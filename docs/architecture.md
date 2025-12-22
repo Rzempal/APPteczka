@@ -1,4 +1,4 @@
-# 🏛️ ArchiFlex - Dokumentacja Architektury
+# 🏛️ - Dokumentacja Architektury
 
 > **Cel dokumentu:** Przegląd architektury systemu dla nowych deweloperów.
 
@@ -18,7 +18,7 @@
 
 ## Przegląd Systemu
 
-**ArchiFLex** to interaktywne narzędzie pozwalające klientom dostosować gotowy projekt architektoniczny do ich indywidualnych potrzeb i ograniczeń działki.
+
 
 ### Model Biznesowy
 

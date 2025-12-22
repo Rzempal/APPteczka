@@ -1,0 +1,214 @@
+/* ========================================
+   Navbar Animation CSS
+   Production-ready animations for desktop & mobile
+   ======================================== */
+
+/* ========================================
+   CSS Custom Properties
+   ======================================== */
+:root {
+  --navbar-easing: cubic-bezier(0.16, 1, 0.3, 1);
+  --navbar-duration: 0.5s;
+  --stagger-base: 0.1s;
+  --stagger-increment: 0.075s;
+  --accent-color: #e63946;
+}
+
+/* ========================================
+   Keyframe Animations
+   ======================================== */
+
+/* Slide from left - for mobile panel */
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Slide from right - for nav links */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Slide from bottom - for CTA buttons */
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Slide from top - alternative option */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Fade in - utility animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   Mobile Menu Panel
+   ======================================== */
+
+/* Main panel - slides from left */
+.mobile-menu-panel {
+  animation: slideInFromLeft 0.35s var(--navbar-easing) forwards;
+}
+
+/* Alternative: slide from top (under navbar) */
+.mobile-menu-slide {
+  animation: slideInFromLeft 0.35s var(--navbar-easing) forwards;
+}
+
+/* ========================================
+   Staggered Navigation Links
+   ======================================== */
+
+.mobile-nav-link {
+  opacity: 0;
+  animation: slideInFromRight 0.4s var(--navbar-easing) forwards;
+}
+
+/* Stagger delays - 5 links */
+.mobile-nav-link:nth-child(1) { animation-delay: 0.1s; }
+.mobile-nav-link:nth-child(2) { animation-delay: 0.175s; }
+.mobile-nav-link:nth-child(3) { animation-delay: 0.25s; }
+.mobile-nav-link:nth-child(4) { animation-delay: 0.325s; }
+.mobile-nav-link:nth-child(5) { animation-delay: 0.4s; }
+.mobile-nav-link:nth-child(6) { animation-delay: 0.475s; }
+.mobile-nav-link:nth-child(7) { animation-delay: 0.55s; }
+
+/* ========================================
+   Staggered CTA Buttons
+   ======================================== */
+
+.mobile-cta {
+  opacity: 0;
+  animation: slideInFromBottom 0.4s var(--navbar-easing) forwards;
+}
+
+/* Stagger delays - after nav links finish */
+.mobile-cta:nth-child(1),
+.mobile-cta-1 { animation-delay: 0.5s; }
+
+.mobile-cta:nth-child(2),
+.mobile-cta-2 { animation-delay: 0.6s; }
+
+.mobile-cta:nth-child(3),
+.mobile-cta-3 { animation-delay: 0.7s; }
+
+/* ========================================
+   Desktop Nav Link Hover Effect
+   ======================================== */
+
+.nav-link {
+  position: relative;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #737373;
+  transition: color 0.2s ease;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: var(--accent-color);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+  color: #1a1a1a;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* ========================================
+   Mobile Logo Animation (Optional)
+   ======================================== */
+
+.mobile-logo {
+  opacity: 0;
+  animation: slideInFromLeft 0.4s var(--navbar-easing) forwards;
+  animation-delay: 0.8s; /* Appears last */
+}
+
+/* ========================================
+   Accessibility - Reduced Motion
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ========================================
+   Tailwind CSS Classes Reference
+   Use with cn() or clsx() for conditional classes
+   ======================================== */
+
+/*
+Desktop scroll-triggered collapse (Tailwind):
+
+Logo text slides left:
+showFullNav ? "max-w-[200px] opacity-100 translate-x-0"
+            : "max-w-0 opacity-0 -translate-x-4"
+
+Nav links slide right:
+showFullNav ? "max-w-[600px] opacity-100 translate-x-0"
+            : "max-w-0 opacity-0 translate-x-8"
+
+CTA button slides right:
+showFullNav ? "max-w-[200px] opacity-100 translate-x-0"
+            : "max-w-0 opacity-0 translate-x-8"
+
+Hamburger appears:
+isScrolled ? "opacity-100 translate-x-0 pointer-events-auto"
+           : "opacity-0 translate-x-4 pointer-events-none absolute"
+
+Common transition class:
+"transition-all duration-500 ease-out overflow-hidden"
+*/
