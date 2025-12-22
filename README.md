@@ -76,12 +76,11 @@ Asystent:
   - generator promptów (copy & paste).
 
 ### Backend / logika
-- Lokalna baza danych użytkownika:
-  - IndexedDB / SQLite (offline-first),
+- baza danych użytkownika:
+  - sugestie? (offline-first),
 - Walidacja danych:
   - JSON Schema / YAML Schema,
-- Brak kont użytkowników (na start),
-- Brak przechowywania danych medycznych na serwerze.
+- konta użytkowników - 
 
 ---
 
@@ -106,7 +105,7 @@ Asystent:
 - Jasne komunikaty:
   - „To nie jest porada lekarska”,
   - „Skonsultuj się z lekarzem” w odpowiednich przypadkach.
-- Dane użytkownika pozostają lokalne.
+- Dane użytkownika pozostają lokalne (android)
 
 ---
 
@@ -115,7 +114,7 @@ Asystent:
 1. Model danych apteczki (lek + termin ważności).
 2. UI listy + filtrów.
 3. Import danych + walidacja.
-4. Generator promptów (2 tryby).
+4. Generator promptów (2 tryby).(na poczatek, pozniej api do gemini?)
 5. MVP web (Faza 1).
 6. Port na Android (Faza 2).
 
