@@ -1,0 +1,44 @@
+leki:
+  - nazwa: Prospan
+    opis: "Roślinny lek w formie pastylek miękkich zawierający wyciąg z liści bluszczu, który rozrzedza wydzielinę i ułatwia odkrztuszanie. Stosować zgodnie z ulotką."
+    wskazania:
+      - "kaszel mokry"
+      - "stany zapalne dróg oddechowych"
+    tagi:
+      - kaszel
+      - wykrztuśny
+      - dla dzieci
+      - dla dorosłych
+
+  - nazwa: Septinum
+    opis: "Wyrób medyczny w formie tabletek musujących (lub do ssania), który nawilża i chroni błonę śluzową gardła oraz łagodzi podrażnienia. Stosować zgodnie z ulotką."
+    wskazania:
+      - "chrypka"
+      - "podrażnienie gardła"
+      - "suchy kaszel"
+    tagi:
+      - ból gardła
+      - kaszel
+      - dla dorosłych
+      - dla dzieci
+
+  - nazwa: neo-angin
+    opis: "Tabletki do ssania o działaniu antyseptycznym i wspomagającym leczenie stanów zapalnych w jamie ustnej i gardle. Stosować zgodnie z ulotką."
+    wskazania:
+      - "ból gardła"
+      - "zaczerwienienie i obrzęk"
+    tagi:
+      - ból gardła
+      - przeciwbólowy
+      - przeciwzapalny
+      - dla dorosłych
+      - dla dzieci
+
+  - nazwa: Pulnozin
+    opis: "Lek w formie tabletek do ssania zmniejszający lepkość śluzu w drogach oddechowych i ułatwiający jego usuwanie. Stosować zgodnie z ulotką."
+    wskazania:
+      - "choroby dróg oddechowych z nadmierną wydzieliną"
+    tagi:
+      - kaszel
+      - wykrztuśny
+      - dla dorosłych
