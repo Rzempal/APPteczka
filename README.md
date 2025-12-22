@@ -121,4 +121,4 @@ Asystent:
 ---
 
 ## Status
-Dokument stanowi **punkt startowy projektu** i może być rozwijany iteracyjnie.
+Dokument stanowi **punkt startowy projektu** 
