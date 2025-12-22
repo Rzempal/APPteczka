@@ -1,0 +1,63 @@
+{
+  "leki": [
+    {
+      "nazwa": "Prospan",
+      "opis": "Roślinny lek w formie miękkich pastylek zawierający wyciąg z liści bluszczu. Działa rozrzedzająco na wydzielinę i ułatwia odkrztuszanie. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "produktywny (mokry) kaszel",
+        "stany zapalne dróg oddechowych"
+      ],
+      "tagi": [
+        "kaszel",
+        "wykrztuśny",
+        "przeziębienie",
+        "dla dorosłych",
+        "dla dzieci"
+      ]
+    },
+    {
+      "nazwa": "Septinum",
+      "opis": "Wyrób medyczny w postaci pastylek do ssania. Powleka błonę śluzową gardła filmem ochronnym, nawilża ją i łagodzi podrażnienia. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "chrypka",
+        "podrażnienie gardła",
+        "kaszel (z podrażnienia)"
+      ],
+      "tagi": [
+        "ból gardła",
+        "kaszel",
+        "dla dorosłych",
+        "dla dzieci"
+      ]
+    },
+    {
+      "nazwa": "neo-angin",
+      "opis": "Tabletki do ssania o działaniu antyseptycznym i wspomagającym leczenie stanów zapalnych w jamie ustnej i gardle. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ból gardła",
+        "zaczerwienienie i obrzęk gardła",
+        "zakażenia jamy ustnej"
+      ],
+      "tagi": [
+        "ból gardła",
+        "przeciwzapalny",
+        "infekcja bakteryjna",
+        "dla dorosłych",
+        "dla dzieci"
+      ]
+    },
+    {
+      "nazwa": "Pulnozin",
+      "opis": "Lek mukolityczny w formie tabletek do ssania. Zmniejsza lepkość śluzu w drogach oddechowych i ułatwia jego usuwanie. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "choroby dróg oddechowych z nadmierną wydzieliną",
+        "trudności z odkrztuszaniem"
+      ],
+      "tagi": [
+        "kaszel",
+        "wykrztuśny",
+        "dla dorosłych"
+      ]
+    }
+  ]
+}
