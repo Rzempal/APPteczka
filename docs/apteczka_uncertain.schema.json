@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Apteczka – status niepewne_rozpoznanie",
+  "type": "object",
+  "required": [
+    "status",
+    "opcje"
+  ],
+  "properties": {
+    "status": {
+      "const": "niepewne_rozpoznanie"
+    },
+    "opcje": {
+      "type": "object",
+      "required": [
+        "A",
+        "B",
+        "C"
+      ],
+      "properties": {
+        "A": {
+          "const": "Poproś o lepsze zdjęcie"
+        },
+        "B": {
+          "const": "Poproś użytkownika o podanie nazwy leku"
+        },
+        "C": {
+          "const": "Zostaw nazwę pustą"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
