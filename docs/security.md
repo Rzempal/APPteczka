@@ -1,70 +1,98 @@
-# 🔐 Bezpieczeństwo
+# 🔐 Bezpieczeństwo – APPteczka
 
 > **Powiązane:** [Architektura](architecture.md) | [Model Danych](data_model.md)
 
 ---
 
-## Ochrona Danych Osobowych (PII & GDPR)
+## ⚠️ Disclaimer Medyczny
 
-| Mechanizm | Opis |
-|-----------|------|
-| **Application Level Encryption** | Szyfrowanie kolumn wrażliwych (email, telefon) przed zapisem do DB (AES-256) |
-| **Klucze** | Master Key w zewnętrznym sejfie (KMS/Vault), niedostępny w repozytorium |
-| **Logi** | Automatyczna sanityzacja (maskowanie) danych osobowych |
-| **Środowiska Dev** | Praca wyłącznie na danych zanonimizowanych (Seeding/Faker) |
-
----
-
-## Płatności (PCI DSS 4.0)
-
-| Mechanizm | Opis |
-|-----------|------|
-| **Model** | SAQ A (pełne przekierowanie do operatora płatności) |
-| **Ochrona Frontend** | Content Security Policy (CSP) + monitorowanie integralności skryptów |
+> [!CAUTION]
+> **APPteczka NIE jest narzędziem medycznym.**
+>
+> - Nie zastępuje porady lekarza
+> - Nie udziela rekomendacji terapeutycznych
+> - Służy wyłącznie do porządkowania informacji o lekach
+>
+> W razie wątpliwości **zawsze skonsultuj się z lekarzem lub farmaceutą**.
 
 ---
 
-## Uwierzytelnianie
+## Ochrona Danych Użytkownika
+
+### Faza 1: Dane Lokalne
 
 | Mechanizm | Opis |
 |-----------|------|
-| **Hasła** | Hashowanie algorytmem Argon2id |
-| **Admin** | Wymuszone 2FA (TOTP/YubiKey) dla panelu zarządzania |
+| **localStorage** | Dane przechowywane wyłącznie w przeglądarce użytkownika |
+| **Brak wysyłki** | Żadne dane nie są wysyłane na zewnętrzne serwery |
+| **Brak śledzenia** | Bez cookies analitycznych, bez telemetrii |
+| **Eksport** | Użytkownik może wyeksportować dane jako JSON |
+
+### Faza 2+: Backend (opcjonalny)
+
+| Mechanizm | Opis |
+|-----------|------|
+| **Szyfrowanie transmisji** | HTTPS dla wszystkich połączeń |
+| **Hasła** | Hashowanie Argon2id (jeśli konta użytkowników) |
+| **Dane wrażliwe** | Brak zbierania danych medycznych/zdrowotnych |
+
+---
+
+## Interakcja z AI
+
+### Faza 1: Prompty Copy-Paste
+
+| Aspekt | Opis |
+|--------|------|
+| **Brak API** | Użytkownik sam wkleja dane do zewnętrznego AI |
+| **Odpowiedzialność** | Użytkownik decyduje, co udostępnia AI |
+| **Brak przechowywania** | Aplikacja nie zapisuje odpowiedzi AI |
+
+### Faza 3: API Gemini
+
+| Aspekt | Opis |
+|--------|------|
+| **Tylko obrazy** | Wysyłane są wyłącznie zdjęcia opakowań |
+| **Minimalizacja danych** | Brak wysyłania listy leków do API |
+| **Klucz API** | Przechowywany w zmiennych środowiskowych (nie w kodzie) |
+
+---
+
+## Zasady AI
+
+Prompty dla AI zawierają ograniczenia:
+
+```text
+❌ Brak porad medycznych
+❌ Brak sugerowania zamienników
+❌ Brak ocen skuteczności
+❌ Brak dawkowania
+❌ Zgadywanie jest zabronione
+
+✅ Tylko porządkowanie informacji
+✅ Zawsze: "Stosować zgodnie z ulotką"
+✅ Przy niepewności: pytaj użytkownika
+```
 
 ---
 
 ## Retencja Danych
 
-- Automatyczne usuwanie porzuconych koszyków po 30 dniach
-- Anonimizacja kont nieaktywnych (z wyjątkiem danych fakturowych)
+| Faza | Retencja |
+|------|----------|
+| 1 | Dane lokalne – użytkownik kontroluje całkowicie |
+| 2+ | Automatyczne usuwanie nieaktywnych kont po 12 miesiącach (jeśli backend) |
 
 ---
 
-## Strategia Bezpieczeństwa Plików
+## Komunikaty w Aplikacji
 
-```mermaid
-flowchart LR
-    subgraph Public ["Strefa Publiczna (CDN)"]
-        A[Wizualizacje]
-        B[Rzuty marketingowe]
-        C[Miniatury]
-    end
+Aplikacja wyświetla disclaimer w kluczowych miejscach:
 
-    subgraph Private ["Strefa Prywatna (S3)"]
-        D[Dokumentacja PDF]
-        E[Pliki DWG]
-        F[Pakiety ZIP]
-    end
-
-    User[Użytkownik] --> |Dostęp otwarty| Public
-    User --> |Signed URL po zakupie| Private
-```
-
-| Strefa | Zawartość | Dostęp |
-|--------|-----------|--------|
-| **Public** | Rzuty funkcjonalne (bez wymiarowania), wizualizacje | CDN, cache'owany |
-| **Private** | Pełna dokumentacja techniczna | Tylko Signed URL (15 min ważności) |
+- **Import leków:** "Zweryfikuj poprawność rozpoznania przed zapisaniem"
+- **Analiza objawów:** "To nie jest porada medyczna. Skonsultuj się z lekarzem."
+- **Przeterminowane leki:** "Nie stosuj przeterminowanych leków"
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-14
+> 📅 **Ostatnia aktualizacja:** 2025-12-22

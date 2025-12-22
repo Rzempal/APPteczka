@@ -1,39 +1,29 @@
-# 🗺️ Road Map - ArchiFlex 
+# 🗺️ Road Map – APPteczka
 
-> **Narzędzie do parametryzacji projektów domów (SaaS)**
+> **Powiązane:** [Architektura](architecture.md) | [Model Danych](data_model.md)
 
 ---
 
 ## Wizja Produktu
 
-**ArchiFlex** to interaktywne narzędzie pozwalające klientom dostosować gotowy projekt architektoniczny do ich indywidualnych potrzeb i ograniczeń działki.
+**APPteczka** to aplikacja do zarządzania domową apteczką z integracją AI. Umożliwia:
+
+- Katalogowanie leków w domu
+- Filtrowanie po objawach, działaniu, grupie użytkowników
+- Śledzenie terminów ważności
+- Analizę apteczki pod kątem objawów (z pomocą AI)
 
 ### Problem
 
-Klienci kupują gotowe projekty domów, które często wymagają kosztownej adaptacji do:
-
-- Wymiarów i kształtu działki
-- Wymagań Miejscowego Planu Zagospodarowania (MPZP)
-- Indywidualnych preferencji (układ pomieszczeń, orientacja)
+Użytkownicy nie wiedzą, jakie leki mają w domu, kiedy się przeterminują i które pasują do aktualnych objawów.
 
 ### Rozwiązanie
 
-Platforma umożliwiająca **parametryzację projektu przed zakupem**:
+Aplikacja webowa (później mobilna) z:
 
-- Edytor wymiarów (szerokość działki, kąt dachu, orientacja)
-- Podgląd na żywo zmian w projekcie
-- Walidacja zgodności z przepisami
-- Dynamiczna wycena
-
----
-
-## Cel Biznesowy
-
-| Aspekt | ArchiKunszt | ArchiFlex |
-|--------|-------------|-----------|
-| **Model** | E-commerce (projekty "as-is") | SaaS (parametryzacja) |
-| **Klient** | Szuka gotowego projektu | Chce dostosować projekt do działki |
-| **Wartość** | Szybki zakup, niższa cena | Dopasowanie, mniej adaptacji |
+- Importem leków przez AI (zdjęcie → lista)
+- Filtrowaniem i wyszukiwaniem
+- Alertami o przeterminowanych lekach
 
 ---
 
@@ -41,84 +31,103 @@ Platforma umożliwiająca **parametryzację projektu przed zakupem**:
 
 | Faza | Nazwa | Status |
 |------|-------|--------|
-| 0 | Walidacja pomysłu (Mock) | ⏳ Planowana (w repo ArchiKunszt) |
-| 1 | Parametryzator UI | ⏳ Planowana |
-| 2 | Checkout i Płatności | ⏳ Planowana |
-| 3 | Analityka i Optymalizacja | ⏳ Planowana |
+| 0 | Dokumentacja i Schematy | ✅ Ukończona |
+| 1 | MVP Web (Next.js) | ⏳ Planowana |
+| 2 | Backend + Synchronizacja | ⏳ Planowana |
+| 3 | Integracja AI API | ⏳ Planowana |
+| 4 | Aplikacja Mobile (Flutter) | ⏳ Planowana |
 
 ---
 
-## FAZA 0: Walidacja Pomysłu (Mock) ⏳
+## FAZA 0: Dokumentacja i Schematy ✅
 
-**Cel:** Zebranie emaili i walidacja zainteresowania przed pełną implementacją.
+**Cel:** Przygotowanie fundamentów projektu.
+
+| Element | Status |
+|---------|--------|
+| Schema danych (JSON/YAML) | ✅ `docs/schema/` |
+| Prompty dla AI | ✅ `docs/prompts/` |
+| Kontrolowana lista tagów | ✅ `docs/example_input/` |
+| Przykładowe dane | ✅ `docs/example_input/` |
+
+---
+
+## FAZA 1: MVP Web (Next.js) ⏳
+
+**Cel:** Działająca aplikacja webowa z podstawowymi funkcjami.
 
 | Element | Opis |
 |---------|------|
-| Landing Page | Hero: "Parametryzuj projekt pod swoją działkę" |
-| Mockup UI | Statyczna wizualizacja interfejsu |
-| Email Capture | Formularz "Zostaw email - powiadomimy o starcie" |
-| Metryki sukcesu | Liczba zapisanych emaili, konwersja z ArchiKunszt |
+| Model danych | Implementacja encji `Lek` w TypeScript |
+| Przechowywanie | localStorage (offline-first) |
+| UI: Lista leków | Karty/tabela z podstawowymi informacjami |
+| UI: Filtry | Po tagach, objawach, terminie ważności |
+| Import danych | Walidacja JSON/YAML/Markdown |
+| Generator promptów | Copy-paste do ChatGPT/Claude/Gemini |
+| Termin ważności | Edycja daty, alerty o przeterminowaniu |
 
-**Kamień milowy:** Zebranie 100+ emaili → decyzja o kontynuacji.
+**Kamień milowy:** Użytkownik może zaimportować leki i filtrować apteczkę.
 
 ---
 
-## FAZA 1: Parametryzator UI ⏳
+## FAZA 2: Backend + Synchronizacja ⏳
 
-**Cel:** Przekształcenie mocka w działające narzędzie.
+**Cel:** Opcjonalne konto użytkownika i backup danych.
 
 | Element | Opis |
 |---------|------|
-| Edytor wymiarów | Suwaki/inputy: szerokość działki, kąt dachu, orientacja |
-| Podgląd na żywo | Wizualizacja zmieniająca się przy edycji |
-| Walidacja reguł | Sprawdzenie czy konfiguracja jest wykonalna |
-| Deep-linking | URL z parametrami → link z ArchiKunszt z pre-loaded projektem |
+| API REST | Node.js + Express lub Next.js API Routes |
+| Baza danych | SQLite (dev) → PostgreSQL (prod) lub serverless |
+| Autentykacja | Opcjonalna (email + hasło lub OAuth) |
+| Backup/Export | JSON export/import dla użytkowników bez konta |
+
+**Kamień milowy:** Użytkownik może założyć konto i zsynchronizować dane między urządzeniami.
 
 ---
 
-## FAZA 2: Checkout i Płatności ⏳
+## FAZA 3: Integracja AI API ⏳
 
-**Cel:** Finalizacja procesu zakupowego dla sparametryzowanych projektów.
+**Cel:** Automatyczne rozpoznawanie leków ze zdjęć.
 
 | Element | Opis |
 |---------|------|
-| Koszyk konfiguracji | Przechowuje wybraną konfigurację (JSON) |
-| Podsumowanie | Przed płatnością pokazuje co kupuje |
-| Płatności | PayU/P24 |
-| Generowanie plików | Backend generuje PDF z parametrami klienta |
-| Email z konfiguracją | Potwierdzenie + specyfikacja wybranych parametrów |
+| Provider | Gemini API (Vision) |
+| Workflow | Upload zdjęcia → analiza → walidacja → import |
+| Fallback | Ręczna weryfikacja przy niepewnym rozpoznaniu |
+
+**Kamień milowy:** Użytkownik robi zdjęcie opakowań i leki są automatycznie dodawane.
 
 ---
 
-## FAZA 3: Analityka i Optymalizacja ⏳
+## FAZA 4: Aplikacja Mobile (Flutter) ⏳
 
-**Cel:** Zrozumienie flow klienta między ArchiKunszt a ArchiFlex.
+**Cel:** Natywna aplikacja na Android (i opcjonalnie iOS).
 
 | Element | Opis |
 |---------|------|
-| UTM tagi | Na wszystkich linkach ArchiKunszt → ArchiFlex |
-| Event tracking | GA4 events dla kluczowych akcji |
-| Funnel analysis | Gdzie klienci "wypadają" |
-| A/B testy | CTA, layouty, copy |
+| Framework | Flutter |
+| Lokalna baza | Hive lub Isar (offline-first) |
+| Kamera | Skanowanie opakowań bezpośrednio w aplikacji |
+| Synchronizacja | Opcjonalna z backendem z Fazy 2 |
+| Powiadomienia | Alerty o przeterminowanych lekach |
+
+**Kamień milowy:** Użytkownik zarządza apteczką z telefonu.
 
 ---
 
-## Integracja z ArchiKunszt
+## Kolejność Implementacji (Faza 1)
 
+```text
+1. Model danych (TypeScript)
+2. Komponent: MedicineCard
+3. Komponent: MedicineList + Filters
+4. Import: walidacja + parsowanie
+5. Generator promptów
+6. Termin ważności + alerty
+7. Stylowanie + responsywność
 ```
-ArchiKunszt.pl                     ArchiFlex
-     │                                 │
-     │ CTA: "Sparametryzuj projekt"    │
-     ├────────────────────────────────→│
-     │                                 │
-     │ Deep-link z project_id          │
-     │                                 │
-     │←────────────────────────────────┤
-     │ Powrót z linkiem do zakupu      │
-     │                                 │
-```
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-14  
-> 🏗️ **Repozytorium:** (osobne - do utworzenia)
+> 📅 **Ostatnia aktualizacja:** 2025-12-22
+> 🏗️ **Projekt:** APPteczka
