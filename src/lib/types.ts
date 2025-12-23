@@ -15,10 +15,17 @@ export interface Medicine {
 }
 
 /**
- * Format danych importowanych z AI
+ * Format danych importowanych z AI (bez terminów)
  */
 export interface MedicineImport {
     leki: Omit<Medicine, 'id' | 'dataDodania' | 'terminWaznosci'>[];
+}
+
+/**
+ * Format pełnego backupu (z terminami i wszystkimi danymi)
+ */
+export interface BackupImport {
+    leki: Medicine[];
 }
 
 /**
