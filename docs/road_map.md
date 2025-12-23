@@ -13,121 +13,113 @@
 - Śledzenie terminów ważności
 - Analizę apteczki pod kątem objawów (z pomocą AI)
 
-### Problem
+---
 
-Użytkownicy nie wiedzą, jakie leki mają w domu, kiedy się przeterminują i które pasują do aktualnych objawów.
+## Dwie ścieżki rozwoju
 
-### Rozwiązanie
+### 🅰️ Opcja A: Full Local (MVP)
 
-Aplikacja webowa (później mobilna) z:
+**100% offline, dane lokalne, zero backendu**
 
-- Importem leków przez AI (zdjęcie → lista)
-- Filtrowaniem i wyszukiwaniem
-- Alertami o przeterminowanych lekach
+| Platforma | Przechowywanie | AI | Koszt użytkownika |
+|-----------|----------------|-----|-------------------|
+| Web | localStorage / IndexedDB | Prompt copy-paste | Darmowe |
+| Android | Hive / Isar | Prompt copy-paste | Darmowe |
+
+### 🅱️ Opcja B: Backend Premium
+
+**Konta użytkowników, sync, automatyczne AI**
+
+| Funkcja | Opis | Koszt |
+|---------|------|-------|
+| Konta użytkowników | Logowanie Google/email | Darmowe |
+| Synchronizacja | Cross-device sync (web ↔ mobile) | Darmowe |
+| Gemini API | Automatyczne rozpoznawanie ze zdjęć | Premium (przyszłość) |
+
+**Hosting testowy:** Vercel (frontend) + Railway/Supabase (backend)
 
 ---
 
-## Status
+## Status Faz
 
 | Faza | Nazwa | Status |
 |------|-------|--------|
 | 0 | Dokumentacja i Schematy | ✅ Ukończona |
-| 1 | MVP Web (Next.js) | ⏳ Planowana |
-| 2 | Backend + Synchronizacja | ⏳ Planowana |
-| 3 | Integracja AI API | ⏳ Planowana |
-| 4 | Aplikacja Mobile (Flutter) | ⏳ Planowana |
+| 1 | MVP Web (Next.js) | ✅ Ukończona |
+| 2 | MVP Mobile (Flutter) | ⏳ Następna |
+| 3 | Backend + Sync (Opcja B) | 📋 Planowana |
+| 4 | Gemini API (Opcja B) | 📋 Planowana |
 
 ---
 
-## FAZA 0: Dokumentacja i Schematy ✅
-
-**Cel:** Przygotowanie fundamentów projektu.
+## ✅ FAZA 0: Dokumentacja i Schematy
 
 | Element | Status |
 |---------|--------|
 | Schema danych (JSON/YAML) | ✅ `docs/schema/` |
 | Prompty dla AI | ✅ `docs/prompts/` |
 | Kontrolowana lista tagów | ✅ `docs/example_input/` |
-| Przykładowe dane | ✅ `docs/example_input/` |
 
 ---
 
-## FAZA 1: MVP Web (Next.js) ⏳
+## ✅ FAZA 1: MVP Web (Next.js)
 
-**Cel:** Działająca aplikacja webowa z podstawowymi funkcjami.
+**Stack:** Next.js 16 + TypeScript + Tailwind CSS
+
+| Funkcja | Status |
+|---------|--------|
+| Model danych TypeScript | ✅ |
+| Lista leków z kartami | ✅ |
+| Filtrowanie (tagi, terminy) | ✅ |
+| Import JSON z walidacją Zod | ✅ |
+| Edycja terminu ważności | ✅ |
+| Alerty o przeterminowaniu | ✅ |
+| Generator promptów AI | ✅ |
+| Eksport JSON + kopiowanie | ✅ |
+| Persistencja localStorage | ✅ |
+
+---
+
+## ⏳ FAZA 2: MVP Mobile (Flutter)
+
+**Cel:** Natywna aplikacja Android (offline-first, jak Opcja A)
 
 | Element | Opis |
 |---------|------|
-| Model danych | Implementacja encji `Lek` w TypeScript |
-| Przechowywanie | localStorage (offline-first) |
-| UI: Lista leków | Karty/tabela z podstawowymi informacjami |
-| UI: Filtry | Po tagach, objawach, terminie ważności |
-| Import danych | Walidacja JSON/YAML/Markdown |
-| Generator promptów | Copy-paste do ChatGPT/Claude/Gemini |
-| Termin ważności | Edycja daty, alerty o przeterminowaniu |
-
-**Kamień milowy:** Użytkownik może zaimportować leki i filtrować apteczkę.
+| Framework | Flutter + Dart |
+| Lokalna baza | Hive lub Isar |
+| UI | Material Design 3 |
+| Funkcje | Identyczne jak web MVP |
+| Kamera | Skanowanie opakowań (z promptem) |
+| Powiadomienia | Lokalne alerty o terminach |
 
 ---
 
-## FAZA 2: Backend + Synchronizacja ⏳
+## 📋 FAZA 3: Backend + Synchronizacja (Opcja B)
 
-**Cel:** Opcjonalne konto użytkownika i backup danych.
+**Cel:** Opcjonalne konta i sync dla użytkowników premium
+
+| Element | Technologia |
+|---------|-------------|
+| Hosting | Vercel (Next.js) + Railway/Supabase |
+| Autentykacja | NextAuth.js (Google OAuth) |
+| Baza danych | PostgreSQL (Supabase) |
+| API | Next.js API Routes |
+| Sync | Real-time z Supabase |
+
+---
+
+## 📋 FAZA 4: Gemini API (Opcja B)
+
+**Cel:** Automatyczne rozpoznawanie leków bez kopiowania promptów
 
 | Element | Opis |
 |---------|------|
-| API REST | Node.js + Express lub Next.js API Routes |
-| Baza danych | SQLite (dev) → PostgreSQL (prod) lub serverless |
-| Autentykacja | Opcjonalna (email + hasło lub OAuth) |
-| Backup/Export | JSON export/import dla użytkowników bez konta |
-
-**Kamień milowy:** Użytkownik może założyć konto i zsynchronizować dane między urządzeniami.
+| Provider | Gemini 2.0 Flash (Vision) |
+| Architektura | Backend proxy (nasz klucz API) |
+| Limit | Rate limiting per user |
+| Model biznesowy | Premium feature (przyszłość) |
 
 ---
 
-## FAZA 3: Integracja AI API ⏳
-
-**Cel:** Automatyczne rozpoznawanie leków ze zdjęć.
-
-| Element | Opis |
-|---------|------|
-| Provider | Gemini API (Vision) |
-| Workflow | Upload zdjęcia → analiza → walidacja → import |
-| Fallback | Ręczna weryfikacja przy niepewnym rozpoznaniu |
-
-**Kamień milowy:** Użytkownik robi zdjęcie opakowań i leki są automatycznie dodawane.
-
----
-
-## FAZA 4: Aplikacja Mobile (Flutter) ⏳
-
-**Cel:** Natywna aplikacja na Android (i opcjonalnie iOS).
-
-| Element | Opis |
-|---------|------|
-| Framework | Flutter |
-| Lokalna baza | Hive lub Isar (offline-first) |
-| Kamera | Skanowanie opakowań bezpośrednio w aplikacji |
-| Synchronizacja | Opcjonalna z backendem z Fazy 2 |
-| Powiadomienia | Alerty o przeterminowanych lekach |
-
-**Kamień milowy:** Użytkownik zarządza apteczką z telefonu.
-
----
-
-## Kolejność Implementacji (Faza 1)
-
-```text
-1. Model danych (TypeScript)
-2. Komponent: MedicineCard
-3. Komponent: MedicineList + Filters
-4. Import: walidacja + parsowanie
-5. Generator promptów
-6. Termin ważności + alerty
-7. Stylowanie + responsywność
-```
-
----
-
-> 📅 **Ostatnia aktualizacja:** 2025-12-22
-> 🏗️ **Projekt:** APPteczka
+> 📅 **Ostatnia aktualizacja:** 2025-12-23
