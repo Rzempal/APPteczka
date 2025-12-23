@@ -14,6 +14,13 @@ export const metadata: Metadata = {
   keywords: ["apteczka", "leki", "zdrowie", "AI", "zarządzanie lekami"],
 };
 
+const navItems = [
+  { href: "/", label: "Apteczka", icon: "💊" },
+  { href: "/dodaj", label: "Dodaj leki", icon: "➕" },
+  { href: "/konsultacja", label: "Konsultacja AI", icon: "🩺" },
+  { href: "/backup", label: "Kopia zapasowa", icon: "💾" },
+];
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,25 +31,41 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased bg-gray-50 dark:bg-gray-900`}>
         {/* Nagłówek */}
         <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/80">
-          <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-            <Link href="/" className="flex items-center gap-2">
-              <span className="text-2xl">💊</span>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">APPteczka</span>
-            </Link>
+          <nav className="mx-auto max-w-7xl px-4 py-3 sm:px-6">
+            {/* Logo + Mobile menu */}
+            <div className="flex items-center justify-between">
+              <Link href="/" className="flex items-center gap-2">
+                <span className="text-2xl">💊</span>
+                <span className="text-xl font-bold text-gray-900 dark:text-white">APPteczka</span>
+              </Link>
 
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-              >
-                Apteczka
-              </Link>
-              <Link
-                href="/import"
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                + Import
-              </Link>
+              {/* Desktop navigation */}
+              <div className="hidden sm:flex items-center gap-1">
+                {navItems.map(item => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+                  >
+                    <span>{item.icon}</span>
+                    <span>{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile navigation */}
+            <div className="flex sm:hidden items-center gap-1 mt-3 overflow-x-auto pb-1 -mx-4 px-4">
+              {navItems.map(item => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700"
+                >
+                  <span>{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
             </div>
           </nav>
         </header>

@@ -1,13 +1,16 @@
 'use client';
 
 // src/app/page.tsx
-// Strona główna – lista leków z filtrami
+// Strona główna – lista leków z filtrami, sortowaniem i eksportem PDF
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Medicine, FilterState } from '@/lib/types';
-import { getMedicines, deleteMedicine, updateMedicine, exportMedicines } from '@/lib/storage';
+import { getMedicines, deleteMedicine, updateMedicine } from '@/lib/storage';
 import MedicineList from '@/components/MedicineList';
 import Filters from '@/components/Filters';
+
+type SortOption = 'nazwa' | 'dataDodania' | 'terminWaznosci';
+type SortDirection = 'asc' | 'desc';
 
 export default function HomePage() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -17,12 +20,41 @@ export default function HomePage() {
     expiry: 'all'
   });
   const [isLoaded, setIsLoaded] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('nazwa');
+  const [sortDir, setSortDir] = useState<SortDirection>('asc');
 
   // Załaduj leki z localStorage przy starcie
   useEffect(() => {
     setMedicines(getMedicines());
     setIsLoaded(true);
   }, []);
+
+  // Sortowanie
+  const sortedMedicines = useMemo(() => {
+    const sorted = [...medicines].sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case 'nazwa':
+          const nameA = (a.nazwa || 'zzz').toLowerCase();
+          const nameB = (b.nazwa || 'zzz').toLowerCase();
+          comparison = nameA.localeCompare(nameB, 'pl');
+          break;
+        case 'dataDodania':
+          comparison = new Date(a.dataDodania).getTime() - new Date(b.dataDodania).getTime();
+          break;
+        case 'terminWaznosci':
+          const expiryA = a.terminWaznosci ? new Date(a.terminWaznosci).getTime() : Infinity;
+          const expiryB = b.terminWaznosci ? new Date(b.terminWaznosci).getTime() : Infinity;
+          comparison = expiryA - expiryB;
+          break;
+      }
+
+      return sortDir === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
+  }, [medicines, sortBy, sortDir]);
 
   const handleDelete = (id: string) => {
     if (confirm('Czy na pewno chcesz usunąć ten lek z apteczki?')) {
@@ -36,28 +68,53 @@ export default function HomePage() {
     setMedicines(getMedicines());
   };
 
-  const handleExport = () => {
-    const json = exportMedicines();
-    const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-    const link = document.createElement('a');
-    link.setAttribute('href', dataUrl);
-    link.setAttribute('download', `apteczka_${new Date().toISOString().split('T')[0]}.json`);
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportPDF = async () => {
+    // Dynamiczny import dla client-side only
+    const { jsPDF } = await import('jspdf');
+    const autoTable = (await import('jspdf-autotable')).default;
+
+    const doc = new jsPDF();
+
+    // Tytuł
+    doc.setFontSize(18);
+    doc.text('Moja Apteczka', 14, 20);
+
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Wygenerowano: ${new Date().toLocaleDateString('pl-PL')}`, 14, 28);
+
+    // Tabelka
+    const tableData = sortedMedicines.map(m => [
+      m.nazwa || 'Nieznany',
+      m.terminWaznosci
+        ? new Date(m.terminWaznosci).toLocaleDateString('pl-PL')
+        : 'Brak',
+      m.tagi.slice(0, 3).join(', ') || '-'
+    ]);
+
+    autoTable(doc, {
+      startY: 35,
+      head: [['Nazwa leku', 'Termin ważności', 'Tagi']],
+      body: tableData,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+
+    // Disclaimer
+    const finalY = (doc as typeof doc & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 100;
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text('APPteczka - narzędzie informacyjne, nie porada medyczna.', 14, finalY + 10);
+
+    doc.save(`apteczka_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
-
-  const handleCopyJson = async () => {
-    const json = exportMedicines();
-    try {
-      await navigator.clipboard.writeText(json);
-      setCopyStatus('copied');
-      setTimeout(() => setCopyStatus('idle'), 2000);
-    } catch {
-      alert('Nie udało się skopiować. Spróbuj ponownie.');
+  const handleSortChange = (option: SortOption) => {
+    if (sortBy === option) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(option);
+      setSortDir('asc');
     }
   };
 
@@ -85,37 +142,56 @@ export default function HomePage() {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {medicines.length === 0
-              ? 'Brak leków – zaimportuj swoją apteczkę'
+              ? 'Brak leków – dodaj leki w zakładce "Dodaj leki"'
               : `${medicines.length} leków w apteczce`
             }
           </p>
         </div>
 
-        {/* Przyciski eksportu */}
+        {/* Akcje */}
         {medicines.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            {/* Sortowanie */}
+            <div className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1 dark:border-gray-600 dark:bg-gray-800">
+              <span className="text-xs text-gray-500 dark:text-gray-400">Sortuj:</span>
+              <button
+                onClick={() => handleSortChange('nazwa')}
+                className={`rounded px-2 py-1 text-xs font-medium ${sortBy === 'nazwa'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400'
+                  }`}
+              >
+                Nazwa {sortBy === 'nazwa' && (sortDir === 'asc' ? '↑' : '↓')}
+              </button>
+              <button
+                onClick={() => handleSortChange('dataDodania')}
+                className={`rounded px-2 py-1 text-xs font-medium ${sortBy === 'dataDodania'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400'
+                  }`}
+              >
+                Data {sortBy === 'dataDodania' && (sortDir === 'asc' ? '↑' : '↓')}
+              </button>
+              <button
+                onClick={() => handleSortChange('terminWaznosci')}
+                className={`rounded px-2 py-1 text-xs font-medium ${sortBy === 'terminWaznosci'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400'
+                  }`}
+              >
+                Termin {sortBy === 'terminWaznosci' && (sortDir === 'asc' ? '↑' : '↓')}
+              </button>
+            </div>
+
+            {/* Eksport PDF */}
             <button
-              onClick={handleExport}
-              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              title="Pobierz plik JSON"
+              onClick={handleExportPDF}
+              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              Pobierz
-            </button>
-            <button
-              onClick={handleCopyJson}
-              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${copyStatus === 'copied'
-                  ? 'bg-green-600 text-white'
-                  : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-                }`}
-              title="Kopiuj JSON do schowka"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              {copyStatus === 'copied' ? '✓ Skopiowano!' : 'Kopiuj JSON'}
+              PDF
             </button>
           </div>
         )}
@@ -133,7 +209,7 @@ export default function HomePage() {
         {/* Lista leków */}
         <section className={medicines.length === 0 ? 'lg:col-span-2' : ''}>
           <MedicineList
-            medicines={medicines}
+            medicines={sortedMedicines}
             filters={filters}
             onDelete={handleDelete}
             onUpdateExpiry={handleUpdateExpiry}
