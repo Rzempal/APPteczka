@@ -7,7 +7,7 @@ import type { Medicine } from './types';
  * Generuje prompt do rozpoznawania leków ze zdjęcia
  */
 export function generateImportPrompt(): string {
-    return `# Prompt – Rozpoznawanie leków ze zdjęcia (Import JSON)
+  return `# Prompt – Rozpoznawanie leków ze zdjęcia (Import JSON)
 
 ## Rola
 Jesteś asystentem farmacji pomagającym użytkownikowi prowadzić prywatną bazę leków (domową apteczkę). Użytkownik nie ma wiedzy farmaceutycznej.
@@ -86,66 +86,48 @@ Celem jest wyłącznie **porządkowanie informacji do prywatnej bazy leków uży
 }
 
 /**
- * Generuje prompt do analizy apteczki pod kątem objawów
+ * Generuje prompt do analizy apteczki pod kątem objawów (rola: lekarz internista)
  */
-export function generateAnalysisPrompt(medicines: Medicine[], symptoms: string[]): string {
-    const medicinesList = medicines
-        .map(m => `- ${m.nazwa || 'Nieznany lek'}: ${m.opis} (tagi: ${m.tagi.join(', ')})`)
-        .join('\n');
+export function generateAnalysisPrompt(medicines: Medicine[], symptoms: string[], additionalNotes?: string): string {
+  const medicineNames = medicines
+    .map(m => m.nazwa || 'Nieznany lek')
+    .join(', ');
 
-    const symptomsList = symptoms.join(', ');
+  const symptomsList = symptoms.join(', ');
 
-    return `# Analiza apteczki pod kątem objawów
+  const notesSection = additionalNotes?.trim()
+    ? `\n\n## Dodatkowe informacje od pacjenta:\n${additionalNotes.trim()}`
+    : '';
 
-## Rola
-Jesteś asystentem informacyjnym (nie medycznym). Twoim zadaniem jest **analiza informacyjna** – nie jesteś lekarzem i nie udzielasz porad medycznych.
+  return `# Konsultacja lekarska
 
-## Dane wejściowe
+Wciel się w rolę lekarza internisty z 10-letnim doświadczeniem klinicznym.
+Pacjent przychodzi z poniższymi objawami i prosi o poradę, które z jego domowych leków mogą pomóc.
 
-### Apteczka użytkownika:
-${medicinesList}
+## Moje objawy:
+${symptomsList}${notesSection}
 
-### Objawy użytkownika:
-${symptomsList}
+## Moja apteczka (lista leków):
+${medicineNames}
 
-## Zadanie
+## Twoje zadanie:
 
-Na podstawie **ulotek i opisów leków** (NIE wiedzy medycznej):
+1. **Analiza objawów** – krótko opisz co mogą oznaczać te objawy w kontekście najczęstszych przyczyn
+2. **Sugestie z apteczki** – które z moich leków wg ulotek mogą pomóc przy tych objawach (bez podawania dawkowania – to pozostaw ulotce)
+3. **Czego brakuje** – jeśli żaden lek nie pasuje do objawów, powiedz o tym
+4. **Czerwone flagi** – wskaż objawy lub sytuacje, które powinny mnie zaniepokić i skłonić do wizyty u lekarza pierwszego kontaktu lub na izbie przyjęć
 
-1. **Potencjalnie pasujące leki** – które leki mają w tagach/wskazaniach cokolwiek związanego z podanymi objawami
-2. **Leki niepasujące** – które leki zdecydowanie nie mają związku z objawami
-3. **Brakujące kategorie** – jeśli żaden lek nie pasuje do objawu
-
-## Format odpowiedzi
-
-### ✅ Potencjalnie pasujące leki
-[lista leków z krótkim uzasadnieniem]
-
-### ❌ Leki niepasujące do objawów
-[lista leków]
-
-### ⚠️ Brak odpowiednich leków dla:
-[lista objawów bez odpowiedniego leku]
-
-### 🏥 Zalecenie
-„**To nie jest porada medyczna.** W przypadku wątpliwości skonsultuj się z lekarzem lub farmaceutą."
-
-## Ograniczenia
-
-- NIE sugeruj dawkowania
-- NIE oceniaj skuteczności
-- NIE zastępuj wizyty u lekarza
-- Bazuj TYLKO na informacjach z ulotek`;
+Odpowiedz w formie naturalnej rozmowy z pacjentem – ciepło, profesjonalnie, zrozumiale.`
 }
 
 /**
  * Kopiuje tekst do schowka
  */
 export async function copyToClipboard(text: string): Promise<boolean> {
-    try {
-        await navigator.clipboard.writeText(text);
-        return true;
-    } catch {
-        return false;
-    }
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
 }
