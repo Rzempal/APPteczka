@@ -2,6 +2,7 @@
 
 // src/app/backup/page.tsx
 // Strona kopii zapasowej – eksport i instrukcje
+// Neumorphism Style
 
 import { useState, useEffect } from 'react';
 import { getMedicines, exportMedicines } from '@/lib/storage';
@@ -64,51 +65,60 @@ export default function BackupPage() {
     return (
         <div className="space-y-6">
             {/* Nagłówek */}
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="animate-fadeInUp">
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
                     💾 Kopia zapasowa
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                     Pobierz lub skopiuj dane apteczki, aby je zachować lub przenieść
                 </p>
             </div>
 
             {/* Status */}
-            <div className="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-6 dark:from-blue-900/20 dark:to-indigo-900/20">
+            <div className="neu-flat p-6 animate-fadeInUp" style={{
+                animationDelay: '0.1s',
+                background: 'linear-gradient(145deg, var(--color-bg-light), var(--color-bg-dark))'
+            }}>
                 <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-2xl dark:bg-blue-900">
+                    <div className="neu-convex flex h-14 w-14 items-center justify-center text-3xl" style={{ borderRadius: '50%' }}>
                         📦
                     </div>
                     <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Leków w apteczce:</p>
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white">{medicineCount}</p>
+                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Leków w apteczce:</p>
+                        <p className="text-3xl font-bold" style={{ color: 'var(--color-accent)' }}>{medicineCount}</p>
                     </div>
                 </div>
             </div>
 
             {medicineCount === 0 ? (
-                <div className="rounded-xl bg-orange-50 p-6 text-center dark:bg-orange-900/20">
-                    <p className="text-lg font-medium text-orange-800 dark:text-orange-200">
-                        📭 Apteczka jest pusta
+                <div className="neu-flat p-8 text-center animate-fadeInUp" style={{
+                    animationDelay: '0.2s',
+                    background: 'linear-gradient(145deg, #fef3c7, #fde68a)'
+                }}>
+                    <div className="neu-convex w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-popIn">
+                        <span className="text-4xl">📭</span>
+                    </div>
+                    <p className="text-lg font-medium" style={{ color: '#92400e' }}>
+                        Apteczka jest pusta
                     </p>
-                    <p className="mt-2 text-sm text-orange-700 dark:text-orange-300">
+                    <p className="mt-2 text-sm" style={{ color: '#78350f' }}>
                         Nie ma czego eksportować. Najpierw dodaj leki.
                     </p>
                     <Link
                         href="/dodaj"
-                        className="mt-4 inline-block rounded-lg bg-orange-600 px-6 py-2 font-medium text-white hover:bg-orange-700"
+                        className="mt-6 inline-block neu-btn neu-btn-primary"
                     >
-                        Dodaj leki →
+                        ➕ Dodaj leki →
                     </Link>
                 </div>
             ) : (
                 <>
                     {/* Eksport */}
-                    <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                        <h2 className="font-semibold text-gray-900 dark:text-white">
-                            Eksportuj dane
+                    <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
+                        <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                            📤 Eksportuj dane
                         </h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                             Plik zawiera wszystkie leki wraz z terminami ważności i datami dodania.
                         </p>
 
@@ -116,12 +126,19 @@ export default function BackupPage() {
                             {/* Pobierz plik */}
                             <button
                                 onClick={handleDownload}
-                                className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${downloadStatus === 'success'
-                                        ? 'bg-green-600 text-white'
+                                className={`neu-btn ${downloadStatus === 'success'
+                                        ? ''
                                         : downloadStatus === 'error'
-                                            ? 'bg-red-600 text-white'
-                                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            ? ''
+                                            : 'neu-btn-primary'
                                     }`}
+                                style={
+                                    downloadStatus === 'success'
+                                        ? { background: 'var(--color-success)', color: 'white' }
+                                        : downloadStatus === 'error'
+                                            ? { background: 'var(--color-error)', color: 'white' }
+                                            : {}
+                                }
                             >
                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -134,10 +151,8 @@ export default function BackupPage() {
                             {/* Kopiuj JSON */}
                             <button
                                 onClick={handleCopyJson}
-                                className={`flex items-center gap-2 rounded-lg border px-4 py-2 font-medium transition-colors ${copyStatus === 'copied'
-                                        ? 'border-green-600 bg-green-50 text-green-700'
-                                        : 'border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300'
-                                    }`}
+                                className={`neu-btn neu-btn-secondary ${copyStatus === 'copied' ? '' : ''}`}
+                                style={copyStatus === 'copied' ? { color: 'var(--color-success)' } : {}}
                             >
                                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -148,54 +163,57 @@ export default function BackupPage() {
                     </div>
 
                     {/* Gdy pobieranie nie działa */}
-                    <div className="rounded-xl bg-yellow-50 p-6 dark:bg-yellow-900/20">
-                        <h3 className="font-semibold text-yellow-800 dark:text-yellow-200">
+                    <div className="neu-flat p-5 animate-fadeInUp" style={{
+                        animationDelay: '0.3s',
+                        background: 'linear-gradient(145deg, #fef3c7, #fde68a)'
+                    }}>
+                        <h3 className="font-semibold" style={{ color: '#92400e' }}>
                             ⚠️ Pobieranie nie działa?
                         </h3>
-                        <p className="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                        <p className="mt-2 text-sm" style={{ color: '#78350f' }}>
                             Niektóre przeglądarki zarządzane przez organizację blokują pobieranie plików.
                             W takim przypadku:
                         </p>
-                        <ol className="mt-3 list-inside list-decimal space-y-1 text-sm text-yellow-700 dark:text-yellow-300">
+                        <ol className="mt-3 list-inside list-decimal space-y-1 text-sm" style={{ color: '#78350f' }}>
                             <li>Kliknij <strong>&quot;Kopiuj JSON&quot;</strong> powyżej</li>
                             <li>Otwórz Notatnik (Windows) lub TextEdit (Mac)</li>
                             <li>Wklej skopiowany tekst (Ctrl+V)</li>
-                            <li>Zapisz jako <code className="rounded bg-yellow-100 px-1 dark:bg-yellow-800">apteczka_backup.json</code></li>
+                            <li>Zapisz jako <code className="neu-tag text-xs">apteczka_backup.json</code></li>
                         </ol>
                     </div>
                 </>
             )}
 
             {/* Przywracanie */}
-            <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                <h2 className="font-semibold text-gray-900 dark:text-white">
+            <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
+                <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
                     📥 Przywracanie kopii zapasowej
                 </h2>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                     Aby przywrócić dane z kopii zapasowej, przejdź do zakładki <strong>&quot;Dodaj leki&quot;</strong>
                     i wczytaj plik .json lub wklej skopiowany JSON.
                 </p>
                 <Link
                     href="/dodaj"
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                    className="mt-4 inline-block neu-btn neu-btn-secondary"
                 >
                     Przejdź do importu →
                 </Link>
             </div>
 
             {/* Format pliku */}
-            <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                <h2 className="font-semibold text-gray-900 dark:text-white">
+            <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
+                <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
                     📄 Format pliku kopii zapasowej
                 </h2>
-                <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                     Jeśli chcesz ręcznie utworzyć lub edytować plik, użyj tego formatu:
                 </p>
-                <pre className="mt-3 overflow-auto rounded-lg bg-gray-900 p-4 text-xs text-green-400">
+                <pre className="mt-3 overflow-auto rounded-lg p-4 text-xs" style={{ background: '#1a1f1c', color: 'var(--color-accent-light)' }}>
                     {exampleBackup}
                 </pre>
-                <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                    Pola <code>id</code> i <code>dataDodania</code> zostaną wygenerowane automatycznie przy imporcie, jeśli ich brakuje.
+                <p className="mt-3 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    Pola <code className="neu-tag text-xs">id</code> i <code className="neu-tag text-xs">dataDodania</code> zostaną wygenerowane automatycznie przy imporcie, jeśli ich brakuje.
                 </p>
             </div>
         </div>

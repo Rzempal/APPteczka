@@ -2,6 +2,7 @@
 
 // src/app/konsultacja/page.tsx
 // Strona konsultacji AI – prompt do analizy objawów
+// Neumorphism Style
 
 import { useState, useEffect } from 'react';
 import type { Medicine } from '@/lib/types';
@@ -48,24 +49,27 @@ export default function KonsultacjaPage() {
     return (
         <div className="space-y-6">
             {/* Nagłówek */}
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="animate-fadeInUp">
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
                     🩺 Konsultacja AI
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                     Zapytaj AI lekarza, które z Twoich leków mogą pomóc przy objawach
                 </p>
             </div>
 
             {/* Disclaimer */}
-            <div className="rounded-xl border-2 border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+            <div className="neu-flat p-5 animate-fadeInUp" style={{
+                animationDelay: '0.1s',
+                background: 'linear-gradient(145deg, #fee2e2, #fecaca)'
+            }}>
                 <div className="flex items-start gap-3">
                     <span className="text-2xl">⚠️</span>
                     <div>
-                        <h4 className="font-bold text-red-800 dark:text-red-200">
+                        <h4 className="font-bold" style={{ color: '#991b1b' }}>
                             WAŻNE – przeczytaj przed użyciem
                         </h4>
-                        <ul className="mt-2 space-y-1 text-sm text-red-700 dark:text-red-300">
+                        <ul className="mt-2 space-y-1 text-sm" style={{ color: '#7f1d1d' }}>
                             <li>• To narzędzie <strong>NIE zastępuje</strong> wizyty u prawdziwego lekarza</li>
                             <li>• AI może się mylić – zawsze weryfikuj informacje</li>
                             <li>• W nagłych przypadkach dzwoń na 112 lub jedź na izbę przyjęć</li>
@@ -77,39 +81,42 @@ export default function KonsultacjaPage() {
 
             {/* Brak leków */}
             {medicines.length === 0 ? (
-                <div className="rounded-xl bg-orange-50 p-6 text-center dark:bg-orange-900/20">
-                    <p className="text-lg font-medium text-orange-800 dark:text-orange-200">
-                        ⚠️ Twoja apteczka jest pusta
+                <div className="neu-flat p-8 text-center animate-fadeInUp" style={{
+                    animationDelay: '0.2s',
+                    background: 'linear-gradient(145deg, #fef3c7, #fde68a)'
+                }}>
+                    <div className="neu-convex w-20 h-20 mx-auto mb-4 flex items-center justify-center animate-popIn">
+                        <span className="text-4xl">⚠️</span>
+                    </div>
+                    <p className="text-lg font-medium" style={{ color: '#92400e' }}>
+                        Twoja apteczka jest pusta
                     </p>
-                    <p className="mt-2 text-sm text-orange-700 dark:text-orange-300">
+                    <p className="mt-2 text-sm" style={{ color: '#78350f' }}>
                         Aby skorzystać z konsultacji, najpierw dodaj leki do apteczki.
                     </p>
                     <Link
                         href="/dodaj"
-                        className="mt-4 inline-block rounded-lg bg-orange-600 px-6 py-2 font-medium text-white hover:bg-orange-700"
+                        className="mt-6 inline-block neu-btn neu-btn-primary"
                     >
-                        Dodaj leki →
+                        ➕ Dodaj leki →
                     </Link>
                 </div>
             ) : (
                 <>
                     {/* Formularz */}
-                    <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
+                    <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
                         {/* Wybór objawów */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Wybierz objawy:
+                            <label className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                                🏥 Wybierz objawy:
                             </label>
-                            <div className="mt-2 flex flex-wrap gap-1.5">
+                            <div className="mt-3 flex flex-wrap gap-2">
                                 {ALLOWED_TAGS.objawy.map(symptom => (
                                     <button
                                         key={symptom}
                                         type="button"
                                         onClick={() => handleSymptomToggle(symptom)}
-                                        className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${selectedSymptoms.includes(symptom)
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-                                            }`}
+                                        className={`neu-tag transition-all ${selectedSymptoms.includes(symptom) ? 'active' : ''}`}
                                     >
                                         {symptom}
                                     </button>
@@ -118,12 +125,12 @@ export default function KonsultacjaPage() {
                         </div>
 
                         {/* Dodatkowe uwagi */}
-                        <div className="mt-4">
+                        <div className="mt-5">
                             <label
                                 htmlFor="notes"
-                                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                                className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}
                             >
-                                Dodatkowe uwagi (opcjonalne):
+                                📝 Dodatkowe uwagi (opcjonalne):
                             </label>
                             <textarea
                                 id="notes"
@@ -131,13 +138,14 @@ export default function KonsultacjaPage() {
                                 onChange={(e) => setAdditionalNotes(e.target.value)}
                                 placeholder="Np. objawy od 3 dni, temperatura ok. 38°C, ból nasila się wieczorem..."
                                 rows={3}
-                                className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                className="neu-input mt-2 text-sm"
+                                style={{ resize: 'vertical' }}
                             />
                         </div>
 
                         {/* Info o apteczce */}
-                        <div className="mt-4 rounded-lg bg-gray-50 p-3 dark:bg-gray-700">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <div className="neu-flat-sm mt-5 p-3">
+                            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                                 📦 Prompt zawrze listę {medicines.length} leków z Twojej apteczki
                             </p>
                         </div>
@@ -145,11 +153,11 @@ export default function KonsultacjaPage() {
 
                     {/* Podgląd promptu */}
                     {previewPrompt && (
-                        <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Podgląd promptu:
+                        <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
+                            <label className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                                📄 Podgląd promptu:
                             </label>
-                            <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-gray-900 p-4 text-xs text-green-400">
+                            <pre className="mt-2 max-h-64 overflow-auto rounded-lg p-4 text-xs" style={{ background: '#1a1f1c', color: 'var(--color-accent-light)' }}>
                                 {previewPrompt}
                             </pre>
                         </div>
@@ -159,12 +167,20 @@ export default function KonsultacjaPage() {
                     <button
                         onClick={handleCopyPrompt}
                         disabled={selectedSymptoms.length === 0}
-                        className={`w-full rounded-lg px-6 py-3 font-medium transition-colors ${copyStatus === 'copied'
-                                ? 'bg-green-600 text-white'
+                        className={`w-full neu-btn ${copyStatus === 'copied'
+                                ? ''
                                 : copyStatus === 'error'
-                                    ? 'bg-red-600 text-white'
-                                    : 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed'
-                            }`}
+                                    ? ''
+                                    : 'neu-btn-primary'
+                            } disabled:opacity-50 disabled:cursor-not-allowed animate-fadeInUp`}
+                        style={{
+                            animationDelay: '0.4s',
+                            ...(copyStatus === 'copied'
+                                ? { background: 'var(--color-success)', color: 'white' }
+                                : copyStatus === 'error'
+                                    ? { background: 'var(--color-error)', color: 'white' }
+                                    : {})
+                        }}
                     >
                         {copyStatus === 'copied' && '✅ Skopiowano! Wklej do ChatGPT/Claude/Gemini'}
                         {copyStatus === 'error' && '❌ Wybierz przynajmniej jeden objaw'}
@@ -172,9 +188,11 @@ export default function KonsultacjaPage() {
                     </button>
 
                     {/* Instrukcja */}
-                    <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
-                        <strong>💡 Jak użyć:</strong> Skopiuj prompt i wklej do ChatGPT, Claude lub Gemini.
-                        AI wcieli się w rolę lekarza i przeanalizuje, które leki z Twojej apteczki mogą pomóc.
+                    <div className="neu-flat p-4 animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
+                        <p className="text-sm" style={{ color: 'var(--color-accent)' }}>
+                            <strong>💡 Jak użyć:</strong> Skopiuj prompt i wklej do ChatGPT, Claude lub Gemini.
+                            AI wcieli się w rolę lekarza i przeanalizuje, które leki z Twojej apteczki mogą pomóc.
+                        </p>
                     </div>
                 </>
             )}

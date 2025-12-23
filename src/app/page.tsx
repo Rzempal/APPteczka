@@ -2,6 +2,7 @@
 
 // src/app/page.tsx
 // Strona główna – lista leków z filtrami, sortowaniem i eksportem PDF
+// Neumorphism Style
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Medicine, FilterState } from '@/lib/types';
@@ -97,7 +98,7 @@ export default function HomePage() {
       head: [['Nazwa leku', 'Termin ważności', 'Tagi']],
       body: tableData,
       styles: { fontSize: 9 },
-      headStyles: { fillColor: [59, 130, 246] },
+      headStyles: { fillColor: [16, 185, 129] }, // Emerald color
     });
 
     // Disclaimer
@@ -121,11 +122,11 @@ export default function HomePage() {
   // Skeleton podczas ładowania
   if (!isLoaded) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="h-10 w-48 rounded bg-gray-200 dark:bg-gray-700" />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="space-y-6">
+        <div className="neu-skeleton h-12 w-48" />
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-64 rounded-xl bg-gray-200 dark:bg-gray-700" />
+            <div key={i} className="neu-skeleton h-64" />
           ))}
         </div>
       </div>
@@ -135,12 +136,12 @@ export default function HomePage() {
   return (
     <div className="space-y-6">
       {/* Nagłówek strony */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fadeInUp">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Twoja apteczka
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+            💊 Twoja apteczka
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
             {medicines.length === 0
               ? 'Brak leków – dodaj leki w zakładce "Dodaj leki"'
               : `${medicines.length} leków w apteczce`
@@ -150,43 +151,29 @@ export default function HomePage() {
 
         {/* Akcje */}
         {medicines.length > 0 && (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
             {/* Sortowanie */}
-            <div className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-2 py-1 dark:border-gray-600 dark:bg-gray-800">
-              <span className="text-xs text-gray-500 dark:text-gray-400">Sortuj:</span>
-              <button
-                onClick={() => handleSortChange('nazwa')}
-                className={`rounded px-2 py-1 text-xs font-medium ${sortBy === 'nazwa'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400'
-                  }`}
-              >
-                Nazwa {sortBy === 'nazwa' && (sortDir === 'asc' ? '↑' : '↓')}
-              </button>
-              <button
-                onClick={() => handleSortChange('dataDodania')}
-                className={`rounded px-2 py-1 text-xs font-medium ${sortBy === 'dataDodania'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400'
-                  }`}
-              >
-                Data {sortBy === 'dataDodania' && (sortDir === 'asc' ? '↑' : '↓')}
-              </button>
-              <button
-                onClick={() => handleSortChange('terminWaznosci')}
-                className={`rounded px-2 py-1 text-xs font-medium ${sortBy === 'terminWaznosci'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400'
-                  }`}
-              >
-                Termin {sortBy === 'terminWaznosci' && (sortDir === 'asc' ? '↑' : '↓')}
-              </button>
+            <div className="neu-flat-sm flex items-center gap-1 px-3 py-2">
+              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Sortuj:</span>
+              {[
+                { key: 'nazwa', label: 'Nazwa' },
+                { key: 'dataDodania', label: 'Data' },
+                { key: 'terminWaznosci', label: 'Termin' },
+              ].map((opt) => (
+                <button
+                  key={opt.key}
+                  onClick={() => handleSortChange(opt.key as SortOption)}
+                  className={`neu-tag text-xs ${sortBy === opt.key ? 'active' : ''}`}
+                >
+                  {opt.label} {sortBy === opt.key && (sortDir === 'asc' ? '↑' : '↓')}
+                </button>
+              ))}
             </div>
 
             {/* Eksport PDF */}
             <button
               onClick={handleExportPDF}
-              className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              className="neu-btn neu-btn-secondary text-sm"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -201,7 +188,7 @@ export default function HomePage() {
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         {/* Sidebar z filtrami */}
         {medicines.length > 0 && (
-          <aside className="lg:sticky lg:top-20 lg:h-fit">
+          <aside className="lg:sticky lg:top-28 lg:h-fit">
             <Filters filters={filters} onFiltersChange={setFilters} />
           </aside>
         )}

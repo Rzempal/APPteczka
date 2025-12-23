@@ -1,7 +1,7 @@
 'use client';
 
 // src/components/MedicineCard.tsx
-// Karta pojedynczego leku
+// Karta pojedynczego leku - Neumorphism Style
 
 import { useState } from 'react';
 import type { Medicine } from '@/lib/types';
@@ -46,11 +46,11 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry }: Med
         setIsEditing(false);
     };
 
-    const statusColors = {
-        expired: 'bg-red-100 border-red-400 dark:bg-red-900/30',
-        'expiring-soon': 'bg-yellow-100 border-yellow-400 dark:bg-yellow-900/30',
-        valid: 'bg-green-100 border-green-400 dark:bg-green-900/30',
-        unknown: 'bg-gray-100 border-gray-300 dark:bg-gray-800'
+    const statusClasses = {
+        expired: 'neu-status-error',
+        'expiring-soon': 'neu-status-warning',
+        valid: 'neu-status-valid',
+        unknown: 'neu-status-unknown'
     };
 
     const statusLabels = {
@@ -62,32 +62,34 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry }: Med
 
     return (
         <article
-            className={`rounded-xl border-2 p-5 shadow-sm transition-all hover:shadow-md ${statusColors[expiryStatus]}`}
+            className={`p-5 rounded-2xl transition-all duration-300 hover:-translate-y-1 ${statusClasses[expiryStatus]}`}
+            style={{ borderRadius: '20px' }}
         >
             {/* Nagłówek */}
             <header className="mb-3 flex items-start justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {medicine.nazwa || <span className="italic text-gray-500">Nazwa nieznana</span>}
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>
+                    {medicine.nazwa || <span className="italic" style={{ color: 'var(--color-text-muted)' }}>Nazwa nieznana</span>}
                 </h3>
                 <button
                     onClick={() => onDelete(medicine.id)}
-                    className="rounded-full p-1 text-gray-400 hover:bg-red-100 hover:text-red-600 transition-colors"
+                    className="neu-tag p-2 hover:scale-110 transition-transform"
                     title="Usuń lek"
                     aria-label="Usuń lek"
+                    style={{ borderRadius: '50%' }}
                 >
-                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: 'var(--color-error)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </header>
 
             {/* Opis */}
-            <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">{medicine.opis}</p>
+            <p className="mb-3 text-sm" style={{ color: 'var(--color-text-muted)' }}>{medicine.opis}</p>
 
             {/* Wskazania */}
             <div className="mb-3">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Wskazania:</span>
-                <ul className="mt-1 list-inside list-disc text-sm text-gray-700 dark:text-gray-300">
+                <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>Wskazania:</span>
+                <ul className="mt-1 list-inside list-disc text-sm" style={{ color: 'var(--color-text)' }}>
                     {medicine.wskazania.map((wskazanie, i) => (
                         <li key={i}>{wskazanie}</li>
                     ))}
@@ -99,7 +101,12 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry }: Med
                 {medicine.tagi.map((tag, i) => (
                     <span
                         key={i}
-                        className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        className="neu-tag text-xs"
+                        style={{
+                            background: 'linear-gradient(145deg, var(--color-accent-light), var(--color-accent))',
+                            color: 'white',
+                            padding: '0.25rem 0.625rem'
+                        }}
                     >
                         {tag}
                     </span>
@@ -107,13 +114,13 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry }: Med
             </div>
 
             {/* Termin ważności */}
-            <div className="border-t border-gray-200 pt-3 dark:border-gray-700">
+            <div className="pt-3" style={{ borderTop: '1px solid var(--shadow-dark)' }}>
                 <div className="flex items-center justify-between">
                     <div>
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Termin ważności:</span>
+                        <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>Termin ważności:</span>
                         {!isEditing ? (
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium">{formatDate(medicine.terminWaznosci)}</span>
+                                <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{formatDate(medicine.terminWaznosci)}</span>
                                 <span className="text-xs">{statusLabels[expiryStatus]}</span>
                             </div>
                         ) : (
@@ -121,7 +128,8 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry }: Med
                                 type="date"
                                 value={expiryDate}
                                 onChange={(e) => setExpiryDate(e.target.value)}
-                                className="mt-1 block rounded border border-gray-300 px-2 py-1 text-sm dark:bg-gray-700 dark:border-gray-600"
+                                className="neu-input mt-1 text-sm"
+                                style={{ padding: '0.5rem', fontSize: '0.875rem' }}
                             />
                         )}
                     </div>
@@ -129,7 +137,8 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry }: Med
                     {!isEditing ? (
                         <button
                             onClick={() => setIsEditing(true)}
-                            className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                            className="neu-tag text-xs"
+                            style={{ color: 'var(--color-accent)' }}
                         >
                             Edytuj datę
                         </button>
@@ -137,13 +146,14 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry }: Med
                         <div className="flex gap-2">
                             <button
                                 onClick={handleSaveExpiry}
-                                className="text-xs text-green-600 hover:underline"
+                                className="neu-tag text-xs"
+                                style={{ color: 'var(--color-success)' }}
                             >
                                 Zapisz
                             </button>
                             <button
                                 onClick={() => setIsEditing(false)}
-                                className="text-xs text-gray-500 hover:underline"
+                                className="neu-tag text-xs"
                             >
                                 Anuluj
                             </button>
@@ -153,7 +163,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry }: Med
             </div>
 
             {/* Data dodania */}
-            <div className="mt-2 text-xs text-gray-400">
+            <div className="mt-2 text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 Dodano: {formatDate(medicine.dataDodania)}
             </div>
         </article>

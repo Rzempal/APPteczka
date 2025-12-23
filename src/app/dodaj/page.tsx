@@ -2,6 +2,7 @@
 
 // src/app/dodaj/page.tsx
 // Strona dodawania leków – prompt rozpoznawania + import JSON
+// Neumorphism Style
 
 import { useState, useEffect } from 'react';
 import { generateImportPrompt, copyToClipboard } from '@/lib/prompts';
@@ -33,45 +34,43 @@ export default function DodajLekiPage() {
     return (
         <div className="space-y-6">
             {/* Nagłówek */}
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="animate-fadeInUp">
+                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
                     ➕ Dodaj leki
                 </h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
                     Zeskanuj opakowania leków przez AI i zaimportuj je do apteczki
                 </p>
             </div>
 
             {/* Krok 1: Prompt */}
-            <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
+            <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
                 <div className="flex items-start gap-4">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold dark:bg-blue-900 dark:text-blue-300">
+                    <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-accent)', borderRadius: '50%' }}>
                         1
                     </div>
                     <div className="flex-1">
-                        <h2 className="font-semibold text-gray-900 dark:text-white">
+                        <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
                             Skopiuj prompt dla AI
                         </h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                             Wklej ten prompt do ChatGPT, Claude lub Gemini, a następnie dodaj zdjęcie opakowań leków.
                         </p>
 
                         {/* Podgląd promptu */}
                         <details className="mt-3">
-                            <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400">
-                                Pokaż podgląd promptu
+                            <summary className="cursor-pointer text-sm" style={{ color: 'var(--color-accent)' }}>
+                                👁️ Pokaż podgląd promptu
                             </summary>
-                            <pre className="mt-2 max-h-48 overflow-auto rounded-lg bg-gray-900 p-3 text-xs text-green-400">
+                            <pre className="mt-2 max-h-48 overflow-auto rounded-lg p-3 text-xs" style={{ background: '#1a1f1c', color: 'var(--color-accent-light)' }}>
                                 {generateImportPrompt()}
                             </pre>
                         </details>
 
                         <button
                             onClick={handleCopyPrompt}
-                            className={`mt-4 flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${copyStatus === 'copied'
-                                    ? 'bg-green-600 text-white'
-                                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                                }`}
+                            className={`mt-4 neu-btn ${copyStatus === 'copied' ? '' : 'neu-btn-primary'}`}
+                            style={copyStatus === 'copied' ? { background: 'var(--color-success)', color: 'white' } : {}}
                         >
                             {copyStatus === 'copied' ? '✅ Skopiowano!' : '📋 Kopiuj prompt'}
                         </button>
@@ -80,16 +79,16 @@ export default function DodajLekiPage() {
             </div>
 
             {/* Krok 2: Zdjęcie */}
-            <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
+            <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
                 <div className="flex items-start gap-4">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 font-bold dark:bg-gray-700 dark:text-gray-300">
+                    <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-text-muted)', borderRadius: '50%' }}>
                         2
                     </div>
                     <div>
-                        <h2 className="font-semibold text-gray-900 dark:text-white">
+                        <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
                             Zrób zdjęcie i wyślij do AI
                         </h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                             Zrób zdjęcie opakowań leków (może być kilka na jednym zdjęciu) i wyślij razem z promptem.
                             AI zwróci dane w formacie JSON.
                         </p>
@@ -98,25 +97,25 @@ export default function DodajLekiPage() {
             </div>
 
             {/* Krok 3: Import */}
-            <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-800">
+            <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
                 <div className="flex items-start gap-4">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-600 font-bold dark:bg-gray-700 dark:text-gray-300">
+                    <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-text-muted)', borderRadius: '50%' }}>
                         3
                     </div>
                     <div className="flex-1">
-                        <h2 className="font-semibold text-gray-900 dark:text-white">
+                        <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
                             Zaimportuj odpowiedź AI
                         </h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                             Skopiuj odpowiedź JSON z AI i wklej poniżej, lub wczytaj plik z kopii zapasowej.
                         </p>
 
                         {!showImport ? (
                             <button
                                 onClick={() => setShowImport(true)}
-                                className="mt-4 rounded-lg border border-blue-600 px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                className="mt-4 neu-btn neu-btn-secondary"
                             >
-                                Pokaż formularz importu
+                                📝 Pokaż formularz importu
                             </button>
                         ) : (
                             <div className="mt-4">
@@ -128,15 +127,18 @@ export default function DodajLekiPage() {
             </div>
 
             {/* Status apteczki */}
-            <div className="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-6 dark:from-blue-900/20 dark:to-indigo-900/20">
+            <div className="neu-flat p-6 animate-fadeInUp" style={{
+                animationDelay: '0.4s',
+                background: 'linear-gradient(145deg, var(--color-bg-light), var(--color-bg-dark))'
+            }}>
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Leków w apteczce:</p>
-                        <p className="text-3xl font-bold text-gray-900 dark:text-white">{medicineCount}</p>
+                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Leków w apteczce:</p>
+                        <p className="text-3xl font-bold" style={{ color: 'var(--color-accent)' }}>{medicineCount}</p>
                     </div>
                     <Link
                         href="/"
-                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                        className="neu-btn neu-btn-primary"
                     >
                         Zobacz apteczkę →
                     </Link>
