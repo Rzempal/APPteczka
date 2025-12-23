@@ -74,7 +74,25 @@ export default function HomePage() {
     const { jsPDF } = await import('jspdf');
     const autoTable = (await import('jspdf-autotable')).default;
 
-    const doc = new jsPDF();
+    // Pobierz font Roboto z CDN (obsługuje polskie znaki)
+    const fontUrl = 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5Q.ttf';
+
+    let doc: InstanceType<typeof jsPDF>;
+
+    try {
+      // Próbuj załadować font Roboto dla polskich znaków
+      const response = await fetch(fontUrl);
+      const fontBuffer = await response.arrayBuffer();
+      const fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBuffer)));
+
+      doc = new jsPDF();
+      doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
+      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+      doc.setFont('Roboto');
+    } catch {
+      // Fallback do domyślnego fonta (bez polskich znaków)
+      doc = new jsPDF();
+    }
 
     // Tytuł
     doc.setFontSize(18);
@@ -84,28 +102,46 @@ export default function HomePage() {
     doc.setTextColor(100);
     doc.text(`Wygenerowano: ${new Date().toLocaleDateString('pl-PL')}`, 14, 28);
 
-    // Tabelka
+    // Tabelka: Nazwa, Opis, Wskazania, Termin ważności
     const tableData = sortedMedicines.map(m => [
       m.nazwa || 'Nieznany',
+      m.opis.length > 60 ? m.opis.substring(0, 57) + '...' : m.opis,
+      m.wskazania.slice(0, 3).join(', '),
       m.terminWaznosci
         ? new Date(m.terminWaznosci).toLocaleDateString('pl-PL')
-        : 'Brak',
-      m.tagi.slice(0, 3).join(', ') || '-'
+        : 'Brak'
     ]);
 
     autoTable(doc, {
       startY: 35,
-      head: [['Nazwa leku', 'Termin ważności', 'Tagi']],
+      head: [['Nazwa', 'Opis', 'Wskazania', 'Termin ważności']],
       body: tableData,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [16, 185, 129] }, // Emerald color
+      styles: {
+        fontSize: 8,
+        font: 'Roboto',
+        cellPadding: 3,
+      },
+      headStyles: {
+        fillColor: [16, 185, 129],
+        font: 'Roboto',
+        fontStyle: 'bold',
+      },
+      columnStyles: {
+        0: { cellWidth: 35 },  // Nazwa
+        1: { cellWidth: 55 },  // Opis
+        2: { cellWidth: 50 },  // Wskazania
+        3: { cellWidth: 25 },  // Termin
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
     });
 
     // Disclaimer
     const finalY = (doc as typeof doc & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 100;
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text('APPteczka - narzędzie informacyjne, nie porada medyczna.', 14, finalY + 10);
+    doc.text('APPteczka - narzedzie informacyjne, nie porada medyczna.', 14, finalY + 10);
 
     doc.save(`apteczka_${new Date().toISOString().split('T')[0]}.pdf`);
   };
