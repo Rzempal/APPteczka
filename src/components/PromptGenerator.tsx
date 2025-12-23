@@ -1,7 +1,7 @@
 'use client';
 
 // src/components/PromptGenerator.tsx
-// Generator promptów do kopiowania
+// Generator promptów do kopiowania - Neumorphism Style
 
 import { useState } from 'react';
 import { generateImportPrompt, generateAnalysisPrompt, copyToClipboard } from '@/lib/prompts';
@@ -56,51 +56,45 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
     return (
         <div className="space-y-4">
             {/* Wybór typu promptu */}
-            <div className="flex gap-2">
+            <div className="neu-flat-sm p-1 inline-flex gap-1">
                 <button
                     onClick={() => setActivePrompt('import')}
-                    className={`rounded-lg px-4 py-2 font-medium transition-colors ${activePrompt === 'import'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-                        }`}
+                    className={`neu-tag transition-all ${activePrompt === 'import' ? 'active' : ''}`}
                 >
                     📷 Rozpoznawanie leków
                 </button>
                 <button
                     onClick={() => setActivePrompt('analysis')}
-                    className={`rounded-lg px-4 py-2 font-medium transition-colors ${activePrompt === 'analysis'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300'
-                        }`}
+                    className={`neu-tag transition-all ${activePrompt === 'analysis' ? 'active' : ''}`}
                 >
                     🩺 Konsultacja lekarska
                 </button>
             </div>
 
             {/* Opis promptu */}
-            <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+            <div className="neu-flat p-5">
                 {activePrompt === 'import' ? (
                     <>
-                        <h3 className="font-medium text-gray-900 dark:text-white">
+                        <h3 className="font-medium" style={{ color: 'var(--color-text)' }}>
                             📷 Prompt do rozpoznawania leków ze zdjęcia
                         </h3>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                             Wklej ten prompt do ChatGPT, Claude lub Gemini, a następnie dodaj zdjęcie opakowań leków.
                             AI zwróci dane w formacie JSON, które możesz zaimportować do apteczki.
                         </p>
                     </>
                 ) : (
                     <>
-                        <h3 className="font-medium text-gray-900 dark:text-white">
+                        <h3 className="font-medium" style={{ color: 'var(--color-text)' }}>
                             🩺 Konsultacja z wirtualnym lekarzem
                         </h3>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                             AI wcieli się w rolę lekarza internisty i przeanalizuje, które z Twoich leków mogą pomóc przy objawach.
                         </p>
 
                         {/* Wybór objawów */}
                         <div className="mt-4">
-                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                            <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
                                 Wybierz objawy:
                             </span>
                             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -108,21 +102,18 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
                                     <button
                                         key={symptom}
                                         onClick={() => handleSymptomToggle(symptom)}
-                                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors ${selectedSymptoms.includes(symptom)
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300'
-                                            }`}
+                                        className={`neu-tag text-xs transition-all ${selectedSymptoms.includes(symptom) ? 'active' : ''}`}
                                     >
                                         {symptom}
                                     </button>
                                 ))}
                             </div>
 
-                            {/* Dodatkowe uwagi - NOWE */}
+                            {/* Dodatkowe uwagi */}
                             <div className="mt-4">
                                 <label
                                     htmlFor="additional-notes"
-                                    className="text-xs font-medium text-gray-500 dark:text-gray-400"
+                                    className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}
                                 >
                                     Dodatkowe uwagi (opcjonalne):
                                 </label>
@@ -130,14 +121,15 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
                                     id="additional-notes"
                                     value={additionalNotes}
                                     onChange={(e) => setAdditionalNotes(e.target.value)}
-                                    placeholder="Np. &quot;Objawy od 3 dni, ból nasila się wieczorem, temperatura ok. 38°C&quot;"
+                                    placeholder='Np. "Objawy od 3 dni, ból nasila się wieczorem, temperatura ok. 38°C"'
                                     rows={3}
-                                    className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder:text-gray-500"
+                                    className="neu-input mt-1 text-sm"
+                                    style={{ resize: 'vertical' }}
                                 />
                             </div>
 
                             {medicines.length === 0 && (
-                                <p className="mt-2 text-xs text-orange-600 dark:text-orange-400">
+                                <p className="mt-2 text-xs" style={{ color: 'var(--color-warning)' }}>
                                     ⚠️ Apteczka jest pusta. Najpierw zaimportuj leki.
                                 </p>
                             )}
@@ -148,14 +140,14 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
 
             {/* Disclaimer - WZMOCNIONY dla analizy */}
             {activePrompt === 'analysis' && (
-                <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+                <div className="neu-flat p-4" style={{ background: 'linear-gradient(145deg, #fee2e2, #fecaca)' }}>
                     <div className="flex items-start gap-3">
                         <span className="text-2xl">⚠️</span>
                         <div>
-                            <h4 className="font-bold text-red-800 dark:text-red-200">
+                            <h4 className="font-bold" style={{ color: '#991b1b' }}>
                                 WAŻNE – przeczytaj przed użyciem
                             </h4>
-                            <ul className="mt-2 space-y-1 text-sm text-red-700 dark:text-red-300">
+                            <ul className="mt-2 space-y-1 text-sm" style={{ color: '#7f1d1d' }}>
                                 <li>• To narzędzie <strong>NIE zastępuje</strong> wizyty u prawdziwego lekarza</li>
                                 <li>• AI może się mylić – zawsze weryfikuj informacje</li>
                                 <li>• W nagłych przypadkach dzwoń na 112 lub jedź na izbę przyjęć</li>
@@ -168,10 +160,10 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
 
             {/* Podgląd promptu */}
             <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Podgląd promptu:
+                <label className="mb-1 block text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                    📄 Podgląd promptu:
                 </label>
-                <pre className="max-h-64 overflow-auto rounded-lg bg-gray-900 p-4 text-xs text-green-400">
+                <pre className="max-h-64 overflow-auto rounded-lg p-4 text-xs" style={{ background: '#1a1f1c', color: 'var(--color-accent-light)' }}>
                     {previewPrompt}
                 </pre>
             </div>
@@ -180,12 +172,19 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
             <button
                 onClick={handleCopy}
                 disabled={activePrompt === 'analysis' && (selectedSymptoms.length === 0 || medicines.length === 0)}
-                className={`w-full rounded-lg px-6 py-3 font-medium transition-colors ${copyStatus === 'copied'
-                    ? 'bg-green-600 text-white'
-                    : copyStatus === 'error'
-                        ? 'bg-red-600 text-white'
-                        : 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed'
-                    }`}
+                className={`w-full neu-btn ${copyStatus === 'copied'
+                        ? ''
+                        : copyStatus === 'error'
+                            ? ''
+                            : 'neu-btn-primary'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={
+                    copyStatus === 'copied'
+                        ? { background: 'var(--color-success)', color: 'white' }
+                        : copyStatus === 'error'
+                            ? { background: 'var(--color-error)', color: 'white' }
+                            : {}
+                }
             >
                 {copyStatus === 'copied' && '✅ Skopiowano!'}
                 {copyStatus === 'error' && '❌ Błąd (wybierz objawy)'}
@@ -194,8 +193,10 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
 
             {/* Instrukcja dla importu */}
             {activePrompt === 'import' && (
-                <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900/30 dark:text-blue-200">
-                    <strong>💡 Jak użyć:</strong> Skopiuj prompt, wklej do ChatGPT/Claude/Gemini, dodaj zdjęcie leków, skopiuj odpowiedź JSON i zaimportuj w zakładce &quot;Import danych&quot;.
+                <div className="neu-flat p-4">
+                    <p className="text-sm" style={{ color: 'var(--color-accent)' }}>
+                        <strong>💡 Jak użyć:</strong> Skopiuj prompt, wklej do ChatGPT/Claude/Gemini, dodaj zdjęcie leków, skopiuj odpowiedź JSON i zaimportuj w zakładce &quot;Import danych&quot;.
+                    </p>
                 </div>
             )}
         </div>

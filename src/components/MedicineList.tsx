@@ -1,7 +1,7 @@
 'use client';
 
 // src/components/MedicineList.tsx
-// Lista/siatka kart leków
+// Lista/siatka kart leków - Neumorphism Style
 
 import type { Medicine, FilterState } from '@/lib/types';
 import MedicineCard from './MedicineCard';
@@ -79,19 +79,21 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
 
     if (medicines.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="mb-4 text-6xl">💊</div>
-                <h2 className="mb-2 text-xl font-semibold text-gray-700 dark:text-gray-300">
+            <div className="neu-flat p-12 text-center animate-fadeInUp">
+                <div className="neu-convex w-24 h-24 mx-auto mb-6 flex items-center justify-center animate-popIn">
+                    <span className="text-5xl">💊</span>
+                </div>
+                <h2 className="mb-2 text-xl font-semibold" style={{ color: 'var(--color-text)' }}>
                     Twoja apteczka jest pusta
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400">
+                <p className="mb-6" style={{ color: 'var(--color-text-muted)' }}>
                     Zaimportuj leki, aby rozpocząć zarządzanie apteczką.
                 </p>
                 <a
-                    href="/import"
-                    className="mt-4 rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700 transition-colors"
+                    href="/dodaj"
+                    className="neu-btn neu-btn-primary inline-flex"
                 >
-                    Importuj leki
+                    ➕ Importuj leki
                 </a>
             </div>
         );
@@ -99,12 +101,14 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
 
     if (filteredMedicines.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="mb-4 text-6xl">🔍</div>
-                <h2 className="mb-2 text-xl font-semibold text-gray-700 dark:text-gray-300">
+            <div className="neu-flat p-12 text-center animate-fadeInUp">
+                <div className="neu-convex w-24 h-24 mx-auto mb-6 flex items-center justify-center animate-popIn">
+                    <span className="text-5xl">🔍</span>
+                </div>
+                <h2 className="mb-2 text-xl font-semibold" style={{ color: 'var(--color-text)' }}>
                     Brak wyników
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400">
+                <p style={{ color: 'var(--color-text-muted)' }}>
                     Żaden lek nie pasuje do wybranych filtrów.
                 </p>
             </div>
@@ -113,18 +117,26 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
 
     return (
         <div className="space-y-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-                Znaleziono: {filteredMedicines.length} z {medicines.length} leków
+            {/* Counter */}
+            <div className="neu-tag inline-flex animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
+                <span>📦</span>
+                <span className="ml-1">Znaleziono: {filteredMedicines.length} z {medicines.length} leków</span>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredMedicines.map(medicine => (
-                    <MedicineCard
+            {/* Grid z kartami */}
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredMedicines.map((medicine, index) => (
+                    <div
                         key={medicine.id}
-                        medicine={medicine}
-                        onDelete={onDelete}
-                        onUpdateExpiry={onUpdateExpiry}
-                    />
+                        className="animate-fadeInUp"
+                        style={{ animationDelay: `${0.1 + index * 0.05}s` }}
+                    >
+                        <MedicineCard
+                            medicine={medicine}
+                            onDelete={onDelete}
+                            onUpdateExpiry={onUpdateExpiry}
+                        />
+                    </div>
                 ))}
             </div>
         </div>
