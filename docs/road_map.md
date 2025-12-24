@@ -82,6 +82,7 @@
 | **Design neumorficzny** | ✅ |
 | **Animacje scroll + button press** | ✅ |
 | **Etykiety użytkownika (labels)** | ✅ |
+| **Notatki użytkownika** | ✅ |
 | Persistencja localStorage | ✅ |
 
 ---

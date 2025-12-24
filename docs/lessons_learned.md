@@ -44,4 +44,41 @@ neu-tag active
 
 ---
 
+## 2. Ucinanie cieni neumorficznych przez brak paddingu
+
+**Data:** 2025-12-24  
+**Kontekst:** Karty leków - przyciski przy prawej krawędzi kontenera
+
+### ❌ Błąd
+
+Przyciski z `box-shadow` neumorficznym (`.neu-tag`) umieszczone przy prawej krawędzi kontenera mają obcięty cień, gdy kontener ma `overflow: hidden` lub brak odpowiedniego paddingu.
+
+### ✅ Poprawne rozwiązanie
+
+Dodaj prawy padding do kontenerów z elementami neumorficznymi:
+
+```css
+pr-1  /* Tailwind: 0.25rem / 4px */
+```
+
+### Przykład
+
+```jsx
+/* ❌ Błędnie - cień ucięty */
+<div className="flex justify-between">
+    <button className="neu-tag">Edytuj</button>
+</div>
+
+/* ✅ Poprawnie - cień widoczny */
+<div className="flex justify-between pr-1">
+    <button className="neu-tag">Edytuj</button>
+</div>
+```
+
+### Zasada ogólna
+
+Elementy z cieniami zewnętrznymi (box-shadow) wymagają odpowiedniego paddingu w kontenerze nadrzędnym, aby cień nie był obcinany.
+
+---
+
 > 📅 **Ostatnia aktualizacja:** 2025-12-24

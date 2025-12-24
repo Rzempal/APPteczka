@@ -46,6 +46,7 @@ export interface Medicine {
     wskazania: string[];
     tagi: string[];
     labels?: string[];        // ID etykiet użytkownika
+    notatka?: string;         // Notatka użytkownika
     terminWaznosci?: string;  // ISO date string (YYYY-MM-DD)
     dataDodania: string;      // ISO date string
 }

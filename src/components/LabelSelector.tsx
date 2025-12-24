@@ -12,9 +12,10 @@ interface LabelSelectorProps {
     selectedLabelIds: string[];
     onChange: (labelIds: string[]) => void;
     onLabelsCreated?: () => void;
+    buttonPosition?: 'left' | 'right';
 }
 
-export default function LabelSelector({ selectedLabelIds, onChange, onLabelsCreated }: LabelSelectorProps) {
+export default function LabelSelector({ selectedLabelIds, onChange, onLabelsCreated, buttonPosition = 'left' }: LabelSelectorProps) {
     const [isOpen, setIsOpen] = useState(false);
     const [labels, setLabels] = useState<UserLabel[]>([]);
     const [isCreating, setIsCreating] = useState(false);
@@ -90,111 +91,134 @@ export default function LabelSelector({ selectedLabelIds, onChange, onLabelsCrea
     const colorOptions = Object.entries(LABEL_COLORS) as [LabelColor, typeof LABEL_COLORS[LabelColor]][];
 
     return (
-        <div className="relative" ref={dropdownRef}>
-            {/* Przycisk otwierający */}
-            <button
-                onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-                className="neu-tag text-xs flex items-center gap-1"
-                style={{ color: 'var(--color-accent)' }}
-            >
-                🏷️ Etykiety
-                {selectedLabelIds.length > 0 && (
-                    <span className="ml-1 px-1.5 py-0.5 rounded-full text-white text-xs"
-                        style={{ backgroundColor: 'var(--color-accent)' }}>
-                        {selectedLabelIds.length}
-                    </span>
-                )}
-            </button>
-
-            {/* Dropdown */}
-            {isOpen && (
-                <div
-                    className="absolute left-0 bottom-full mb-1 z-[100] neu-flat p-3 min-w-[200px] animate-popIn"
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    {/* Limit info */}
-                    {!canAddMore && (
-                        <p className="text-xs mb-2" style={{ color: 'var(--color-warning)' }}>
-                            Max {MAX_LABELS_PER_MEDICINE} etykiet na lek
-                        </p>
-                    )}
-
-                    {/* Lista etykiet */}
-                    {labels.length > 0 ? (
-                        <div className="space-y-1.5 mb-2">
-                            {labels.map(label => {
-                                const isSelected = selectedLabelIds.includes(label.id);
-                                const isDisabled = !isSelected && !canAddMore;
-
-                                return (
-                                    <button
-                                        key={label.id}
-                                        onClick={() => !isDisabled && handleToggle(label.id)}
-                                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs transition-all ${isSelected ? 'neu-tag active' : 'neu-tag'
-                                            } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        disabled={isDisabled}
-                                    >
-                                        <span
-                                            className="w-3 h-3 rounded-full flex-shrink-0"
-                                            style={{ backgroundColor: LABEL_COLORS[label.color].hex }}
-                                        />
-                                        <span className={isSelected ? 'text-white' : ''}>{label.name}</span>
-                                        {isSelected && <span className="ml-auto">✓</span>}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ) : !isCreating && (
-                        <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                            Brak etykiet
-                        </p>
-                    )}
-
-                    {/* Formularz tworzenia */}
-                    {isCreating ? (
-                        <div className="space-y-2 pt-2" style={{ borderTop: '1px solid var(--shadow-dark)' }}>
-                            <input
-                                type="text"
-                                value={newName}
-                                onChange={(e) => setNewName(e.target.value)}
-                                placeholder="Nazwa..."
-                                className="neu-input text-xs w-full"
-                                style={{ padding: '0.375rem' }}
-                                maxLength={20}
-                                autoFocus
-                                onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
-                            />
-                            <div className="flex flex-wrap gap-1">
-                                {colorOptions.map(([key, value]) => (
-                                    <button
-                                        key={key}
-                                        onClick={() => setNewColor(key)}
-                                        className={`w-5 h-5 rounded-full ${newColor === key ? 'ring-2 ring-offset-1' : ''}`}
-                                        style={{ backgroundColor: value.hex }}
-                                        title={value.name}
-                                    />
-                                ))}
-                            </div>
-                            {error && <p className="text-xs" style={{ color: 'var(--color-error)' }}>{error}</p>}
-                            <div className="flex gap-1">
-                                <button onClick={handleCreate} className="neu-tag text-xs" style={{ color: 'var(--color-success)' }}>Zapisz</button>
-                                <button onClick={() => { setIsCreating(false); setError(''); }} className="neu-tag text-xs">Anuluj</button>
-                            </div>
-                        </div>
-                    ) : labels.length < MAX_LABELS_GLOBAL && (
-                        <button
-                            onClick={() => setIsCreating(true)}
-                            className="w-full neu-tag text-xs mt-1"
-                            style={{ color: 'var(--color-accent)' }}
+        <div className={`relative ${buttonPosition === 'right' ? 'flex flex-wrap items-start justify-between gap-2 pr-1' : ''}`} ref={dropdownRef}>
+            {/* Wyświetlanie wybranych etykiet - przed przyciskiem gdy buttonPosition='right' */}
+            {buttonPosition === 'right' && (
+                <div className="flex flex-wrap gap-1 p-1 flex-1 min-h-[28px]">
+                    {selectedLabels.map(label => (
+                        <span
+                            key={label.id}
+                            className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+                            style={{ backgroundColor: LABEL_COLORS[label.color].hex, color: 'white' }}
                         >
-                            + Nowa etykieta
-                        </button>
-                    )}
+                            {label.name}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); handleToggle(label.id); }}
+                                className="opacity-70 hover:opacity-100"
+                            >
+                                ×
+                            </button>
+                        </span>
+                    ))}
                 </div>
             )}
 
-            {/* Wyświetlanie wybranych etykiet (poza dropdownem) */}
-            {selectedLabels.length > 0 && !isOpen && (
+            {/* Przycisk otwierający */}
+            <div className={buttonPosition === 'right' ? 'flex-shrink-0' : ''}>
+                <button
+                    onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+                    className="neu-tag text-xs flex items-center gap-1"
+                    style={{ color: 'var(--color-accent)' }}
+                >
+                    🏷️ Etykiety
+                    {selectedLabelIds.length > 0 && (
+                        <span className="ml-1 px-1.5 py-0.5 rounded-full text-white text-xs"
+                            style={{ backgroundColor: 'var(--color-accent)' }}>
+                            {selectedLabelIds.length}
+                        </span>
+                    )}
+                </button>
+
+                {/* Dropdown */}
+                {isOpen && (
+                    <div
+                        className={`absolute ${buttonPosition === 'right' ? 'right-0' : 'left-0'} bottom-full mb-1 z-[200] neu-flat p-3 pr-4 min-w-[200px] animate-popIn`}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Limit info */}
+                        {!canAddMore && (
+                            <p className="text-xs mb-2" style={{ color: 'var(--color-warning)' }}>
+                                Max {MAX_LABELS_PER_MEDICINE} etykiet na lek
+                            </p>
+                        )}
+
+                        {/* Lista etykiet */}
+                        {labels.length > 0 ? (
+                            <div className="space-y-1.5 mb-2">
+                                {labels.map(label => {
+                                    const isSelected = selectedLabelIds.includes(label.id);
+                                    const isDisabled = !isSelected && !canAddMore;
+
+                                    return (
+                                        <button
+                                            key={label.id}
+                                            onClick={() => !isDisabled && handleToggle(label.id)}
+                                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left text-xs transition-all ${isSelected ? 'neu-tag active' : 'neu-tag'
+                                                } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                            disabled={isDisabled}
+                                        >
+                                            <span
+                                                className="w-3 h-3 rounded-full flex-shrink-0"
+                                                style={{ backgroundColor: LABEL_COLORS[label.color].hex }}
+                                            />
+                                            <span className={isSelected ? 'text-white' : ''}>{label.name}</span>
+                                            {isSelected && <span className="ml-auto">✓</span>}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        ) : !isCreating && (
+                            <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                                Brak etykiet
+                            </p>
+                        )}
+
+                        {/* Formularz tworzenia */}
+                        {isCreating ? (
+                            <div className="space-y-2 pt-2" style={{ borderTop: '1px solid var(--shadow-dark)' }}>
+                                <input
+                                    type="text"
+                                    value={newName}
+                                    onChange={(e) => setNewName(e.target.value)}
+                                    placeholder="Nazwa..."
+                                    className="neu-input text-xs w-full"
+                                    style={{ padding: '0.375rem' }}
+                                    maxLength={20}
+                                    autoFocus
+                                    onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+                                />
+                                <div className="flex flex-wrap gap-1">
+                                    {colorOptions.map(([key, value]) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setNewColor(key)}
+                                            className={`w-5 h-5 rounded-full ${newColor === key ? 'ring-2 ring-offset-1' : ''}`}
+                                            style={{ backgroundColor: value.hex }}
+                                            title={value.name}
+                                        />
+                                    ))}
+                                </div>
+                                {error && <p className="text-xs" style={{ color: 'var(--color-error)' }}>{error}</p>}
+                                <div className="flex gap-1">
+                                    <button onClick={handleCreate} className="neu-tag text-xs" style={{ color: 'var(--color-success)' }}>Zapisz</button>
+                                    <button onClick={() => { setIsCreating(false); setError(''); }} className="neu-tag text-xs">Anuluj</button>
+                                </div>
+                            </div>
+                        ) : labels.length < MAX_LABELS_GLOBAL && (
+                            <button
+                                onClick={() => setIsCreating(true)}
+                                className="w-full neu-tag text-xs mt-1"
+                                style={{ color: 'var(--color-accent)' }}
+                            >
+                                + Nowa etykieta
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Wyświetlanie wybranych etykiet (po przycisku) - tylko gdy buttonPosition='left' */}
+            {buttonPosition === 'left' && selectedLabels.length > 0 && !isOpen && (
                 <div className="flex flex-wrap gap-1 mt-1.5">
                     {selectedLabels.map(label => (
                         <span

@@ -16,6 +16,7 @@ interface MedicineListProps {
     onDelete: (id: string) => void;
     onUpdateExpiry: (id: string, date: string | undefined) => void;
     onUpdateLabels: (id: string, labelIds: string[]) => void;
+    onUpdateNote: (id: string, note: string | undefined) => void;
     totalCount: number;
     sortBy: SortOption;
     sortDir: SortDirection;
@@ -94,7 +95,7 @@ function filterMedicines(medicines: Medicine[], filters: FilterState): Medicine[
     });
 }
 
-export default function MedicineList({ medicines, filters, onDelete, onUpdateExpiry, onUpdateLabels, totalCount, sortBy, sortDir, onSortChange }: MedicineListProps) {
+export default function MedicineList({ medicines, filters, onDelete, onUpdateExpiry, onUpdateLabels, onUpdateNote, totalCount, sortBy, sortDir, onSortChange }: MedicineListProps) {
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [collapsedCards, setCollapsedCards] = useState<Set<string>>(new Set());
 
@@ -264,6 +265,7 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
                             onDelete={onDelete}
                             onUpdateExpiry={onUpdateExpiry}
                             onUpdateLabels={onUpdateLabels}
+                            onUpdateNote={onUpdateNote}
                             isCollapsed={isCardCollapsed(medicine.id)}
                             onToggleCollapse={() => toggleCollapse(medicine.id)}
                         />

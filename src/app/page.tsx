@@ -75,6 +75,11 @@ export default function HomePage() {
     setMedicines(getMedicines());
   };
 
+  const handleUpdateNote = (id: string, note: string | undefined) => {
+    updateMedicine(id, { notatka: note });
+    setMedicines(getMedicines());
+  };
+
   const handleExportPDF = async () => {
     const { jsPDF } = await import('jspdf');
     const autoTable = (await import('jspdf-autotable')).default;
@@ -186,6 +191,7 @@ export default function HomePage() {
             onDelete={handleDelete}
             onUpdateExpiry={handleUpdateExpiry}
             onUpdateLabels={handleUpdateLabels}
+            onUpdateNote={handleUpdateNote}
             totalCount={medicines.length}
             sortBy={sortBy}
             sortDir={sortDir}
