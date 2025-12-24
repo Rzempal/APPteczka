@@ -12,9 +12,10 @@ import LabelManager from './LabelManager';
 interface FiltersProps {
     filters: FilterState;
     onFiltersChange: (filters: FilterState) => void;
+    onExportPDF?: () => void;
 }
 
-export default function Filters({ filters, onFiltersChange }: FiltersProps) {
+export default function Filters({ filters, onFiltersChange, onExportPDF }: FiltersProps) {
     const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
     const [isLabelsCollapsed, setIsLabelsCollapsed] = useState(false);
     const [isLabelManagerOpen, setIsLabelManagerOpen] = useState(false);
@@ -81,6 +82,25 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
 
     return (
         <div className="neu-flat p-5 space-y-5 animate-fadeInUp">
+            {/* Tytuł strony + PDF */}
+            <div className="flex items-center justify-between">
+                <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
+                    💊 Twoja apteczka
+                </h1>
+                {onExportPDF && (
+                    <button
+                        onClick={onExportPDF}
+                        className="neu-btn neu-btn-secondary text-sm"
+                        title="Eksportuj do PDF"
+                    >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        PDF
+                    </button>
+                )}
+            </div>
+
             {/* Wyszukiwanie */}
             <div>
                 <label htmlFor="search" className="mb-2 block text-sm font-medium" style={{ color: 'var(--color-text)' }}>

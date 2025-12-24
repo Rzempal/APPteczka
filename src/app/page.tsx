@@ -165,61 +165,16 @@ export default function HomePage() {
 
   return (
     <div className="space-y-6">
-      {/* Nagłówek strony */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-fadeInUp">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-            💊 Twoja apteczka
-          </h1>
-          <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-            {medicines.length === 0
-              ? 'Brak leków – dodaj leki w zakładce "Dodaj leki"'
-              : `${medicines.length} leków w apteczce`
-            }
-          </p>
-        </div>
-
-        {/* Akcje */}
-        {medicines.length > 0 && (
-          <div className="flex flex-wrap gap-3 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-            {/* Sortowanie */}
-            <div className="neu-flat-sm flex items-center gap-1 px-3 py-2">
-              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Sortuj:</span>
-              {[
-                { key: 'nazwa', label: 'Nazwa' },
-                { key: 'dataDodania', label: 'Data' },
-                { key: 'terminWaznosci', label: 'Termin' },
-              ].map((opt) => (
-                <button
-                  key={opt.key}
-                  onClick={() => handleSortChange(opt.key as SortOption)}
-                  className={`neu-tag text-xs ${sortBy === opt.key ? 'active' : ''}`}
-                >
-                  {opt.label} {sortBy === opt.key && (sortDir === 'asc' ? '↑' : '↓')}
-                </button>
-              ))}
-            </div>
-
-            {/* Eksport PDF */}
-            <button
-              onClick={handleExportPDF}
-              className="neu-btn neu-btn-secondary text-sm"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              PDF
-            </button>
-          </div>
-        )}
-      </div>
-
       {/* Główna zawartość */}
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
         {/* Sidebar z filtrami */}
         {medicines.length > 0 && (
           <aside className="lg:sticky lg:top-28 lg:h-fit">
-            <Filters filters={filters} onFiltersChange={setFilters} />
+            <Filters
+              filters={filters}
+              onFiltersChange={setFilters}
+              onExportPDF={handleExportPDF}
+            />
           </aside>
         )}
 
@@ -231,6 +186,10 @@ export default function HomePage() {
             onDelete={handleDelete}
             onUpdateExpiry={handleUpdateExpiry}
             onUpdateLabels={handleUpdateLabels}
+            totalCount={medicines.length}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSortChange={handleSortChange}
           />
         </section>
       </div>

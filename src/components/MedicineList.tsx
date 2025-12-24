@@ -7,12 +7,19 @@ import { useState, useEffect } from 'react';
 import type { Medicine, FilterState } from '@/lib/types';
 import MedicineCard from './MedicineCard';
 
+type SortOption = 'nazwa' | 'dataDodania' | 'terminWaznosci';
+type SortDirection = 'asc' | 'desc';
+
 interface MedicineListProps {
     medicines: Medicine[];
     filters: FilterState;
     onDelete: (id: string) => void;
     onUpdateExpiry: (id: string, date: string | undefined) => void;
     onUpdateLabels: (id: string, labelIds: string[]) => void;
+    totalCount: number;
+    sortBy: SortOption;
+    sortDir: SortDirection;
+    onSortChange: (option: SortOption) => void;
 }
 
 type ViewMode = 'grid' | 'list';
@@ -87,7 +94,7 @@ function filterMedicines(medicines: Medicine[], filters: FilterState): Medicine[
     });
 }
 
-export default function MedicineList({ medicines, filters, onDelete, onUpdateExpiry, onUpdateLabels }: MedicineListProps) {
+export default function MedicineList({ medicines, filters, onDelete, onUpdateExpiry, onUpdateLabels, totalCount, sortBy, sortDir, onSortChange }: MedicineListProps) {
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [collapsedCards, setCollapsedCards] = useState<Set<string>>(new Set());
 
@@ -176,42 +183,68 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
 
     return (
         <div className="space-y-4">
-            {/* Header: Counter + View Toggle */}
-            <div className="flex items-center justify-between animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-                <div className="neu-tag inline-flex">
-                    <span>📦</span>
-                    <span className="ml-1">Znaleziono: {filteredMedicines.length} z {medicines.length} leków</span>
-                </div>
+            {/* Header: Unified Toolbar - Counter | Sorting | View Toggle */}
+            <div
+                className="neu-flat-sm flex flex-wrap items-center justify-between gap-3 px-4 py-3 animate-fadeInUp"
+                style={{ animationDelay: '0.1s' }}
+            >
+                {/* Licznik - jako tekst, nie przycisk */}
+                <span className="text-sm font-medium order-last sm:order-first w-full sm:w-auto text-center sm:text-left" style={{ color: 'var(--color-text)' }}>
+                    📦 Znaleziono: {filteredMedicines.length} z {totalCount} leków
+                </span>
 
-                {/* View Mode Toggle */}
-                <div className="flex gap-1">
-                    <button
-                        onClick={() => handleViewModeChange('grid')}
-                        className={`neu-tag p-2 transition-all ${viewMode === 'grid' ? 'active' : ''}`}
-                        title="Widok kafelków"
-                        aria-label="Widok kafelków"
-                        aria-pressed={viewMode === 'grid'}
-                    >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            style={{ color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                        </svg>
-                    </button>
-                    <button
-                        onClick={() => handleViewModeChange('list')}
-                        className={`neu-tag p-2 transition-all ${viewMode === 'list' ? 'active' : ''}`}
-                        title="Widok listy"
-                        aria-label="Widok listy"
-                        aria-pressed={viewMode === 'list'}
-                    >
-                        {/* Stack icon - prostokąty ułożone wertykalnie */}
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            style={{ color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                d="M4 5h16a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM4 14h16a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3a1 1 0 011-1z" />
-                        </svg>
-                    </button>
+                {/* Sortowanie + Widok - zawsze razem */}
+                <div className="flex items-center gap-3 mx-auto sm:mx-0">
+                    {/* Sortowanie */}
+                    <div className="flex items-center gap-1">
+                        <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Sortuj:</span>
+                        {[
+                            { key: 'nazwa', label: 'Nazwa' },
+                            { key: 'dataDodania', label: 'Data' },
+                            { key: 'terminWaznosci', label: 'Termin' },
+                        ].map((opt) => (
+                            <button
+                                key={opt.key}
+                                onClick={() => onSortChange(opt.key as SortOption)}
+                                className={`neu-tag text-xs ${sortBy === opt.key ? 'active' : ''}`}
+                            >
+                                {opt.label} {sortBy === opt.key && (sortDir === 'asc' ? '↑' : '↓')}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Separator */}
+                    <div className="w-px h-5 bg-current opacity-20" />
+
+                    {/* View Mode Toggle */}
+                    <div className="flex gap-1">
+                        <button
+                            onClick={() => handleViewModeChange('grid')}
+                            className={`neu-tag p-2 transition-all ${viewMode === 'grid' ? 'active' : ''}`}
+                            title="Widok kafelków"
+                            aria-label="Widok kafelków"
+                            aria-pressed={viewMode === 'grid'}
+                        >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                style={{ color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)' }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                            </svg>
+                        </button>
+                        <button
+                            onClick={() => handleViewModeChange('list')}
+                            className={`neu-tag p-2 transition-all ${viewMode === 'list' ? 'active' : ''}`}
+                            title="Widok listy"
+                            aria-label="Widok listy"
+                            aria-pressed={viewMode === 'list'}
+                        >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                style={{ color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)' }}>
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                    d="M4 5h16a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM4 14h16a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3a1 1 0 011-1z" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
 
