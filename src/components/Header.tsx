@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const navItems = [
     { href: "/", label: "Apteczka", icon: "💊" },
@@ -11,9 +11,36 @@ const navItems = [
 ];
 
 export function Header() {
-    // Icons visible by default (hamburger pressed)
     const [iconsVisible, setIconsVisible] = useState(true);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [lastScrollY, setLastScrollY] = useState(0);
+
+    // Handle scroll - toggle hamburger menu only
+    const handleScroll = useCallback(() => {
+        const currentScrollY = window.scrollY;
+        const scrollDelta = currentScrollY - lastScrollY;
+
+        if (currentScrollY > 50) {
+            if (scrollDelta > 15 && iconsVisible && !isAnimating) {
+                // Scroll down - collapse menu
+                setIsAnimating(true);
+                setTimeout(() => {
+                    setIconsVisible(false);
+                    setIsAnimating(false);
+                }, 200);
+            } else if (scrollDelta < -15 && !iconsVisible && !isAnimating) {
+                // Scroll up - expand menu
+                setIconsVisible(true);
+            }
+        }
+
+        setLastScrollY(currentScrollY);
+    }, [lastScrollY, iconsVisible, isAnimating]);
+
+    useEffect(() => {
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [handleScroll]);
 
     // Toggle icons visibility with animation
     const toggleIcons = () => {
@@ -32,8 +59,14 @@ export function Header() {
 
     // Handle link click on mobile - close menu
     const handleMobileLinkClick = () => {
-        // On mobile, we might want to close after click
-        // But for now, keep icons visible
+        // Close menu after click on mobile
+        if (window.innerWidth < 640) {
+            setIsAnimating(true);
+            setTimeout(() => {
+                setIconsVisible(false);
+                setIsAnimating(false);
+            }, 200);
+        }
     };
 
     return (
@@ -49,7 +82,10 @@ export function Header() {
                                 💊
                             </span>
                             <span
-                                className="text-xl font-bold"
+                                className={`text-xl font-bold transition-all duration-300 overflow-hidden ${iconsVisible
+                                        ? 'max-w-[120px] opacity-100 translate-x-0'
+                                        : 'max-w-0 opacity-0 -translate-x-4'
+                                    }`}
                                 style={{ color: "var(--color-accent)" }}
                             >
                                 APPteczka
