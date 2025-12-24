@@ -12,6 +12,7 @@ interface MedicineListProps {
     filters: FilterState;
     onDelete: (id: string) => void;
     onUpdateExpiry: (id: string, date: string | undefined) => void;
+    onUpdateLabels: (id: string, labelIds: string[]) => void;
 }
 
 type ViewMode = 'grid' | 'list';
@@ -56,6 +57,15 @@ function filterMedicines(medicines: Medicine[], filters: FilterState): Medicine[
             if (!hasAllTags) return false;
         }
 
+        // Filtr etykiet użytkownika
+        if (filters.labels.length > 0) {
+            const medicineLabels = medicine.labels || [];
+            const hasAllLabels = filters.labels.every(labelId =>
+                medicineLabels.includes(labelId)
+            );
+            if (!hasAllLabels) return false;
+        }
+
         // Filtr terminu ważności
         if (filters.expiry !== 'all') {
             const status = getExpiryStatus(medicine.terminWaznosci);
@@ -77,7 +87,7 @@ function filterMedicines(medicines: Medicine[], filters: FilterState): Medicine[
     });
 }
 
-export default function MedicineList({ medicines, filters, onDelete, onUpdateExpiry }: MedicineListProps) {
+export default function MedicineList({ medicines, filters, onDelete, onUpdateExpiry, onUpdateLabels }: MedicineListProps) {
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [collapsedCards, setCollapsedCards] = useState<Set<string>>(new Set());
 
@@ -207,7 +217,7 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
 
             {/* Grid/List z kartami */}
             <div className={viewMode === 'grid'
-                ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3'
+                ? 'grid gap-5 sm:grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
                 : 'flex flex-col gap-3'
             }>
                 {filteredMedicines.map((medicine, index) => (
@@ -220,6 +230,7 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
                             medicine={medicine}
                             onDelete={onDelete}
                             onUpdateExpiry={onUpdateExpiry}
+                            onUpdateLabels={onUpdateLabels}
                             isCollapsed={isCardCollapsed(medicine.id)}
                             onToggleCollapse={() => toggleCollapse(medicine.id)}
                         />

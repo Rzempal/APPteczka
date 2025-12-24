@@ -17,6 +17,7 @@ export default function HomePage() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [filters, setFilters] = useState<FilterState>({
     tags: [],
+    labels: [],
     search: '',
     expiry: 'all'
   });
@@ -66,6 +67,11 @@ export default function HomePage() {
 
   const handleUpdateExpiry = (id: string, date: string | undefined) => {
     updateMedicine(id, { terminWaznosci: date });
+    setMedicines(getMedicines());
+  };
+
+  const handleUpdateLabels = (id: string, labelIds: string[]) => {
+    updateMedicine(id, { labels: labelIds });
     setMedicines(getMedicines());
   };
 
@@ -224,6 +230,7 @@ export default function HomePage() {
             filters={filters}
             onDelete={handleDelete}
             onUpdateExpiry={handleUpdateExpiry}
+            onUpdateLabels={handleUpdateLabels}
           />
         </section>
       </div>

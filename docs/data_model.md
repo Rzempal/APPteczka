@@ -18,6 +18,7 @@ erDiagram
     
     LEK ||--o{ WSKAZANIE : ma
     LEK ||--o{ TAG : ma
+    LEK ||--o{ ETYKIETA_REF : ma
     
     WSKAZANIE {
         string wartosc
@@ -26,6 +27,18 @@ erDiagram
     TAG {
         string wartosc
     }
+    
+    ETYKIETA {
+        uuid id PK
+        string name
+        string color
+    }
+    
+    ETYKIETA_REF {
+        uuid etykieta_id FK
+    }
+    
+    ETYKIETA ||--o{ ETYKIETA_REF : "przypisana do"
 ```
 
 ---
@@ -39,12 +52,25 @@ erDiagram
 | `opis` | string | ✅ | Krótki opis działania |
 | `wskazania` | string[] | ✅ | Lista wskazań do stosowania |
 | `tagi` | string[] | ✅ | Kontrolowane tagi (filtry) |
+| `labels` | string[] | ❌ | ID etykiet użytkownika (max 5) |
 | `terminWaznosci` | Date | ❌ | Opcjonalny termin ważności |
 | `dataDodania` | timestamp | ✅ | Automatyczna data importu |
 
 ---
 
-## TypeScript Interface
+## Encja: Etykieta (UserLabel)
+
+| Pole | Typ | Wymagane | Opis |
+|------|-----|----------|------|
+| `id` | UUID | ✅ | Unikalny identyfikator |
+| `name` | string | ✅ | Nazwa etykiety (max 20 znaków) |
+| `color` | LabelColor | ✅ | Kolor: red, orange, yellow, green, blue, purple, pink, gray |
+
+**Limity:** max 15 etykiet globalnie, max 5 etykiet na lek
+
+---
+
+## TypeScript Interfaces
 
 ```typescript
 interface Medicine {
@@ -53,9 +79,18 @@ interface Medicine {
   opis: string;
   wskazania: string[];
   tagi: string[];
+  labels?: string[];        // ID etykiet użytkownika
   terminWaznosci?: Date;
   dataDodania: Date;
 }
+
+interface UserLabel {
+  id: string;
+  name: string;
+  color: LabelColor;
+}
+
+type LabelColor = 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'pink' | 'gray';
 ```
 
 ---
@@ -103,4 +138,4 @@ interface Medicine {
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-22
+> 📅 **Ostatnia aktualizacja:** 2025-12-24

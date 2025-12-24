@@ -1,11 +1,13 @@
 'use client';
 
 // src/components/Filters.tsx
-// Filtry dla listy leków - Neumorphism Style z możliwością zwijania
+// Filtry dla listy léków - Neumorphism Style z możliwością zwijania
 
 import { useState, useEffect } from 'react';
-import type { FilterState, ExpiryFilter } from '@/lib/types';
-import { TAG_CATEGORIES } from '@/lib/types';
+import type { FilterState, ExpiryFilter, UserLabel } from '@/lib/types';
+import { TAG_CATEGORIES, LABEL_COLORS } from '@/lib/types';
+import { getLabels } from '@/lib/labelStorage';
+import LabelManager from './LabelManager';
 
 interface FiltersProps {
     filters: FilterState;
@@ -14,6 +16,9 @@ interface FiltersProps {
 
 export default function Filters({ filters, onFiltersChange }: FiltersProps) {
     const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
+    const [isLabelsCollapsed, setIsLabelsCollapsed] = useState(false);
+    const [isLabelManagerOpen, setIsLabelManagerOpen] = useState(false);
+    const [userLabels, setUserLabels] = useState<UserLabel[]>([]);
 
     // Załaduj stan zwijania z localStorage
     useEffect(() => {
@@ -27,6 +32,24 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
     useEffect(() => {
         localStorage.setItem('filtersCollapsed', String(isFiltersCollapsed));
     }, [isFiltersCollapsed]);
+
+    // Załaduj etykiety
+    useEffect(() => {
+        setUserLabels(getLabels());
+    }, []);
+
+    // Nasłuchuj na zmiany etykiet (z kart leków)
+    useEffect(() => {
+        const handleLabelsUpdated = () => {
+            setUserLabels(getLabels());
+        };
+        window.addEventListener('labelsUpdated', handleLabelsUpdated);
+        return () => window.removeEventListener('labelsUpdated', handleLabelsUpdated);
+    }, []);
+
+    const refreshLabels = () => {
+        setUserLabels(getLabels());
+    };
 
     const handleSearchChange = (search: string) => {
         onFiltersChange({ ...filters, search });
@@ -43,11 +66,18 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
         onFiltersChange({ ...filters, expiry });
     };
 
-    const handleClearFilters = () => {
-        onFiltersChange({ tags: [], search: '', expiry: 'all' });
+    const handleLabelToggle = (labelId: string) => {
+        const newLabels = filters.labels.includes(labelId)
+            ? filters.labels.filter(l => l !== labelId)
+            : [...filters.labels, labelId];
+        onFiltersChange({ ...filters, labels: newLabels });
     };
 
-    const hasActiveFilters = filters.tags.length > 0 || filters.search || filters.expiry !== 'all';
+    const handleClearFilters = () => {
+        onFiltersChange({ tags: [], labels: [], search: '', expiry: 'all' });
+    };
+
+    const hasActiveFilters = filters.tags.length > 0 || filters.labels.length > 0 || filters.search || filters.expiry !== 'all';
 
     return (
         <div className="neu-flat p-5 space-y-5 animate-fadeInUp">
@@ -129,9 +159,9 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
 
                 {/* Kategorie filtrów - ukryte gdy zwinięte */}
                 <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isFiltersCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isFiltersCollapsed ? 'max-h-0 opacity-0' : 'max-h-[600px] opacity-100'}`}
                 >
-                    <div className="space-y-3">
+                    <div className="space-y-3 pb-4">
                         {TAG_CATEGORIES.map(category => (
                             <div key={category.key}>
                                 <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
@@ -154,11 +184,85 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
                 </div>
             </div>
 
+            {/* Sekcja Moje etykiety - zwijalna */}
+            <div className="mt-4">
+                {/* Nagłówek */}
+                <div
+                    className="mb-2 flex items-center justify-between cursor-pointer group"
+                    onClick={() => setIsLabelsCollapsed(!isLabelsCollapsed)}
+                    role="button"
+                    aria-expanded={!isLabelsCollapsed}
+                >
+                    <label className="text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+                        🏷️ Moje etykiety
+                        <span
+                            className={`neu-tag p-1 transition-all group-hover:scale-110 ${isLabelsCollapsed ? 'active' : ''}`}
+                            style={{ borderRadius: '50%' }}
+                        >
+                            <svg
+                                className={`h-3 w-3 transition-transform duration-300 ${isLabelsCollapsed ? '' : 'rotate-180'}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                style={{ color: isLabelsCollapsed ? 'white' : 'var(--color-text-muted)' }}
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </label>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setIsLabelManagerOpen(!isLabelManagerOpen); }}
+                        className="neu-tag text-xs"
+                        style={{ color: 'var(--color-accent)' }}
+                    >
+                        ⚙️ Zarządzaj
+                    </button>
+                </div>
+
+                {/* Zawartość - ukryta gdy zwinięta */}
+                <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isLabelsCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}
+                >
+                    {/* LabelManager */}
+                    {isLabelManagerOpen && (
+                        <div className="mb-3 neu-concave p-3">
+                            <LabelManager onLabelsChange={refreshLabels} />
+                        </div>
+                    )}
+
+                    {/* Filtry etykiet */}
+                    {userLabels.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5">
+                            {userLabels.map(label => (
+                                <button
+                                    key={label.id}
+                                    onClick={() => handleLabelToggle(label.id)}
+                                    className={`text-xs px-2.5 py-1 rounded-full transition-all ${filters.labels.includes(label.id)
+                                        ? 'ring-2 ring-offset-1'
+                                        : 'opacity-80 hover:opacity-100'
+                                        }`}
+                                    style={{
+                                        backgroundColor: LABEL_COLORS[label.color].hex,
+                                        color: 'white'
+                                    }}
+                                >
+                                    {label.name}
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            Brak etykiet. Kliknij "Zarządzaj" aby dodać.
+                        </p>
+                    )}
+                </div>
+            </div>
+
             {/* Aktywne filtry (podsumowanie) */}
-            {filters.tags.length > 0 && (
+            {(filters.tags.length > 0 || filters.labels.length > 0) && (
                 <div className="pt-4" style={{ borderTop: '1px solid var(--shadow-dark)' }}>
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
-                        Aktywne filtry ({filters.tags.length}):
+                        Aktywne filtry ({filters.tags.length + filters.labels.length}):
                     </span>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                         {filters.tags.map(tag => (
@@ -176,6 +280,26 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
                                 </button>
                             </span>
                         ))}
+                        {filters.labels.map(labelId => {
+                            const label = userLabels.find(l => l.id === labelId);
+                            if (!label) return null;
+                            return (
+                                <span
+                                    key={labelId}
+                                    className="text-xs inline-flex items-center px-2 py-0.5 rounded-full"
+                                    style={{ backgroundColor: LABEL_COLORS[label.color].hex, color: 'white' }}
+                                >
+                                    {label.name}
+                                    <button
+                                        onClick={() => handleLabelToggle(labelId)}
+                                        className="ml-1.5 hover:scale-110 transition-transform opacity-70 hover:opacity-100"
+                                        aria-label={`Usuń etykietę ${label.name}`}
+                                    >
+                                        ×
+                                    </button>
+                                </span>
+                            );
+                        })}
                     </div>
                 </div>
             )}

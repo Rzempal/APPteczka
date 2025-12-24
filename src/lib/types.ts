@@ -1,6 +1,41 @@
 // src/lib/types.ts
 // Główna encja: Lek (Medicine)
 
+// ==================== ETYKIETY UŻYTKOWNIKA ====================
+
+/**
+ * Dostępne kolory etykiet
+ */
+export const LABEL_COLORS = {
+    red: { name: 'Czerwony', hex: '#ef4444' },
+    orange: { name: 'Pomarańczowy', hex: '#f97316' },
+    yellow: { name: 'Żółty', hex: '#eab308' },
+    green: { name: 'Zielony', hex: '#22c55e' },
+    blue: { name: 'Niebieski', hex: '#3b82f6' },
+    purple: { name: 'Fioletowy', hex: '#a855f7' },
+    pink: { name: 'Różowy', hex: '#ec4899' },
+    gray: { name: 'Szary', hex: '#6b7280' }
+} as const;
+
+export type LabelColor = keyof typeof LABEL_COLORS;
+
+/**
+ * Limity etykiet
+ */
+export const MAX_LABELS_PER_MEDICINE = 5;
+export const MAX_LABELS_GLOBAL = 15;
+
+/**
+ * Etykieta użytkownika (definiowana dowolnie)
+ */
+export interface UserLabel {
+    id: string;
+    name: string;
+    color: LabelColor;
+}
+
+// ==================== LEK ====================
+
 /**
  * Reprezentacja leku w apteczce
  */
@@ -10,8 +45,9 @@ export interface Medicine {
     opis: string;
     wskazania: string[];
     tagi: string[];
-    terminWaznosci?: string; // ISO date string (YYYY-MM-DD)
-    dataDodania: string;     // ISO date string
+    labels?: string[];        // ID etykiet użytkownika
+    terminWaznosci?: string;  // ISO date string (YYYY-MM-DD)
+    dataDodania: string;      // ISO date string
 }
 
 /**
@@ -97,6 +133,7 @@ export type ExpiryFilter = 'all' | 'expired' | 'expiring-soon' | 'valid';
 
 export interface FilterState {
     tags: string[];
+    labels: string[];         // ID etykiet do filtrowania
     search: string;
     expiry: ExpiryFilter;
 }

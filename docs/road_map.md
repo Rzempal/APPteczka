@@ -81,6 +81,7 @@
 | **4-tabowa nawigacja** | ✅ |
 | **Design neumorficzny** | ✅ |
 | **Animacje scroll + button press** | ✅ |
+| **Etykiety użytkownika (labels)** | ✅ |
 | Persistencja localStorage | ✅ |
 
 ---

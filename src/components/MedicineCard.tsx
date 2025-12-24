@@ -5,11 +5,13 @@
 
 import { useState } from 'react';
 import type { Medicine } from '@/lib/types';
+import LabelSelector from './LabelSelector';
 
 interface MedicineCardProps {
     medicine: Medicine;
     onDelete: (id: string) => void;
     onUpdateExpiry: (id: string, date: string | undefined) => void;
+    onUpdateLabels: (id: string, labelIds: string[]) => void;
     isCollapsed?: boolean;
     onToggleCollapse?: () => void;
 }
@@ -37,7 +39,7 @@ function formatDate(dateString?: string): string {
     return new Date(dateString).toLocaleDateString('pl-PL');
 }
 
-export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, isCollapsed = false, onToggleCollapse }: MedicineCardProps) {
+export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpdateLabels, isCollapsed = false, onToggleCollapse }: MedicineCardProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [expiryDate, setExpiryDate] = useState(medicine.terminWaznosci || '');
 
@@ -111,7 +113,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, isCol
                 </div>
 
                 {/* Tagi */}
-                <div className="mb-4 flex flex-wrap gap-1.5">
+                <div className="mb-3 flex flex-wrap gap-1.5">
                     {medicine.tagi.map((tag, i) => (
                         <span
                             key={i}
@@ -125,6 +127,14 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, isCol
                             {tag}
                         </span>
                     ))}
+                </div>
+
+                {/* Etykiety użytkownika */}
+                <div className="mb-4">
+                    <LabelSelector
+                        selectedLabelIds={medicine.labels || []}
+                        onChange={(labelIds) => onUpdateLabels(medicine.id, labelIds)}
+                    />
                 </div>
 
                 {/* Termin ważności */}
