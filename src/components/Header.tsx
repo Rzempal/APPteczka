@@ -101,7 +101,7 @@ export function Header() {
                                         <Link
                                             key={item.href}
                                             href={item.href}
-                                            className={`neu-tag whitespace-nowrap ${isAnimating ? "animate-buttonPress" : "animate-buttonRelease"}`}
+                                            className={`neu-tag whitespace-nowrap ${isAnimating ? "animate-buttonPress" : "animate-popIn"}`}
                                             style={{ animationDelay: `${index * 0.05}s` }}
                                         >
                                             <span>{item.icon}</span>
@@ -138,7 +138,7 @@ export function Header() {
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`neu-tag ${isAnimating ? "animate-buttonPress" : "animate-buttonRelease"}`}
+                                        className={`neu-tag ${isAnimating ? "animate-buttonPress" : "animate-popIn"}`}
                                         style={{ animationDelay: `${index * 0.06}s` }}
                                         onClick={handleMobileLinkClick}
                                     >
