@@ -1,7 +1,7 @@
 'use client';
 
 // src/components/Filters.tsx
-// Filtry dla listy léków - Neumorphism Style z możliwością zwijania
+// Filtry dla listy léków - Neumorphism Style z możliwością zwijania
 
 import { useState, useEffect } from 'react';
 import type { FilterState, ExpiryFilter, UserLabel } from '@/lib/types';
@@ -16,23 +16,36 @@ interface FiltersProps {
 }
 
 export default function Filters({ filters, onFiltersChange, onExportPDF }: FiltersProps) {
-    const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
-    const [isLabelsCollapsed, setIsLabelsCollapsed] = useState(false);
+    // Domyślnie wszystko schowane
+    const [isExpiryCollapsed, setIsExpiryCollapsed] = useState(true);
+    const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
+    const [isLabelsCollapsed, setIsLabelsCollapsed] = useState(true);
     const [isLabelManagerOpen, setIsLabelManagerOpen] = useState(false);
     const [userLabels, setUserLabels] = useState<UserLabel[]>([]);
 
     // Załaduj stan zwijania z localStorage
     useEffect(() => {
-        const saved = localStorage.getItem('filtersCollapsed');
-        if (saved !== null) {
-            setIsFiltersCollapsed(saved === 'true');
-        }
+        const savedExpiry = localStorage.getItem('expiryCollapsed');
+        const savedFilters = localStorage.getItem('filtersCollapsed');
+        const savedLabels = localStorage.getItem('labelsCollapsed');
+
+        if (savedExpiry !== null) setIsExpiryCollapsed(savedExpiry === 'true');
+        if (savedFilters !== null) setIsFiltersCollapsed(savedFilters === 'true');
+        if (savedLabels !== null) setIsLabelsCollapsed(savedLabels === 'true');
     }, []);
 
     // Zapisz stan zwijania do localStorage
     useEffect(() => {
+        localStorage.setItem('expiryCollapsed', String(isExpiryCollapsed));
+    }, [isExpiryCollapsed]);
+
+    useEffect(() => {
         localStorage.setItem('filtersCollapsed', String(isFiltersCollapsed));
     }, [isFiltersCollapsed]);
+
+    useEffect(() => {
+        localStorage.setItem('labelsCollapsed', String(isLabelsCollapsed));
+    }, [isLabelsCollapsed]);
 
     // Załaduj etykiety
     useEffect(() => {
@@ -117,26 +130,62 @@ export default function Filters({ filters, onFiltersChange, onExportPDF }: Filte
                 />
             </div>
 
-            {/* Filtr terminu ważności */}
+            {/* Filtr terminu ważności - zwijalna */}
             <div>
-                <label className="mb-2 block text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                    📅 Termin ważności
-                </label>
-                <div className="flex flex-wrap gap-2">
-                    {[
-                        { value: 'all', label: 'Wszystkie', icon: '📋' },
-                        { value: 'expired', label: 'Przeterminowane', icon: '⚠️' },
-                        { value: 'expiring-soon', label: 'Kończą się', icon: '⏰' },
-                        { value: 'valid', label: 'Ważne', icon: '✅' }
-                    ].map(option => (
-                        <button
-                            key={option.value}
-                            onClick={() => handleExpiryChange(option.value as ExpiryFilter)}
-                            className={`neu-tag transition-all ${filters.expiry === option.value ? 'active' : ''}`}
+                {/* Nagłówek - klikalny do zwijania */}
+                <div
+                    className="mb-2 flex items-center justify-between cursor-pointer group"
+                    onClick={() => setIsExpiryCollapsed(!isExpiryCollapsed)}
+                    role="button"
+                    aria-expanded={!isExpiryCollapsed}
+                >
+                    <label className="text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+                        📅 Termin ważności
+                        <span
+                            className={`neu-tag p-1 transition-all group-hover:scale-110 ${isExpiryCollapsed ? 'active' : ''}`}
+                            style={{ borderRadius: '50%' }}
                         >
-                            {option.icon} {option.label}
-                        </button>
-                    ))}
+                            <svg
+                                className={`h-3 w-3 transition-transform duration-300 ${isExpiryCollapsed ? '' : 'rotate-180'}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                style={{ color: isExpiryCollapsed ? 'white' : 'var(--color-text-muted)' }}
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </label>
+                    {/* Pokaż aktywny filtr terminu gdy zwinięte */}
+                    {isExpiryCollapsed && filters.expiry !== 'all' && (
+                        <span className="neu-tag active text-xs">
+                            {filters.expiry === 'expired' && '⚠️ Przeterminowane'}
+                            {filters.expiry === 'expiring-soon' && '⏰ Kończą się'}
+                            {filters.expiry === 'valid' && '✅ Ważne'}
+                        </span>
+                    )}
+                </div>
+
+                {/* Przyciski terminu - ukryte gdy zwinięte */}
+                <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpiryCollapsed ? 'max-h-0 opacity-0' : 'max-h-[100px] opacity-100'}`}
+                >
+                    <div className="flex flex-wrap gap-2 pb-2">
+                        {[
+                            { value: 'all', label: 'Wszystkie', icon: '📋' },
+                            { value: 'expired', label: 'Przeterminowane', icon: '⚠️' },
+                            { value: 'expiring-soon', label: 'Kończą się', icon: '⏰' },
+                            { value: 'valid', label: 'Ważne', icon: '✅' }
+                        ].map(option => (
+                            <button
+                                key={option.value}
+                                onClick={(e) => { e.stopPropagation(); handleExpiryChange(option.value as ExpiryFilter); }}
+                                className={`neu-tag transition-all ${filters.expiry === option.value ? 'active' : ''}`}
+                            >
+                                {option.icon} {option.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -326,4 +375,3 @@ export default function Filters({ filters, onFiltersChange, onExportPDF }: Filte
         </div>
     );
 }
-

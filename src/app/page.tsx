@@ -97,49 +97,57 @@ export default function HomePage() {
       return text.replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, char => map[char] || char);
     };
 
-    // Tytuł - kompaktowy
+    // Tytuł - czarno-biały
     doc.setFontSize(14);
-    doc.setTextColor(16, 185, 129);
+    doc.setTextColor(0); // Czarny
     doc.text('Moja Apteczka', 14, 14);
     doc.setFontSize(8);
-    doc.setTextColor(120);
+    doc.setTextColor(80); // Ciemnoszary
     doc.text(`${new Date().toLocaleDateString('pl-PL')}`, 60, 14);
 
-    // Tabelka kompaktowa
+    // Tabelka czarno-biała z kolumną Notatka
     const tableData = sortedMedicines.map(m => [
       removeDiacritics(m.nazwa || 'Nieznany'),
       removeDiacritics(m.wskazania.slice(0, 2).join(', ') || '-'),
-      m.terminWaznosci ? new Date(m.terminWaznosci).toLocaleDateString('pl-PL') : '-'
+      m.terminWaznosci ? new Date(m.terminWaznosci).toLocaleDateString('pl-PL') : '-',
+      removeDiacritics(m.notatka || '-')
     ]);
 
     autoTable(doc, {
       startY: 20,
-      head: [['Nazwa', 'Wskazania', 'Termin']],
+      head: [['Nazwa', 'Wskazania', 'Termin', 'Notatka']],
       body: tableData,
       styles: {
         fontSize: 7,
         cellPadding: 1.5,
-        lineColor: [220, 220, 220],
-        lineWidth: 0.1,
+        lineColor: [0, 0, 0], // Czarna linia
+        lineWidth: 0.2,
+        textColor: [0, 0, 0], // Czarny tekst
       },
       headStyles: {
-        fillColor: [16, 185, 129],
-        textColor: 255,
+        fillColor: [255, 255, 255], // Białe tło nagłówka
+        textColor: [0, 0, 0], // Czarny tekst
         fontStyle: 'bold',
         cellPadding: 2,
+        lineColor: [0, 0, 0],
+        lineWidth: 0.3,
       },
       columnStyles: {
-        0: { cellWidth: 45 },
-        1: { cellWidth: 'auto' },
-        2: { cellWidth: 22, halign: 'center' },
+        0: { cellWidth: 35 },
+        1: { cellWidth: 50 },
+        2: { cellWidth: 20, halign: 'center' },
+        3: { cellWidth: 'auto' },
       },
       margin: { left: 14, right: 14, top: 10 },
+      alternateRowStyles: {
+        fillColor: [255, 255, 255], // Białe - brak kolorów
+      },
     });
 
-    // Disclaimer - kompaktowy
+    // Disclaimer - czarno-biały
     const finalY = (doc as typeof doc & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 100;
     doc.setFontSize(6);
-    doc.setTextColor(160);
+    doc.setTextColor(80);
     doc.text('APPteczka - narzedzie informacyjne, nie porada medyczna.', 14, finalY + 5);
 
     doc.save(`apteczka_${new Date().toISOString().split('T')[0]}.pdf`);
