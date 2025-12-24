@@ -201,6 +201,13 @@ export default function ImportForm({ onImportSuccess }: ImportFormProps) {
   ]
 }`;
 
+    // Bulk actions for all duplicates
+    const setAllDuplicateActions = (action: DuplicateAction) => {
+        const newActions = new Map<string, DuplicateAction>();
+        duplicates.forEach(d => newActions.set(d.nazwa, action));
+        setDuplicateActions(newActions);
+    };
+
     // STEP: Duplikaty
     if (step === 'duplicates') {
         return (
@@ -212,6 +219,34 @@ export default function ImportForm({ onImportSuccess }: ImportFormProps) {
                     <p className="mt-1 text-sm" style={{ color: '#78350f' }}>
                         Niektóre leki już istnieją w Twojej apteczce. Co chcesz zrobić?
                     </p>
+
+                    {/* Bulk action buttons */}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setAllDuplicateActions('replace')}
+                            className="neu-tag text-xs transition-all hover:scale-105"
+                            style={{ background: 'rgba(255,255,255,0.5)' }}
+                        >
+                            🔄 Zastąp wszystkie
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setAllDuplicateActions('add')}
+                            className="neu-tag text-xs transition-all hover:scale-105"
+                            style={{ background: 'rgba(255,255,255,0.5)' }}
+                        >
+                            ➕ Dodaj wszystkie
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setAllDuplicateActions('skip')}
+                            className="neu-tag text-xs transition-all hover:scale-105"
+                            style={{ background: 'rgba(255,255,255,0.5)' }}
+                        >
+                            ⏭️ Pomiń wszystkie
+                        </button>
+                    </div>
                 </div>
 
                 <div className="space-y-3">
