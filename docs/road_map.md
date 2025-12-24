@@ -64,7 +64,7 @@
 
 ## ✅ FAZA 1: MVP Web (Next.js)
 
-**Stack:** Next.js 16 + TypeScript + Tailwind CSS
+**Stack:** Next.js 16 + TypeScript + Tailwind CSS 4
 
 | Funkcja | Status |
 |---------|--------|
@@ -76,6 +76,11 @@
 | Alerty o przeterminowaniu | ✅ |
 | Generator promptów AI | ✅ |
 | Eksport JSON + kopiowanie | ✅ |
+| **Eksport do PDF** | ✅ |
+| **Sortowanie (A-Z, termin)** | ✅ |
+| **4-tabowa nawigacja** | ✅ |
+| **Design neumorficzny** | ✅ |
+| **Animacje scroll + button press** | ✅ |
 | Persistencja localStorage | ✅ |
 
 ---
@@ -122,4 +127,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-23
+> 📅 **Ostatnia aktualizacja:** 2025-12-24

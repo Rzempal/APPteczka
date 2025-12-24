@@ -101,11 +101,15 @@ APPteczka/
 │
 ├── src/
 │   ├── app/                  # Next.js App Router
-│   │   ├── page.tsx          # Strona główna (lista leków)
-│   │   ├── import/           # Strona importu
-│   │   └── layout.tsx
+│   │   ├── page.tsx          # Apteczka (lista leków)
+│   │   ├── dodaj/page.tsx    # Dodaj leki (import AI)
+│   │   ├── konsultacja/page.tsx # Konsultacja AI
+│   │   ├── backup/page.tsx   # Kopia zapasowa
+│   │   ├── layout.tsx        # Layout z nawigacją
+│   │   └── globals.css       # Style neumorficzne
 │   │
 │   ├── components/
+│   │   ├── Header.tsx        # Nagłówek z scroll toggle
 │   │   ├── MedicineCard.tsx
 │   │   ├── MedicineList.tsx
 │   │   ├── Filters.tsx
@@ -185,5 +189,5 @@ Gotowe prompty: `docs/prompts/`
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-22
-> 🏷️ **Wersja:** 1.0.0
+> 📅 **Ostatnia aktualizacja:** 2025-12-24
+> 🏷️ **Wersja:** 1.1.0

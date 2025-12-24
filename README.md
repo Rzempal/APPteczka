@@ -13,7 +13,10 @@ Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, ś
 - ✅ Wyszukiwanie tekstowe
 - ✅ Edycja terminów ważności z alertami
 - ✅ Generator promptów dla ChatGPT/Claude/Gemini
-- ✅ Eksport apteczki do JSON
+- ✅ Eksport apteczki do JSON i PDF
+- ✅ Sortowanie leków (A-Z, termin ważności)
+- ✅ 4-tabowa nawigacja (Apteczka, Dodaj leki, Konsultacja AI, Kopia zapasowa)
+- ✅ Design neumorficzny z animacjami scroll
 - ✅ 100% offline – dane lokalne w przeglądarce
 
 ---
@@ -107,4 +110,4 @@ MIT License
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-23
+> 📅 **Ostatnia aktualizacja:** 2025-12-24
