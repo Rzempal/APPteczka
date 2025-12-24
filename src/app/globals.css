@@ -389,6 +389,59 @@ body {
   animation: popOut 0.2s var(--navbar-easing) forwards;
 }
 
+/* Button Press/Release - Neumorphic keyboard effect */
+@keyframes buttonPress {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow:
+      var(--neu-distance-sm) var(--neu-distance-sm) var(--neu-blur-sm) var(--shadow-dark),
+      calc(var(--neu-distance-sm) * -1) calc(var(--neu-distance-sm) * -1) var(--neu-blur-sm) var(--shadow-light);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(0.95);
+    box-shadow:
+      inset 2px 2px 4px var(--shadow-dark),
+      inset -2px -2px 4px var(--shadow-light);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+    box-shadow:
+      inset 3px 3px 6px var(--shadow-dark),
+      inset -3px -3px 6px var(--shadow-light);
+  }
+}
+
+@keyframes buttonRelease {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+    box-shadow:
+      inset 2px 2px 4px var(--shadow-dark),
+      inset -2px -2px 4px var(--shadow-light);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow:
+      var(--neu-distance-sm) var(--neu-distance-sm) var(--neu-blur-sm) var(--shadow-dark),
+      calc(var(--neu-distance-sm) * -1) calc(var(--neu-distance-sm) * -1) var(--neu-blur-sm) var(--shadow-light);
+  }
+}
+
+.animate-buttonPress {
+  animation: buttonPress 0.2s ease-out forwards;
+}
+
+.animate-buttonRelease {
+  animation: buttonRelease 0.25s ease-out forwards;
+}
+
 @keyframes breathe {
 
   0%,

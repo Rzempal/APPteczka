@@ -83,8 +83,8 @@ export function Header() {
                             </span>
                             <span
                                 className={`text-xl font-bold transition-all duration-300 overflow-hidden ${iconsVisible
-                                        ? 'max-w-[120px] opacity-100 translate-x-0'
-                                        : 'max-w-0 opacity-0 -translate-x-4'
+                                    ? 'max-w-[120px] opacity-100 translate-x-0'
+                                    : 'max-w-0 opacity-0 -translate-x-4'
                                     }`}
                                 style={{ color: "var(--color-accent)" }}
                             >
@@ -101,8 +101,8 @@ export function Header() {
                                         <Link
                                             key={item.href}
                                             href={item.href}
-                                            className={`neu-tag whitespace-nowrap ${isAnimating ? "animate-popOut" : "animate-popIn"}`}
-                                            style={{ animationDelay: `${0.05 + index * 0.05}s` }}
+                                            className={`neu-tag whitespace-nowrap ${isAnimating ? "animate-buttonPress" : "animate-buttonRelease"}`}
+                                            style={{ animationDelay: `${index * 0.05}s` }}
                                         >
                                             <span>{item.icon}</span>
                                             <span className="ml-1">{item.label}</span>
@@ -138,8 +138,8 @@ export function Header() {
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`neu-tag ${isAnimating ? "animate-popOut" : "animate-popIn"}`}
-                                        style={{ animationDelay: `${0.05 + index * 0.075}s` }}
+                                        className={`neu-tag ${isAnimating ? "animate-buttonPress" : "animate-buttonRelease"}`}
+                                        style={{ animationDelay: `${index * 0.06}s` }}
                                         onClick={handleMobileLinkClick}
                                     >
                                         <span>{item.icon}</span>
