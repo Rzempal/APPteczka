@@ -20,18 +20,18 @@ export function Header() {
         const currentScrollY = window.scrollY;
         const scrollDelta = currentScrollY - lastScrollY;
 
-        if (currentScrollY > 50) {
-            if (scrollDelta > 15 && iconsVisible && !isAnimating) {
-                // Scroll down - collapse menu
-                setIsAnimating(true);
-                setTimeout(() => {
-                    setIconsVisible(false);
-                    setIsAnimating(false);
-                }, 200);
-            } else if (scrollDelta < -15 && !iconsVisible && !isAnimating) {
-                // Scroll up - expand menu
-                setIconsVisible(true);
-            }
+        // Scroll down - collapse menu (when past threshold)
+        if (currentScrollY > 50 && scrollDelta > 15 && iconsVisible && !isAnimating) {
+            setIsAnimating(true);
+            setTimeout(() => {
+                setIconsVisible(false);
+                setIsAnimating(false);
+            }, 200);
+        }
+
+        // Scroll to top - expand menu (only when at the very top)
+        if (currentScrollY <= 5 && !iconsVisible && !isAnimating) {
+            setIconsVisible(true);
         }
 
         setLastScrollY(currentScrollY);
