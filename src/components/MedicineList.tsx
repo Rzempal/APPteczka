@@ -1,8 +1,9 @@
 'use client';
 
 // src/components/MedicineList.tsx
-// Lista/siatka kart leków - Neumorphism Style
+// Lista/siatka kart leków - Neumorphism Style z toggle widoku
 
+import { useState, useEffect } from 'react';
 import type { Medicine, FilterState } from '@/lib/types';
 import MedicineCard from './MedicineCard';
 
@@ -12,6 +13,8 @@ interface MedicineListProps {
     onDelete: (id: string) => void;
     onUpdateExpiry: (id: string, date: string | undefined) => void;
 }
+
+type ViewMode = 'grid' | 'list';
 
 /**
  * Sprawdza status terminu ważności
@@ -75,7 +78,53 @@ function filterMedicines(medicines: Medicine[], filters: FilterState): Medicine[
 }
 
 export default function MedicineList({ medicines, filters, onDelete, onUpdateExpiry }: MedicineListProps) {
+    const [viewMode, setViewMode] = useState<ViewMode>('grid');
+    const [collapsedCards, setCollapsedCards] = useState<Set<string>>(new Set());
+
+    // Załaduj viewMode z localStorage
+    useEffect(() => {
+        const savedMode = localStorage.getItem('medicineListViewMode') as ViewMode;
+        if (savedMode === 'grid' || savedMode === 'list') {
+            setViewMode(savedMode);
+        }
+    }, []);
+
+    // Zapisz viewMode do localStorage
+    useEffect(() => {
+        localStorage.setItem('medicineListViewMode', viewMode);
+    }, [viewMode]);
+
     const filteredMedicines = filterMedicines(medicines, filters);
+
+    // Toggle collapse dla pojedynczej karty
+    const toggleCollapse = (id: string) => {
+        setCollapsedCards(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
+
+    // Sprawdzanie czy karta jest zwinięta (w widoku lista domyślnie zwinięte)
+    const isCardCollapsed = (id: string): boolean => {
+        if (viewMode === 'list') {
+            // W widoku lista: domyślnie zwinięte, chyba że rozwinięte ręcznie
+            return !collapsedCards.has(id);
+        } else {
+            // W widoku grid: domyślnie rozwinięte, chyba że zwinięte ręcznie
+            return collapsedCards.has(id);
+        }
+    };
+
+    // Reset collapsed state przy zmianie widoku
+    const handleViewModeChange = (mode: ViewMode) => {
+        setViewMode(mode);
+        setCollapsedCards(new Set()); // Reset stanu zwijania
+    };
 
     if (medicines.length === 0) {
         return (
@@ -117,14 +166,50 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
 
     return (
         <div className="space-y-4">
-            {/* Counter */}
-            <div className="neu-tag inline-flex animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-                <span>📦</span>
-                <span className="ml-1">Znaleziono: {filteredMedicines.length} z {medicines.length} leków</span>
+            {/* Header: Counter + View Toggle */}
+            <div className="flex items-center justify-between animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
+                <div className="neu-tag inline-flex">
+                    <span>📦</span>
+                    <span className="ml-1">Znaleziono: {filteredMedicines.length} z {medicines.length} leków</span>
+                </div>
+
+                {/* View Mode Toggle */}
+                <div className="flex gap-1">
+                    <button
+                        onClick={() => handleViewModeChange('grid')}
+                        className={`neu-tag p-2 transition-all ${viewMode === 'grid' ? 'active' : ''}`}
+                        title="Widok kafelków"
+                        aria-label="Widok kafelków"
+                        aria-pressed={viewMode === 'grid'}
+                    >
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            style={{ color: viewMode === 'grid' ? 'white' : 'var(--color-text-muted)' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                    </button>
+                    <button
+                        onClick={() => handleViewModeChange('list')}
+                        className={`neu-tag p-2 transition-all ${viewMode === 'list' ? 'active' : ''}`}
+                        title="Widok listy"
+                        aria-label="Widok listy"
+                        aria-pressed={viewMode === 'list'}
+                    >
+                        {/* Stack icon - prostokąty ułożone wertykalnie */}
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            style={{ color: viewMode === 'list' ? 'white' : 'var(--color-text-muted)' }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                d="M4 5h16a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1zM4 14h16a1 1 0 011 1v3a1 1 0 01-1 1H4a1 1 0 01-1-1v-3a1 1 0 011-1z" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
-            {/* Grid z kartami */}
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Grid/List z kartami */}
+            <div className={viewMode === 'grid'
+                ? 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3'
+                : 'flex flex-col gap-3'
+            }>
                 {filteredMedicines.map((medicine, index) => (
                     <div
                         key={medicine.id}
@@ -135,6 +220,8 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
                             medicine={medicine}
                             onDelete={onDelete}
                             onUpdateExpiry={onUpdateExpiry}
+                            isCollapsed={isCardCollapsed(medicine.id)}
+                            onToggleCollapse={() => toggleCollapse(medicine.id)}
                         />
                     </div>
                 ))}
@@ -142,3 +229,4 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
         </div>
     );
 }
+

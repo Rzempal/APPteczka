@@ -1,8 +1,9 @@
 'use client';
 
 // src/components/Filters.tsx
-// Filtry dla listy leków - Neumorphism Style
+// Filtry dla listy leków - Neumorphism Style z możliwością zwijania
 
+import { useState, useEffect } from 'react';
 import type { FilterState, ExpiryFilter } from '@/lib/types';
 import { TAG_CATEGORIES } from '@/lib/types';
 
@@ -12,6 +13,21 @@ interface FiltersProps {
 }
 
 export default function Filters({ filters, onFiltersChange }: FiltersProps) {
+    const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(false);
+
+    // Załaduj stan zwijania z localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem('filtersCollapsed');
+        if (saved !== null) {
+            setIsFiltersCollapsed(saved === 'true');
+        }
+    }, []);
+
+    // Zapisz stan zwijania do localStorage
+    useEffect(() => {
+        localStorage.setItem('filtersCollapsed', String(isFiltersCollapsed));
+    }, [isFiltersCollapsed]);
+
     const handleSearchChange = (search: string) => {
         onFiltersChange({ ...filters, search });
     };
@@ -74,15 +90,35 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
                 </div>
             </div>
 
-            {/* Filtry tagów */}
+            {/* Sekcja Filtry (dawniej Tagi) - zwijalna */}
             <div>
-                <div className="mb-2 flex items-center justify-between">
-                    <label className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                        🏷️ Tagi
+                {/* Nagłówek - klikalny do zwijania */}
+                <div
+                    className="mb-2 flex items-center justify-between cursor-pointer group"
+                    onClick={() => setIsFiltersCollapsed(!isFiltersCollapsed)}
+                    role="button"
+                    aria-expanded={!isFiltersCollapsed}
+                >
+                    <label className="text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+                        🏷️ Filtry
+                        <span
+                            className={`neu-tag p-1 transition-all group-hover:scale-110 ${isFiltersCollapsed ? 'active' : ''}`}
+                            style={{ borderRadius: '50%' }}
+                        >
+                            <svg
+                                className={`h-3 w-3 transition-transform duration-300 ${isFiltersCollapsed ? '' : 'rotate-180'}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                style={{ color: isFiltersCollapsed ? 'white' : 'var(--color-text-muted)' }}
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
                     </label>
                     {hasActiveFilters && (
                         <button
-                            onClick={handleClearFilters}
+                            onClick={(e) => { e.stopPropagation(); handleClearFilters(); }}
                             className="neu-tag text-xs"
                             style={{ color: 'var(--color-error)' }}
                         >
@@ -91,25 +127,30 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
                     )}
                 </div>
 
-                <div className="space-y-3">
-                    {TAG_CATEGORIES.map(category => (
-                        <div key={category.key}>
-                            <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
-                                {category.label}
-                            </span>
-                            <div className="mt-1 flex flex-wrap gap-1.5">
-                                {category.tags.map(tag => (
-                                    <button
-                                        key={tag}
-                                        onClick={() => handleTagToggle(tag)}
-                                        className={`neu-tag text-xs transition-all ${filters.tags.includes(tag) ? 'active' : ''}`}
-                                    >
-                                        {tag}
-                                    </button>
-                                ))}
+                {/* Kategorie filtrów - ukryte gdy zwinięte */}
+                <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isFiltersCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}
+                >
+                    <div className="space-y-3">
+                        {TAG_CATEGORIES.map(category => (
+                            <div key={category.key}>
+                                <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                                    {category.label}
+                                </span>
+                                <div className="mt-1 flex flex-wrap gap-1.5">
+                                    {category.tags.map(tag => (
+                                        <button
+                                            key={tag}
+                                            onClick={() => handleTagToggle(tag)}
+                                            className={`neu-tag text-xs transition-all ${filters.tags.includes(tag) ? 'active' : ''}`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -117,7 +158,7 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
             {filters.tags.length > 0 && (
                 <div className="pt-4" style={{ borderTop: '1px solid var(--shadow-dark)' }}>
                     <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
-                        Aktywne tagi ({filters.tags.length}):
+                        Aktywne filtry ({filters.tags.length}):
                     </span>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                         {filters.tags.map(tag => (
@@ -141,3 +182,4 @@ export default function Filters({ filters, onFiltersChange }: FiltersProps) {
         </div>
     );
 }
+
