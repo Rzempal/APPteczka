@@ -70,78 +70,66 @@ export default function HomePage() {
   };
 
   const handleExportPDF = async () => {
-    // Dynamiczny import dla client-side only
     const { jsPDF } = await import('jspdf');
     const autoTable = (await import('jspdf-autotable')).default;
 
-    // Pobierz font Roboto z CDN (obsługuje polskie znaki)
-    const fontUrl = 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5Q.ttf';
+    const doc = new jsPDF();
 
-    let doc: InstanceType<typeof jsPDF>;
+    // Funkcja do zamiany polskich znaków
+    const removeDiacritics = (text: string): string => {
+      const map: Record<string, string> = {
+        'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n',
+        'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
+        'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N',
+        'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
+      };
+      return text.replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, char => map[char] || char);
+    };
 
-    try {
-      // Próbuj załadować font Roboto dla polskich znaków
-      const response = await fetch(fontUrl);
-      const fontBuffer = await response.arrayBuffer();
-      const fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBuffer)));
+    // Tytuł - kompaktowy
+    doc.setFontSize(14);
+    doc.setTextColor(16, 185, 129);
+    doc.text('Moja Apteczka', 14, 14);
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text(`${new Date().toLocaleDateString('pl-PL')}`, 60, 14);
 
-      doc = new jsPDF();
-      doc.addFileToVFS('Roboto-Regular.ttf', fontBase64);
-      doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
-      doc.setFont('Roboto');
-    } catch {
-      // Fallback do domyślnego fonta (bez polskich znaków)
-      doc = new jsPDF();
-    }
-
-    // Tytuł
-    doc.setFontSize(18);
-    doc.text('Moja Apteczka', 14, 20);
-
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Wygenerowano: ${new Date().toLocaleDateString('pl-PL')}`, 14, 28);
-
-    // Tabelka: Nazwa, Opis, Wskazania, Termin ważności
+    // Tabelka kompaktowa
     const tableData = sortedMedicines.map(m => [
-      m.nazwa || 'Nieznany',
-      m.opis.length > 60 ? m.opis.substring(0, 57) + '...' : m.opis,
-      m.wskazania.slice(0, 3).join(', '),
-      m.terminWaznosci
-        ? new Date(m.terminWaznosci).toLocaleDateString('pl-PL')
-        : 'Brak'
+      removeDiacritics(m.nazwa || 'Nieznany'),
+      removeDiacritics(m.wskazania.slice(0, 2).join(', ') || '-'),
+      m.terminWaznosci ? new Date(m.terminWaznosci).toLocaleDateString('pl-PL') : '-'
     ]);
 
     autoTable(doc, {
-      startY: 35,
-      head: [['Nazwa', 'Opis', 'Wskazania', 'Termin ważności']],
+      startY: 20,
+      head: [['Nazwa', 'Wskazania', 'Termin']],
       body: tableData,
       styles: {
-        fontSize: 8,
-        font: 'Roboto',
-        cellPadding: 3,
+        fontSize: 7,
+        cellPadding: 1.5,
+        lineColor: [220, 220, 220],
+        lineWidth: 0.1,
       },
       headStyles: {
         fillColor: [16, 185, 129],
-        font: 'Roboto',
+        textColor: 255,
         fontStyle: 'bold',
+        cellPadding: 2,
       },
       columnStyles: {
-        0: { cellWidth: 35 },  // Nazwa
-        1: { cellWidth: 55 },  // Opis
-        2: { cellWidth: 50 },  // Wskazania
-        3: { cellWidth: 25 },  // Termin
+        0: { cellWidth: 45 },
+        1: { cellWidth: 'auto' },
+        2: { cellWidth: 22, halign: 'center' },
       },
-      alternateRowStyles: {
-        fillColor: [245, 245, 245],
-      },
+      margin: { left: 14, right: 14, top: 10 },
     });
 
-    // Disclaimer
+    // Disclaimer - kompaktowy
     const finalY = (doc as typeof doc & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 100;
-    doc.setFontSize(8);
-    doc.setTextColor(150);
-    doc.text('APPteczka - narzedzie informacyjne, nie porada medyczna.', 14, finalY + 10);
+    doc.setFontSize(6);
+    doc.setTextColor(160);
+    doc.text('APPteczka - narzedzie informacyjne, nie porada medyczna.', 14, finalY + 5);
 
     doc.save(`apteczka_${new Date().toISOString().split('T')[0]}.pdf`);
   };
