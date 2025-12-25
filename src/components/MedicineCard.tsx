@@ -239,7 +239,9 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
 
                                         {!leafletLoading && leafletSearchResults.length === 0 && leafletSearchQuery.trim().length >= 3 && (
                                             <div className="text-xs p-2" style={{ color: 'var(--color-text-muted)' }}>
-                                                Nie znaleziono - spróbuj inną nazwę lub tylko pierwsze słowo
+                                                Nie znaleziono - spróbuj inną nazwę lub tylko pierwsze słowo.
+                                                <br />
+                                                <span style={{ fontSize: '0.65rem' }}>Uwaga: suplementy diety nie są w Rejestrze Produktów Leczniczych.</span>
                                             </div>
                                         )}
 
