@@ -100,7 +100,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
             {/* Tytuł strony + przyciski */}
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-                    <Image src="/icons/twoja_apteczka.png" alt="Twoja apteczka" width={24} height={24} />
+                    <Image src="/icons/twoja_apteczka.png" alt="Twoja apteczka" width={36} height={36} />
                     Twoja apteczka
                 </h1>
                 <div className="flex gap-2">
@@ -296,13 +296,15 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                             </svg>
                         </span>
                     </label>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setIsLabelManagerOpen(!isLabelManagerOpen); }}
-                        className="neu-tag text-xs"
-                        style={{ color: 'var(--color-accent)' }}
-                    >
-                        ⚙️ Zarządzaj
-                    </button>
+                    {!isLabelsCollapsed && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsLabelManagerOpen(!isLabelManagerOpen); }}
+                            className="neu-tag text-xs"
+                            style={{ color: 'var(--color-accent)' }}
+                        >
+                            ⚙️ Zarządzaj
+                        </button>
+                    )}
                 </div>
 
                 {/* Zawartość - ukryta gdy zwinięta */}

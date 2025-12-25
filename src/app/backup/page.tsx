@@ -72,31 +72,42 @@ export default function BackupPage() {
                 animationDelay: '0.1s',
                 background: 'linear-gradient(145deg, var(--color-bg-light), var(--color-bg-dark))'
             }}>
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                    {/* Lewa strona: Ikona + Tytuł + Opis */}
-                    <div className="flex items-center gap-4">
-                        <div className="neu-convex flex h-14 w-14 items-center justify-center" style={{ borderRadius: '50%' }}>
+                <div className="flex items-center gap-4 flex-wrap">
+                    {/* Tytuł + Opis */}
+                    <div>
+                        <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
+                            Kopia zapasowa
+                        </h1>
+                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                            Pobierz lub skopiuj dane apteczki
+                        </p>
+                    </div>
+
+                    {/* Ikony */}
+                    <div className="flex items-center gap-2">
+                        <div className="neu-convex flex h-12 w-12 items-center justify-center" style={{ borderRadius: '50%' }}>
                             <Image
                                 src="/icons/backup.png"
-                                alt="Kopia zapasowa"
-                                width={32}
-                                height={32}
+                                alt="Pudełko otwarte"
+                                width={28}
+                                height={28}
                             />
                         </div>
-                        <div>
-                            <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
-                                Kopia zapasowa
-                            </h1>
-                            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                                Pobierz lub skopiuj dane apteczki, aby je zachować lub przenieść
-                            </p>
+                        <span style={{ color: 'var(--color-text-muted)' }}>→</span>
+                        <div className="neu-convex flex h-12 w-12 items-center justify-center" style={{ borderRadius: '50%' }}>
+                            <Image
+                                src="/icons/backup_closed.png"
+                                alt="Pudełko zamknięte"
+                                width={28}
+                                height={28}
+                            />
                         </div>
                     </div>
 
-                    {/* Prawa strona: Licznik */}
-                    <div className="text-right">
-                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Leków w apteczce:</p>
-                        <p className="text-3xl font-bold" style={{ color: 'var(--color-accent)' }}>{medicineCount}</p>
+                    {/* Licznik */}
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Liczba leków w pudełku:</span>
+                        <span className="text-2xl font-bold" style={{ color: 'var(--color-accent)' }}>{medicineCount}</span>
                     </div>
                 </div>
             </div>
