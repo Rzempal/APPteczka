@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { getMedicines, exportMedicines } from '@/lib/storage';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function BackupPage() {
     const [medicineCount, setMedicineCount] = useState(0);
@@ -66,26 +67,34 @@ export default function BackupPage() {
 
     return (
         <div className="space-y-6">
-            {/* Nagłówek */}
-            <div className="animate-fadeInUp">
-                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                    💾 Kopia zapasowa
-                </h1>
-                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                    Pobierz lub skopiuj dane apteczki, aby je zachować lub przenieść
-                </p>
-            </div>
-
-            {/* Status */}
+            {/* Nagłówek + Status - połączony kontener */}
             <div className="neu-flat p-6 animate-fadeInUp" style={{
                 animationDelay: '0.1s',
                 background: 'linear-gradient(145deg, var(--color-bg-light), var(--color-bg-dark))'
             }}>
-                <div className="flex items-center gap-4">
-                    <div className="neu-convex flex h-14 w-14 items-center justify-center text-3xl" style={{ borderRadius: '50%' }}>
-                        📦
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                    {/* Lewa strona: Ikona + Tytuł + Opis */}
+                    <div className="flex items-center gap-4">
+                        <div className="neu-convex flex h-14 w-14 items-center justify-center" style={{ borderRadius: '50%' }}>
+                            <Image
+                                src="/icons/backup.png"
+                                alt="Kopia zapasowa"
+                                width={32}
+                                height={32}
+                            />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
+                                Kopia zapasowa
+                            </h1>
+                            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                                Pobierz lub skopiuj dane apteczki, aby je zachować lub przenieść
+                            </p>
+                        </div>
                     </div>
-                    <div>
+
+                    {/* Prawa strona: Licznik */}
+                    <div className="text-right">
                         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>Leków w apteczce:</p>
                         <p className="text-3xl font-bold" style={{ color: 'var(--color-accent)' }}>{medicineCount}</p>
                     </div>

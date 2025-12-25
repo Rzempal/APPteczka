@@ -82,18 +82,18 @@ export function Header() {
                 {/* Main navbar container */}
                 <div className="neu-flat p-4 animate-fadeInUp">
                     {/* Top row: Logo + icons + hamburger */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between min-h-[40px]">
                         {/* Logo Section */}
-                        <Link href="/" className="flex items-center gap-2 group">
+                        <Link href="/" className="flex items-center gap-2 group h-8">
                             <Image
                                 src="/favicon.png"
                                 alt="Pudełko na leki logo"
                                 width={32}
                                 height={32}
-                                className="group-hover:scale-110 transition-transform"
+                                className="shrink-0 group-hover:scale-110 transition-transform"
                             />
                             <span
-                                className={`text-xl font-bold transition-all duration-300 overflow-hidden ${iconsVisible
+                                className={`text-xl font-bold transition-all duration-300 overflow-hidden whitespace-nowrap ${iconsVisible
                                     ? 'max-w-[160px] opacity-100 translate-x-0'
                                     : 'max-w-0 opacity-0 -translate-x-4'
                                     }`}
@@ -104,7 +104,7 @@ export function Header() {
                         </Link>
 
                         {/* Right side: icons + hamburger */}
-                        <div className="flex items-center gap-2 py-2">
+                        <div className="flex items-center gap-2">
                             {/* Desktop inline icons - shown when iconsVisible */}
                             {(iconsVisible || isAnimating) && (
                                 <div className="hidden sm:flex items-center gap-2">

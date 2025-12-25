@@ -4,6 +4,7 @@
 // Filtry dla listy léków - Neumorphism Style z możliwością zwijania
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import type { FilterState, ExpiryFilter, UserLabel } from '@/lib/types';
 import { TAG_CATEGORIES, LABEL_COLORS } from '@/lib/types';
 import { getLabels } from '@/lib/labelStorage';
@@ -98,8 +99,9 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
         <div className="neu-flat p-5 space-y-5 animate-fadeInUp">
             {/* Tytuł strony + przyciski */}
             <div className="flex flex-wrap items-center justify-between gap-2">
-                <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
-                    💊 Twoja apteczka
+                <h1 className="text-xl font-bold flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
+                    <Image src="/icons/twoja_apteczka.png" alt="Twoja apteczka" width={24} height={24} />
+                    Twoja apteczka
                 </h1>
                 <div className="flex gap-2">
                     {onCopyList && (

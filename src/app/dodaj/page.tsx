@@ -33,14 +33,21 @@ export default function DodajLekiPage() {
 
     return (
         <div className="space-y-6">
-            {/* Nagłówek */}
-            <div className="animate-fadeInUp">
-                <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                    ➕ Dodaj leki
-                </h1>
-                <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                    Zeskanuj opakowania leków przez AI i zaimportuj je do apteczki
-                </p>
+            {/* Nagłówek - kontener w stylu kroków */}
+            <div className="neu-flat p-6 animate-fadeInUp">
+                <div className="flex items-start gap-4">
+                    <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold text-lg" style={{ color: 'var(--color-accent)', borderRadius: '50%' }}>
+                        ➕
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
+                            Dodaj leki
+                        </h1>
+                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                            Zeskanuj opakowania leków przez AI i zaimportuj je do apteczki
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Krok 1: Prompt */}
