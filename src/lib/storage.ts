@@ -100,6 +100,8 @@ export function importMedicinesWithDuplicateHandling(
                 opis: lek.opis,
                 wskazania: lek.wskazania,
                 tagi: lek.tagi,
+                labels: lek.labels,
+                notatka: lek.notatka,
                 dataDodania: new Date().toISOString()
             };
             newMedicines.push(newMedicine);
@@ -117,7 +119,9 @@ export function importMedicinesWithDuplicateHandling(
                 ...medicines[existingIndex],
                 opis: lek.opis,
                 wskazania: lek.wskazania,
-                tagi: lek.tagi
+                tagi: lek.tagi,
+                labels: lek.labels,
+                notatka: lek.notatka
                 // Zachowaj terminWaznosci i dataDodania
             };
         } else if (action === 'skip') {
@@ -131,6 +135,8 @@ export function importMedicinesWithDuplicateHandling(
                 opis: lek.opis,
                 wskazania: lek.wskazania,
                 tagi: lek.tagi,
+                labels: lek.labels,
+                notatka: lek.notatka,
                 dataDodania: new Date().toISOString()
             };
             newMedicines.push(newMedicine);

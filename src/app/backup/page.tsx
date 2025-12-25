@@ -56,6 +56,8 @@ export default function BackupPage() {
       "opis": "Lek przeciwbólowy...",
       "wskazania": ["ból głowy"],
       "tagi": ["przeciwbólowy"],
+      "labels": ["label-id-1"],
+      "notatka": "Dawkowanie: 1 tabletka co 6h",
       "terminWaznosci": "2025-12-31",
       "dataDodania": "2024-01-15"
     }
@@ -127,10 +129,10 @@ export default function BackupPage() {
                             <button
                                 onClick={handleDownload}
                                 className={`neu-btn ${downloadStatus === 'success'
+                                    ? ''
+                                    : downloadStatus === 'error'
                                         ? ''
-                                        : downloadStatus === 'error'
-                                            ? ''
-                                            : 'neu-btn-primary'
+                                        : 'neu-btn-primary'
                                     }`}
                                 style={
                                     downloadStatus === 'success'
