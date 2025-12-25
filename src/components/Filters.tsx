@@ -13,9 +13,10 @@ interface FiltersProps {
     filters: FilterState;
     onFiltersChange: (filters: FilterState) => void;
     onExportPDF?: () => void;
+    onCopyList?: () => void;
 }
 
-export default function Filters({ filters, onFiltersChange, onExportPDF }: FiltersProps) {
+export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyList }: FiltersProps) {
     // Domyślnie wszystko schowane
     const [isExpiryCollapsed, setIsExpiryCollapsed] = useState(true);
     const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
@@ -95,23 +96,37 @@ export default function Filters({ filters, onFiltersChange, onExportPDF }: Filte
 
     return (
         <div className="neu-flat p-5 space-y-5 animate-fadeInUp">
-            {/* Tytuł strony + PDF */}
+            {/* Tytuł strony + przyciski */}
             <div className="flex items-center justify-between">
                 <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
                     💊 Twoja apteczka
                 </h1>
-                {onExportPDF && (
-                    <button
-                        onClick={onExportPDF}
-                        className="neu-btn neu-btn-secondary text-sm"
-                        title="Eksportuj do PDF"
-                    >
-                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        PDF
-                    </button>
-                )}
+                <div className="flex gap-2">
+                    {onCopyList && (
+                        <button
+                            onClick={onCopyList}
+                            className="neu-btn neu-btn-secondary text-sm"
+                            title="Kopiuj listę leków"
+                        >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                            Lista
+                        </button>
+                    )}
+                    {onExportPDF && (
+                        <button
+                            onClick={onExportPDF}
+                            className="neu-btn neu-btn-secondary text-sm"
+                            title="Eksportuj do PDF"
+                        >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            PDF
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Wyszukiwanie */}

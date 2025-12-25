@@ -12,12 +12,11 @@ Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, ś
 - ✅ Filtrowanie po tagach, objawach, terminie ważności
 - ✅ Wyszukiwanie tekstowe
 - ✅ Edycja terminów ważności z alertami
-- ✅ Generator promptów dla ChatGPT/Claude/Gemini
-- ✅ **Wyszukiwarka w ulotkach** (dopasowanie leków do objawów)
+- ✅ Generator promptu OCR (rozpoznawanie leków ze zdjęcia)
+- ✅ Kopiowanie listy leków do schowka
 - ✅ Eksport apteczki do JSON i PDF
 - ✅ Sortowanie leków (A-Z, termin ważności)
-- ✅ 4-tabowa nawigacja (Apteczka, Dodaj leki, Wyszukiwarka, Kopia zapasowa)
-- ✅ Zabezpieczenia RODO (checkbox zgody przed kopiowaniem)
+- ✅ 3-tabowa nawigacja (Apteczka, Dodaj leki, Kopia zapasowa)
 - ✅ Design neumorficzny z animacjami scroll
 - ✅ 100% offline – dane lokalne w przeglądarce
 

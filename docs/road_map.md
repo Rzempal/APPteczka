@@ -83,8 +83,7 @@
 | **Animacje scroll + button press** | ✅ |
 | **Etykiety użytkownika (labels)** | ✅ |
 | **Notatki użytkownika** | ✅ |
-| **Wyszukiwarka w ulotkach (bez roli lekarza)** | ✅ |
-| **Compliance MDR/RODO** | ✅ |
+| **Kopiowanie listy leków** | ✅ |
 | Persistencja localStorage | ✅ |
 
 ---

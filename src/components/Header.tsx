@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback } from "react";
 const navItems = [
     { href: "/", label: "Apteczka", icon: "💊" },
     { href: "/dodaj", label: "Dodaj leki", icon: "➕" },
-    { href: "/konsultacja", label: "Konsultacja AI", icon: "🩺" },
     { href: "/backup", label: "Kopia zapasowa", icon: "💾" },
 ];
 

@@ -86,50 +86,13 @@ Celem jest wyłącznie **porządkowanie informacji do prywatnej bazy leków uży
 }
 
 /**
- * Generuje prompt do wyszukiwania informacji w ulotkach leków (rola: asystent wyszukiwania)
- * UWAGA: Prompt NIE pełni roli doradczej/lekarskiej - tylko wyszukuje i cytuje ulotki
+ * Generuje listę nazw leków oddzielonych przecinkami
+ * Do kopiowania i użycia zewnętrznego
  */
-export function generateAnalysisPrompt(medicines: Medicine[], symptoms: string[], additionalNotes?: string): string {
-  const medicineNames = medicines
+export function generateMedicineList(medicines: Medicine[]): string {
+  return medicines
     .map(m => m.nazwa || 'Nieznany lek')
     .join(', ');
-
-  const symptomsList = symptoms.join(', ');
-
-  const notesSection = additionalNotes?.trim()
-    ? `\n\n## Dodatkowe informacje:\n${additionalNotes.trim()}`
-    : '';
-
-  return `# Wyszukiwanie w ulotkach leków
-
-## Rola
-Działaj jako asystent wyszukujący informacje w dokumentacji leków (Charakterystyka Produktu Leczniczego / ulotki). 
-NIE jesteś lekarzem. NIE udzielasz porad medycznych. NIE oceniasz skuteczności klinicznej.
-
-## Słowa kluczowe do wyszukania:
-${symptomsList}${notesSection}
-
-## Lista leków do przeszukania:
-${medicineNames}
-
-## Zadanie (format: WYSZUKIWARKA / BIBLIOTEKARZ)
-
-1. **Dopasowanie słów kluczowych** – Wyszukaj w treści ulotek (ChPL) leków z powyższej listy te, które w sekcji "Wskazania do stosowania" zawierają wymienione słowa kluczowe (objawy lub pokrewne terminy).
-
-2. **Cytowanie źródła** – Dla każdego dopasowania zacytuj fragment ulotki, np.:
-   > "Lek X – Wskazania: stosowany w leczeniu [objaw]..." (źródło: ulotka producenta)
-
-3. **Brak dopasowania** – Jeśli żaden lek z listy nie zawiera w ulotce wymienionych słów kluczowych, napisz: "Brak dopasowań w ulotkach dla podanych słów kluczowych."
-
-4. **Przypomnienie dla użytkownika** – Na końcu zawsze dodaj:
-   > ⚠️ To jest wyszukiwarka informacji z ulotek, NIE porada medyczna. Przed użyciem leku przeczytaj pełną ulotkę i skonsultuj się z lekarzem lub farmaceutą.
-
-## Ograniczenia (BEZWZGLĘDNE)
-- NIE oceniaj, czy lek jest odpowiedni dla użytkownika
-- NIE sugeruj dawkowania
-- NIE analizuj interakcji między lekami
-- NIE stawiaj diagnoz
-- NIE wcielaj się w rolę lekarza ani farmaceuty`
 }
 
 /**
@@ -143,3 +106,4 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     return false;
   }
 }
+

@@ -7,6 +7,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { Medicine, FilterState } from '@/lib/types';
 import { getMedicines, deleteMedicine, updateMedicine } from '@/lib/storage';
+import { generateMedicineList, copyToClipboard } from '@/lib/prompts';
 import MedicineList from '@/components/MedicineList';
 import Filters from '@/components/Filters';
 
@@ -24,6 +25,7 @@ export default function HomePage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('nazwa');
   const [sortDir, setSortDir] = useState<SortDirection>('asc');
+  const [copyListStatus, setCopyListStatus] = useState<'idle' | 'copied'>('idle');
 
   // Załaduj leki z localStorage przy starcie
   useEffect(() => {
@@ -162,6 +164,15 @@ export default function HomePage() {
     }
   };
 
+  const handleCopyList = async () => {
+    const list = generateMedicineList(sortedMedicines);
+    const success = await copyToClipboard(list);
+    if (success) {
+      setCopyListStatus('copied');
+      setTimeout(() => setCopyListStatus('idle'), 2000);
+    }
+  };
+
   // Skeleton podczas ładowania
   if (!isLoaded) {
     return (
@@ -187,7 +198,13 @@ export default function HomePage() {
               filters={filters}
               onFiltersChange={setFilters}
               onExportPDF={handleExportPDF}
+              onCopyList={handleCopyList}
             />
+            {copyListStatus === 'copied' && (
+              <div className="mt-2 neu-flat p-2 text-center text-sm animate-fadeInUp" style={{ color: 'var(--color-success)' }}>
+                ✅ Skopiowano listę leków!
+              </div>
+            )}
           </aside>
         )}
 
