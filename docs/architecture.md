@@ -189,5 +189,5 @@ Gotowe prompty: `docs/prompts/`
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-24
+> 📅 **Ostatnia aktualizacja:** 2025-12-25
 > 🏷️ **Wersja:** 1.1.0

@@ -1,5 +1,7 @@
 # 💊 Pudełko na leki – Zarządzaj domową apteczką
 
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-pudelkonaleki.michalrapala.app-blue)](https://pudelkonaleki.michalrapala.app)
+
 Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, śledź terminy ważności, filtruj po objawach.
 
 > ⚠️ **Ważne:** Pudełko na leki to narzędzie informacyjne (wyszukiwarka w ulotkach), NIE porada medyczna. Aplikacja NIE weryfikuje interakcji międzylekowych.
@@ -108,6 +110,13 @@ Szczegóły: [docs/road_map.md](docs/road_map.md)
 ## 📄 Licencja
 
 MIT License
+
+---
+
+## 🔗 Linki
+
+- 🌐 **Wersja produkcyjna:** [pudelkonaleki.michalrapala.app](https://pudelkonaleki.michalrapala.app)
+- 📦 **Repozytorium:** [GitHub](https://github.com/Rzempal/APPteczka)
 
 ---
 
