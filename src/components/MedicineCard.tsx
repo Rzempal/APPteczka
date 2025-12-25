@@ -157,8 +157,120 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
 
                 {/* Szczegóły wewnętrzne - ukryte gdy zwinięte (BEZ etykiet - one są poza overflow-hidden) */}
                 <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[400px] opacity-100'}`}
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}
                 >
+                    {/* Ulotka PDF - pierwsza po rozwinieciu */}
+                    <div className="mb-3">
+                        <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>Ulotka PDF:</span>
+
+                        {medicine.leafletUrl ? (
+                            <div className="mt-1 flex items-center gap-2 flex-wrap">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setIsPdfModalOpen(true); }}
+                                    className="neu-tag text-xs flex items-center gap-1 hover:scale-105 transition-transform"
+                                    style={{ color: 'var(--color-accent)' }}
+                                >
+                                    📄 Pokaż ulotkę PDF
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleRemoveLeaflet(); }}
+                                    className="neu-tag text-xs"
+                                    style={{ color: 'var(--color-error)' }}
+                                    title="Odepnij ulotkę"
+                                >
+                                    Odepnij
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="mt-1">
+                                {!isSearchingLeaflet ? (
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleOpenLeafletSearch(); }}
+                                        className="neu-tag text-xs flex items-center gap-1"
+                                        style={{ color: 'var(--color-accent)' }}
+                                        title="Wyszukaj ulotkę w Rejestrze Produktów Leczniczych"
+                                    >
+                                        🔍 Znajdź i podepnij ulotkę
+                                    </button>
+                                ) : (
+                                    <div
+                                        className="rounded-lg p-3 animate-fadeIn"
+                                        style={{ background: 'var(--color-bg-dark)', opacity: 0.95 }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="text-xs font-bold" style={{ color: 'var(--color-text)' }}>
+                                                Szukaj w bazie MZ:
+                                            </span>
+                                            <button
+                                                onClick={() => { setIsSearchingLeaflet(false); setLeafletSearchResults([]); setLeafletSearchQuery(''); }}
+                                                className="text-xs px-2 py-1 rounded"
+                                                style={{ color: 'var(--color-error)' }}
+                                            >
+                                                ✕ Anuluj
+                                            </button>
+                                        </div>
+
+                                        <div className="flex gap-2 mb-2">
+                                            <input
+                                                type="text"
+                                                value={leafletSearchQuery}
+                                                onChange={(e) => setLeafletSearchQuery(e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') handleSearchLeaflet(); }}
+                                                placeholder="Wpisz nazwę leku..."
+                                                className="neu-input flex-1 text-xs"
+                                                style={{ padding: '0.5rem' }}
+                                            />
+                                            <button
+                                                onClick={() => handleSearchLeaflet()}
+                                                disabled={leafletSearchQuery.trim().length < 3 || leafletLoading}
+                                                className="neu-tag text-xs"
+                                                style={{ color: 'var(--color-accent)' }}
+                                            >
+                                                {leafletLoading ? '...' : '🔍'}
+                                            </button>
+                                        </div>
+
+                                        {leafletLoading && (
+                                            <div className="text-xs p-2" style={{ color: 'var(--color-text-muted)' }}>
+                                                Szukanie w Rejestrze Produktów Leczniczych...
+                                            </div>
+                                        )}
+
+                                        {!leafletLoading && leafletSearchResults.length === 0 && leafletSearchQuery.trim().length >= 3 && (
+                                            <div className="text-xs p-2" style={{ color: 'var(--color-text-muted)' }}>
+                                                Nie znaleziono - spróbuj inną nazwę lub tylko pierwsze słowo
+                                            </div>
+                                        )}
+
+                                        {!leafletLoading && leafletSearchResults.length > 0 && (
+                                            <div className="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
+                                                {leafletSearchResults.map((res) => (
+                                                    <button
+                                                        key={res.id}
+                                                        onClick={() => handleSelectLeaflet(res.ulotkaUrl)}
+                                                        className="w-full text-left text-xs p-2 rounded transition-colors flex justify-between group neu-tag"
+                                                        style={{ marginBottom: '0.25rem' }}
+                                                    >
+                                                        <span style={{ color: 'var(--color-text)' }}>
+                                                            {res.nazwa}{' '}
+                                                            <span style={{ opacity: 0.7 }}>
+                                                                ({res.moc}{res.postac ? `, ${res.postac}` : ''})
+                                                            </span>
+                                                        </span>
+                                                        <span className="hidden group-hover:inline" style={{ color: 'var(--color-accent)' }}>
+                                                            ➕
+                                                        </span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Wskazania */}
                     <div className="mb-3">
                         <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>Wskazania:</span>
@@ -302,121 +414,6 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                             </div>
                         </div>
 
-                        {/* Ulotka PDF */}
-                        <div className="pt-3 pr-1" style={{ borderTop: '1px solid var(--shadow-dark)' }}>
-                            <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>Ulotka PDF:</span>
-
-                            {medicine.leafletUrl ? (
-                                /* Lek ma ulotkę - pokaż przycisk otwierający modal i przycisk odpięcia */
-                                <div className="mt-1 flex items-center justify-between gap-2">
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setIsPdfModalOpen(true); }}
-                                        className="neu-tag text-xs flex items-center gap-1 hover:scale-105 transition-transform"
-                                        style={{ color: 'var(--color-accent)' }}
-                                    >
-                                        📄 Pokaż ulotkę PDF
-                                    </button>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleRemoveLeaflet(); }}
-                                        className="neu-tag text-xs"
-                                        style={{ color: 'var(--color-error)' }}
-                                        title="Odepnij ulotkę"
-                                    >
-                                        Odepnij
-                                    </button>
-                                </div>
-                            ) : (
-                                /* Brak ulotki - pokaż przycisk szukania lub wyniki */
-                                <div className="mt-1">
-                                    {!isSearchingLeaflet ? (
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); handleOpenLeafletSearch(); }}
-                                            className="neu-tag text-xs flex items-center gap-1"
-                                            style={{ color: 'var(--color-accent)' }}
-                                            title="Wyszukaj ulotkę w Rejestrze Produktów Leczniczych"
-                                        >
-                                            🔍 Znajdź i podepnij ulotkę
-                                        </button>
-                                    ) : (
-                                        /* Panel wyników wyszukiwania */
-                                        <div
-                                            className="rounded-lg p-3 animate-fadeIn"
-                                            style={{ background: 'var(--color-bg-dark)', opacity: 0.95 }}
-                                            onClick={(e) => e.stopPropagation()}
-                                        >
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-xs font-bold" style={{ color: 'var(--color-text)' }}>
-                                                    Szukaj w bazie MZ:
-                                                </span>
-                                                <button
-                                                    onClick={() => { setIsSearchingLeaflet(false); setLeafletSearchResults([]); setLeafletSearchQuery(''); }}
-                                                    className="text-xs px-2 py-1 rounded"
-                                                    style={{ color: 'var(--color-error)' }}
-                                                >
-                                                    ✕ Anuluj
-                                                </button>
-                                            </div>
-
-                                            {/* Pole wyszukiwania */}
-                                            <div className="flex gap-2 mb-2">
-                                                <input
-                                                    type="text"
-                                                    value={leafletSearchQuery}
-                                                    onChange={(e) => setLeafletSearchQuery(e.target.value)}
-                                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearchLeaflet(); }}
-                                                    placeholder="Wpisz nazwę leku..."
-                                                    className="neu-input flex-1 text-xs"
-                                                    style={{ padding: '0.5rem' }}
-                                                />
-                                                <button
-                                                    onClick={() => handleSearchLeaflet()}
-                                                    disabled={leafletSearchQuery.trim().length < 3 || leafletLoading}
-                                                    className="neu-tag text-xs"
-                                                    style={{ color: 'var(--color-accent)' }}
-                                                >
-                                                    {leafletLoading ? '...' : '🔍'}
-                                                </button>
-                                            </div>
-
-                                            {leafletLoading && (
-                                                <div className="text-xs p-2" style={{ color: 'var(--color-text-muted)' }}>
-                                                    Szukanie w Rejestrze Produktów Leczniczych...
-                                                </div>
-                                            )}
-
-                                            {!leafletLoading && leafletSearchResults.length === 0 && leafletSearchQuery.trim().length >= 3 && (
-                                                <div className="text-xs p-2" style={{ color: 'var(--color-text-muted)' }}>
-                                                    Nie znaleziono - spróbuj inną nazwę lub tylko pierwsze słowo
-                                                </div>
-                                            )}
-
-                                            {!leafletLoading && leafletSearchResults.length > 0 && (
-                                                <div className="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
-                                                    {leafletSearchResults.map((res) => (
-                                                        <button
-                                                            key={res.id}
-                                                            onClick={() => handleSelectLeaflet(res.ulotkaUrl)}
-                                                            className="w-full text-left text-xs p-2 rounded transition-colors flex justify-between group neu-tag"
-                                                            style={{ marginBottom: '0.25rem' }}
-                                                        >
-                                                            <span style={{ color: 'var(--color-text)' }}>
-                                                                {res.nazwa}{' '}
-                                                                <span style={{ opacity: 0.7 }}>
-                                                                    ({res.moc}{res.postac ? `, ${res.postac}` : ''})
-                                                                </span>
-                                                            </span>
-                                                            <span className="hidden group-hover:inline" style={{ color: 'var(--color-accent)' }}>
-                                                                ➕
-                                                            </span>
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
 
                         {/* Footer: Data dodania + Usuń */}
                         <div className="flex items-center justify-between mt-3 pr-1">
