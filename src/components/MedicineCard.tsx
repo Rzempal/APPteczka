@@ -54,6 +54,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
     const [leafletSearchResults, setLeafletSearchResults] = useState<RplSearchResult[]>([]);
     const [leafletLoading, setLeafletLoading] = useState(false);
     const [isPdfModalOpen, setIsPdfModalOpen] = useState(false);
+    const [leafletSearchQuery, setLeafletSearchQuery] = useState('');
 
     const expiryStatus = getExpiryStatus(medicine.terminWaznosci);
 
@@ -67,15 +68,22 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
         setIsEditingNote(false);
     };
 
-    // Wyszukiwanie ulotki w RPL
-    const handleFindLeaflet = async () => {
-        if (!medicine.nazwa) return;
-
+    // Otwórz panel wyszukiwania
+    const handleOpenLeafletSearch = () => {
+        setLeafletSearchQuery(medicine.nazwa || '');
         setIsSearchingLeaflet(true);
+        setLeafletSearchResults([]);
+    };
+
+    // Wyszukiwanie ulotki w RPL
+    const handleSearchLeaflet = async (query?: string) => {
+        const searchQuery = query || leafletSearchQuery;
+        if (!searchQuery || searchQuery.trim().length < 3) return;
+
         setLeafletLoading(true);
 
         try {
-            const results = await searchMedicineInRpl(medicine.nazwa);
+            const results = await searchMedicineInRpl(searchQuery.trim());
             setLeafletSearchResults(results);
         } catch (error) {
             console.error('Błąd wyszukiwania ulotki:', error);
@@ -90,6 +98,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
         onUpdateLeaflet(medicine.id, url);
         setIsSearchingLeaflet(false);
         setLeafletSearchResults([]);
+        setLeafletSearchQuery('');
     };
 
     // Odepnięcie ulotki
@@ -321,11 +330,10 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                 <div className="mt-1">
                                     {!isSearchingLeaflet ? (
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); handleFindLeaflet(); }}
+                                            onClick={(e) => { e.stopPropagation(); handleOpenLeafletSearch(); }}
                                             className="neu-tag text-xs flex items-center gap-1"
                                             style={{ color: 'var(--color-accent)' }}
-                                            disabled={!medicine.nazwa}
-                                            title={!medicine.nazwa ? 'Lek musi mieć nazwę' : 'Wyszukaj ulotkę w Rejestrze Produktów Leczniczych'}
+                                            title="Wyszukaj ulotkę w Rejestrze Produktów Leczniczych"
                                         >
                                             🔍 Znajdź i podepnij ulotkę
                                         </button>
@@ -338,14 +346,35 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                         >
                                             <div className="flex justify-between items-center mb-2">
                                                 <span className="text-xs font-bold" style={{ color: 'var(--color-text)' }}>
-                                                    Wybierz właściwy lek z bazy MZ:
+                                                    Szukaj w bazie MZ:
                                                 </span>
                                                 <button
-                                                    onClick={() => { setIsSearchingLeaflet(false); setLeafletSearchResults([]); }}
+                                                    onClick={() => { setIsSearchingLeaflet(false); setLeafletSearchResults([]); setLeafletSearchQuery(''); }}
                                                     className="text-xs px-2 py-1 rounded"
                                                     style={{ color: 'var(--color-error)' }}
                                                 >
                                                     ✕ Anuluj
+                                                </button>
+                                            </div>
+
+                                            {/* Pole wyszukiwania */}
+                                            <div className="flex gap-2 mb-2">
+                                                <input
+                                                    type="text"
+                                                    value={leafletSearchQuery}
+                                                    onChange={(e) => setLeafletSearchQuery(e.target.value)}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') handleSearchLeaflet(); }}
+                                                    placeholder="Wpisz nazwę leku..."
+                                                    className="neu-input flex-1 text-xs"
+                                                    style={{ padding: '0.5rem' }}
+                                                />
+                                                <button
+                                                    onClick={() => handleSearchLeaflet()}
+                                                    disabled={leafletSearchQuery.trim().length < 3 || leafletLoading}
+                                                    className="neu-tag text-xs"
+                                                    style={{ color: 'var(--color-accent)' }}
+                                                >
+                                                    {leafletLoading ? '...' : '🔍'}
                                                 </button>
                                             </div>
 
@@ -355,9 +384,9 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                                 </div>
                                             )}
 
-                                            {!leafletLoading && leafletSearchResults.length === 0 && (
+                                            {!leafletLoading && leafletSearchResults.length === 0 && leafletSearchQuery.trim().length >= 3 && (
                                                 <div className="text-xs p-2" style={{ color: 'var(--color-text-muted)' }}>
-                                                    Nie znaleziono ulotek dla &quot;{medicine.nazwa}&quot;
+                                                    Nie znaleziono - spróbuj inną nazwę lub tylko pierwsze słowo
                                                 </div>
                                             )}
 
