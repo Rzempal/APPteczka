@@ -67,7 +67,7 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
                     onClick={() => setActivePrompt('analysis')}
                     className={`neu-tag transition-all ${activePrompt === 'analysis' ? 'active' : ''}`}
                 >
-                    🩺 Konsultacja lekarska
+                    📄 Analiza ulotek
                 </button>
             </div>
 
@@ -86,10 +86,10 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
                 ) : (
                     <>
                         <h3 className="font-medium" style={{ color: 'var(--color-text)' }}>
-                            🩺 Konsultacja z wirtualnym lekarzem
+                            📄 Wyszukiwanie w ulotkach leków
                         </h3>
                         <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                            AI wcieli się w rolę lekarza internisty i przeanalizuje, które z Twoich leków mogą pomóc przy objawach.
+                            AI wyszuka w ulotkach (ChPL) leków z Twojej apteczki te, które zawierają wybrane objawy we wskazaniach.
                         </p>
 
                         {/* Wybór objawów */}
@@ -115,7 +115,7 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
                                     htmlFor="additional-notes"
                                     className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}
                                 >
-                                    Dodatkowe uwagi (opcjonalne):
+                                    Dodatkowe słowa kluczowe (opcjonalne):
                                 </label>
                                 <textarea
                                     id="additional-notes"
@@ -126,6 +126,9 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
                                     className="neu-input mt-1 text-sm"
                                     style={{ resize: 'vertical' }}
                                 />
+                                <p className="mt-1 text-xs" style={{ color: 'var(--color-warning)' }}>
+                                    ⚠️ Nie wpisuj danych osobowych (imienia, nazwiska, PESEL)
+                                </p>
                             </div>
 
                             {medicines.length === 0 && (
@@ -148,10 +151,11 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
                                 WAŻNE – przeczytaj przed użyciem
                             </h4>
                             <ul className="mt-2 space-y-1 text-sm" style={{ color: '#7f1d1d' }}>
-                                <li>• To narzędzie <strong>NIE zastępuje</strong> wizyty u prawdziwego lekarza</li>
-                                <li>• AI może się mylić – zawsze weryfikuj informacje</li>
+                                <li>• To jest <strong>wyszukiwarka informacji</strong>, NIE porada medyczna</li>
+                                <li>• AI może się mylić – zawsze weryfikuj informacje w pełnej ulotce</li>
+                                <li>• <strong>Aplikacja NIE weryfikuje interakcji międzylekowych</strong></li>
                                 <li>• W nagłych przypadkach dzwoń na 112 lub jedź na izbę przyjęć</li>
-                                <li>• Przed przyjęciem leku przeczytaj ulotkę</li>
+                                <li>• Przed przyjęciem leku przeczytaj ulotkę i skonsultuj się z lekarzem/farmaceutą</li>
                             </ul>
                         </div>
                     </div>
@@ -173,10 +177,10 @@ export default function PromptGenerator({ medicines }: PromptGeneratorProps) {
                 onClick={handleCopy}
                 disabled={activePrompt === 'analysis' && (selectedSymptoms.length === 0 || medicines.length === 0)}
                 className={`w-full neu-btn ${copyStatus === 'copied'
+                    ? ''
+                    : copyStatus === 'error'
                         ? ''
-                        : copyStatus === 'error'
-                            ? ''
-                            : 'neu-btn-primary'
+                        : 'neu-btn-primary'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={
                     copyStatus === 'copied'

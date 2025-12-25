@@ -1,7 +1,7 @@
 'use client';
 
 // src/app/konsultacja/page.tsx
-// Strona konsultacji AI – prompt do analizy objawów
+// Strona wyszukiwania w ulotkach leków – prompt do dopasowania objawów
 // Neumorphism Style
 
 import { useState, useEffect } from 'react';
@@ -16,6 +16,7 @@ export default function KonsultacjaPage() {
     const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
     const [additionalNotes, setAdditionalNotes] = useState('');
     const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+    const [privacyConsent, setPrivacyConsent] = useState(false);
 
     useEffect(() => {
         setMedicines(getMedicines());
@@ -51,10 +52,10 @@ export default function KonsultacjaPage() {
             {/* Nagłówek */}
             <div className="animate-fadeInUp">
                 <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-                    🩺 Konsultacja AI
+                    🔍 Wyszukiwarka w Ulotkach
                 </h1>
                 <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                    Zapytaj AI lekarza, które z Twoich leków mogą pomóc przy objawach
+                    Sprawdź dopasowanie leków do objawów w oparciu o treść ulotek
                 </p>
             </div>
 
@@ -70,10 +71,11 @@ export default function KonsultacjaPage() {
                             WAŻNE – przeczytaj przed użyciem
                         </h4>
                         <ul className="mt-2 space-y-1 text-sm" style={{ color: '#7f1d1d' }}>
-                            <li>• To narzędzie <strong>NIE zastępuje</strong> wizyty u prawdziwego lekarza</li>
-                            <li>• AI może się mylić – zawsze weryfikuj informacje</li>
+                            <li>• To jest <strong>wyszukiwarka informacji</strong>, NIE porada medyczna</li>
+                            <li>• AI może się mylić – zawsze weryfikuj informacje w pełnej ulotce</li>
+                            <li>• <strong>Aplikacja NIE weryfikuje interakcji międzylekowych</strong></li>
                             <li>• W nagłych przypadkach dzwoń na 112 lub jedź na izbę przyjęć</li>
-                            <li>• Przed przyjęciem leku przeczytaj ulotkę</li>
+                            <li>• Przed przyjęciem leku przeczytaj ulotkę i skonsultuj się z lekarzem/farmaceutą</li>
                         </ul>
                     </div>
                 </div>
@@ -130,7 +132,7 @@ export default function KonsultacjaPage() {
                                 htmlFor="notes"
                                 className="block text-sm font-medium" style={{ color: 'var(--color-text)' }}
                             >
-                                📝 Dodatkowe uwagi (opcjonalne):
+                                📝 Dodatkowe słowa kluczowe (opcjonalne):
                             </label>
                             <textarea
                                 id="notes"
@@ -141,6 +143,9 @@ export default function KonsultacjaPage() {
                                 className="neu-input mt-2 text-sm"
                                 style={{ resize: 'vertical' }}
                             />
+                            <p className="mt-1 text-xs" style={{ color: 'var(--color-warning)' }}>
+                                ⚠️ Nie wpisuj danych osobowych (imienia, nazwiska, PESEL)
+                            </p>
                         </div>
 
                         {/* Info o apteczce */}
@@ -163,15 +168,34 @@ export default function KonsultacjaPage() {
                         </div>
                     )}
 
+                    {/* Checkbox zgody RODO */}
+                    <div className="neu-flat p-4 animate-fadeInUp" style={{
+                        animationDelay: '0.35s',
+                        background: 'linear-gradient(145deg, #fef3c7, #fde68a)'
+                    }}>
+                        <label className="flex items-start gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={privacyConsent}
+                                onChange={(e) => setPrivacyConsent(e.target.checked)}
+                                className="mt-1 w-4 h-4 accent-amber-600"
+                            />
+                            <span className="text-xs" style={{ color: '#78350f' }}>
+                                Rozumiem, że kopiując ten tekst, przenoszę moje dane o objawach do zewnętrznego narzędzia
+                                (np. ChatGPT), które posiada własną politykę prywatności, niezależną od APPteczki.
+                            </span>
+                        </label>
+                    </div>
+
                     {/* Przycisk kopiowania */}
                     <button
                         onClick={handleCopyPrompt}
-                        disabled={selectedSymptoms.length === 0}
+                        disabled={selectedSymptoms.length === 0 || !privacyConsent}
                         className={`w-full neu-btn ${copyStatus === 'copied'
+                            ? ''
+                            : copyStatus === 'error'
                                 ? ''
-                                : copyStatus === 'error'
-                                    ? ''
-                                    : 'neu-btn-primary'
+                                : 'neu-btn-primary'
                             } disabled:opacity-50 disabled:cursor-not-allowed animate-fadeInUp`}
                         style={{
                             animationDelay: '0.4s',
@@ -191,7 +215,7 @@ export default function KonsultacjaPage() {
                     <div className="neu-flat p-4 animate-fadeInUp" style={{ animationDelay: '0.5s' }}>
                         <p className="text-sm" style={{ color: 'var(--color-accent)' }}>
                             <strong>💡 Jak użyć:</strong> Skopiuj prompt i wklej do ChatGPT, Claude lub Gemini.
-                            AI wcieli się w rolę lekarza i przeanalizuje, które leki z Twojej apteczki mogą pomóc.
+                            AI wyszuka w ulotkach leków z Twojej apteczki te, które zawierają wybrane objawy we wskazaniach.
                         </p>
                     </div>
                 </>

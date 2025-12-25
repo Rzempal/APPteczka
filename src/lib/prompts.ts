@@ -86,7 +86,8 @@ Celem jest wyłącznie **porządkowanie informacji do prywatnej bazy leków uży
 }
 
 /**
- * Generuje prompt do analizy apteczki pod kątem objawów (rola: lekarz internista)
+ * Generuje prompt do wyszukiwania informacji w ulotkach leków (rola: asystent wyszukiwania)
+ * UWAGA: Prompt NIE pełni roli doradczej/lekarskiej - tylko wyszukuje i cytuje ulotki
  */
 export function generateAnalysisPrompt(medicines: Medicine[], symptoms: string[], additionalNotes?: string): string {
   const medicineNames = medicines
@@ -96,28 +97,39 @@ export function generateAnalysisPrompt(medicines: Medicine[], symptoms: string[]
   const symptomsList = symptoms.join(', ');
 
   const notesSection = additionalNotes?.trim()
-    ? `\n\n## Dodatkowe informacje od pacjenta:\n${additionalNotes.trim()}`
+    ? `\n\n## Dodatkowe informacje:\n${additionalNotes.trim()}`
     : '';
 
-  return `# Konsultacja lekarska
+  return `# Wyszukiwanie w ulotkach leków
 
-Wciel się w rolę lekarza internisty z 10-letnim doświadczeniem klinicznym.
-Pacjent przychodzi z poniższymi objawami i prosi o poradę, które z jego domowych leków mogą pomóc.
+## Rola
+Działaj jako asystent wyszukujący informacje w dokumentacji leków (Charakterystyka Produktu Leczniczego / ulotki). 
+NIE jesteś lekarzem. NIE udzielasz porad medycznych. NIE oceniasz skuteczności klinicznej.
 
-## Moje objawy:
+## Słowa kluczowe do wyszukania:
 ${symptomsList}${notesSection}
 
-## Moja apteczka (lista leków):
+## Lista leków do przeszukania:
 ${medicineNames}
 
-## Twoje zadanie:
+## Zadanie (format: WYSZUKIWARKA / BIBLIOTEKARZ)
 
-1. **Analiza objawów** – krótko opisz co mogą oznaczać te objawy w kontekście najczęstszych przyczyn
-2. **Sugestie z apteczki** – które z moich leków wg ulotek mogą pomóc przy tych objawach (bez podawania dawkowania – to pozostaw ulotce)
-3. **Czego brakuje** – jeśli żaden lek nie pasuje do objawów, powiedz o tym
-4. **Czerwone flagi** – wskaż objawy lub sytuacje, które powinny mnie zaniepokić i skłonić do wizyty u lekarza pierwszego kontaktu lub na izbie przyjęć
+1. **Dopasowanie słów kluczowych** – Wyszukaj w treści ulotek (ChPL) leków z powyższej listy te, które w sekcji "Wskazania do stosowania" zawierają wymienione słowa kluczowe (objawy lub pokrewne terminy).
 
-Odpowiedz w formie naturalnej rozmowy z pacjentem – ciepło, profesjonalnie, zrozumiale.`
+2. **Cytowanie źródła** – Dla każdego dopasowania zacytuj fragment ulotki, np.:
+   > "Lek X – Wskazania: stosowany w leczeniu [objaw]..." (źródło: ulotka producenta)
+
+3. **Brak dopasowania** – Jeśli żaden lek z listy nie zawiera w ulotce wymienionych słów kluczowych, napisz: "Brak dopasowań w ulotkach dla podanych słów kluczowych."
+
+4. **Przypomnienie dla użytkownika** – Na końcu zawsze dodaj:
+   > ⚠️ To jest wyszukiwarka informacji z ulotek, NIE porada medyczna. Przed użyciem leku przeczytaj pełną ulotkę i skonsultuj się z lekarzem lub farmaceutą.
+
+## Ograniczenia (BEZWZGLĘDNE)
+- NIE oceniaj, czy lek jest odpowiedni dla użytkownika
+- NIE sugeruj dawkowania
+- NIE analizuj interakcji między lekami
+- NIE stawiaj diagnoz
+- NIE wcielaj się w rolę lekarza ani farmaceuty`
 }
 
 /**

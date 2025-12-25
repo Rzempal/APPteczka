@@ -83,6 +83,8 @@
 | **Animacje scroll + button press** | ✅ |
 | **Etykiety użytkownika (labels)** | ✅ |
 | **Notatki użytkownika** | ✅ |
+| **Wyszukiwarka w ulotkach (bez roli lekarza)** | ✅ |
+| **Compliance MDR/RODO** | ✅ |
 | Persistencja localStorage | ✅ |
 
 ---
@@ -129,4 +131,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-24
+> 📅 **Ostatnia aktualizacja:** 2025-12-25
