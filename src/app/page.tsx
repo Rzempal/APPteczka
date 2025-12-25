@@ -31,6 +31,13 @@ export default function HomePage() {
   useEffect(() => {
     setMedicines(getMedicines());
     setIsLoaded(true);
+
+    // Nasłuchuj na zmiany w lekach (np. po usunięciu etykiety)
+    const handleMedicinesUpdated = () => {
+      setMedicines(getMedicines());
+    };
+    window.addEventListener('medicinesUpdated', handleMedicinesUpdated);
+    return () => window.removeEventListener('medicinesUpdated', handleMedicinesUpdated);
   }, []);
 
   // Sortowanie

@@ -92,7 +92,7 @@ export function updateLabel(id: string, updates: Partial<Omit<UserLabel, 'id'>>)
 }
 
 /**
- * Usuwa etykietę
+ * Usuwa etykietę oraz czyści referencje do niej ze wszystkich leków
  */
 export function deleteLabel(id: string): boolean {
     const labels = getLabels();
@@ -103,7 +103,46 @@ export function deleteLabel(id: string): boolean {
     }
 
     saveLabels(filtered);
+
+    // Usuń referencje do tej etykiety ze wszystkich leków
+    removeLabelFromAllMedicines(id);
+
     return true;
+}
+
+/**
+ * Usuwa referencję do etykiety ze wszystkich leków
+ */
+function removeLabelFromAllMedicines(labelId: string): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+        const stored = localStorage.getItem('appteczka_medicines');
+        if (!stored) return;
+
+        const data = JSON.parse(stored);
+        if (!data.leki || !Array.isArray(data.leki)) return;
+
+        let modified = false;
+
+        for (const medicine of data.leki) {
+            if (medicine.labels && Array.isArray(medicine.labels)) {
+                const originalLength = medicine.labels.length;
+                medicine.labels = medicine.labels.filter((lid: string) => lid !== labelId);
+                if (medicine.labels.length !== originalLength) {
+                    modified = true;
+                }
+            }
+        }
+
+        if (modified) {
+            localStorage.setItem('appteczka_medicines', JSON.stringify(data));
+            // Emit event to notify components
+            window.dispatchEvent(new Event('medicinesUpdated'));
+        }
+    } catch (error) {
+        console.error('Błąd usuwania etykiety z leków:', error);
+    }
 }
 
 /**

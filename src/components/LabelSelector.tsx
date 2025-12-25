@@ -121,10 +121,10 @@ export default function LabelSelector({ selectedLabelIds, onChange, onLabelsCrea
                     style={{ color: 'var(--color-accent)' }}
                 >
                     🏷️ Etykiety
-                    {selectedLabelIds.length > 0 && (
+                    {selectedLabels.length > 0 && (
                         <span className="ml-1 px-1.5 py-0.5 rounded-full text-white text-xs"
                             style={{ backgroundColor: 'var(--color-accent)' }}>
-                            {selectedLabelIds.length}
+                            {selectedLabels.length}
                         </span>
                     )}
                 </button>
