@@ -89,6 +89,11 @@ export default function HomePage() {
     setMedicines(getMedicines());
   };
 
+  const handleUpdateLeaflet = (id: string, url: string | undefined) => {
+    updateMedicine(id, { leafletUrl: url });
+    setMedicines(getMedicines());
+  };
+
   const handleExportPDF = async () => {
     const { jsPDF } = await import('jspdf');
     const autoTable = (await import('jspdf-autotable')).default;
@@ -224,6 +229,7 @@ export default function HomePage() {
             onUpdateExpiry={handleUpdateExpiry}
             onUpdateLabels={handleUpdateLabels}
             onUpdateNote={handleUpdateNote}
+            onUpdateLeaflet={handleUpdateLeaflet}
             totalCount={medicines.length}
             sortBy={sortBy}
             sortDir={sortDir}

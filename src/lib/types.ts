@@ -48,6 +48,7 @@ export interface Medicine {
     labels?: string[];        // ID etykiet użytkownika
     notatka?: string;         // Notatka użytkownika
     terminWaznosci?: string;  // ISO date string (YYYY-MM-DD)
+    leafletUrl?: string;      // Link do ulotki PDF z Rejestru Produktów Leczniczych
     dataDodania: string;      // ISO date string
 }
 
