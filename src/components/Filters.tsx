@@ -97,7 +97,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
     return (
         <div className="neu-flat p-5 space-y-5 animate-fadeInUp">
             {/* Tytuł strony + przyciski */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
                     💊 Twoja apteczka
                 </h1>
