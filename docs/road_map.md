@@ -1,4 +1,4 @@
-# 🗺️ Road Map – APPteczka
+# 🗺️ Road Map – Pudełko na leki
 
 > **Powiązane:** [Architektura](architecture.md) | [Model Danych](data_model.md)
 
@@ -6,7 +6,7 @@
 
 ## Wizja Produktu
 
-**APPteczka** to aplikacja do zarządzania domową apteczką z integracją AI. Umożliwia:
+**Pudełko na leki** to aplikacja do zarządzania domową apteczką z integracją AI. Umożliwia:
 
 - Katalogowanie leków w domu
 - Filtrowanie po objawach, działaniu, grupie użytkowników

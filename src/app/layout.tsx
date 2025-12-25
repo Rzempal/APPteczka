@@ -10,9 +10,12 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "APPteczka – Zarządzaj domową apteczką",
+  title: "Pudełko na leki – Zarządzaj domową apteczką",
   description: "Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, śledź terminy ważności, filtruj po objawach.",
-  keywords: ["apteczka", "leki", "zdrowie", "AI", "zarządzanie lekami"],
+  keywords: ["apteczka", "leki", "zdrowie", "AI", "zarządzanie lekami", "pudełko na leki"],
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
@@ -43,7 +46,7 @@ export default function RootLayout({
                     Ważne
                   </p>
                   <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                    APPteczka to narzędzie informacyjne, NIE porada medyczna.
+                    Pudełko na leki to narzędzie informacyjne, NIE porada medyczna.
                     Zawsze konsultuj się z lekarzem lub farmaceutą przed zastosowaniem leku.
                   </p>
                 </div>
@@ -52,7 +55,7 @@ export default function RootLayout({
 
             {/* Copyright */}
             <p className="mt-6 text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              APPteczka © {new Date().getFullYear()} • Dane przechowywane lokalnie w przeglądarce
+              Pudełko na leki © {new Date().getFullYear()} • Dane przechowywane lokalnie w przeglądarce
             </p>
           </div>
         </footer>

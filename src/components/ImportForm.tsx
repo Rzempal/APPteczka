@@ -408,7 +408,7 @@ export default function ImportForm({ onImportSuccess }: ImportFormProps) {
                 </p>
                 <ul className="mt-2 list-inside list-disc space-y-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
                     <li><strong>Import z AI</strong> – odpowiedź z ChatGPT/Claude/Gemini</li>
-                    <li><strong>Backup</strong> – plik wyeksportowany z APPteczka (z terminami ważności)</li>
+                    <li><strong>Backup</strong> – plik wyeksportowany z Pudełko na leki (z terminami ważności)</li>
                 </ul>
             </div>
         </form>

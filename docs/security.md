@@ -1,4 +1,4 @@
-# 🔐 Bezpieczeństwo – APPteczka
+# 🔐 Bezpieczeństwo – Pudełko na leki
 
 > **Powiązane:** [Architektura](architecture.md) | [Model Danych](data_model.md)
 
@@ -7,7 +7,7 @@
 ## ⚠️ Disclaimer Medyczny
 
 > [!CAUTION]
-> **APPteczka NIE jest narzędziem medycznym.**
+> **Pudełko na leki NIE jest narzędziem medycznym.**
 >
 > - Nie zastępuje porady lekarza
 > - Nie udziela rekomendacji terapeutycznych

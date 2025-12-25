@@ -1,4 +1,4 @@
-# 📊 Model Danych – APPteczka
+# 📊 Model Danych – Pudełko na leki
 
 > **Powiązane:** [Architektura](architecture.md) | [Bezpieczeństwo](security.md)
 

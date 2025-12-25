@@ -1,4 +1,4 @@
-# 🏛️ Architektura – APPteczka
+# 🏛️ Architektura – Pudełko na leki
 
 > **Powiązane:** [Road Map](road_map.md) | [Model Danych](data_model.md) | [Bezpieczeństwo](security.md)
 
@@ -28,7 +28,7 @@ flowchart TB
         GPT["ChatGPT / Claude / Gemini"]
     end
 
-    subgraph App ["📱 APPteczka"]
+    subgraph App ["📱 Pudełko na leki"]
         Import["Import (JSON/YAML/MD)"]
         DB["Baza leków"]
         Filters["Filtry + Wyszukiwanie"]
@@ -89,7 +89,7 @@ flowchart TB
 ## Struktura Katalogów (Faza 1)
 
 ```text
-APPteczka/
+Pudełko-na-leki/
 ├── docs/                     # Dokumentacja
 │   ├── architecture.md
 │   ├── road_map.md
@@ -158,7 +158,7 @@ interface Medicine {
 
 ```text
 ┌──────────────┐     ┌─────────────────┐     ┌──────────────┐
-│  Użytkownik  │────▶│  ChatGPT/Gemini │────▶│  APPteczka   │
+│  Użytkownik  │────▶│  ChatGPT/Gemini │────▶│ Pudełko na leki │
 │  (zdjęcie)   │     │  (prompt z /docs│     │  (import)    │
 └──────────────┘     └─────────────────┘     └──────────────┘
 ```
@@ -169,7 +169,7 @@ Gotowe prompty: `docs/prompts/`
 
 ```text
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Użytkownik  │────▶│  APPteczka   │────▶│  Gemini API  │
+│  Użytkownik  │────▶│ Pudełko na leki │────▶│  Gemini API  │
 │  (upload)    │     │  (automatyczny│     │  (Vision)    │
 └──────────────┘     │   import)     │     └──────────────┘
                      └──────────────┘

@@ -150,7 +150,7 @@ export default function HomePage() {
     const finalY = (doc as typeof doc & { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY || 100;
     doc.setFontSize(6);
     doc.setTextColor(80);
-    doc.text('APPteczka - narzedzie informacyjne, nie porada medyczna.', 14, finalY + 5);
+    doc.text('Pudelko na leki - narzedzie informacyjne, nie porada medyczna.', 14, finalY + 5);
 
     doc.save(`apteczka_${new Date().toISOString().split('T')[0]}.pdf`);
   };

@@ -1,8 +1,8 @@
-# 💊 APPteczka – Zarządzaj domową apteczką
+# 💊 Pudełko na leki – Zarządzaj domową apteczką
 
 Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, śledź terminy ważności, filtruj po objawach.
 
-> ⚠️ **Ważne:** APPteczka to narzędzie informacyjne (wyszukiwarka w ulotkach), NIE porada medyczna. Aplikacja NIE weryfikuje interakcji międzylekowych.
+> ⚠️ **Ważne:** Pudełko na leki to narzędzie informacyjne (wyszukiwarka w ulotkach), NIE porada medyczna. Aplikacja NIE weryfikuje interakcji międzylekowych.
 
 ---
 
@@ -43,7 +43,7 @@ Otwórz <http://localhost:3000>
 ## 📁 Struktura projektu
 
 ```
-APPteczka/
+Pudełko-na-leki/
 ├── src/
 │   ├── app/              # Next.js App Router
 │   ├── components/       # Komponenty React

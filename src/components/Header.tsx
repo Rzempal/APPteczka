@@ -1,12 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 
-const navItems = [
-    { href: "/", label: "Apteczka", icon: "💊" },
+type NavItem = {
+    href: string;
+    label: string;
+    icon: string;
+    isImage?: boolean;
+};
+
+const navItems: NavItem[] = [
+    { href: "/", label: "Apteczka", icon: "/icons/apteczka.png", isImage: true },
     { href: "/dodaj", label: "Dodaj leki", icon: "➕" },
-    { href: "/backup", label: "Kopia zapasowa", icon: "💾" },
+    { href: "/backup", label: "Kopia zapasowa", icon: "/icons/backup.png", isImage: true },
 ];
 
 export function Header() {
@@ -77,17 +85,21 @@ export function Header() {
                     <div className="flex items-center justify-between">
                         {/* Logo Section */}
                         <Link href="/" className="flex items-center gap-2 group">
-                            <span className="text-2xl group-hover:scale-110 transition-transform">
-                                💊
-                            </span>
+                            <Image
+                                src="/favicon.png"
+                                alt="Pudełko na leki logo"
+                                width={32}
+                                height={32}
+                                className="group-hover:scale-110 transition-transform"
+                            />
                             <span
                                 className={`text-xl font-bold transition-all duration-300 overflow-hidden ${iconsVisible
-                                    ? 'max-w-[120px] opacity-100 translate-x-0'
+                                    ? 'max-w-[160px] opacity-100 translate-x-0'
                                     : 'max-w-0 opacity-0 -translate-x-4'
                                     }`}
                                 style={{ color: "var(--color-accent)" }}
                             >
-                                APPteczka
+                                Pudełko na leki
                             </span>
                         </Link>
 
@@ -103,7 +115,11 @@ export function Header() {
                                             className={`neu-tag whitespace-nowrap ${isAnimating ? "animate-buttonPress" : "animate-popIn"}`}
                                             style={{ animationDelay: `${index * 0.05}s` }}
                                         >
-                                            <span>{item.icon}</span>
+                                            {item.isImage ? (
+                                                <Image src={item.icon} alt={item.label} width={20} height={20} />
+                                            ) : (
+                                                <span>{item.icon}</span>
+                                            )}
                                             <span className="ml-1">{item.label}</span>
                                         </Link>
                                     ))}
@@ -141,7 +157,11 @@ export function Header() {
                                         style={{ animationDelay: `${index * 0.06}s` }}
                                         onClick={handleMobileLinkClick}
                                     >
-                                        <span>{item.icon}</span>
+                                        {item.isImage ? (
+                                            <Image src={item.icon} alt={item.label} width={20} height={20} />
+                                        ) : (
+                                            <span>{item.icon}</span>
+                                        )}
                                         <span className="ml-1">{item.label}</span>
                                     </Link>
                                 ))}
