@@ -283,7 +283,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                 <div
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${isFiltersCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'}`}
                 >
-                    <div className="space-y-2 pt-2 pb-4 px-1">
+                    <div className="space-y-3 py-3 px-2">
                         {TAG_CATEGORIES.map(category => {
                             const isCollapsed = collapsedCategories[category.key] ?? true;
                             const activeCount = category.tags.filter(tag => filters.tags.includes(tag)).length;
@@ -292,8 +292,9 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                                 <div key={category.key} className="mb-2">
                                     {/* Nagłówek kategorii - klikalny, wypukły */}
                                     <button
+                                        type="button"
                                         onClick={() => toggleCategory(category.key)}
-                                        className="neu-flat-sm w-full flex items-center justify-between text-left py-2 px-3 rounded-xl transition-all duration-200"
+                                        className="neu-flat-sm w-full flex items-center justify-between text-left py-2 px-3 rounded-xl transition-all duration-200 cursor-pointer select-none"
                                     >
                                         <span
                                             className="text-xs font-medium flex items-center gap-1.5"
