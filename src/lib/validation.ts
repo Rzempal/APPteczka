@@ -6,12 +6,13 @@ import { ALL_ALLOWED_TAGS } from './types';
 
 /**
  * Schema dla pojedynczego leku (import)
+ * wskazania i tagi są opcjonalne dla OCR - mogą być puste
  */
 const MedicineImportItemSchema = z.object({
     nazwa: z.string().nullable(),
     opis: z.string().min(1, 'Opis jest wymagany'),
-    wskazania: z.array(z.string()).min(1, 'Przynajmniej jedno wskazanie jest wymagane'),
-    tagi: z.array(z.string()).min(1, 'Przynajmniej jeden tag jest wymagany')
+    wskazania: z.array(z.string()).default([]),
+    tagi: z.array(z.string()).default([])
 });
 
 /**

@@ -81,4 +81,39 @@ Elementy z cieniami zewnętrznymi (box-shadow) wymagają odpowiedniego paddingu 
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-24
+## 3. Przyciski wychodzące poza kontener (brak flex-wrap)
+
+**Data:** 2025-12-26  
+**Kontekst:** Kontener "Twoja apteczka" - przyciski Lista, PDF, Wyczyść
+
+### ❌ Błąd
+
+Przyciski umieszczone w kontenerze `flex` bez `flex-wrap` są ucinane gdy nie mieszczą się w jednej linii.
+
+### ✅ Poprawne rozwiązanie
+
+Zawsze dodawaj `flex-wrap` do kontenerów z przyciskami:
+
+```jsx
+/* ❌ Błędnie - przyciski ucięte */
+<div className="flex gap-2">
+    <button>Lista</button>
+    <button>PDF</button>
+    <button>Wyczyść</button>
+</div>
+
+/* ✅ Poprawnie - przyciski zawijają się */
+<div className="flex flex-wrap gap-2">
+    <button>Lista</button>
+    <button>PDF</button>
+    <button>Wyczyść</button>
+</div>
+```
+
+### Zasada ogólna
+
+Kontenery z wieloma przyciskami lub elementami inline powinny używać `flex-wrap` aby elementy zawijały się do nowej linii zamiast być ucinane.
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2025-12-26

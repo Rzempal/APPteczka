@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { Medicine, FilterState } from '@/lib/types';
-import { getMedicines, deleteMedicine, updateMedicine } from '@/lib/storage';
+import { getMedicines, deleteMedicine, updateMedicine, clearMedicines } from '@/lib/storage';
 import { generateMedicineList, copyToClipboard } from '@/lib/prompts';
 import MedicineList from '@/components/MedicineList';
 import Filters from '@/components/Filters';
@@ -185,6 +185,11 @@ export default function HomePage() {
     }
   };
 
+  const handleClearAll = () => {
+    clearMedicines();
+    setMedicines([]);
+  };
+
   // Skeleton podczas ładowania
   if (!isLoaded) {
     return (
@@ -211,6 +216,7 @@ export default function HomePage() {
               onFiltersChange={setFilters}
               onExportPDF={handleExportPDF}
               onCopyList={handleCopyList}
+              onClearAll={handleClearAll}
             />
             {copyListStatus === 'copied' && (
               <div className="mt-2 neu-flat p-2 text-center text-sm animate-fadeInUp" style={{ color: 'var(--color-success)' }}>

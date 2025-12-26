@@ -3,7 +3,7 @@
 // src/components/ImportForm.tsx
 // Formularz do importu leków z JSON - Neumorphism Style
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { parseImportInput, validateMedicineImport, isUncertainRecognition } from '@/lib/validation';
 import {
     findDuplicates,
@@ -16,6 +16,14 @@ import type { Medicine } from '@/lib/types';
 
 interface ImportFormProps {
     onImportSuccess: (medicines: Medicine[]) => void;
+    initialData?: {
+        leki: Array<{
+            nazwa: string | null;
+            opis: string;
+            wskazania: string[];
+            tagi: string[];
+        }>;
+    };
 }
 
 interface DuplicateInfo {
@@ -25,7 +33,7 @@ interface DuplicateInfo {
 
 type ImportStep = 'input' | 'duplicates' | 'success';
 
-export default function ImportForm({ onImportSuccess }: ImportFormProps) {
+export default function ImportForm({ onImportSuccess, initialData }: ImportFormProps) {
     const [input, setInput] = useState('');
     const [errors, setErrors] = useState<string[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -39,6 +47,21 @@ export default function ImportForm({ onImportSuccess }: ImportFormProps) {
     const [isBackup, setIsBackup] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Obsługa danych z Gemini Scanner
+    useEffect(() => {
+        if (initialData) {
+            const jsonString = JSON.stringify(initialData, null, 2);
+            setInput(jsonString);
+            // Reset całego stanu formularza
+            setErrors([]);
+            setStep('input');
+            setDuplicates([]);
+            setDuplicateActions(new Map());
+            setPendingData(null);
+            setSuccessMessage('');
+        }
+    }, [initialData]);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];

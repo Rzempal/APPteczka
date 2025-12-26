@@ -1,20 +1,32 @@
 'use client';
 
 // src/app/dodaj/page.tsx
-// Strona dodawania leków – prompt rozpoznawania + import JSON
+// Strona dodawania leków – Gemini AI Scanner + prompt rozpoznawania + import JSON
 // Neumorphism Style
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { generateImportPrompt, copyToClipboard } from '@/lib/prompts';
 import ImportForm from '@/components/ImportForm';
+import GeminiScanner from '@/components/GeminiScanner';
 import type { Medicine } from '@/lib/types';
-import { getMedicines } from '@/lib/storage';
+import { getMedicines, importMedicinesWithDuplicateHandling } from '@/lib/storage';
 import Link from 'next/link';
+
+interface ScanResult {
+    leki: Array<{
+        nazwa: string | null;
+        opis: string;
+        wskazania: string[];
+        tagi: string[];
+    }>;
+}
 
 export default function DodajLekiPage() {
     const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
     const [medicineCount, setMedicineCount] = useState(0);
     const [showImport, setShowImport] = useState(false);
+    const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+    const backupInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setMedicineCount(getMedicines().length);
@@ -29,109 +41,181 @@ export default function DodajLekiPage() {
 
     const handleImportSuccess = (imported: Medicine[]) => {
         setMedicineCount(prev => prev + imported.length);
+        setScanResult(null);
+    };
+
+    const handleScanResult = (result: ScanResult) => {
+        setScanResult(result);
+    };
+
+    // Import bezpośrednio z GeminiScanner
+    const handleDirectImport = () => {
+        if (!scanResult) return;
+        const imported = importMedicinesWithDuplicateHandling(
+            { leki: scanResult.leki },
+            new Map()
+        );
+        setMedicineCount(prev => prev + imported.length);
+        setScanResult(null);
+    };
+
+    // Import backup z pliku
+    const handleBackupFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            if (data.leki) {
+                setScanResult(data);
+                setShowImport(true);
+            }
+        } catch {
+            alert('Nieprawidłowy format pliku backup');
+        }
+        if (backupInputRef.current) backupInputRef.current.value = '';
     };
 
     return (
         <div className="space-y-6">
             {/* Nagłówek - kontener w stylu kroków */}
             <div className="neu-flat p-6 animate-fadeInUp">
-                <div className="flex items-start gap-4">
-                    <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold text-lg" style={{ color: 'var(--color-accent)', borderRadius: '50%' }}>
-                        ➕
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="flex items-start gap-4">
+                        <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold text-lg" style={{ color: 'var(--color-accent)', borderRadius: '50%' }}>
+                            ➕
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
+                                Dodaj leki
+                            </h1>
+                            <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                                Zeskanuj opakowania leków przez AI lub zaimportuj backup
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
-                            Dodaj leki
-                        </h1>
-                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                            Zeskanuj opakowania leków przez AI i zaimportuj je do apteczki
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Krok 1: Prompt */}
-            <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-                <div className="flex items-start gap-4">
-                    <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-accent)', borderRadius: '50%' }}>
-                        1
-                    </div>
-                    <div className="flex-1">
-                        <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
-                            Skopiuj prompt dla AI
-                        </h2>
-                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                            Wklej ten prompt do ChatGPT, Claude lub Gemini, a następnie dodaj zdjęcie opakowań leków.
-                        </p>
-
-                        {/* Podgląd promptu */}
-                        <details className="mt-3">
-                            <summary className="cursor-pointer text-sm" style={{ color: 'var(--color-accent)' }}>
-                                👁️ Pokaż podgląd promptu
-                            </summary>
-                            <pre className="mt-2 max-h-48 overflow-auto rounded-lg p-3 text-xs" style={{ background: '#1a1f1c', color: 'var(--color-accent-light)' }}>
-                                {generateImportPrompt()}
-                            </pre>
-                        </details>
-
+                    <div className="flex flex-wrap gap-2">
                         <button
-                            onClick={handleCopyPrompt}
-                            className={`mt-4 neu-btn ${copyStatus === 'copied' ? '' : 'neu-btn-primary'}`}
-                            style={copyStatus === 'copied' ? { background: 'var(--color-success)', color: 'white' } : {}}
+                            onClick={() => backupInputRef.current?.click()}
+                            className="neu-btn neu-btn-secondary text-sm"
                         >
-                            {copyStatus === 'copied' ? '✅ Skopiowano!' : '📋 Kopiuj prompt'}
+                            📂 Import backup
                         </button>
+                        <input
+                            ref={backupInputRef}
+                            type="file"
+                            accept=".json"
+                            onChange={handleBackupFileChange}
+                            className="hidden"
+                        />
                     </div>
                 </div>
             </div>
 
-            {/* Krok 2: Zdjęcie */}
-            <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-                <div className="flex items-start gap-4">
-                    <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-text-muted)', borderRadius: '50%' }}>
-                        2
-                    </div>
-                    <div>
-                        <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
-                            Zrób zdjęcie i wyślij do AI
-                        </h2>
-                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                            Zrób zdjęcie opakowań leków (może być kilka na jednym zdjęciu) i wyślij razem z promptem.
-                            AI zwróci dane w formacie JSON.
-                        </p>
-                    </div>
-                </div>
+            {/* 🤖 Gemini AI Scanner - szybka opcja */}
+            <div className="animate-fadeInUp" style={{ animationDelay: '0.05s' }}>
+                <GeminiScanner
+                    onResult={handleScanResult}
+                    onImport={scanResult ? handleDirectImport : undefined}
+                    scannedCount={scanResult?.leki.length}
+                />
             </div>
 
-            {/* Krok 3: Import */}
-            <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
-                <div className="flex items-start gap-4">
-                    <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-text-muted)', borderRadius: '50%' }}>
-                        3
-                    </div>
-                    <div className="flex-1">
-                        <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
-                            Zaimportuj odpowiedź AI
-                        </h2>
-                        <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                            Skopiuj odpowiedź JSON z AI i wklej poniżej, lub wczytaj plik z kopii zapasowej.
-                        </p>
+            {/* Separator - alternatywa ręczna */}
+            <details className="group animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
+                <summary className="neu-flat p-4 cursor-pointer flex items-center gap-2 list-none" style={{ color: 'var(--color-text-muted)' }}>
+                    <svg className="h-4 w-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span className="text-sm font-medium">📝 Ręczny prompt (alternatywa przy limicie API)</span>
+                </summary>
 
-                        {!showImport ? (
+                {/* Krok 1: Prompt (alternatywa ręczna) */}
+                <div id="prompt-generator" className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.15s' }}>
+                    <div className="flex items-start gap-4">
+                        <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-text-muted)', borderRadius: '50%' }}>
+                            1
+                        </div>
+                        <div className="flex-1">
+                            <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                                Skopiuj prompt dla AI
+                            </h2>
+                            <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                                Wklej ten prompt do ChatGPT, Claude lub Gemini, a następnie dodaj zdjęcie opakowań leków.
+                            </p>
+
+                            {/* Podgląd promptu */}
+                            <details className="mt-3">
+                                <summary className="cursor-pointer text-sm" style={{ color: 'var(--color-accent)' }}>
+                                    👁️ Pokaż podgląd promptu
+                                </summary>
+                                <pre className="mt-2 max-h-48 overflow-auto rounded-lg p-3 text-xs" style={{ background: '#1a1f1c', color: 'var(--color-accent-light)' }}>
+                                    {generateImportPrompt()}
+                                </pre>
+                            </details>
+
                             <button
-                                onClick={() => setShowImport(true)}
-                                className="mt-4 neu-btn neu-btn-secondary"
+                                onClick={handleCopyPrompt}
+                                className={`mt-4 neu-btn ${copyStatus === 'copied' ? '' : 'neu-btn-primary'}`}
+                                style={copyStatus === 'copied' ? { background: 'var(--color-success)', color: 'white' } : {}}
                             >
-                                📝 Pokaż formularz importu
+                                {copyStatus === 'copied' ? '✅ Skopiowano!' : '📋 Kopiuj prompt'}
                             </button>
-                        ) : (
-                            <div className="mt-4">
-                                <ImportForm onImportSuccess={handleImportSuccess} />
-                            </div>
-                        )}
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                {/* Krok 2: Zdjęcie (ręczna metoda) */}
+                <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
+                    <div className="flex items-start gap-4">
+                        <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-text-muted)', borderRadius: '50%' }}>
+                            2
+                        </div>
+                        <div>
+                            <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                                Zrób zdjęcie i wyślij do AI
+                            </h2>
+                            <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                                Zrób zdjęcie opakowań leków (może być kilka na jednym zdjęciu) i wyślij razem z promptem.
+                                AI zwróci dane w formacie JSON.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Krok 3: Import */}
+                <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
+                    <div className="flex items-start gap-4">
+                        <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-text-muted)', borderRadius: '50%' }}>
+                            3
+                        </div>
+                        <div className="flex-1">
+                            <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                                Zaimportuj odpowiedź AI
+                            </h2>
+                            <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                                Skopiuj odpowiedź JSON z AI i wklej poniżej, lub wczytaj plik z kopii zapasowej.
+                            </p>
+
+                            {!showImport ? (
+                                <button
+                                    onClick={() => setShowImport(true)}
+                                    className="mt-4 neu-btn neu-btn-secondary"
+                                >
+                                    📝 Pokaż formularz importu
+                                </button>
+                            ) : (
+                                <div className="mt-4">
+                                    <ImportForm
+                                        onImportSuccess={handleImportSuccess}
+                                        initialData={scanResult || undefined}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </details>
 
             {/* Status apteczki */}
             <div className="neu-flat p-6 animate-fadeInUp" style={{

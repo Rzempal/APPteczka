@@ -15,9 +15,10 @@ interface FiltersProps {
     onFiltersChange: (filters: FilterState) => void;
     onExportPDF?: () => void;
     onCopyList?: () => void;
+    onClearAll?: () => void;
 }
 
-export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyList }: FiltersProps) {
+export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyList, onClearAll }: FiltersProps) {
     // Domyślnie wszystko schowane
     const [isExpiryCollapsed, setIsExpiryCollapsed] = useState(true);
     const [isFiltersCollapsed, setIsFiltersCollapsed] = useState(true);
@@ -103,7 +104,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     <Image src="/icons/twoja_apteczka.png" alt="Twoja apteczka" width={36} height={36} />
                     Twoja apteczka
                 </h1>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     {onCopyList && (
                         <button
                             onClick={onCopyList}
@@ -126,6 +127,23 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
                             PDF
+                        </button>
+                    )}
+                    {onClearAll && (
+                        <button
+                            onClick={() => {
+                                if (window.confirm('Czy na pewno chcesz wyczyścić całą apteczkę? Tej operacji nie można cofnąć.')) {
+                                    onClearAll();
+                                }
+                            }}
+                            className="neu-btn neu-btn-secondary text-sm"
+                            style={{ color: 'var(--color-error)' }}
+                            title="Wyczyść całą apteczkę"
+                        >
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Wyczyść
                         </button>
                     )}
                 </div>

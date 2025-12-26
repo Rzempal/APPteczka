@@ -11,6 +11,7 @@ Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, ś
 ## ✨ Funkcje (MVP)
 
 - ✅ Import leków z JSON (przez prompt AI)
+- ✅ **Gemini AI OCR** – automatyczne rozpoznawanie leków ze zdjęć
 - ✅ Filtrowanie po tagach, objawach, terminie ważności
 - ✅ Wyszukiwanie tekstowe
 - ✅ Edycja terminów ważności z alertami
