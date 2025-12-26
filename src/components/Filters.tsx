@@ -223,7 +223,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                 <div
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpiryCollapsed ? 'max-h-0 opacity-0' : 'max-h-[100px] opacity-100'}`}
                 >
-                    <div className="flex flex-wrap gap-2 pb-2">
+                    <div className="flex flex-wrap gap-2 pt-2 pb-2">
                         {[
                             { value: 'all', label: 'Wszystkie', icon: '📋' },
                             { value: 'expired', label: 'Przeterminowane', icon: '⚠️' },
@@ -283,19 +283,22 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                 <div
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${isFiltersCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'}`}
                 >
-                    <div className="space-y-1 pb-4">
+                    <div className="space-y-2 pt-2 pb-4 px-1">
                         {TAG_CATEGORIES.map(category => {
                             const isCollapsed = collapsedCategories[category.key] ?? true;
                             const activeCount = category.tags.filter(tag => filters.tags.includes(tag)).length;
 
                             return (
-                                <div key={category.key}>
-                                    {/* Nagłówek kategorii - klikalny */}
+                                <div key={category.key} className="mb-2">
+                                    {/* Nagłówek kategorii - klikalny, wypukły */}
                                     <button
                                         onClick={() => toggleCategory(category.key)}
-                                        className="w-full flex items-center justify-between text-left py-1.5 px-1 rounded hover:bg-white/5 transition-colors"
+                                        className="neu-flat-sm w-full flex items-center justify-between text-left py-2 px-3 rounded-xl transition-all duration-200"
                                     >
-                                        <span className="text-xs font-medium flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                                        <span
+                                            className="text-xs font-medium flex items-center gap-1.5"
+                                            style={{ color: isCollapsed ? 'var(--color-text-muted)' : 'var(--color-accent)' }}
+                                        >
                                             <svg
                                                 className={`h-2.5 w-2.5 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
                                                 fill="none"
@@ -323,9 +326,9 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
 
                                     {/* Tagi - ukryte gdy kategoria zwinięta */}
                                     <div
-                                        className={`overflow-hidden transition-all duration-200 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}
+                                        className={`overflow-hidden transition-all duration-200 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 mt-2'}`}
                                     >
-                                        <div className="flex flex-wrap gap-1.5 py-2 pl-4">
+                                        <div className="flex flex-wrap gap-1.5 pl-3 pr-1 py-1">
                                             {category.tags.map(tag => (
                                                 <button
                                                     key={tag}
