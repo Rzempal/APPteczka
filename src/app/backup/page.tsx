@@ -186,18 +186,17 @@ export default function BackupPage() {
                     </div>
 
                     {/* Gdy pobieranie nie działa */}
-                    <div className="neu-flat p-5 animate-fadeInUp" style={{
-                        animationDelay: '0.3s',
-                        background: 'linear-gradient(145deg, #fef3c7, #fde68a)'
+                    <div className="warning-card neu-flat p-5 animate-fadeInUp" style={{
+                        animationDelay: '0.3s'
                     }}>
-                        <h3 className="font-semibold flex items-center gap-1.5" style={{ color: '#92400e' }}>
+                        <h3 className="warning-card-title font-semibold flex items-center gap-1.5">
                             <SvgIcon name="alert-triangle" size={18} /> Pobieranie nie działa?
                         </h3>
-                        <p className="mt-2 text-sm" style={{ color: '#78350f' }}>
+                        <p className="warning-card-text mt-2 text-sm">
                             Niektóre przeglądarki zarządzane przez organizację blokują pobieranie plików.
                             W takim przypadku:
                         </p>
-                        <ol className="mt-3 list-inside list-decimal space-y-1 text-sm" style={{ color: '#78350f' }}>
+                        <ol className="warning-card-text mt-3 list-inside list-decimal space-y-1 text-sm">
                             <li>Kliknij <strong>&quot;Kopiuj JSON&quot;</strong> powyżej</li>
                             <li>Otwórz Notatnik (Windows) lub TextEdit (Mac)</li>
                             <li>Wklej skopiowany tekst (Ctrl+V)</li>

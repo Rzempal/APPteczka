@@ -142,7 +142,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
     return (
         <>
             <article
-                className={`p-5 rounded-2xl transition-all duration-300 hover:-translate-y-1 ${statusClasses[expiryStatus]}`}
+                className={`p-5 rounded-2xl transition-all duration-300 hover:-translate-y-1 glass-dark ${statusClasses[expiryStatus]}`}
                 style={{ borderRadius: '20px', overflow: 'visible' }}
             >
                 {/* Nagłówek - klikalny do zwijania */}
