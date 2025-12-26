@@ -197,10 +197,10 @@ body {
 
 /* Dark mode: stonowany amber z przezroczystością */
 [data-theme="dark"] .warning-card {
-  background: rgba(245, 158, 11, 0.15) !important;
+  background: rgba(245, 158, 11, 0.25) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
 }
 
@@ -709,26 +709,23 @@ select:focus-visible {
     calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) var(--shadow-light);
 }
 
-/* Dark mode status variants (manual toggle) */
+/* Dark mode status variants (manual toggle) - z przezroczystością */
 [data-theme="dark"] .neu-status-valid {
-  background: linear-gradient(145deg, #064e3b, #065f46);
-  box-shadow:
-    var(--neu-distance) var(--neu-distance) var(--neu-blur) #042f23,
-    calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) #086f53;
+  background: rgba(6, 78, 59, 0.7);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] .neu-status-warning {
-  background: linear-gradient(145deg, #78350f, #92400e);
-  box-shadow:
-    var(--neu-distance) var(--neu-distance) var(--neu-blur) #4a2008,
-    calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) #b45309;
+  background: rgba(120, 53, 15, 0.7);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme="dark"] .neu-status-error {
-  background: linear-gradient(145deg, #7f1d1d, #991b1b);
-  box-shadow:
-    var(--neu-distance) var(--neu-distance) var(--neu-blur) #4c1212,
-    calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) #b91c1c;
+  background: rgba(127, 29, 29, 0.7);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* Auto dark mode status fallback */
