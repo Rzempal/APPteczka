@@ -3,17 +3,20 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
+import { SvgIcon } from "./SvgIcon";
 
 type NavItem = {
     href: string;
     label: string;
     icon: string;
     isImage?: boolean;
+    isSvg?: boolean;
+    svgName?: "plus" | "settings" | "sun" | "moon";
 };
 
 const navItems: NavItem[] = [
     { href: "/", label: "Apteczka", icon: "/icons/apteczka.png", isImage: true },
-    { href: "/dodaj", label: "Dodaj leki", icon: "➕" },
+    { href: "/dodaj", label: "Dodaj leki", icon: "plus", isSvg: true, svgName: "plus" },
     { href: "/backup", label: "Kopia zapasowa", icon: "/icons/backup.png", isImage: true },
 ];
 
@@ -21,6 +24,45 @@ export function Header() {
     const [iconsVisible, setIconsVisible] = useState(true);
     const [isAnimating, setIsAnimating] = useState(false);
     const [lastScrollY, setLastScrollY] = useState(0);
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    // Initialize theme from localStorage on mount
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            setIsDarkMode(true);
+            document.documentElement.setAttribute('data-theme', 'dark');
+        } else if (savedTheme === 'light') {
+            setIsDarkMode(false);
+            document.documentElement.setAttribute('data-theme', 'light');
+        }
+    }, []);
+
+    // Toggle theme
+    const toggleTheme = () => {
+        const newTheme = isDarkMode ? 'light' : 'dark';
+        setIsDarkMode(!isDarkMode);
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+    };
+
+    // Close settings when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('.settings-wrapper')) {
+                setSettingsOpen(false);
+            }
+        };
+
+        if (settingsOpen) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [settingsOpen]);
 
     // Handle scroll - toggle hamburger menu only
     const handleScroll = useCallback(() => {
@@ -81,7 +123,7 @@ export function Header() {
             <nav className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
                 {/* Main navbar container */}
                 <div className="neu-flat p-4 animate-fadeInUp">
-                    {/* Top row: Logo + icons + hamburger */}
+                    {/* Top row: Logo + icons + settings + hamburger */}
                     <div className="flex items-center justify-between min-h-[40px]">
                         {/* Logo Section */}
                         <Link href="/" className="flex items-center gap-2 group h-8">
@@ -103,7 +145,7 @@ export function Header() {
                             </span>
                         </Link>
 
-                        {/* Right side: icons + hamburger */}
+                        {/* Right side: icons + settings + hamburger */}
                         <div className="flex items-center gap-2">
                             {/* Desktop inline icons - shown when iconsVisible */}
                             {(iconsVisible || isAnimating) && (
@@ -117,6 +159,8 @@ export function Header() {
                                         >
                                             {item.isImage ? (
                                                 <Image src={item.icon} alt={item.label} width={20} height={20} />
+                                            ) : item.isSvg && item.svgName ? (
+                                                <SvgIcon name={item.svgName} size={18} />
                                             ) : (
                                                 <span>{item.icon}</span>
                                             )}
@@ -125,6 +169,39 @@ export function Header() {
                                     ))}
                                 </div>
                             )}
+
+                            {/* Settings button - between nav items and hamburger */}
+                            <div className="settings-wrapper relative">
+                                <button
+                                    type="button"
+                                    className={`inline-flex items-center justify-center p-2 neu-tag transition-all duration-300 ${settingsOpen ? "active" : ""}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSettingsOpen(!settingsOpen);
+                                    }}
+                                    aria-expanded={settingsOpen}
+                                    aria-label="Ustawienia"
+                                >
+                                    <SvgIcon name="settings" size={22} />
+                                </button>
+
+                                {/* Settings Dropdown */}
+                                <div className={`settings-dropdown ${settingsOpen ? 'show' : ''}`}>
+                                    <div className="settings-item">
+                                        <span>Tryb ciemny</span>
+                                        <div
+                                            className="theme-toggle"
+                                            onClick={toggleTheme}
+                                            role="button"
+                                            aria-label="Przełącz motyw"
+                                        >
+                                            <div className="theme-toggle-thumb">
+                                                <SvgIcon name={isDarkMode ? "moon" : "sun"} size={14} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             {/* Hamburger button - always visible, pressed effect when icons visible */}
                             <button
@@ -159,6 +236,8 @@ export function Header() {
                                     >
                                         {item.isImage ? (
                                             <Image src={item.icon} alt={item.label} width={20} height={20} />
+                                        ) : item.isSvg && item.svgName ? (
+                                            <SvgIcon name={item.svgName} size={18} />
                                         ) : (
                                             <span>{item.icon}</span>
                                         )}

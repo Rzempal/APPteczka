@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import type { Medicine, FilterState } from '@/lib/types';
 import MedicineCard from './MedicineCard';
+import { SvgIcon } from './SvgIcon';
 
 type SortOption = 'nazwa' | 'dataDodania' | 'terminWaznosci';
 type SortDirection = 'asc' | 'desc';
@@ -149,7 +150,7 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
         return (
             <div className="neu-flat p-12 text-center animate-fadeInUp">
                 <div className="neu-convex w-24 h-24 mx-auto mb-6 flex items-center justify-center animate-popIn">
-                    <span className="text-5xl">💊</span>
+                    <SvgIcon name="pill" size={48} style={{ color: 'var(--color-accent)' }} />
                 </div>
                 <h2 className="mb-2 text-xl font-semibold" style={{ color: 'var(--color-text)' }}>
                     Twoja apteczka jest pusta
@@ -159,9 +160,9 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
                 </p>
                 <a
                     href="/dodaj"
-                    className="neu-btn neu-btn-primary inline-flex"
+                    className="neu-btn neu-btn-primary inline-flex items-center gap-2"
                 >
-                    ➕ Importuj leki
+                    <SvgIcon name="plus" size={18} /> Importuj leki
                 </a>
             </div>
         );
@@ -171,7 +172,7 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
         return (
             <div className="neu-flat p-12 text-center animate-fadeInUp">
                 <div className="neu-convex w-24 h-24 mx-auto mb-6 flex items-center justify-center animate-popIn">
-                    <span className="text-5xl">🔍</span>
+                    <SvgIcon name="search" size={48} style={{ color: 'var(--color-accent)' }} />
                 </div>
                 <h2 className="mb-2 text-xl font-semibold" style={{ color: 'var(--color-text)' }}>
                     Brak wyników
@@ -191,8 +192,8 @@ export default function MedicineList({ medicines, filters, onDelete, onUpdateExp
                 style={{ animationDelay: '0.1s' }}
             >
                 {/* Licznik - jako tekst, nie przycisk */}
-                <span className="text-sm font-medium order-last sm:order-first w-full sm:w-auto text-center sm:text-left" style={{ color: 'var(--color-text)' }}>
-                    📦 Znaleziono: {filteredMedicines.length} z {totalCount} leków
+                <span className="text-sm font-medium order-last sm:order-first w-full sm:w-auto text-center sm:text-left flex items-center justify-center sm:justify-start gap-1.5" style={{ color: 'var(--color-text)' }}>
+                    <SvgIcon name="package" size={16} /> Znaleziono: {filteredMedicines.length} z {totalCount} leków
                 </span>
 
                 {/* Sortowanie + Widok - zawsze razem */}

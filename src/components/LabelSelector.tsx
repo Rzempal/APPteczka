@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { UserLabel, LabelColor } from '@/lib/types';
 import { LABEL_COLORS, MAX_LABELS_PER_MEDICINE, MAX_LABELS_GLOBAL } from '@/lib/types';
 import { getLabels, createLabel, getLabelsByIds } from '@/lib/labelStorage';
+import { SvgIcon } from './SvgIcon';
 
 interface LabelSelectorProps {
     selectedLabelIds: string[];
@@ -99,7 +100,11 @@ export default function LabelSelector({ selectedLabelIds, onChange, onLabelsCrea
                         <span
                             key={label.id}
                             className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-                            style={{ backgroundColor: LABEL_COLORS[label.color].hex, color: 'white' }}
+                            style={{
+                                backgroundColor: LABEL_COLORS[label.color].hex,
+                                color: 'white',
+                                boxShadow: '2px 2px 4px rgba(0,0,0,0.15), -2px -2px 4px rgba(255,255,255,0.1)'
+                            }}
                         >
                             {label.name}
                             <button
@@ -118,9 +123,9 @@ export default function LabelSelector({ selectedLabelIds, onChange, onLabelsCrea
                 <button
                     onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
                     className="neu-tag text-xs flex items-center gap-1"
-                    style={{ color: 'var(--color-accent)' }}
+                    style={{ color: 'var(--color-text)' }}
                 >
-                    🏷️ Etykiety
+                    <SvgIcon name="tags" size={14} style={{ color: 'var(--color-accent)' }} /> Etykiety
                     {selectedLabels.length > 0 && (
                         <span className="ml-1 px-1.5 py-0.5 rounded-full text-white text-xs"
                             style={{ backgroundColor: 'var(--color-accent)' }}>
@@ -218,25 +223,31 @@ export default function LabelSelector({ selectedLabelIds, onChange, onLabelsCrea
             </div>
 
             {/* Wyświetlanie wybranych etykiet (po przycisku) - tylko gdy buttonPosition='left' */}
-            {buttonPosition === 'left' && selectedLabels.length > 0 && !isOpen && (
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                    {selectedLabels.map(label => (
-                        <span
-                            key={label.id}
-                            className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
-                            style={{ backgroundColor: LABEL_COLORS[label.color].hex, color: 'white' }}
-                        >
-                            {label.name}
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleToggle(label.id); }}
-                                className="opacity-70 hover:opacity-100"
+            {
+                buttonPosition === 'left' && selectedLabels.length > 0 && !isOpen && (
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                        {selectedLabels.map(label => (
+                            <span
+                                key={label.id}
+                                className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full"
+                                style={{
+                                    backgroundColor: LABEL_COLORS[label.color].hex,
+                                    color: 'white',
+                                    boxShadow: '2px 2px 4px rgba(0,0,0,0.15), -2px -2px 4px rgba(255,255,255,0.1)'
+                                }}
                             >
-                                ×
-                            </button>
-                        </span>
-                    ))}
-                </div>
-            )}
-        </div>
+                                {label.name}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleToggle(label.id); }}
+                                    className="opacity-70 hover:opacity-100"
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                    </div>
+                )
+            }
+        </div >
     );
 }

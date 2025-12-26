@@ -9,6 +9,7 @@ import type { FilterState, ExpiryFilter, UserLabel } from '@/lib/types';
 import { TAG_CATEGORIES, LABEL_COLORS } from '@/lib/types';
 import { getLabels } from '@/lib/labelStorage';
 import LabelManager from './LabelManager';
+import { SvgIcon } from './SvgIcon';
 
 interface FiltersProps {
     filters: FilterState;
@@ -129,9 +130,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                             className="neu-btn neu-btn-secondary text-sm"
                             title="Kopiuj listę leków"
                         >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
+                            <SvgIcon name="list-tree" size={16} style={{ color: 'var(--color-text)' }} />
                             Lista
                         </button>
                     )}
@@ -154,14 +153,11 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                                     onClearAll();
                                 }
                             }}
-                            className="neu-btn neu-btn-secondary text-sm"
-                            style={{ color: 'var(--color-error)' }}
+                            className="neu-btn neu-btn-secondary text-sm flex items-center gap-1 group/clear"
                             title="Wyczyść całą apteczkę"
                         >
-                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Wyczyść
+                            <SvgIcon name="trash" size={16} style={{ color: 'var(--color-error)' }} />
+                            <span className="group-hover/clear:text-[var(--color-error)] transition-colors" style={{ color: 'var(--color-text)' }}>Wyczyść</span>
                         </button>
                     )}
                 </div>
@@ -169,8 +165,8 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
 
             {/* Wyszukiwanie */}
             <div>
-                <label htmlFor="search" className="mb-2 block text-sm font-medium" style={{ color: 'var(--color-text)' }}>
-                    🔍 Szukaj
+                <label htmlFor="search" className="mb-2 block text-sm font-medium flex items-center gap-1.5" style={{ color: 'var(--color-text)' }}>
+                    <SvgIcon name="search" size={16} /> Szukaj
                 </label>
                 <input
                     type="text"
@@ -193,7 +189,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     aria-expanded={!isExpiryCollapsed}
                 >
                     <label className="text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-                        📅 Termin ważności
+                        <SvgIcon name="calendar" size={16} /> Termin ważności
                         <span
                             className={`neu-tag p-1 transition-all group-hover:scale-110 ${!isExpiryCollapsed ? 'active' : ''}`}
                             style={{ borderRadius: '50%' }}
@@ -211,10 +207,10 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     </label>
                     {/* Pokaż aktywny filtr terminu gdy zwinięte */}
                     {isExpiryCollapsed && filters.expiry !== 'all' && (
-                        <span className="neu-tag active text-xs">
-                            {filters.expiry === 'expired' && '⚠️ Przeterminowane'}
-                            {filters.expiry === 'expiring-soon' && '⏰ Kończą się'}
-                            {filters.expiry === 'valid' && '✅ Ważne'}
+                        <span className="neu-tag active text-xs flex items-center gap-1">
+                            {filters.expiry === 'expired' && <><SvgIcon name="alert-triangle" size={12} /> Przeterminowane</>}
+                            {filters.expiry === 'expiring-soon' && <><SvgIcon name="clock" size={12} /> Kończą się</>}
+                            {filters.expiry === 'valid' && <><SvgIcon name="check-circle" size={12} /> Ważne</>}
                         </span>
                     )}
                 </div>
@@ -225,17 +221,17 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                 >
                     <div className="flex flex-wrap gap-2 pt-2 pb-2">
                         {[
-                            { value: 'all', label: 'Wszystkie', icon: '📋' },
-                            { value: 'expired', label: 'Przeterminowane', icon: '⚠️' },
-                            { value: 'expiring-soon', label: 'Kończą się', icon: '⏰' },
-                            { value: 'valid', label: 'Ważne', icon: '✅' }
+                            { value: 'all', label: 'Wszystkie', icon: 'clipboard' as const },
+                            { value: 'expired', label: 'Przeterminowane', icon: 'alert-triangle' as const },
+                            { value: 'expiring-soon', label: 'Kończą się', icon: 'clock' as const },
+                            { value: 'valid', label: 'Ważne', icon: 'check-circle' as const }
                         ].map(option => (
                             <button
                                 key={option.value}
                                 onClick={(e) => { e.stopPropagation(); handleExpiryChange(option.value as ExpiryFilter); }}
-                                className={`neu-tag transition-all ${filters.expiry === option.value ? 'active' : ''}`}
+                                className={`neu-tag transition-all flex items-center gap-1 ${filters.expiry === option.value ? 'active' : ''}`}
                             >
-                                {option.icon} {option.label}
+                                <SvgIcon name={option.icon} size={14} /> {option.label}
                             </button>
                         ))}
                     </div>
@@ -252,7 +248,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     aria-expanded={!isFiltersCollapsed}
                 >
                     <label className="text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-                        🏷️ Filtry
+                        <SvgIcon name="funnel" size={16} /> Filtry
                         <span
                             className={`neu-tag p-1 transition-all group-hover:scale-110 ${!isFiltersCollapsed ? 'active' : ''}`}
                             style={{ borderRadius: '50%' }}
@@ -358,7 +354,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     aria-expanded={!isLabelsCollapsed}
                 >
                     <label className="text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-                        🏷️ Moje etykiety
+                        <SvgIcon name="tags" size={16} /> Moje etykiety
                         <span
                             className={`neu-tag p-1 transition-all group-hover:scale-110 ${!isLabelsCollapsed ? 'active' : ''}`}
                             style={{ borderRadius: '50%' }}
@@ -377,10 +373,10 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     {!isLabelsCollapsed && (
                         <button
                             onClick={(e) => { e.stopPropagation(); setIsLabelManagerOpen(!isLabelManagerOpen); }}
-                            className="neu-tag text-xs"
+                            className="neu-tag text-xs flex items-center gap-1"
                             style={{ color: 'var(--color-accent)' }}
                         >
-                            ⚙️ Zarządzaj
+                            <SvgIcon name="settings" size={14} /> Zarządzaj
                         </button>
                     )}
                 </div>

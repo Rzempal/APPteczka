@@ -11,6 +11,7 @@ import GeminiScanner from '@/components/GeminiScanner';
 import type { Medicine } from '@/lib/types';
 import { getMedicines, importMedicinesWithDuplicateHandling } from '@/lib/storage';
 import Link from 'next/link';
+import { SvgIcon } from '@/components/SvgIcon';
 
 interface ScanResult {
     leki: Array<{
@@ -82,8 +83,8 @@ export default function DodajLekiPage() {
             <div className="neu-flat p-6 animate-fadeInUp">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
-                        <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold text-lg" style={{ color: 'var(--color-accent)', borderRadius: '50%' }}>
-                            ➕
+                        <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold text-lg" style={{ borderRadius: '50%' }}>
+                            <SvgIcon name="plus" size={20} style={{ color: '#8b5cf6' }} />
                         </div>
                         <div>
                             <h1 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
@@ -97,9 +98,9 @@ export default function DodajLekiPage() {
                     <div className="flex flex-wrap gap-2">
                         <button
                             onClick={() => backupInputRef.current?.click()}
-                            className="neu-btn neu-btn-secondary text-sm"
+                            className="neu-btn neu-btn-secondary text-sm flex items-center gap-1.5"
                         >
-                            📂 Import backup
+                            <SvgIcon name="folder-input" size={16} /> Import backup
                         </button>
                         <input
                             ref={backupInputRef}
@@ -127,7 +128,7 @@ export default function DodajLekiPage() {
                     <svg className="h-4 w-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="text-sm font-medium">📝 Ręczny prompt (alternatywa przy limicie API)</span>
+                    <span className="text-sm font-medium flex items-center gap-1.5"><SvgIcon name="clipboard-plus" size={14} /> Ręczny prompt (alternatywa przy limicie API)</span>
                 </summary>
 
                 {/* Krok 1: Prompt (alternatywa ręczna) */}
@@ -147,7 +148,7 @@ export default function DodajLekiPage() {
                             {/* Podgląd promptu */}
                             <details className="mt-3">
                                 <summary className="cursor-pointer text-sm" style={{ color: 'var(--color-accent)' }}>
-                                    👁️ Pokaż podgląd promptu
+                                    <SvgIcon name="search" size={14} /> Pokaż podgląd promptu
                                 </summary>
                                 <pre className="mt-2 max-h-48 overflow-auto rounded-lg p-3 text-xs" style={{ background: '#1a1f1c', color: 'var(--color-accent-light)' }}>
                                     {generateImportPrompt()}
@@ -159,7 +160,7 @@ export default function DodajLekiPage() {
                                 className={`mt-4 neu-btn ${copyStatus === 'copied' ? '' : 'neu-btn-primary'}`}
                                 style={copyStatus === 'copied' ? { background: 'var(--color-success)', color: 'white' } : {}}
                             >
-                                {copyStatus === 'copied' ? '✅ Skopiowano!' : '📋 Kopiuj prompt'}
+                                {copyStatus === 'copied' ? <><SvgIcon name="check-circle" size={16} /> Skopiowano!</> : <><SvgIcon name="clipboard" size={16} /> Kopiuj prompt</>}
                             </button>
                         </div>
                     </div>
@@ -202,7 +203,7 @@ export default function DodajLekiPage() {
                                     onClick={() => setShowImport(true)}
                                     className="mt-4 neu-btn neu-btn-secondary"
                                 >
-                                    📝 Pokaż formularz importu
+                                    <SvgIcon name="clipboard" size={16} /> Pokaż formularz importu
                                 </button>
                             ) : (
                                 <div className="mt-4">

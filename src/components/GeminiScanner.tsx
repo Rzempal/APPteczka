@@ -4,6 +4,7 @@
 // Komponent do skanowania leków ze zdjęć przez Gemini AI
 
 import { useState, useCallback, useRef } from 'react';
+import { SvgIcon } from './SvgIcon';
 
 interface ScanResult {
     leki: Array<{
@@ -144,7 +145,7 @@ export default function GeminiScanner({ onResult, onImport, scannedCount }: Gemi
             {/* Nagłówek */}
             <div className="neu-flat p-5">
                 <h3 className="font-medium flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
-                    <span className="text-xl">🤖</span>
+                    <SvgIcon name="sparkles" size={22} style={{ color: 'var(--color-accent)' }} />
                     Skanuj leki z Gemini AI
                 </h3>
                 <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
@@ -191,7 +192,7 @@ export default function GeminiScanner({ onResult, onImport, scannedCount }: Gemi
                     </div>
                 ) : (
                     <>
-                        <div className="text-5xl mb-4">📷</div>
+                        <SvgIcon name="image-plus" size={48} style={{ color: 'var(--color-text-muted)' }} />
                         <p className="text-center font-medium" style={{ color: 'var(--color-text)' }}>
                             {isDragging ? 'Upuść zdjęcie tutaj' : 'Kliknij lub przeciągnij zdjęcie'}
                         </p>
@@ -213,7 +214,7 @@ export default function GeminiScanner({ onResult, onImport, scannedCount }: Gemi
             {status === 'error' && error && (
                 <div className="neu-flat p-4 space-y-3">
                     <div className="flex items-start gap-3" style={{ color: 'var(--color-error)' }}>
-                        <span className="text-xl">❌</span>
+                        <SvgIcon name="x-circle" size={24} style={{ color: 'var(--color-error)' }} />
                         <div>
                             <p className="font-medium">Błąd skanowania</p>
                             <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>{error}</p>
@@ -237,7 +238,7 @@ export default function GeminiScanner({ onResult, onImport, scannedCount }: Gemi
             {status === 'success' && (
                 <div className="neu-flat p-4 space-y-3">
                     <div className="flex items-center gap-3" style={{ color: 'var(--color-success)' }}>
-                        <span className="text-xl">✅</span>
+                        <SvgIcon name="check-circle" size={24} style={{ color: 'var(--color-success)' }} />
                         <div className="flex-1">
                             <p className="font-medium">Leki rozpoznane!</p>
                             <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
@@ -253,7 +254,7 @@ export default function GeminiScanner({ onResult, onImport, scannedCount }: Gemi
                             onClick={onImport}
                             className="w-full neu-btn neu-btn-primary"
                         >
-                            📥 Importuj {scannedCount || ''} leków do apteczki
+                            <SvgIcon name="folder-input" size={18} /> Importuj {scannedCount || ''} leków do apteczki
                         </button>
                     )}
                 </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
+import { SvgIcon } from "@/components/SvgIcon";
 
 const dmSans = DM_Sans({
   subsets: ["latin", "latin-ext"],
@@ -40,7 +41,7 @@ export default function RootLayout({
             {/* Disclaimer */}
             <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
               <div className="flex items-start gap-3">
-                <span className="text-2xl">⚠️</span>
+                <SvgIcon name="alert-triangle" size={28} style={{ color: 'var(--color-warning)' }} />
                 <div>
                   <p className="font-semibold" style={{ color: 'var(--color-warning)' }}>
                     Ważne

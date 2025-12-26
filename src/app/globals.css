@@ -42,9 +42,24 @@
   --navbar-easing: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* --- Dark Mode --- */
+/* --- Dark Mode (manual toggle via data-theme) --- */
+[data-theme="dark"] {
+  --color-bg: #1a1f1c;
+  --color-bg-dark: #15191a;
+  --color-bg-light: #222a24;
+  --color-text: #f3f4f6;
+  --color-text-muted: #9ca3af;
+
+  --shadow-light: #242b26;
+  --shadow-dark: #101312;
+
+  --color-accent: #34d399;
+  --color-accent-light: #6ee7b7;
+}
+
+/* Auto dark mode fallback (when no data-theme set) */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --color-bg: #1a1f1c;
     --color-bg-dark: #15191a;
     --color-bg-light: #222a24;
@@ -640,23 +655,45 @@ select:focus-visible {
     calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) var(--shadow-light);
 }
 
-/* Dark mode status variants */
+/* Dark mode status variants (manual toggle) */
+[data-theme="dark"] .neu-status-valid {
+  background: linear-gradient(145deg, #064e3b, #065f46);
+  box-shadow:
+    var(--neu-distance) var(--neu-distance) var(--neu-blur) #042f23,
+    calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) #086f53;
+}
+
+[data-theme="dark"] .neu-status-warning {
+  background: linear-gradient(145deg, #78350f, #92400e);
+  box-shadow:
+    var(--neu-distance) var(--neu-distance) var(--neu-blur) #4a2008,
+    calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) #b45309;
+}
+
+[data-theme="dark"] .neu-status-error {
+  background: linear-gradient(145deg, #7f1d1d, #991b1b);
+  box-shadow:
+    var(--neu-distance) var(--neu-distance) var(--neu-blur) #4c1212,
+    calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) #b91c1c;
+}
+
+/* Auto dark mode status fallback */
 @media (prefers-color-scheme: dark) {
-  .neu-status-valid {
+  :root:not([data-theme]) .neu-status-valid {
     background: linear-gradient(145deg, #064e3b, #065f46);
     box-shadow:
       var(--neu-distance) var(--neu-distance) var(--neu-blur) #042f23,
       calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) #086f53;
   }
 
-  .neu-status-warning {
+  :root:not([data-theme]) .neu-status-warning {
     background: linear-gradient(145deg, #78350f, #92400e);
     box-shadow:
       var(--neu-distance) var(--neu-distance) var(--neu-blur) #4a2008,
       calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) #b45309;
   }
 
-  .neu-status-error {
+  :root:not([data-theme]) .neu-status-error {
     background: linear-gradient(145deg, #7f1d1d, #991b1b);
     box-shadow:
       var(--neu-distance) var(--neu-distance) var(--neu-blur) #4c1212,
@@ -686,4 +723,81 @@ select:focus-visible {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 20px;
+}
+
+/* ============================================
+   🌗 THEME TOGGLE (Quick Settings)
+   ============================================ */
+
+.theme-toggle {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  background: var(--color-bg-dark);
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1px solid var(--shadow-dark);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-accent);
+}
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  background: linear-gradient(135deg, var(--color-accent-light), var(--color-accent));
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+[data-theme="dark"] .theme-toggle-thumb {
+  transform: translateX(24px);
+}
+
+/* Settings Dropdown */
+.settings-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  min-width: 220px;
+  background: var(--color-bg);
+  border-radius: 16px;
+  padding: 1rem;
+  box-shadow:
+    var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--shadow-dark),
+    calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) var(--shadow-light);
+  z-index: 100;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+}
+
+.settings-dropdown.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.settings-item:not(:last-child) {
+  border-bottom: 1px solid var(--shadow-dark);
 }

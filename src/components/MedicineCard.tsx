@@ -5,9 +5,12 @@
 
 import { useState } from 'react';
 import type { Medicine } from '@/lib/types';
+import { LABEL_COLORS } from '@/lib/types';
+import { getLabelsByIds } from '@/lib/labelStorage';
 import LabelSelector from './LabelSelector';
 import PdfModal from './PdfModal';
 import { searchMedicineInRpl, type RplSearchResult } from '@/actions/rplActions';
+import { SvgIcon } from './SvgIcon';
 
 interface MedicineCardProps {
     medicine: Medicine;
@@ -113,11 +116,11 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
         unknown: 'neu-status-unknown'
     };
 
-    const statusLabels = {
-        expired: '⚠️ Przeterminowany',
-        'expiring-soon': '⏰ Kończy się ważność',
-        valid: '✅ Ważny',
-        unknown: '❓ Brak daty'
+    const statusLabels: Record<string, React.ReactNode> = {
+        expired: <><SvgIcon name="alert-triangle" size={14} style={{ color: 'var(--color-error)' }} /> Przeterminowany</>,
+        'expiring-soon': <><SvgIcon name="clock" size={14} style={{ color: 'var(--color-warning)' }} /> Kończy się ważność</>,
+        valid: <><SvgIcon name="check-circle" size={14} style={{ color: 'var(--color-success)' }} /> Ważny</>,
+        unknown: <><SvgIcon name="help-circle" size={14} style={{ color: 'var(--color-text-muted)' }} /> Brak daty</>
     };
 
     return (
@@ -133,11 +136,32 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                     role="button"
                     aria-expanded={!isCollapsed}
                 >
-                    <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>
-                        {medicine.nazwa || <span className="italic" style={{ color: 'var(--color-text-muted)' }}>Nazwa nieznana</span>}
-                    </h3>
+                    <div className="flex flex-col gap-1 flex-1">
+                        <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>
+                            {medicine.nazwa || <span className="italic" style={{ color: 'var(--color-text-muted)' }}>Nazwa nieznana</span>}
+                        </h3>
+                        {/* Etykiety w widoku zwiniętym (collapsed) */}
+                        {isCollapsed && medicine.labels && medicine.labels.length > 0 && (
+                            <div className="flex flex-wrap gap-1 pl-1">
+                                {getLabelsByIds(medicine.labels).map(label => (
+                                    <span
+                                        key={label.id}
+                                        className="inline-flex items-center text-xs px-1.5 py-0.5 rounded-full"
+                                        style={{
+                                            backgroundColor: LABEL_COLORS[label.color].hex,
+                                            color: 'white',
+                                            fontSize: '0.65rem',
+                                            boxShadow: '1px 1px 2px rgba(0,0,0,0.15), -1px -1px 2px rgba(255,255,255,0.1)'
+                                        }}
+                                    >
+                                        {label.name}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     <span
-                        className={`neu-tag p-2 transition-all group-hover:scale-110 ${isCollapsed ? 'active' : ''}`}
+                        className={`neu-tag p-2 transition-all group-hover:scale-110 flex-shrink-0 ${isCollapsed ? 'active' : ''}`}
                         style={{ borderRadius: '50%' }}
                     >
                         <svg
@@ -160,7 +184,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                     className={`overflow-hidden transition-all duration-300 ease-in-out ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}
                 >
                     {/* Ulotka PDF - pierwsza po rozwinieciu */}
-                    <div className="mb-3">
+                    <div className="mb-3 pl-1">
                         <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>Ulotka PDF:</span>
 
                         {medicine.leafletUrl ? (
@@ -170,7 +194,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                     className="neu-tag text-xs flex items-center gap-1 hover:scale-105 transition-transform"
                                     style={{ color: 'var(--color-accent)' }}
                                 >
-                                    📄 Pokaż ulotkę PDF
+                                    <SvgIcon name="file-text" size={14} /> Pokaż ulotkę PDF
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleRemoveLeaflet(); }}
@@ -190,7 +214,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                         style={{ color: 'var(--color-accent)' }}
                                         title="Wyszukaj ulotkę w Rejestrze Produktów Leczniczych"
                                     >
-                                        🔍 Znajdź i podepnij ulotkę
+                                        <SvgIcon name="search" size={14} /> Znajdź i podepnij ulotkę
                                     </button>
                                 ) : (
                                     <div
@@ -227,7 +251,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                                 className="neu-tag text-xs"
                                                 style={{ color: 'var(--color-accent)' }}
                                             >
-                                                {leafletLoading ? '...' : '🔍'}
+                                                {leafletLoading ? <SvgIcon name="loader" size={14} /> : <SvgIcon name="search" size={14} />}
                                             </button>
                                         </div>
 
@@ -261,7 +285,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                                             </span>
                                                         </span>
                                                         <span className="hidden group-hover:inline" style={{ color: 'var(--color-accent)' }}>
-                                                            ➕
+                                                            <SvgIcon name="plus" size={14} />
                                                         </span>
                                                     </button>
                                                 ))}
@@ -284,14 +308,13 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                     </div>
 
                     {/* Tagi */}
-                    <div className="mb-3 flex flex-wrap gap-1.5 pr-1">
+                    <div className="mb-3 flex flex-wrap gap-1.5 px-1">
                         {medicine.tagi.map((tag, i) => (
                             <span
                                 key={i}
                                 className="neu-tag text-xs"
                                 style={{
-                                    background: 'linear-gradient(145deg, var(--color-accent-light), var(--color-accent))',
-                                    color: 'white',
+                                    color: 'var(--color-text)',
                                     padding: '0.25rem 0.625rem'
                                 }}
                             >
@@ -303,7 +326,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
 
                 {/* Etykiety użytkownika - POZA overflow-hidden, aby dropdown był widoczny */}
                 {!isCollapsed && (
-                    <div className="mb-4 pr-1">
+                    <div className="mb-4 px-1">
                         <LabelSelector
                             selectedLabelIds={medicine.labels || []}
                             onChange={(labelIds) => onUpdateLabels(medicine.id, labelIds)}
@@ -341,10 +364,11 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                 {!isEditingNote ? (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setIsEditingNote(true); setNoteText(medicine.notatka || ''); }}
-                                        className="neu-tag text-xs flex-shrink-0"
-                                        style={{ color: 'var(--color-accent)' }}
+                                        className="neu-tag text-xs flex-shrink-0 flex items-center gap-1 group/btn"
+                                        style={{ color: 'var(--color-text)' }}
                                     >
-                                        Edytuj notkę
+                                        <SvgIcon name="file-pen-line" size={14} />
+                                        <span className="group-hover/btn:text-[var(--color-accent)] transition-colors">Edytuj notkę</span>
                                     </button>
                                 ) : (
                                     <div className="flex gap-2 flex-shrink-0">
@@ -391,10 +415,11 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                 {!isEditing ? (
                                     <button
                                         onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-                                        className="neu-tag text-xs"
-                                        style={{ color: 'var(--color-accent)' }}
+                                        className="neu-tag text-xs flex items-center gap-1 group/btn"
+                                        style={{ color: 'var(--color-text)' }}
                                     >
-                                        Edytuj datę
+                                        <SvgIcon name="calendar-sync" size={14} />
+                                        <span className="group-hover/btn:text-[var(--color-accent)] transition-colors">Edytuj datę</span>
                                     </button>
                                 ) : (
                                     <div className="flex gap-2">
@@ -424,12 +449,12 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                             </span>
                             <button
                                 onClick={(e) => { e.stopPropagation(); onDelete(medicine.id); }}
-                                className="neu-tag text-xs hover:scale-105 transition-transform"
+                                className="neu-tag text-xs hover:scale-105 transition-all flex items-center gap-1 group/del"
                                 title="Usuń lek"
                                 aria-label="Usuń lek"
-                                style={{ color: 'var(--color-error)' }}
                             >
-                                Usuń lek
+                                <SvgIcon name="trash" size={14} style={{ color: 'var(--color-error)' }} />
+                                <span className="group-hover/del:text-[var(--color-error)] transition-colors" style={{ color: 'var(--color-text)' }}>Usuń lek</span>
                             </button>
                         </div>
                     </>
