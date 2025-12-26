@@ -70,39 +70,55 @@ export interface BackupImport {
  * Kontrolowane tagi dla filtrowania
  */
 export const ALLOWED_TAGS = {
+    // === OBJAWY ===
     objawy: [
-        'ból',
-        'gorączka',
-        'kaszel',
-        'katar',
-        'ból gardła',
-        'ból głowy',
-        'ból mięśni',
-        'biegunka',
-        'nudności',
-        'wymioty',
-        'alergia',
-        'zgaga'
+        // Ból
+        'ból', 'ból głowy', 'ból gardła', 'ból mięśni', 'ból menstruacyjny', 'ból ucha',
+        // Układ pokarmowy
+        'nudności', 'wymioty', 'biegunka', 'zaparcia', 'wzdęcia', 'zgaga', 'kolka',
+        // Układ oddechowy
+        'gorączka', 'kaszel', 'katar', 'duszność',
+        // Skóra
+        'świąd', 'wysypka', 'oparzenie', 'ukąszenie', 'rana', 'sucha skóra',
+        // Oczy/uszy
+        'suche oczy',
+        // Inne
+        'alergia', 'bezsenność', 'stres', 'choroba lokomocyjna',
+        'afty', 'ząbkowanie'
     ],
+
+    // === INFEKCJE ===
     typInfekcji: [
-        'infekcja wirusowa',
-        'infekcja bakteryjna',
-        'przeziębienie',
-        'grypa'
+        'infekcja wirusowa', 'infekcja bakteryjna', 'infekcja grzybicza',
+        'przeziębienie', 'grypa'
     ],
+
+    // === DZIAŁANIE ===
     dzialanie: [
-        'przeciwbólowy',
-        'przeciwgorączkowy',
-        'przeciwzapalny',
-        'przeciwhistaminowy',
-        'przeciwkaszlowy',
-        'wykrztuśny',
-        'przeciwwymiotny',
-        'przeciwbiegunkowy'
+        'przeciwbólowy', 'przeciwgorączkowy', 'przeciwzapalny',
+        'przeciwhistaminowy', 'przeciwkaszlowy', 'wykrztuśny',
+        'przeciwwymiotny', 'przeciwbiegunkowy', 'przeczyszczający',
+        'probiotyk', 'nawilżający', 'odkażający', 'uspokajający',
+        'rozkurczowy', 'przeciwświądowy'
     ],
+
+    // === OBSZAR CIAŁA ===
+    obszar: [
+        'układ pokarmowy', 'układ oddechowy', 'układ krążenia',
+        'oczy', 'uszy', 'skóra', 'jama ustna', 'nos',
+        'mięśnie i stawy', 'układ nerwowy', 'układ moczowy'
+    ],
+
+    // === RODZAJ PRODUKTU ===
+    rodzaj: [
+        'lek OTC', 'lek Rx', 'suplement', 'probiotyk',
+        'wyrób medyczny', 'test diagnostyczny', 'kosmetyk leczniczy'
+    ],
+
+    // === GRUPA DOCELOWA ===
     grupa: [
-        'dla dorosłych',
-        'dla dzieci'
+        'dla dorosłych', 'dla dzieci', 'dla niemowląt',
+        'dla kobiet w ciąży', 'dla seniorów'
     ]
 } as const;
 
@@ -113,6 +129,8 @@ export const ALL_ALLOWED_TAGS = [
     ...ALLOWED_TAGS.objawy,
     ...ALLOWED_TAGS.typInfekcji,
     ...ALLOWED_TAGS.dzialanie,
+    ...ALLOWED_TAGS.obszar,
+    ...ALLOWED_TAGS.rodzaj,
     ...ALLOWED_TAGS.grupa
 ] as const;
 
@@ -125,7 +143,9 @@ export const TAG_CATEGORIES = [
     { key: 'objawy', label: 'Objawy', tags: ALLOWED_TAGS.objawy },
     { key: 'typInfekcji', label: 'Typ infekcji', tags: ALLOWED_TAGS.typInfekcji },
     { key: 'dzialanie', label: 'Działanie leku', tags: ALLOWED_TAGS.dzialanie },
-    { key: 'grupa', label: 'Grupa użytkowników', tags: ALLOWED_TAGS.grupa }
+    { key: 'obszar', label: 'Obszar ciała', tags: ALLOWED_TAGS.obszar },
+    { key: 'rodzaj', label: 'Rodzaj produktu', tags: ALLOWED_TAGS.rodzaj },
+    { key: 'grupa', label: 'Grupa docelowa', tags: ALLOWED_TAGS.grupa }
 ] as const;
 
 /**

@@ -68,13 +68,31 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
 
 ## Dozwolone tagi (kontrolowana lista)
 
-ból, gorączka, kaszel, katar, ból gardła, ból głowy, ból mięśni,
-biegunka, nudności, wymioty, alergia, zgaga,
-infekcja wirusowa, infekcja bakteryjna, przeziębienie, grypa,
-przeciwbólowy, przeciwgorączkowy, przeciwzapalny,
-przeciwhistaminowy, przeciwkaszlowy, wykrztuśny,
-przeciwwymiotny, przeciwbiegunkowy,
-dla dorosłych, dla dzieci
+### Objawy
+ból, ból głowy, ból gardła, ból mięśni, ból menstruacyjny, ból ucha,
+nudności, wymioty, biegunka, zaparcia, wzdęcia, zgaga, kolka,
+gorączka, kaszel, katar, duszność,
+świąd, wysypka, oparzenie, ukąszenie, rana, sucha skóra,
+suche oczy, alergia, bezsenność, stres, choroba lokomocyjna, afty, ząbkowanie
+
+### Typ infekcji
+infekcja wirusowa, infekcja bakteryjna, infekcja grzybicza, przeziębienie, grypa
+
+### Działanie leku
+przeciwbólowy, przeciwgorączkowy, przeciwzapalny, przeciwhistaminowy,
+przeciwkaszlowy, wykrztuśny, przeciwwymiotny, przeciwbiegunkowy,
+przeczyszczający, probiotyk, nawilżający, odkażający, uspokajający,
+rozkurczowy, przeciwświądowy
+
+### Obszar ciała
+układ pokarmowy, układ oddechowy, układ krążenia, oczy, uszy, skóra,
+jama ustna, nos, mięśnie i stawy, układ nerwowy, układ moczowy
+
+### Rodzaj produktu
+lek OTC, lek Rx, suplement, probiotyk, wyrób medyczny, test diagnostyczny, kosmetyk leczniczy
+
+### Grupa docelowa
+dla dorosłych, dla dzieci, dla niemowląt, dla kobiet w ciąży, dla seniorów
 
 ## Ograniczenia
 

@@ -25,6 +25,8 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
     const [isLabelsCollapsed, setIsLabelsCollapsed] = useState(true);
     const [isLabelManagerOpen, setIsLabelManagerOpen] = useState(false);
     const [userLabels, setUserLabels] = useState<UserLabel[]>([]);
+    // Stan zwijania poszczególnych kategorii tagów
+    const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({});
 
     // Załaduj stan zwijania z localStorage
     useEffect(() => {
@@ -35,6 +37,13 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
         if (savedExpiry !== null) setIsExpiryCollapsed(savedExpiry === 'true');
         if (savedFilters !== null) setIsFiltersCollapsed(savedFilters === 'true');
         if (savedLabels !== null) setIsLabelsCollapsed(savedLabels === 'true');
+        // Załaduj stan zwijania kategorii
+        const savedCategories = localStorage.getItem('collapsedCategories');
+        if (savedCategories) {
+            try {
+                setCollapsedCategories(JSON.parse(savedCategories));
+            } catch { /* ignore */ }
+        }
     }, []);
 
     // Zapisz stan zwijania do localStorage
@@ -49,6 +58,15 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
     useEffect(() => {
         localStorage.setItem('labelsCollapsed', String(isLabelsCollapsed));
     }, [isLabelsCollapsed]);
+
+    // Zapisz stan zwijania kategorii
+    useEffect(() => {
+        localStorage.setItem('collapsedCategories', JSON.stringify(collapsedCategories));
+    }, [collapsedCategories]);
+
+    const toggleCategory = (key: string) => {
+        setCollapsedCategories(prev => ({ ...prev, [key]: !prev[key] }));
+    };
 
     // Załaduj etykiety
     useEffect(() => {
@@ -263,27 +281,65 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
 
                 {/* Kategorie filtrów - ukryte gdy zwinięte */}
                 <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isFiltersCollapsed ? 'max-h-0 opacity-0' : 'max-h-[600px] opacity-100'}`}
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${isFiltersCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'}`}
                 >
-                    <div className="space-y-3 pb-4">
-                        {TAG_CATEGORIES.map(category => (
-                            <div key={category.key}>
-                                <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
-                                    {category.label}
-                                </span>
-                                <div className="mt-1 flex flex-wrap gap-1.5">
-                                    {category.tags.map(tag => (
-                                        <button
-                                            key={tag}
-                                            onClick={() => handleTagToggle(tag)}
-                                            className={`neu-tag text-xs transition-all ${filters.tags.includes(tag) ? 'active' : ''}`}
-                                        >
-                                            {tag}
-                                        </button>
-                                    ))}
+                    <div className="space-y-1 pb-4">
+                        {TAG_CATEGORIES.map(category => {
+                            const isCollapsed = collapsedCategories[category.key] ?? true;
+                            const activeCount = category.tags.filter(tag => filters.tags.includes(tag)).length;
+
+                            return (
+                                <div key={category.key}>
+                                    {/* Nagłówek kategorii - klikalny */}
+                                    <button
+                                        onClick={() => toggleCategory(category.key)}
+                                        className="w-full flex items-center justify-between text-left py-1.5 px-1 rounded hover:bg-white/5 transition-colors"
+                                    >
+                                        <span className="text-xs font-medium flex items-center gap-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                                            <svg
+                                                className={`h-2.5 w-2.5 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
+                                            {category.label}
+                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-[10px]" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>
+                                                {category.tags.length}
+                                            </span>
+                                            {activeCount > 0 && (
+                                                <span
+                                                    className="text-[10px] min-w-[16px] text-center px-1 py-0.5 rounded-full"
+                                                    style={{ background: 'var(--color-accent)', color: 'white' }}
+                                                >
+                                                    {activeCount}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </button>
+
+                                    {/* Tagi - ukryte gdy kategoria zwinięta */}
+                                    <div
+                                        className={`overflow-hidden transition-all duration-200 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'}`}
+                                    >
+                                        <div className="flex flex-wrap gap-1.5 py-2 pl-4">
+                                            {category.tags.map(tag => (
+                                                <button
+                                                    key={tag}
+                                                    onClick={() => handleTagToggle(tag)}
+                                                    className={`neu-tag text-xs transition-all ${filters.tags.includes(tag) ? 'active' : ''}`}
+                                                >
+                                                    {tag}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             </div>

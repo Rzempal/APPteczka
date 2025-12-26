@@ -1,0 +1,1090 @@
+{
+  "leki": [
+    {
+      "id": "3e7f726d-9bab-4131-93e8-8e55ad37e172",
+      "nazwa": "Orsalit",
+      "opis": "Środek nawadniający organizm, uzupełnia elektrolity utracone podczas choroby. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "odwodnienie",
+        "biegunka",
+        "wymioty"
+      ],
+      "tagi": [
+        "biegunka",
+        "wymioty"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.739Z",
+      "terminWaznosci": "2027-05-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "07888f7f-d3df-40f3-b2af-c02c237aeb65",
+      "nazwa": "Tasectan 250 mg",
+      "opis": "Wyrób medyczny stosowany w celu przywrócenia fizjologicznych funkcji ścian jelita. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "biegunka"
+      ],
+      "tagi": [
+        "biegunka",
+        "przeciwbiegunkowy",
+        "dla dzieci"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.739Z",
+      "terminWaznosci": "2025-12-25",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "4227733b-2c58-4efe-818e-eccae2e792a5",
+      "nazwa": "Asecurin junior",
+      "opis": "Probiotyk wspomagający florę bakteryjną jelit. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "antybiotykoterapia",
+        "wsparcie odporności"
+      ],
+      "tagi": [
+        "dla dzieci",
+        "probiotyk",
+        "suplement",
+        "układ pokarmowy"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.739Z",
+      "terminWaznosci": "2026-02-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "537dc42c-c513-431f-884d-ff627849dd01",
+      "nazwa": "Nebu-dose Hipertonic",
+      "opis": "Roztwór do inhalacji wspomagający samooczyszczanie górnych dróg oddechowych. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "kaszel",
+        "katar",
+        "zapalenie oskrzeli"
+      ],
+      "tagi": [
+        "katar",
+        "kaszel",
+        "przeziębienie",
+        "nos",
+        "układ oddechowy"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2026-04-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "edbae255-47fb-41aa-92bb-ed42ffd00caa",
+      "nazwa": "Doz Product Dentiti Baby",
+      "opis": "Żel łagodzący dolegliwości związane z ząbkowaniem. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ząbkowanie"
+      ],
+      "tagi": [
+        "dla dzieci",
+        "ból",
+        "jama ustna",
+        "dla niemowląt"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-05-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "515d6d0c-0623-4616-a798-a923c1642163",
+      "nazwa": "Rhino Argent",
+      "opis": "Spray do nosa wspomagający regenerację błony śluzowej. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "katar",
+        "podrażnienie nosa"
+      ],
+      "tagi": [
+        "katar",
+        "nos"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-02-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "81dd0d0a-8c4e-4aea-8baf-118d034af324",
+      "nazwa": "Maść Majerankowa",
+      "opis": "Tradycyjny produkt ziołowy łagodzący podrażnienia okolic nosa. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "katar"
+      ],
+      "tagi": [
+        "katar",
+        "przeziębienie",
+        "nos"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2026-06-26",
+      "leafletUrl": "https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/11716/leaflet",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "63e85136-7081-4d89-aa05-7cb083f5c8ae",
+      "nazwa": "Mirramare",
+      "opis": "Izotoniczny roztwór wody morskiej do higieny i nawilżania nosa. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "codzienna higiena nosa",
+        "suchość nosa"
+      ],
+      "tagi": [
+        "katar"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2026-01-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "e4abfa92-2c95-4a36-a6fd-b2187426ad05",
+      "nazwa": "Lemena",
+      "opis": "Lek hormonalny (antykoncepcyjny) dostępny na receptę. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "antykoncepcja"
+      ],
+      "tagi": [
+        "dla dorosłych",
+        "lek Rx"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-04-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "341c66f9-97fc-4044-ada9-4e7b4ddce8b6",
+      "nazwa": "Paroxinor 20 mg",
+      "opis": "Lek przeciwdepresyjny dostępny na receptę. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "depresja",
+        "zaburzenia lękowe"
+      ],
+      "tagi": [
+        "dla dorosłych",
+        "układ nerwowy",
+        "lek Rx"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2028-01-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "81aa5d55-ede6-48ef-9cd4-e39082d71cff",
+      "nazwa": "Paracetamol Zentiva 500 mg",
+      "opis": "Lek przeciwbólowy i przeciwgorączkowy. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ból",
+        "gorączka",
+        "grypa"
+      ],
+      "tagi": [
+        "przeciwbólowy",
+        "przeciwgorączkowy",
+        "ból",
+        "gorączka",
+        "dla dorosłych"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-06-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "04da6070-63b3-48dd-99b1-ea505559814c",
+      "nazwa": "Mozarin",
+      "opis": "Lek przeciwdepresyjny dostępny na receptę. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "depresja",
+        "zaburzenia lękowe"
+      ],
+      "tagi": [
+        "dla dorosłych",
+        "układ nerwowy",
+        "lek Rx"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2028-01-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "b417e609-a127-4645-88dd-424d8ee555b4",
+      "nazwa": "Nasivin Classic",
+      "opis": "Aerozol do nosa zmniejszający obrzęk błony śluzowej. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "katar",
+        "zapalenie zatok"
+      ],
+      "tagi": [
+        "katar",
+        "dla dorosłych",
+        "nos"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-03-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "bb5d2c6c-2e83-4ff4-9428-9eae68e31f18",
+      "nazwa": "Lamotrix",
+      "opis": "Lek przeciwpadaczkowy i stabilizujący nastrój dostępny na receptę. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "padaczka",
+        "zaburzenia afektywne dwubiegunowe"
+      ],
+      "tagi": [
+        "dla dorosłych",
+        "układ nerwowy",
+        "lek Rx"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-09-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "d18a3b9e-545d-46b2-8641-814e1dd034cb",
+      "nazwa": "Akavit D3",
+      "opis": "Suplement diety uzupełniający niedobory witaminy D. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "niedobór witaminy D",
+        "wsparcie odporności"
+      ],
+      "tagi": [
+        "dla dorosłych",
+        "suplement"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2026-05-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "be4be25a-d07e-435c-8a4a-179fa3bbacca",
+      "nazwa": "Krople żołądkowe T",
+      "opis": "Lek ziołowy stosowany w dolegliwościach trawiennych. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "niestrawność",
+        "wzdęcia",
+        "brak łaknienia"
+      ],
+      "tagi": [
+        "nudności",
+        "dla dorosłych",
+        "układ pokarmowy"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2028-06-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "cb526830-9132-478b-8ab3-99d1282fa4d4",
+      "nazwa": "Marimer Baby Hipertoniczny",
+      "opis": "Woda morska do udrażniania zatkanego nosa. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "katar",
+        "zatkany nos"
+      ],
+      "tagi": [
+        "katar",
+        "przeziębienie",
+        "dla dzieci",
+        "nos",
+        "dla niemowląt"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-02-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "f987824f-8b8b-4dee-85f3-4636b7d8e5f6",
+      "nazwa": "Nasivin Kids",
+      "opis": "Aerozol do nosa dla dzieci zmniejszający katar. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "katar",
+        "zapalenie zatok"
+      ],
+      "tagi": [
+        "katar",
+        "dla dzieci",
+        "nos"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-09-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "347f16e2-30d3-43c4-8c26-5e16e7ba50e6",
+      "nazwa": "Floxal",
+      "opis": "Krople do oczu z antybiotykiem, dostępne na receptę. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "bakteryjne zapalenie spojówek"
+      ],
+      "tagi": [
+        "infekcja bakteryjna",
+        "oczy",
+        "lek Rx"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-11-01",
+      "leafletUrl": "https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/8593/leaflet",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "e1ab10ff-f210-4010-87eb-cdc4ba7fb1be",
+      "nazwa": "Pedicetamol",
+      "opis": "Lek przeciwbólowy i przeciwgorączkowy w kroplach. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "gorączka",
+        "ból"
+      ],
+      "tagi": [
+        "przeciwbólowy",
+        "przeciwgorączkowy",
+        "ból",
+        "gorączka",
+        "dla dzieci"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2026-08-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "de3dafa7-c139-4572-be16-5c44f4ebf4fb",
+      "nazwa": "Tantum Verde",
+      "opis": "Aerozol do stosowania w stanach zapalnych jamy ustnej i gardła. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ból gardła",
+        "stan zapalny dziąseł"
+      ],
+      "tagi": [
+        "ból gardła",
+        "przeciwzapalny",
+        "przeciwbólowy",
+        "jama ustna"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2028-09-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "cb72d1c3-cfa0-482d-9417-4af8280d55b1",
+      "nazwa": "Muconasin",
+      "opis": "Spray do nosa upłynniający wydzielinę i udrażniający nos. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "katar",
+        "zapalenie zatok"
+      ],
+      "tagi": [
+        "katar",
+        "dla dorosłych",
+        "nos"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2026-06-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "4c695929-2553-404f-b762-c649adfb28d5",
+      "nazwa": "Ibum Forte",
+      "opis": "Zawiesina o działaniu przeciwbólowym, przeciwgorączkowym i przeciwzapalnym. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "gorączka",
+        "ból różnego pochodzenia"
+      ],
+      "tagi": [
+        "przeciwbólowy",
+        "przeciwgorączkowy",
+        "przeciwzapalny",
+        "ból",
+        "gorączka",
+        "dla dzieci"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-05-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "08c3ec97-d845-453b-bddb-efbf3d620524",
+      "nazwa": "Hederasal",
+      "opis": "Syrop roślinny stosowany w kaszlu mokrym. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "kaszel mokry",
+        "utrudnione odkrztuszanie"
+      ],
+      "tagi": [
+        "kaszel",
+        "wykrztuśny",
+        "układ oddechowy"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2026-05-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "7fb67a5c-4f7c-4397-964e-8d1952c11632",
+      "nazwa": "Fanipos",
+      "opis": "Aerozol do nosa ze sterydem, leczy objawy alergicznego nieżytu nosa. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "katar sienny",
+        "alergia"
+      ],
+      "tagi": [
+        "alergia",
+        "katar",
+        "przeciwzapalny"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-04-01",
+      "leafletUrl": "https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/15957/leaflet",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "14534ea4-7179-49ce-bcf5-bfbc1b6c20ce",
+      "nazwa": "Actiferol Fe Baby",
+      "opis": "Suplement diety zawierający żelazo. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "niedobór żelaza",
+        "anemia"
+      ],
+      "tagi": [
+        "dla dzieci",
+        "suplement",
+        "dla niemowląt"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2026-01-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "44c52173-658d-4d58-b529-5009bb167892",
+      "nazwa": "Dicoflor Junior",
+      "opis": "Probiotyk w saszetkach wspierający mikroflorę jelitową. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "antybiotykoterapia",
+        "wsparcie odporności"
+      ],
+      "tagi": [
+        "dla dzieci",
+        "probiotyk",
+        "suplement",
+        "układ pokarmowy"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-02-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "fa84a4e2-9e4e-4466-a012-04e13739da99",
+      "nazwa": "Petit Drill",
+      "opis": "Syrop łagodzący podrażnienia gardła związane z suchym kaszlem. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "kaszel suchy"
+      ],
+      "tagi": [
+        "kaszel",
+        "dla dzieci",
+        "układ oddechowy"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2028-01-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "02893a89-bc0b-42b0-a42f-1d0a3c78b388",
+      "nazwa": "Espumisan",
+      "opis": "Krople doustne łagodzące wzdęcia i kolki. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "wzdęcia",
+        "kolka niemowlęca"
+      ],
+      "tagi": [
+        "dla dzieci",
+        "układ pokarmowy"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2027-04-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "51ce2cf5-f76a-49d5-b675-36a99b49e730",
+      "nazwa": "Fenistil",
+      "opis": "Krople doustne łagodzące objawy alergii i świąd. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "alergia skórna",
+        "świąd",
+        "katar alergiczny"
+      ],
+      "tagi": [
+        "alergia",
+        "przeciwhistaminowy",
+        "dla dzieci"
+      ],
+      "dataDodania": "2025-12-23T20:23:28.740Z",
+      "terminWaznosci": "2026-02-01",
+      "labels": [
+        "720b444a-92b9-4b26-9d62-8ee0cd1010f8"
+      ]
+    },
+    {
+      "id": "cba61880-04d7-4628-ba97-6e87eef7a2f2",
+      "nazwa": "neo-angin",
+      "opis": "Lek w formie tabletek do ssania stosowany w stanach zapalnych jamy ustnej i gardła. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ból gardła",
+        "zaczerwienienie",
+        "obrzęk"
+      ],
+      "tagi": [
+        "ból gardła",
+        "przeciwzapalny",
+        "jama ustna"
+      ],
+      "dataDodania": "2025-12-26T10:44:26.592Z",
+      "terminWaznosci": "2027-05-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "d86baf81-de36-4fd1-82a9-982c7aaae642",
+      "nazwa": "Węgiel aktywny",
+      "opis": "Suplement diety wspomagający funkcjonowanie układu pokarmowego i łagodzący dolegliwości trawienne. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "wzdęcia",
+        "uczucie pełności"
+      ],
+      "tagi": [
+        "biegunka",
+        "przeciwbiegunkowy",
+        "układ pokarmowy",
+        "suplement"
+      ],
+      "dataDodania": "2025-12-26T10:44:26.596Z",
+      "terminWaznosci": "2027-04-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "120d1c72-05f4-44c5-9123-57a49cd6c694",
+      "nazwa": "Pulnozin",
+      "opis": "Lek ułatwiający odkrztuszanie zalegającej wydzieliny w drogach oddechowych. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "kaszel mokry",
+        "utrudnione odkrztuszanie"
+      ],
+      "tagi": [
+        "kaszel",
+        "wykrztuśny",
+        "układ oddechowy"
+      ],
+      "dataDodania": "2025-12-26T10:44:26.596Z",
+      "terminWaznosci": "2027-09-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "bc6f4f36-7b20-4f2c-b25b-cf7a5f205204",
+      "nazwa": "Sinupret",
+      "opis": "Lek roślinny stosowany wspomagająco w stanach zapalnych zatok i przy katarze. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "katar",
+        "zapalenie zatok"
+      ],
+      "tagi": [
+        "katar",
+        "przeziębienie",
+        "nos"
+      ],
+      "dataDodania": "2025-12-26T10:44:26.596Z",
+      "terminWaznosci": "2027-07-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "af8ca9d5-320d-40d9-a3bc-6ff3d124b9f4",
+      "nazwa": "Aspirin C",
+      "opis": "Lek musujący stosowany w celu łagodzenia objawów przeziębienia i grypy. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "gorączka",
+        "ból głowy",
+        "ból mięśni"
+      ],
+      "tagi": [
+        "ból głowy",
+        "ból mięśni",
+        "gorączka",
+        "przeciwbólowy",
+        "przeciwgorączkowy",
+        "przeziębienie",
+        "grypa"
+      ],
+      "dataDodania": "2025-12-26T10:44:26.596Z",
+      "terminWaznosci": "2027-02-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "10658040-125b-42da-8504-ed2dad180c6f",
+      "nazwa": "Septinum",
+      "opis": "Wyrób medyczny nawilżający gardło i łagodzący podrażnienia oraz kaszel. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ból gardła",
+        "kaszel",
+        "chrypka"
+      ],
+      "tagi": [
+        "ból gardła",
+        "kaszel",
+        "jama ustna"
+      ],
+      "dataDodania": "2025-12-26T10:44:26.596Z",
+      "terminWaznosci": "2027-05-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "feb41156-6e6f-4b63-b3d5-0784bf287e4b",
+      "nazwa": "Tribux FORTE",
+      "opis": "Lek pomagający regulować pracę jelit i łagodzić dolegliwości układu pokarmowego. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ból brzucha",
+        "zaburzenia pracy jelit"
+      ],
+      "tagi": [
+        "ból"
+      ],
+      "dataDodania": "2025-12-26T10:49:26.892Z",
+      "terminWaznosci": "2026-01-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "3bc85e7b-5edd-432e-92aa-cb313b216364",
+      "nazwa": "Levosol",
+      "opis": "Lek stosowany w celu łagodzenia suchego, męczącego kaszlu. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "suchy kaszel"
+      ],
+      "tagi": [
+        "kaszel",
+        "przeciwkaszlowy",
+        "układ oddechowy"
+      ],
+      "dataDodania": "2025-12-26T10:49:26.894Z",
+      "terminWaznosci": "2027-12-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "1118ac73-361e-420a-a01b-0372d195a4ad",
+      "nazwa": "Neo Bianacid",
+      "opis": "Wyrób medyczny łagodzący pieczenie i chroniący błonę śluzową żołądka. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "zgaga",
+        "refluks",
+        "problemy z trawieniem"
+      ],
+      "tagi": [
+        "zgaga",
+        "układ pokarmowy"
+      ],
+      "dataDodania": "2025-12-26T10:51:38.572Z",
+      "terminWaznosci": "2027-04-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "09e270a6-c54c-4779-aaf9-fedd563537e2",
+      "nazwa": "Dulcobis",
+      "opis": "Lek o działaniu przeczyszczającym w formie czopków, ułatwiający wypróżnianie. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "zaparcia"
+      ],
+      "tagi": [
+        "dla dorosłych",
+        "dla dzieci",
+        "układ pokarmowy"
+      ],
+      "dataDodania": "2025-12-26T10:51:38.575Z",
+      "terminWaznosci": "2026-09-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "e133a429-bfff-40bd-a6ec-64ef09190ea5",
+      "nazwa": "Octeangin",
+      "opis": "Lek w postaci pastylek do ssania o działaniu odkażającym i przeciwbakteryjnym. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ból gardła",
+        "stan zapalny jamy ustnej"
+      ],
+      "tagi": [
+        "ból gardła",
+        "infekcja bakteryjna",
+        "infekcja wirusowa",
+        "jama ustna"
+      ],
+      "dataDodania": "2025-12-26T10:51:38.575Z",
+      "terminWaznosci": "2029-04-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "e94befa2-3987-44c6-a7ef-749072b13739",
+      "nazwa": "Ulcamed",
+      "opis": "Lek stosowany w leczeniu chorób żołądka i dwunastnicy. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "choroba wrzodowa",
+        "zapalenie błony śluzowej żołądka"
+      ],
+      "tagi": [
+        "dla dorosłych",
+        "układ pokarmowy"
+      ],
+      "dataDodania": "2025-12-26T10:51:38.575Z",
+      "terminWaznosci": "2026-02-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "567e11c6-d17c-45bd-b3a1-de3701d78364",
+      "nazwa": "Groprinosin Forte",
+      "opis": "Lek o działaniu przeciwwirusowym i zwiększającym odporność organizmu. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "infekcje wirusowe",
+        "opryszczka",
+        "obniżona odporność"
+      ],
+      "tagi": [
+        "infekcja wirusowa",
+        "dla dorosłych",
+        "dla dzieci"
+      ],
+      "dataDodania": "2025-12-26T10:51:38.575Z",
+      "terminWaznosci": "2026-02-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "ff5c92ac-f04d-4dc1-82ba-fa3d86f3e352",
+      "nazwa": "Acard",
+      "opis": "Lek hamujący zlepianie się płytek krwi, stosowany w profilaktyce chorób układu krążenia. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "profilaktyka zawału serca",
+        "choroba niedokrwienna serca"
+      ],
+      "tagi": [
+        "dla dorosłych",
+        "układ krążenia"
+      ],
+      "dataDodania": "2025-12-26T10:51:38.575Z",
+      "terminWaznosci": "2026-01-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "e32a72a8-7f5d-4d89-95ae-8dc498bad844",
+      "nazwa": "Thiocodin",
+      "opis": "Lek złożony hamujący suchy kaszel i ułatwiający odkrztuszanie wydzieliny. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "suchy kaszel",
+        "trudności z odkrztuszaniem"
+      ],
+      "tagi": [
+        "kaszel",
+        "przeciwkaszlowy",
+        "wykrztuśny",
+        "dla dorosłych",
+        "układ oddechowy"
+      ],
+      "dataDodania": "2025-12-26T10:51:38.575Z",
+      "terminWaznosci": "2027-09-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "8ad0d652-67cd-4775-8eaf-766a7f5d9e6e",
+      "nazwa": "Acodin",
+      "opis": "Lek hamujący suchy i męczący kaszel. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "suchy kaszel"
+      ],
+      "tagi": [
+        "kaszel",
+        "przeciwkaszlowy",
+        "dla dorosłych",
+        "układ oddechowy"
+      ],
+      "dataDodania": "2025-12-26T10:51:38.575Z",
+      "terminWaznosci": "2026-04-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "64faf1fb-30ca-4b1b-b0f2-b7a089a4d650",
+      "nazwa": "MeteoSpasmyl",
+      "opis": "Lek stosowany w łagodzeniu wzdęć, gazów oraz bólów brzucha o charakterze skurczowym. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "wzdęcia",
+        "gazy",
+        "ból brzucha"
+      ],
+      "tagi": [
+        "ból",
+        "układ pokarmowy"
+      ],
+      "dataDodania": "2025-12-26T11:06:27.259Z",
+      "terminWaznosci": "2026-01-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "c8bbba1b-716c-4b70-9fce-1cee06561836",
+      "nazwa": "Alliofil 200",
+      "opis": "Preparat roślinny z czosnkiem stosowany wspomagająco w zapobieganiu infekcjom górnych dróg oddechowych i przeziębieniom. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "przeziębienie",
+        "odporność"
+      ],
+      "tagi": [
+        "przeziębienie",
+        "dla dorosłych"
+      ],
+      "dataDodania": "2025-12-26T11:06:27.260Z",
+      "terminWaznosci": "2027-03-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "2c0c53a9-2182-4b4b-9d97-6e2d4dfb489d",
+      "nazwa": "Procto-Glyvenol Complex",
+      "opis": "Suplement diety wspomagający krążenie żylne i szczelność naczyń krwionośnych, stosowany pomocniczo w dolegliwościach hemoroidalnych. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "hemoroidy",
+        "problemy z krążeniem"
+      ],
+      "tagi": [
+        "ból",
+        "układ krążenia",
+        "suplement"
+      ],
+      "dataDodania": "2025-12-26T11:06:27.260Z",
+      "terminWaznosci": "2026-02-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "4e10e198-6976-44fa-be75-1e322709a644",
+      "nazwa": "Prospan",
+      "opis": "Lek roślinny z wyciągiem z bluszczu, który ułatwia odkrztuszanie zalegającej wydzieliny. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "kaszel",
+        "trudności z odkrztuszaniem"
+      ],
+      "tagi": [
+        "kaszel",
+        "wykrztuśny"
+      ],
+      "dataDodania": "2025-12-26T11:06:27.260Z",
+      "terminWaznosci": "2026-10-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "83d69614-06ea-4de9-95eb-c52926f37228",
+      "nazwa": "Anapran",
+      "opis": "Lek o działaniu przeciwbólowym, przeciwzapalnym i przeciwgorączkowym. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ból o małym i umiarkowanym nasileniu",
+        "gorączka",
+        "ból mięśni i stawów"
+      ],
+      "tagi": [
+        "przeciwbólowy",
+        "przeciwzapalny",
+        "przeciwgorączkowy",
+        "ból",
+        "gorączka",
+        "ból mięśni",
+        "dla dorosłych"
+      ],
+      "dataDodania": "2025-12-26T11:08:27.267Z",
+      "terminWaznosci": "2027-12-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "04812c2b-e430-4d80-87bc-0370c1af133e",
+      "nazwa": "Aspirin Cardio",
+      "opis": "Lek hamujący zlepianie się płytek krwi, stosowany w profilaktyce chorób układu krążenia. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "zapobieganie zawałom serca",
+        "zapobieganie zakrzepom"
+      ],
+      "tagi": [
+        "przeciwzapalny",
+        "dla dorosłych"
+      ],
+      "dataDodania": "2025-12-26T11:08:27.270Z",
+      "terminWaznosci": "2027-11-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "3510d4f8-64b5-4c30-84a5-d2516e9e0d33",
+      "nazwa": "Metafen Paracetamol",
+      "opis": "Lek o działaniu przeciwbólowym i obniżającym gorączkę. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "ból głowy",
+        "ból zębów",
+        "gorączka"
+      ],
+      "tagi": [
+        "przeciwbólowy",
+        "przeciwgorączkowy",
+        "ból",
+        "gorączka",
+        "ból głowy",
+        "dla dorosłych"
+      ],
+      "dataDodania": "2025-12-26T11:08:27.270Z",
+      "terminWaznosci": "2028-11-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "7d2adf28-86dc-410a-8fb8-09268c2a0de1",
+      "nazwa": "Ketonal forte",
+      "opis": "Lek o silnym działaniu przeciwbólowym i przeciwzapalnym. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "silny ból",
+        "ból mięśni i stawów",
+        "stany zapalne"
+      ],
+      "tagi": [
+        "przeciwbólowy",
+        "przeciwzapalny",
+        "ból",
+        "ból mięśni",
+        "dla dorosłych"
+      ],
+      "dataDodania": "2025-12-26T11:08:27.270Z",
+      "terminWaznosci": "2026-04-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "54661a72-623e-4b57-95f3-651a37ced96b",
+      "nazwa": "Sorbifer Durules",
+      "opis": "Lek zawierający żelazo oraz witaminę C, który pomaga uzupełnić poziom żelaza w organizmie. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "niedobór żelaza",
+        "anemia"
+      ],
+      "tagi": [
+        "dla dorosłych",
+        "suplement"
+      ],
+      "dataDodania": "2025-12-26T11:10:19.559Z",
+      "terminWaznosci": "2027-04-01",
+      "labels": [
+        "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
+      ]
+    },
+    {
+      "id": "7bc34d84-d315-4c2e-8a06-b3e89dc12579",
+      "nazwa": "fluorecare TEST SARS-CoV-2 & Grypa A/B & RSV ANTYGEN COMBO",
+      "opis": "Domowy test diagnostyczny przeznaczony do wykrywania wirusów grypy typu A i B, SARS-CoV-2 (COVID-19) oraz RSV. Stosować zgodnie z ulotką.",
+      "wskazania": [
+        "podejrzenie infekcji wirusowej",
+        "objawy grypy",
+        "objawy przeziębienia"
+      ],
+      "tagi": [
+        "infekcja wirusowa",
+        "grypa",
+        "przeziębienie",
+        "test diagnostyczny"
+      ],
+      "dataDodania": "2025-12-26T11:11:36.986Z"
+    }
+  ]
+}
