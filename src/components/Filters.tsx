@@ -195,17 +195,17 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     <label className="text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
                         📅 Termin ważności
                         <span
-                            className={`neu-tag p-1 transition-all group-hover:scale-110 ${isExpiryCollapsed ? 'active' : ''}`}
+                            className={`neu-tag p-1 transition-all group-hover:scale-110 ${!isExpiryCollapsed ? 'active' : ''}`}
                             style={{ borderRadius: '50%' }}
                         >
                             <svg
-                                className={`h-3 w-3 transition-transform duration-300 ${isExpiryCollapsed ? '' : 'rotate-180'}`}
+                                className="h-3 w-3 transition-transform duration-300"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
-                                style={{ color: isExpiryCollapsed ? 'white' : 'var(--color-text-muted)' }}
+                                style={{ color: !isExpiryCollapsed ? 'white' : 'var(--color-text-muted)' }}
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isExpiryCollapsed ? "M15 19l-7-7 7-7" : "M19 9l-7 7-7-7"} />
                             </svg>
                         </span>
                     </label>
@@ -254,17 +254,17 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     <label className="text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
                         🏷️ Filtry
                         <span
-                            className={`neu-tag p-1 transition-all group-hover:scale-110 ${isFiltersCollapsed ? 'active' : ''}`}
+                            className={`neu-tag p-1 transition-all group-hover:scale-110 ${!isFiltersCollapsed ? 'active' : ''}`}
                             style={{ borderRadius: '50%' }}
                         >
                             <svg
-                                className={`h-3 w-3 transition-transform duration-300 ${isFiltersCollapsed ? '' : 'rotate-180'}`}
+                                className="h-3 w-3 transition-transform duration-300"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
-                                style={{ color: isFiltersCollapsed ? 'white' : 'var(--color-text-muted)' }}
+                                style={{ color: !isFiltersCollapsed ? 'white' : 'var(--color-text-muted)' }}
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isFiltersCollapsed ? "M15 19l-7-7 7-7" : "M19 9l-7 7-7-7"} />
                             </svg>
                         </span>
                     </label>
@@ -290,23 +290,23 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
 
                             return (
                                 <div key={category.key} className="mb-2">
-                                    {/* Nagłówek kategorii - klikalny, wypukły */}
+                                    {/* Nagłówek kategorii - klikalny, wypukły/wciśnięty */}
                                     <button
                                         type="button"
                                         onClick={() => toggleCategory(category.key)}
-                                        className="neu-flat-sm w-full flex items-center justify-between text-left py-2 px-3 rounded-xl transition-all duration-200 cursor-pointer select-none"
+                                        className={`neu-flat-sm w-full flex items-center justify-between text-left py-2 pl-4 pr-3 rounded-xl transition-all duration-200 cursor-pointer select-none ${!isCollapsed ? 'active' : ''}`}
                                     >
                                         <span
                                             className="text-xs font-medium flex items-center gap-1.5"
-                                            style={{ color: isCollapsed ? 'var(--color-text-muted)' : 'var(--color-accent)' }}
+                                            style={{ color: isCollapsed ? 'var(--color-text-muted)' : 'white' }}
                                         >
                                             <svg
-                                                className={`h-2.5 w-2.5 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}`}
+                                                className="h-2.5 w-2.5 transition-transform duration-200"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 viewBox="0 0 24 24"
                                             >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isCollapsed ? "M9 5l7 7-7 7" : "M19 9l-7 7-7-7"} />
                                             </svg>
                                             {category.label}
                                         </span>
@@ -360,17 +360,17 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     <label className="text-sm font-medium cursor-pointer flex items-center gap-2" style={{ color: 'var(--color-text)' }}>
                         🏷️ Moje etykiety
                         <span
-                            className={`neu-tag p-1 transition-all group-hover:scale-110 ${isLabelsCollapsed ? 'active' : ''}`}
+                            className={`neu-tag p-1 transition-all group-hover:scale-110 ${!isLabelsCollapsed ? 'active' : ''}`}
                             style={{ borderRadius: '50%' }}
                         >
                             <svg
-                                className={`h-3 w-3 transition-transform duration-300 ${isLabelsCollapsed ? '' : 'rotate-180'}`}
+                                className="h-3 w-3 transition-transform duration-300"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
-                                style={{ color: isLabelsCollapsed ? 'white' : 'var(--color-text-muted)' }}
+                                style={{ color: !isLabelsCollapsed ? 'white' : 'var(--color-text-muted)' }}
                             >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isLabelsCollapsed ? "M15 19l-7-7 7-7" : "M19 9l-7 7-7-7"} />
                             </svg>
                         </span>
                     </label>
