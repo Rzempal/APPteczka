@@ -36,7 +36,11 @@ export type IconName =
     | 'folder-input'
     | 'sparkles'
     | 'image-plus'
-    | 'trash';
+    | 'trash'
+    | 'pin-off'
+    | 'clipboard-list'
+    | 'file-input'
+    | 'file-search';
 
 interface SvgIconProps {
     name: IconName;
@@ -139,6 +143,18 @@ const iconPaths: Record<IconName, string> = {
 
     // Trash - kosz
     trash: 'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
+
+    // Pin Off - odepnij
+    'pin-off': 'M2 2l20 20M12 17v5M9 9v1.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V17h6M15 9.34V4h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4',
+
+    // Clipboard List - lista ze schowka
+    'clipboard-list': 'M9 2h6a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1ZM16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2M12 11h4M12 16h4M8 11h.01M8 16h.01',
+
+    // File Input - eksport pliku
+    'file-input': 'M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4M14 2v6h6M2 15h10M5 12l-3 3 3 3',
+
+    // File Search - szukaj w pliku
+    'file-search': 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M9.5 12.5a2.5 2.5 0 1 0 5 0 2.5 2.5 0 1 0-5 0M13.3 14.3L15 16',
 };
 
 export function SvgIcon({

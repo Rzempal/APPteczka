@@ -123,6 +123,22 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
         unknown: <><SvgIcon name="help-circle" size={14} style={{ color: 'var(--color-text-muted)' }} /> Brak daty</>
     };
 
+    // Ikony statusu (dla nagłówka terminu ważności)
+    const statusIcons: Record<string, React.ReactNode> = {
+        expired: <SvgIcon name="alert-triangle" size={16} style={{ color: 'var(--color-error)' }} />,
+        'expiring-soon': <SvgIcon name="clock" size={16} style={{ color: 'var(--color-warning)' }} />,
+        valid: <SvgIcon name="check-circle" size={16} style={{ color: 'var(--color-success)' }} />,
+        unknown: <SvgIcon name="help-circle" size={16} style={{ color: 'var(--color-text-muted)' }} />
+    };
+
+    // Teksty statusu (bez ikony)
+    const statusTexts: Record<string, string> = {
+        expired: 'Przeterminowany',
+        'expiring-soon': 'Kończy się ważność',
+        valid: 'Ważny',
+        unknown: 'Brak daty'
+    };
+
     return (
         <>
             <article
@@ -136,11 +152,11 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                     role="button"
                     aria-expanded={!isCollapsed}
                 >
-                    <div className="flex flex-col gap-1 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 flex-1">
                         <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>
                             {medicine.nazwa || <span className="italic" style={{ color: 'var(--color-text-muted)' }}>Nazwa nieznana</span>}
                         </h3>
-                        {/* Etykiety w widoku zwiniętym (collapsed) */}
+                        {/* Etykiety w widoku zwiniętym (collapsed) - obok nazwy jeśli jest miejsce */}
                         {isCollapsed && medicine.labels && medicine.labels.length > 0 && (
                             <div className="flex flex-wrap gap-1 pl-1">
                                 {getLabelsByIds(medicine.labels).map(label => (
@@ -192,17 +208,17 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setIsPdfModalOpen(true); }}
                                     className="neu-tag text-xs flex items-center gap-1 hover:scale-105 transition-transform"
-                                    style={{ color: 'var(--color-accent)' }}
                                 >
-                                    <SvgIcon name="file-text" size={14} /> Pokaż ulotkę PDF
+                                    <SvgIcon name="file-text" size={14} style={{ color: 'var(--color-success)' }} />
+                                    <span style={{ color: 'var(--color-text)' }}>Pokaż ulotkę PDF</span>
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleRemoveLeaflet(); }}
-                                    className="neu-tag text-xs"
-                                    style={{ color: 'var(--color-error)' }}
+                                    className="neu-tag text-xs flex items-center gap-1"
                                     title="Odepnij ulotkę"
                                 >
-                                    Odepnij
+                                    <SvgIcon name="pin-off" size={14} style={{ color: 'var(--color-error)' }} />
+                                    <span style={{ color: 'var(--color-text)' }}>Odepnij</span>
                                 </button>
                             </div>
                         ) : (
@@ -211,10 +227,10 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handleOpenLeafletSearch(); }}
                                         className="neu-tag text-xs flex items-center gap-1"
-                                        style={{ color: 'var(--color-accent)' }}
                                         title="Wyszukaj ulotkę w Rejestrze Produktów Leczniczych"
                                     >
-                                        <SvgIcon name="search" size={14} /> Znajdź i podepnij ulotkę
+                                        <SvgIcon name="file-search" size={14} style={{ color: 'var(--color-text)' }} />
+                                        <span style={{ color: 'var(--color-text)' }}>Znajdź i podepnij ulotkę</span>
                                     </button>
                                 ) : (
                                     <div
@@ -228,10 +244,10 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                             </span>
                                             <button
                                                 onClick={() => { setIsSearchingLeaflet(false); setLeafletSearchResults([]); setLeafletSearchQuery(''); }}
-                                                className="text-xs px-2 py-1 rounded"
-                                                style={{ color: 'var(--color-error)' }}
+                                                className="neu-tag text-xs flex items-center gap-1"
                                             >
-                                                ✕ Anuluj
+                                                <SvgIcon name="x" size={12} style={{ color: 'var(--color-error)' }} />
+                                                <span style={{ color: 'var(--color-text)' }}>Anuluj</span>
                                             </button>
                                         </div>
 
@@ -249,9 +265,8 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                                 onClick={() => handleSearchLeaflet()}
                                                 disabled={leafletSearchQuery.trim().length < 3 || leafletLoading}
                                                 className="neu-tag text-xs"
-                                                style={{ color: 'var(--color-accent)' }}
                                             >
-                                                {leafletLoading ? <SvgIcon name="loader" size={14} /> : <SvgIcon name="search" size={14} />}
+                                                {leafletLoading ? <SvgIcon name="loader" size={14} /> : <SvgIcon name="search" size={14} style={{ color: 'var(--color-text)' }} />}
                                             </button>
                                         </div>
 
@@ -270,13 +285,12 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                         )}
 
                                         {!leafletLoading && leafletSearchResults.length > 0 && (
-                                            <div className="max-h-40 overflow-y-auto space-y-1 custom-scrollbar">
+                                            <div className="max-h-40 overflow-y-auto space-y-1.5 p-1 custom-scrollbar">
                                                 {leafletSearchResults.map((res) => (
                                                     <button
                                                         key={res.id}
                                                         onClick={() => handleSelectLeaflet(res.ulotkaUrl)}
                                                         className="w-full text-left text-xs p-2 rounded transition-colors flex justify-between group neu-tag"
-                                                        style={{ marginBottom: '0.25rem' }}
                                                     >
                                                         <span style={{ color: 'var(--color-text)' }}>
                                                             {res.nazwa}{' '}
@@ -392,13 +406,18 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
 
                         {/* Termin ważności */}
                         <div className="pt-3 pr-1" style={{ borderTop: '1px solid var(--shadow-dark)' }}>
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>Termin ważności:</span>
+                            <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                    {/* Linia 1: Nagłówek z ikoną statusu */}
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <span className="text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>Termin ważności:</span>
+                                        {statusIcons[expiryStatus]}
+                                    </div>
+                                    {/* Linia 2: Data i tekst statusu */}
                                     {!isEditing ? (
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{formatDate(medicine.terminWaznosci)}</span>
-                                            <span className="text-xs">{statusLabels[expiryStatus]}</span>
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{formatDate(medicine.terminWaznosci)}</span>
+                                            <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{statusTexts[expiryStatus]}</span>
                                         </div>
                                     ) : (
                                         <input
@@ -406,7 +425,7 @@ export default function MedicineCard({ medicine, onDelete, onUpdateExpiry, onUpd
                                             value={expiryDate}
                                             onChange={(e) => setExpiryDate(e.target.value)}
                                             onClick={(e) => e.stopPropagation()}
-                                            className="neu-input mt-1 text-sm"
+                                            className="neu-input text-sm"
                                             style={{ padding: '0.5rem', fontSize: '0.875rem' }}
                                         />
                                     )}

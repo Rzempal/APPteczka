@@ -43,34 +43,45 @@
 }
 
 /* --- Dark Mode (manual toggle via data-theme) --- */
+/* Paleta z landing page pnl.html - ciemnogranatowy styl */
 [data-theme="dark"] {
-  --color-bg: #1a1f1c;
-  --color-bg-dark: #15191a;
-  --color-bg-light: #222a24;
-  --color-text: #f3f4f6;
-  --color-text-muted: #9ca3af;
+  /* Tła - ciemnogranatowe */
+  --color-bg: #0f172a;
+  --color-bg-dark: #0b1120;
+  --color-bg-light: #1e293b;
 
-  --shadow-light: #242b26;
-  --shadow-dark: #101312;
+  /* Tekst */
+  --color-text: #f1f5f9;
+  --color-text-muted: #94a3b8;
 
-  --color-accent: #34d399;
-  --color-accent-light: #6ee7b7;
+  /* Cienie neumorficzne - dostosowane do granatowego */
+  --shadow-light: #1e293b;
+  --shadow-dark: #070b15;
+
+  /* Akcenty - miętowa zieleń */
+  --color-accent: #10b981;
+  --color-accent-light: #34d399;
 }
 
 /* Auto dark mode fallback (when no data-theme set) */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --color-bg: #1a1f1c;
-    --color-bg-dark: #15191a;
-    --color-bg-light: #222a24;
-    --color-text: #f3f4f6;
-    --color-text-muted: #9ca3af;
+    /* Tła - ciemnogranatowe (identyczne jak data-theme dark) */
+    --color-bg: #0f172a;
+    --color-bg-dark: #0b1120;
+    --color-bg-light: #1e293b;
 
-    --shadow-light: #242b26;
-    --shadow-dark: #101312;
+    /* Tekst */
+    --color-text: #f1f5f9;
+    --color-text-muted: #94a3b8;
 
-    --color-accent: #34d399;
-    --color-accent-light: #6ee7b7;
+    /* Cienie */
+    --shadow-light: #1e293b;
+    --shadow-dark: #070b15;
+
+    /* Akcenty */
+    --color-accent: #10b981;
+    --color-accent-light: #34d399;
   }
 }
 
@@ -151,11 +162,11 @@ body {
 }
 
 .neu-flat-sm.active {
-  background: linear-gradient(145deg, var(--color-accent-light), var(--color-accent));
-  color: white;
+  background: linear-gradient(145deg, var(--color-accent-light), var(--color-accent)) !important;
+  color: white !important;
   box-shadow:
     inset var(--neu-distance-sm) var(--neu-distance-sm) var(--neu-blur-sm) rgba(0, 0, 0, 0.15),
-    inset calc(var(--neu-distance-sm) * -1) calc(var(--neu-distance-sm) * -1) var(--neu-blur-sm) rgba(255, 255, 255, 0.1);
+    inset calc(var(--neu-distance-sm) * -1) calc(var(--neu-distance-sm) * -1) var(--neu-blur-sm) rgba(255, 255, 255, 0.1) !important;
 }
 
 /* ============================================
