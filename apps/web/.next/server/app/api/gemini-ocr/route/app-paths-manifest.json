@@ -1,0 +1,3 @@
+{
+  "/api/gemini-ocr/route": "app/api/gemini-ocr/route.js"
+}

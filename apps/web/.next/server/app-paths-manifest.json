@@ -1,0 +1,9 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/gemini-ocr/route": "app/api/gemini-ocr/route.js",
+  "/api/pdf-proxy/route": "app/api/pdf-proxy/route.js",
+  "/backup/page": "app/backup/page.js",
+  "/dodaj/page": "app/dodaj/page.js",
+  "/page": "app/page.js"
+}

@@ -86,52 +86,31 @@ flowchart TB
 
 ---
 
-## Struktura Katalogów (Faza 1)
+## Struktura Katalogów (Monorepo)
 
 ```text
 APPteczka/
-├── docs/                     # Dokumentacja
-│   ├── architecture.md
-│   ├── road_map.md
-│   ├── data_model.md
-│   ├── security.md
-│   ├── lessons_learned.md
-│   ├── schema/               # Schematy JSON/YAML
-│   ├── prompts/              # Prompty dla AI
-│   └── example_input/        # Przykładowe dane
-│
-├── src/
-│   ├── app/                  # Next.js App Router
-│   │   ├── api/              # API Routes (Gemini proxy)
-│   │   ├── page.tsx          # Apteczka (lista leków)
-│   │   ├── dodaj/page.tsx    # Dodaj leki (import AI)
-│   │   ├── backup/page.tsx   # Kopia zapasowa
-│   │   ├── layout.tsx        # Layout z nawigacją
-│   │   └── globals.css       # Style neumorficzne
+├── apps/
+│   ├── web/                    # Next.js 16 (Faza 1)
+│   │   ├── src/
+│   │   │   ├── app/            # App Router
+│   │   │   ├── components/
+│   │   │   └── lib/
+│   │   ├── public/
+│   │   └── package.json
 │   │
-│   ├── components/
-│   │   ├── Filters.tsx
-│   │   ├── GeminiScanner.tsx    # Skaner AI
-│   │   ├── Header.tsx           # Nagłówek z scroll toggle
-│   │   ├── ImportForm.tsx
-│   │   ├── LabelManager.tsx     # Zarządzanie etykietami
-│   │   ├── LabelSelector.tsx    # Wybór etykiet dla leku
-│   │   ├── MedicineCard.tsx
-│   │   ├── MedicineList.tsx
-│   │   ├── PdfModal.tsx         # Modal PDF ulotek
-│   │   ├── PromptGenerator.tsx
-│   │   └── SvgIcon.tsx          # Ikony SVG
-│   │
-│   └── lib/
-│       ├── gemini.ts            # Gemini API client
-│       ├── labelStorage.ts      # Storage etykiet użytkownika
-│       ├── prompts.ts           # Generatory promptów
-│       ├── storage.ts           # localStorage helpers
-│       ├── types.ts             # Typy TypeScript
-│       └── validation.ts        # Walidacja Zod
+│   └── mobile/                 # Flutter (Faza 2)
+│       ├── lib/
+│       ├── android/
+│       ├── ios/
+│       └── pubspec.yaml
 │
-├── public/
-├── package.json
+├── packages/
+│   └── shared/                 # Wspólne schematy
+│       └── schemas/
+│
+├── docs/                       # Dokumentacja
+├── package.json                # npm workspaces
 └── README.md
 ```
 

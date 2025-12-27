@@ -46,7 +46,7 @@
 |------|-------|--------|
 | 0 | Dokumentacja i Schematy | ✅ Ukończona |
 | 1 | MVP Web (Next.js) | ✅ Ukończona |
-| 2 | MVP Mobile (Flutter) | ⏳ Następna |
+| 2 | MVP Mobile (Flutter) | 🔄 W toku |
 | 3 | Backend + Sync (Opcja B) | 📋 Planowana |
 | 4 | Gemini API (Opcja B) | ✅ Ukończona |
 
