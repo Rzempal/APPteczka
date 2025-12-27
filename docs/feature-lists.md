@@ -1,52 +1,74 @@
-# 📊 Porównanie Funkcji (Web vs Apk)
+# 📊 Szczegółowe Porównanie Funkcji (Web vs Mobile)
 
-> ℹ️ **Status**: Apk (Android) jest obecnie o **4** funkcje w tyle za wersją Web.
+> ℹ️ **Status**: Mobile (Flutter) osiągnął parytet funkcjonalny MVP z wersją Web. Główne różnice dotyczą stylu (Material vs Neumorphism) oraz integracji PDF/AI.
 
-| Funkcja | Web (Next.js) | Apk (Flutter) | Status |
-|---------|---------------|---------------|--------|
-| **Podstawowe** | | | |
-| Lista leków | ✅ Tak | ✅ Tak | Równe |
-| Dodawanie ręczne | ✅ Tak | ✅ Tak | Równe |
-| Edycja leku | ✅ Tak | ✅ Tak | Równe |
-| Usuwanie leku | ✅ Tak | ✅ Tak | Równe |
-| Wyszukiwanie tekstowe | ✅ Tak | ✅ Tak | Równe |
-| Sortowanie | ✅ Tak | ✅ Tak | Równe |
-| Filtrowanie | ✅ Tak | ✅ Tak | Równe |
-| **Dane i Backup** | | | |
-| Import/Eksport JSON | ✅ Tak | ✅ Tak | Równe |
-| Eksport PDF | ✅ Tak | ❌ Nie | **Web Only** |
-| Kopia zapasowa do schowka | ✅ Tak | ✅ Tak | Równe |
-| **AI i Automatyzacja** | | | |
-| Generator promptu AI (kopiowanie) | ✅ Tak | ✅ Tak | Równe |
-| Gemini OCR (rozpoznawanie ze zdjęć) | ✅ Tak | ❌ Nie (tylko prompt) | **Web Only** |
-| **UI/UX** | | | |
-| Design Neumorficzny | ✅ Tak | ❌ Nie (Material 3) | **Web Only** |
-| Nawigacja | 3-tab (Bottom Bar) | 3-tab (NavigationBar) | Równe |
-| Animacje | Scroll + Micro-interactions | Standard Material | **Web Only** |
-| **Inne** | | | |
-| Offline-first | ✅ Tak | ✅ Tak | Równe |
-| Skaner kodów kreskowych | ❌ Planowane | ❌ Planowane | - |
+## 📱 Podsumowanie
+
+| Kategoria | Web (Next.js) | Mobile (Flutter) |
+| :--- | :--- | :--- |
+| **Wersja** | 1.1.0 | 1.0.0 (MVP) |
+| **Styl** | Neumorphism (Soft UI) | Material Design 3 |
+| **Baza** | localStorage | Hive (NoSQL) |
+| **Dostęp** | Przeglądarka (PWA)| Aplikacja Android/iOS |
 
 ---
 
-## 📝 Szczegóły różnic
+## 🛠️ Lista Funkcji
 
-### 1. Eksport PDF
+### 1. Zarządzanie Lekami
 
-- **Web**: Generuje gotowy plik PDF z listą leków do druku dla lekarza.
-- **Apk**: Brak. Użytkownik może jedynie skopiować JSON.
+| Funkcja | Szczegóły | Web | Mobile | Uwagi |
+| :--- | :--- | :--- | :--- | :--- |
+| **Lista leków** | Widok kart z detalami | ✅ Tak | ✅ Tak | Web ma animacje wejścia |
+| **Wyszukiwanie** | Po nazwie, opisie, tagach | ✅ Tak | ✅ Tak | |
+| **Sortowanie** | A-Z, Z-A, Termin ↑, Termin ↓ | ✅ Tak | ✅ Tak | Mobile: Menu w AppBar |
+| **Filtrowanie** | Po tagach | ✅ Tak | ✅ Tak | |
+| | Po terminie ważności | ✅ Tak | ✅ Tak | (Wszystkie/Ważne/Kończące się) |
+| | Licznik aktywnych filtrów | ✅ Tak | ✅ Tak | |
+| **Dodawanie** | Formularz ręczny | ✅ Tak | ✅ Tak | |
+| | Walidacja pól | ✅ Tak | ✅ Tak | Nazwa i opis wymagane |
+| **Edycja** | Pełna edycja danych | ✅ Tak | ✅ Tak | |
+| **Usuwanie** | Pojedyncze | ✅ Tak | ✅ Tak | Mobile: Swipe-to-delete |
+| | Masowe (Wyczyść wszystko) | ✅ Tak | ✅ Tak | Wymaga potwierdzenia |
+| **Status ważności**| Kolorowe oznaczenia | ✅ Tak | ✅ Tak | 🟢 Ważne, 🟠 < 30 dni, 🔴 Przeterminowane |
+| **Licznik leków** | Suma leków w apteczce | ✅ Tak | ✅ Tak | |
 
-### 2. Gemini AI OCR
+### 2. Integracja AI i Import
 
-- **Web**: Zintegrowane API Gemini Vision. Użytkownik robi zdjęcie -> formularz wypełnia się sam.
-- **Apk**: "Manualne AI". Użytkownik kopiuje prompt -> wkleja do ChatGPT -> kopiuje JSON -> importuje.
+| Funkcja | Szczegóły | Web | Mobile | Uwagi |
+| :--- | :--- | :--- | :--- | :--- |
+| **Generator Promptu**| Kopiowanie promptu AI | ✅ Tak | ✅ Tak | Pozwala na demo "AI loop" |
+| **Import JSON** | Wklejanie JSON z AI | ✅ Tak | ✅ Tak | Format kompatybilny |
+| **Gemini Vision** | Bezpośrednie zdjęcie | ✅ Tak | ❌ Nie | Web używa API key (Public Preview) |
+| **Import masowy** | Obsługa wielu leków | ✅ Tak | ✅ Tak | |
 
-### 3. Design
+### 3. Dane i Eksport
 
-- **Web**: Unikalny styl Neumorphism (Soft UI), niestandardowe cienie, szklane efekty.
-- **Apk**: Standardowy Material Design 3 (Google native look).
+| Funkcja | Szczegóły | Web | Mobile | Uwagi |
+| :--- | :--- | :--- | :--- | :--- |
+| **Eksport JSON** | Kopia zapasowa do schowka | ✅ Tak | ✅ Tak | Pełna zgodność formatu |
+| **Eksport PDF** | Gotowy druk dla lekarza | ✅ Tak | ❌ Nie | Biblioteka `jspdf` w Web |
+| **Offline** | Działanie bez internetu | ✅ Tak | ✅ Tak | Web: localStorage, Mobile: Hive |
+| **Synchronizacja** | Przenoszenie danych | Manual | Manual | Automatyczna sync planowana w Fazie 3 |
 
-### 4. Animacje
+### 4. UI / UX
 
-- **Web**: Zaawansowane animacje elementów listy przy scrollowaniu, interaktywne przyciski.
-- **Apk**: Standardowe przejścia ekranów Flutter.
+| Funkcja | Szczegóły | Web | Mobile | Uwagi |
+| :--- | :--- | :--- | :--- | :--- |
+| **Styl** | Główny motyw | Neumorphism | Material 3 | Mobile używa natywnych widgetów |
+| **Tryb Ciemny** | Dark Mode | ✅ Tak | ✅ Tak | Mobile: Auto (System) |
+| **Nawigacja** | Struktura | 3 Tabs | Bottom Bar | Apteczka / Dodaj / Kopia |
+| **Responsywność** | Mobile/Tablet/Desktop | ✅ Tak | ✅ Tak | Flutter skaluje się natywnie |
+| **Feedback** | Toasty/Snackbary | ✅ Tak | ✅ Tak | Potwierdzenia akcji |
+
+### 5. Planowane (Roadmap)
+
+| Funkcja | Web | Mobile | Priorytet |
+| :--- | :--- | :--- | :--- |
+| **Powiadomienia** | ❌ Nie | ⏳ Planowane | Wysoki (Local Notifications) |
+| **Skaner kodów** | ⏳ Planowane | ⏳ Planowane | Średni (Barcode Scanner) |
+| **Backend Sync** | ⏳ Planowane | ⏳ Planowane | Niski (Faza 3) |
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2025-12-27

@@ -68,9 +68,9 @@ Pudełko-na-leki/
 |------|-------|--------|
 | 0 | Dokumentacja | ✅ Ukończona |
 | 1 | MVP Web (Next.js) | ✅ Ukończona |
-| 2 | MVP Mobile (Flutter) | 🔄 W toku |
+| 2 | MVP Mobile (Flutter) | ✅ Ukończona |
 | 3 | Backend + Sync | 📋 Planowana |
-| 4 | Gemini API | 📋 Planowana |
+| 4 | Gemini API | ✅ Ukończona |
 
 Szczegóły: [docs/road_map.md](docs/road_map.md)
 
@@ -85,6 +85,15 @@ Szczegóły: [docs/road_map.md](docs/road_map.md)
 | Walidacja | Zod |
 | Przechowywanie | localStorage (offline-first) |
 | Język | TypeScript |
+
+### Mobile (Flutter)
+
+| Warstwa | Technologia |
+|---------|-------------|
+| Framework | Flutter (Dart) |
+| UI | Material Design 3 |
+| Baza danych | Hive (NoSQL) |
+| Platformy | Android / iOS / Web |
 
 ---
 
