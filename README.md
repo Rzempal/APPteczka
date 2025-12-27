@@ -68,7 +68,7 @@ Pudełko-na-leki/
 |------|-------|--------|
 | 0 | Dokumentacja | ✅ Ukończona |
 | 1 | MVP Web (Next.js) | ✅ Ukończona |
-| 2 | MVP Mobile (Flutter) | ⏳ Następna |
+| 2 | MVP Mobile (Flutter) | 🔄 W toku |
 | 3 | Backend + Sync | 📋 Planowana |
 | 4 | Gemini API | 📋 Planowana |
 

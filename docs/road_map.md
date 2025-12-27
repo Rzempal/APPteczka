@@ -97,7 +97,7 @@
 | Framework | Flutter + Dart |
 | Lokalna baza | Hive lub Isar |
 | UI | Material Design 3 |
-| Funkcje | Identyczne jak web MVP |
+| Funkcje | Prawie identyczne (zobacz plik [feature-lists.md](feature-lists.md)) |
 | Kamera | Skanowanie opakowań (z promptem) |
 | Powiadomienia | Lokalne alerty o terminach |
 
