@@ -60,7 +60,7 @@ flowchart TB
 
 | Warstwa | Technologia |
 |---------|-------------|
-| **Framework** | Next.js 14+ (App Router) |
+| **Framework** | Next.js 16 (App Router) |
 | **UI** | React + Tailwind CSS |
 | **Przechowywanie** | localStorage (offline-first) |
 | **Walidacja** | Zod + JSON Schema |
@@ -89,41 +89,46 @@ flowchart TB
 ## Struktura Katalogów (Faza 1)
 
 ```text
-Pudełko-na-leki/
+APPteczka/
 ├── docs/                     # Dokumentacja
 │   ├── architecture.md
 │   ├── road_map.md
 │   ├── data_model.md
 │   ├── security.md
+│   ├── lessons_learned.md
 │   ├── schema/               # Schematy JSON/YAML
 │   ├── prompts/              # Prompty dla AI
 │   └── example_input/        # Przykładowe dane
 │
 ├── src/
 │   ├── app/                  # Next.js App Router
+│   │   ├── api/              # API Routes (Gemini proxy)
 │   │   ├── page.tsx          # Apteczka (lista leków)
 │   │   ├── dodaj/page.tsx    # Dodaj leki (import AI)
-│   │   ├── konsultacja/page.tsx # Konsultacja AI
 │   │   ├── backup/page.tsx   # Kopia zapasowa
 │   │   ├── layout.tsx        # Layout z nawigacją
 │   │   └── globals.css       # Style neumorficzne
 │   │
 │   ├── components/
-│   │   ├── Header.tsx        # Nagłówek z scroll toggle
+│   │   ├── Filters.tsx
+│   │   ├── GeminiScanner.tsx    # Skaner AI
+│   │   ├── Header.tsx           # Nagłówek z scroll toggle
+│   │   ├── ImportForm.tsx
+│   │   ├── LabelManager.tsx     # Zarządzanie etykietami
+│   │   ├── LabelSelector.tsx    # Wybór etykiet dla leku
 │   │   ├── MedicineCard.tsx
 │   │   ├── MedicineList.tsx
-│   │   ├── Filters.tsx
-│   │   ├── ImportForm.tsx
-│   │   └── PromptGenerator.tsx
+│   │   ├── PdfModal.tsx         # Modal PDF ulotek
+│   │   ├── PromptGenerator.tsx
+│   │   └── SvgIcon.tsx          # Ikony SVG
 │   │
-│   ├── lib/
-│   │   ├── types.ts          # Typy TypeScript
-│   │   ├── storage.ts        # localStorage helpers
-│   │   ├── validation.ts     # Walidacja Zod
-│   │   └── prompts.ts        # Generatory promptów
-│   │
-│   └── styles/
-│       └── globals.css
+│   └── lib/
+│       ├── gemini.ts            # Gemini API client
+│       ├── labelStorage.ts      # Storage etykiet użytkownika
+│       ├── prompts.ts           # Generatory promptów
+│       ├── storage.ts           # localStorage helpers
+│       ├── types.ts             # Typy TypeScript
+│       └── validation.ts        # Walidacja Zod
 │
 ├── public/
 ├── package.json
@@ -189,5 +194,5 @@ Gotowe prompty: `docs/prompts/`
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-25
+> 📅 **Ostatnia aktualizacja:** 2025-12-27
 > 🏷️ **Wersja:** 1.1.0

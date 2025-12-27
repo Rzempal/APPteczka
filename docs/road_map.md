@@ -78,7 +78,7 @@
 | Eksport JSON + kopiowanie | ✅ |
 | **Eksport do PDF** | ✅ |
 | **Sortowanie (A-Z, termin)** | ✅ |
-| **4-tabowa nawigacja** | ✅ |
+| **3-tabowa nawigacja** | ✅ |
 | **Design neumorficzny** | ✅ |
 | **Animacje scroll + button press** | ✅ |
 | **Etykiety użytkownika (labels)** | ✅ |
@@ -130,4 +130,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-25
+> 📅 **Ostatnia aktualizacja:** 2025-12-27
