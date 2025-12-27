@@ -1,13 +1,13 @@
 # 📊 Szczegółowe Porównanie Funkcji (Web vs Mobile)
 
-> ℹ️ **Status**: Mobile (Flutter) osiągnął parytet funkcjonalny MVP z wersją Web. Główne różnice dotyczą stylu (Material vs Neumorphism) oraz integracji PDF/AI.
+> ℹ️ **Status**: Mobile (Flutter) osiągnął parytet funkcjonalny z wersją Web, włącznie z Gemini Vision, systemem etykiet i importem z plików.
 
 ## 📱 Podsumowanie
 
 | Kategoria | Web (Next.js) | Mobile (Flutter) |
 | :--- | :--- | :--- |
-| **Wersja** | 1.1.0 | 1.0.0 (MVP) |
-| **Styl** | Neumorphism (Soft UI) | Material Design 3 |
+| **Wersja** | 1.1.0 | 1.1.0 |
+| **Styl** | Neumorphism (Soft UI) | Material Design 3 + Neumorphic colors |
 | **Baza** | localStorage | Hive (NoSQL) |
 | **Dostęp** | Przeglądarka (PWA)| Aplikacja Android/iOS |
 
@@ -38,9 +38,11 @@
 | Funkcja | Szczegóły | Web | Mobile | Uwagi |
 | :--- | :--- | :--- | :--- | :--- |
 | **Generator Promptu**| Kopiowanie promptu AI | ✅ Tak | ✅ Tak | Pozwala na demo "AI loop" |
-| **Import JSON** | Wklejanie JSON z AI | ✅ Tak | ✅ Tak | Format kompatybilny |
-| **Gemini Vision** | Bezpośrednie zdjęcie | ✅ Tak | ❌ Nie | Web używa API key (Public Preview) |
+| **Import JSON (Wklej)** | Wklejanie JSON z AI | ✅ Tak | ✅ Tak | Format kompatybilny |
+| **Import JSON (Plik)** | Wybór pliku .json | ✅ Tak | ✅ Tak | FilePicker |
+| **Gemini Vision** | Bezpośrednie zdjęcie | ✅ Tak | ✅ Tak | Mobile: przez API Vercel |
 | **Import masowy** | Obsługa wielu leków | ✅ Tak | ✅ Tak | |
+| **System Etykiet** | Tworzenie/edycja/filtrowanie | ✅ Tak | ✅ Tak | Max 15 globalnie, 5 per lek |
 
 ### 3. Dane i Eksport
 
@@ -56,8 +58,8 @@
 | Funkcja | Szczegóły | Web | Mobile | Uwagi |
 | :--- | :--- | :--- | :--- | :--- |
 | **Styl** | Główny motyw | Neumorphism | Material 3 | Mobile używa natywnych widgetów |
-| **Tryb Ciemny** | Dark Mode | ✅ Tak | ✅ Tak | Mobile: Auto (System) |
-| **Nawigacja** | Struktura | 3 Tabs | Bottom Bar | Apteczka / Dodaj / Kopia |
+| **Tryb Ciemny** | Dark Mode | ✅ Tak | ✅ Tak | Toggle switch w ustawieniach |
+| **Nawigacja** | Struktura | 3 Tabs | Bottom Bar | Kopia / Apteczka / Dodaj |
 | **Responsywność** | Mobile/Tablet/Desktop | ✅ Tak | ✅ Tak | Flutter skaluje się natywnie |
 | **Feedback** | Toasty/Snackbary | ✅ Tak | ✅ Tak | Potwierdzenia akcji |
 

@@ -1,0 +1,7 @@
+[info] Dangling library doc comment (C:\Users\rzemp\GitHub\APPteczka\apps\mobile\lib\models\label.dart:2:1)
+[warning] The declaration '_clearFilters' isn't referenced (C:\Users\rzemp\GitHub\APPteczka\apps\mobile\lib\screens\home_screen.dart:352:8)
+[info] Unnecessary use of multiple underscores (C:\Users\rzemp\GitHub\APPteczka\apps\mobile\lib\screens\home_screen.dart:179:33)
+[info] Unnecessary use of multiple underscores (C:\Users\rzemp\GitHub\APPteczka\apps\mobile\lib\screens\home_screen.dart:179:37)
+[info] Unnecessary use of multiple underscores (C:\Users\rzemp\GitHub\APPteczka\apps\mobile\lib\screens\home_screen.dart:522:33)
+[info] Unnecessary use of multiple underscores (C:\Users\rzemp\GitHub\APPteczka\apps\mobile\lib\screens\home_screen.dart:522:37)
+[error] The name 'MyApp' isn't a class (C:\Users\rzemp\GitHub\APPteczka\apps\mobile\test\widget_test.dart:16:35)

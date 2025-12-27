@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../models/medicine.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:file_picker/file_picker.dart';
 import '../services/storage_service.dart';
 
-/// Ekran kopii zapasowej - import/eksport
+/// Ekran kopii zapasowej - TYLKO EKSPORT
 class BackupScreen extends StatefulWidget {
   final StorageService storageService;
 
@@ -15,9 +17,8 @@ class BackupScreen extends StatefulWidget {
 }
 
 class _BackupScreenState extends State<BackupScreen> {
-  final TextEditingController _importController = TextEditingController();
   int _medicineCount = 0;
-  bool _isImporting = false;
+  bool _isExporting = false;
 
   @override
   void initState() {
@@ -32,17 +33,20 @@ class _BackupScreenState extends State<BackupScreen> {
   }
 
   @override
-  void dispose() {
-    _importController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('📦 Kopia zapasowa')),
+      appBar: AppBar(
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.package, color: theme.colorScheme.primary),
+            const SizedBox(width: 8),
+            const Text('Kopia zapasowa'),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -60,9 +64,14 @@ class _BackupScreenState extends State<BackupScreen> {
                         color: theme.colorScheme.primaryContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        Icons.medication,
-                        color: theme.colorScheme.onPrimaryContainer,
+                      child: Image.asset(
+                        'assets/backup.png',
+                        width: 32,
+                        height: 32,
+                        errorBuilder: (context, error, stackTrace) => Icon(
+                          LucideIcons.package,
+                          color: theme.colorScheme.onPrimaryContainer,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -91,95 +100,112 @@ class _BackupScreenState extends State<BackupScreen> {
 
             const SizedBox(height: 24),
 
-            // Eksport
+            // Eksport header
             Text(
-              'Eksport',
+              'Eksport danych',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 12),
+
+            // Kopiuj do schowka
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      'Skopiuj dane apteczki do schowka w formacie JSON. Możesz je zaimportować w wersji webowej lub innym urządzeniu.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: _medicineCount > 0 ? _exportToClipboard : null,
-                      icon: const Icon(Icons.copy),
-                      label: const Text('Kopiuj do schowka'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Import
-            Text(
-              'Import',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      'Wklej dane JSON z kopii zapasowej lub eksportu z wersji webowej.',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _importController,
-                      maxLines: 5,
-                      decoration: InputDecoration(
-                        hintText: '{"leki": [...]}',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        filled: true,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: _pasteFromClipboard,
-                            icon: const Icon(Icons.paste),
-                            label: const Text('Wklej'),
-                          ),
+                        Icon(
+                          LucideIcons.clipboard,
+                          color: theme.colorScheme.primary,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: FilledButton.icon(
-                            onPressed: _isImporting ? null : _importFromJson,
-                            icon: _isImporting
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(Icons.download),
-                            label: const Text('Importuj'),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kopiuj do schowka',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                'Skopiuj dane w formacie JSON do schowka',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: _medicineCount > 0 ? _exportToClipboard : null,
+                      icon: const Icon(LucideIcons.copy),
+                      label: const Text('Kopiuj JSON'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Eksport do pliku
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          LucideIcons.folderOutput,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Zapisz do pliku',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                'Zapisz kopię zapasową jako plik JSON',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: _medicineCount > 0 && !_isExporting
+                          ? _exportToFile
+                          : null,
+                      icon: _isExporting
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(LucideIcons.download),
+                      label: const Text('Zapisz plik'),
+                    ),
                   ],
                 ),
               ),
@@ -187,33 +213,24 @@ class _BackupScreenState extends State<BackupScreen> {
 
             const SizedBox(height: 24),
 
-            // Wyczyść
-            Text(
-              'Niebezpieczna strefa',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.error,
-              ),
-            ),
-            const SizedBox(height: 12),
+            // Info o imporcie
             Card(
-              color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+              color: theme.colorScheme.surfaceContainerHighest,
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                child: Row(
                   children: [
-                    Text(
-                      'Usuń wszystkie leki z apteczki. Ta operacja jest nieodwracalna!',
-                      style: theme.textTheme.bodyMedium,
+                    Icon(
+                      LucideIcons.info,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(height: 16),
-                    OutlinedButton.icon(
-                      onPressed: _medicineCount > 0 ? _confirmClear : null,
-                      icon: const Icon(Icons.delete_forever),
-                      label: const Text('Wyczyść apteczkę'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: theme.colorScheme.error,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Aby zaimportować dane, przejdź do zakładki "Dodaj" i wybierz metodę importu.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
@@ -249,149 +266,52 @@ class _BackupScreenState extends State<BackupScreen> {
     }
   }
 
-  Future<void> _pasteFromClipboard() async {
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    if (data?.text != null) {
-      _importController.text = data!.text!;
-    }
-  }
-
-  Future<void> _importFromJson() async {
-    final text = _importController.text.trim();
-    if (text.isEmpty) {
-      _showError('Wklej dane JSON do zaimportowania');
-      return;
-    }
-
+  Future<void> _exportToFile() async {
     setState(() {
-      _isImporting = true;
+      _isExporting = true;
     });
 
     try {
-      final data = jsonDecode(text);
+      final json = widget.storageService.exportToJson();
+      final fileName =
+          'apteczka_backup_${DateTime.now().toIso8601String().split('T')[0]}.json';
 
-      if (data is! Map<String, dynamic>) {
-        throw const FormatException('Nieprawidłowy format JSON');
-      }
+      // Wybierz lokalizację do zapisu
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: 'Zapisz kopię zapasową',
+        fileName: fileName,
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
 
-      final lekiRaw = data['leki'];
-      if (lekiRaw is! List) {
-        throw const FormatException('Brak tablicy "leki" w JSON');
-      }
+      if (result != null) {
+        final file = File(result);
+        await file.writeAsString(json, encoding: utf8);
 
-      final medicines = <Medicine>[];
-      for (final item in lekiRaw) {
-        if (item is Map<String, dynamic>) {
-          // Generuj nowe ID jeśli brak
-          final medicineData = Map<String, dynamic>.from(item);
-          if (medicineData['id'] == null) {
-            medicineData['id'] = DateTime.now().millisecondsSinceEpoch
-                .toString();
-          }
-          if (medicineData['dataDodania'] == null) {
-            medicineData['dataDodania'] = DateTime.now().toIso8601String();
-          }
-          medicines.add(Medicine.fromJson(medicineData));
-        }
-      }
-
-      if (medicines.isEmpty) {
-        throw const FormatException('Brak leków do zaimportowania');
-      }
-
-      // Pokaż dialog potwierdzenia
-      if (mounted) {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Potwierdź import'),
-            content: Text('Czy chcesz zaimportować ${medicines.length} leków?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Anuluj'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Importuj'),
-              ),
-            ],
-          ),
-        );
-
-        if (confirmed == true) {
-          await widget.storageService.importMedicines(medicines);
-          _importController.clear();
-          _updateCount();
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Zaimportowano ${medicines.length} leków'),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        }
-      }
-    } on FormatException catch (e) {
-      _showError(e.message);
-    } catch (e) {
-      _showError('Błąd parsowania JSON: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isImporting = false;
-        });
-      }
-    }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  Future<void> _confirmClear() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Wyczyść apteczkę?'),
-        content: const Text(
-          'Wszystkie leki zostaną usunięte. Ta operacja jest nieodwracalna!',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Zapisano kopię do: ${file.path.split('/').last}'),
+              behavior: SnackBarBehavior.floating,
             ),
-            child: const Text('Usuń wszystko'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      await widget.storageService.clearMedicines();
-      _updateCount();
-
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Apteczka została wyczyszczona'),
+          SnackBar(
+            content: Text('Błąd zapisu: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isExporting = false;
+        });
       }
     }
   }

@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required for Gemini API calls -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    
     <application
         android:label="pudelko_na_leki"
         android:name="${applicationName}"

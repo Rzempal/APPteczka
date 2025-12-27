@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../models/medicine.dart';
+import '../models/label.dart';
 import '../services/storage_service.dart';
+import '../services/theme_provider.dart';
 import '../widgets/medicine_card.dart';
 import '../widgets/filters_sheet.dart';
+import '../widgets/settings_popup.dart';
+import '../theme/app_theme.dart';
 import 'edit_medicine_screen.dart';
+import 'medicine_detail_sheet.dart';
 
 /// Opcje sortowania
 enum SortOption {
-  nameAsc('Nazwa A-Z', Icons.sort_by_alpha),
-  nameDesc('Nazwa Z-A', Icons.sort_by_alpha),
-  expiryAsc('Termin ↑', Icons.arrow_upward),
-  expiryDesc('Termin ↓', Icons.arrow_downward);
+  nameAsc('Nazwa ↑', LucideIcons.arrowUpAZ),
+  nameDesc('Nazwa ↓', LucideIcons.arrowDownAZ),
+  expiryAsc('Termin ↑', LucideIcons.arrowUp),
+  expiryDesc('Termin ↓', LucideIcons.arrowDown);
 
   final String label;
   final IconData icon;
@@ -20,8 +26,13 @@ enum SortOption {
 /// Główny ekran - lista leków (Apteczka)
 class HomeScreen extends StatefulWidget {
   final StorageService storageService;
+  final ThemeProvider themeProvider;
 
-  const HomeScreen({super.key, required this.storageService});
+  const HomeScreen({
+    super.key,
+    required this.storageService,
+    required this.themeProvider,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -89,170 +100,254 @@ class _HomeScreenState extends State<HomeScreen> {
     return tags.toList()..sort();
   }
 
+  List<UserLabel> get _allLabels {
+    return widget.storageService.getLabels();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('💊 Pudełko na leki'),
-        centerTitle: true,
-        elevation: 0,
-        actions: [
-          // Sortowanie
-          PopupMenuButton<SortOption>(
-            icon: const Icon(Icons.sort),
-            tooltip: 'Sortuj',
-            onSelected: (option) {
-              setState(() {
-                _sortOption = option;
-              });
-            },
-            itemBuilder: (context) => SortOption.values.map((option) {
-              return PopupMenuItem(
-                value: option,
-                child: Row(
-                  children: [
-                    Icon(
-                      option.icon,
-                      size: 20,
-                      color: _sortOption == option
-                          ? theme.colorScheme.primary
-                          : null,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header z logo
+            _buildHeader(theme),
+
+            // Wyszukiwarka
+            _buildSearchBar(theme),
+
+            // Sortowanie i licznik
+            _buildToolbar(theme),
+
+            // Lista leków
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filteredMedicines.isEmpty
+                  ? _EmptyState(
+                      onAddPressed: _addDemoMedicines,
+                      hasFilters: _filterState.hasActiveFilters,
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      itemCount: _filteredMedicines.length,
+                      itemBuilder: (context, index) {
+                        final medicine = _filteredMedicines[index];
+                        return Dismissible(
+                          key: Key(medicine.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.expired,
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: const Icon(
+                              LucideIcons.trash,
+                              color: Colors.white,
+                            ),
+                          ),
+                          confirmDismiss: (_) => _confirmDelete(medicine),
+                          onDismissed: (_) => _deleteMedicine(medicine),
+                          child: MedicineCard(
+                            medicine: medicine,
+                            labels: _allLabels,
+                            onTap: () => _showMedicineDetails(medicine),
+                          ),
+                        );
+                      },
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      option.label,
-                      style: TextStyle(
-                        fontWeight: _sortOption == option
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          // Logo
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              'assets/favicon.png',
+              width: 40,
+              height: 40,
+              errorBuilder: (_, __, ___) => Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              );
-            }).toList(),
+                child: const Icon(LucideIcons.pill, color: Colors.white),
+              ),
+            ),
           ),
-          // Filtr badge
+          const SizedBox(width: 12),
+          // Tytuł
+          Text(
+            'Pudełko na leki',
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+          const Spacer(),
+          // Przycisk ustawień (theme toggle)
+          SettingsPopup(themeProvider: widget.themeProvider),
+          // Przycisk filtrów
           Badge(
             isLabelVisible: _filterState.hasActiveFilters,
             label: Text('${_filterState.activeFilterCount}'),
             child: IconButton(
-              icon: const Icon(Icons.filter_list),
-              tooltip: 'Filtry',
+              icon: const Icon(LucideIcons.filter),
               onPressed: _showFilters,
             ),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Pasek wyszukiwania
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'Szukaj leku...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {
-                            _filterState = _filterState.copyWith(
-                              searchQuery: '',
-                            );
-                          });
-                        },
-                      )
-                    : null,
-                filled: true,
-                fillColor: theme.colorScheme.surfaceContainerHighest,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _filterState = _filterState.copyWith(searchQuery: value);
-                });
-              },
-            ),
-          ),
-
-          // Licznik leków + aktywne filtry
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                Text(
-                  '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const Spacer(),
-                if (_filterState.hasActiveFilters)
-                  TextButton.icon(
-                    onPressed: _clearFilters,
-                    icon: const Icon(Icons.clear, size: 16),
-                    label: const Text('Wyczyść filtry'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: theme.colorScheme.error,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          // Lista leków
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filteredMedicines.isEmpty
-                ? _EmptyState(
-                    onAddPressed: _addDemoMedicines,
-                    hasFilters: _filterState.hasActiveFilters,
-                  )
-                : ListView.builder(
-                    itemCount: _filteredMedicines.length,
-                    itemBuilder: (context, index) {
-                      final medicine = _filteredMedicines[index];
-                      return Dismissible(
-                        key: Key(medicine.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 24),
-                          color: theme.colorScheme.error,
-                          child: const Icon(Icons.delete, color: Colors.white),
-                        ),
-                        confirmDismiss: (_) => _confirmDelete(medicine),
-                        onDismissed: (_) => _deleteMedicine(medicine),
-                        child: MedicineCard(
-                          medicine: medicine,
-                          onTap: () => _showMedicineDetails(medicine),
-                        ),
-                      );
-                    },
-                  ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildSearchBar(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Szukaj leku...',
+          prefixIcon: const Icon(LucideIcons.search),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(LucideIcons.x),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _filterState = _filterState.copyWith(searchQuery: '');
+                    });
+                  },
+                )
+              : null,
+        ),
+        onChanged: (value) {
+          setState(() {
+            _filterState = _filterState.copyWith(searchQuery: value);
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _buildToolbar(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          // Licznik
+          Text(
+            '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const Spacer(),
+          // Sortowanie - widoczne przyciski
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: theme.dividerColor),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildSortButton(
+                  'Nazwa',
+                  SortOption.nameAsc,
+                  SortOption.nameDesc,
+                  theme,
+                ),
+                Container(width: 1, height: 24, color: theme.dividerColor),
+                _buildSortButton(
+                  'Termin',
+                  SortOption.expiryAsc,
+                  SortOption.expiryDesc,
+                  theme,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSortButton(
+    String label,
+    SortOption asc,
+    SortOption desc,
+    ThemeData theme,
+  ) {
+    final isActive = _sortOption == asc || _sortOption == desc;
+    final isAsc = _sortOption == asc;
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          if (_sortOption == asc) {
+            _sortOption = desc;
+          } else {
+            _sortOption = asc;
+          }
+        });
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary.withValues(alpha: 0.1) : null,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                color: isActive
+                    ? AppColors.primary
+                    : theme.colorScheme.onSurface,
+              ),
+            ),
+            if (isActive) ...[
+              const SizedBox(width: 4),
+              Icon(
+                isAsc ? LucideIcons.arrowUp : LucideIcons.arrowDown,
+                size: 14,
+                color: AppColors.primary,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showFilters() {
+    final labels = widget.storageService.getLabels();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -262,6 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => FiltersSheet(
         initialState: _filterState,
         availableTags: _allTags,
+        availableLabels: labels,
         onApply: (newState) {
           setState(() {
             _filterState = newState;
@@ -292,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
+                  backgroundColor: AppColors.expired,
                 ),
                 child: const Text('Usuń'),
               ),
@@ -332,149 +428,38 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.3,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+      builder: (context) => MedicineDetailSheet(
+        medicine: medicine,
+        storageService: widget.storageService,
+        onEdit: () async {
+          Navigator.pop(context);
+          final result = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditMedicineScreen(
+                storageService: widget.storageService,
+                medicine: medicine,
               ),
-              const SizedBox(height: 24),
-
-              // Nazwa + przyciski akcji
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      medicine.nazwa ?? 'Nieznany lek',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.edit_outlined,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    tooltip: 'Edytuj',
-                    onPressed: () async {
-                      Navigator.pop(context);
-                      final result = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => EditMedicineScreen(
-                            storageService: widget.storageService,
-                            medicine: medicine,
-                          ),
-                        ),
-                      );
-                      if (result == true) {
-                        _loadMedicines();
-                      }
-                    },
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.delete_outline,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    tooltip: 'Usuń',
-                    onPressed: () async {
-                      Navigator.pop(context);
-                      if (await _confirmDelete(medicine)) {
-                        _deleteMedicine(medicine);
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Opis
-              Text(medicine.opis, style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(height: 24),
-
-              // Wskazania
-              if (medicine.wskazania.isNotEmpty) ...[
-                Text(
-                  'Wskazania:',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                ...medicine.wskazania.map(
-                  (w) => Padding(
-                    padding: const EdgeInsets.only(left: 8, bottom: 4),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('• '),
-                        Expanded(child: Text(w)),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              // Tagi
-              if (medicine.tagi.isNotEmpty) ...[
-                Text(
-                  'Tagi:',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: medicine.tagi.map((tag) {
-                    final isFiltered = _filterState.selectedTags.contains(tag);
-                    return ActionChip(
-                      label: Text(tag),
-                      avatar: isFiltered
-                          ? const Icon(Icons.check, size: 16)
-                          : null,
-                      onPressed: () {
-                        Navigator.pop(context);
-                        setState(() {
-                          final newTags = Set<String>.from(
-                            _filterState.selectedTags,
-                          );
-                          if (isFiltered) {
-                            newTags.remove(tag);
-                          } else {
-                            newTags.add(tag);
-                          }
-                          _filterState = _filterState.copyWith(
-                            selectedTags: newTags,
-                          );
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ],
-            ],
-          ),
-        ),
+            ),
+          );
+          if (result == true) {
+            _loadMedicines();
+          }
+        },
+        onDelete: () async {
+          Navigator.pop(context);
+          if (await _confirmDelete(medicine)) {
+            _deleteMedicine(medicine);
+          }
+        },
+        onTagTap: (tag) {
+          Navigator.pop(context);
+          setState(() {
+            final newTags = Set<String>.from(_filterState.selectedTags);
+            newTags.add(tag);
+            _filterState = _filterState.copyWith(selectedTags: newTags);
+          });
+        },
       ),
     );
   }
@@ -542,25 +527,30 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              hasFilters ? Icons.filter_list_off : Icons.medication_outlined,
-              size: 80,
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.5),
+            Image.asset(
+              'assets/apteczka.png',
+              width: 120,
+              height: 120,
+              errorBuilder: (_, __, ___) => Icon(
+                hasFilters ? LucideIcons.filterX : LucideIcons.pill,
+                size: 80,
+                color: AppColors.primary.withValues(alpha: 0.5),
+              ),
             ),
             const SizedBox(height: 24),
             Text(
               hasFilters ? 'Brak wyników' : 'Twoja apteczka jest pusta',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -568,8 +558,8 @@ class _EmptyState extends StatelessWidget {
               hasFilters
                   ? 'Zmień filtry aby zobaczyć leki.'
                   : 'Dodaj leki aby śledzić terminy ważności i szybko znajdować potrzebne preparaty.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
@@ -577,7 +567,7 @@ class _EmptyState extends StatelessWidget {
             if (!hasFilters)
               FilledButton.icon(
                 onPressed: onAddPressed,
-                icon: const Icon(Icons.add),
+                icon: const Icon(LucideIcons.plus),
                 label: const Text('Dodaj przykładowe leki'),
               ),
           ],

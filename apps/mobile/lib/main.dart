@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'services/storage_service.dart';
+import 'services/theme_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_medicine_screen.dart';
 import 'screens/backup_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,67 +14,45 @@ void main() async {
   final storageService = StorageService();
   await storageService.init();
 
-  runApp(PudelkoNaLekiApp(storageService: storageService));
+  // Inicjalizacja theme provider
+  final themeProvider = ThemeProvider();
+  await themeProvider.init();
+
+  runApp(
+    PudelkoNaLekiApp(
+      storageService: storageService,
+      themeProvider: themeProvider,
+    ),
+  );
 }
 
 class PudelkoNaLekiApp extends StatelessWidget {
   final StorageService storageService;
+  final ThemeProvider themeProvider;
 
-  const PudelkoNaLekiApp({super.key, required this.storageService});
+  const PudelkoNaLekiApp({
+    super.key,
+    required this.storageService,
+    required this.themeProvider,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pudełko na leki',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366f1), // Indigo
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(centerTitle: true),
-        cardTheme: CardThemeData(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+    return ListenableBuilder(
+      listenable: themeProvider,
+      builder: (context, child) {
+        return MaterialApp(
+          title: 'Pudełko na leki',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: MainNavigation(
+            storageService: storageService,
+            themeProvider: themeProvider,
           ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6366f1),
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(centerTitle: true),
-        cardTheme: CardThemeData(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        floatingActionButtonTheme: FloatingActionButtonThemeData(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      ),
-      themeMode: ThemeMode.system,
-      home: MainNavigation(storageService: storageService),
+        );
+      },
     );
   }
 }
@@ -79,15 +60,20 @@ class PudelkoNaLekiApp extends StatelessWidget {
 /// Główna nawigacja z bottom navigation bar
 class MainNavigation extends StatefulWidget {
   final StorageService storageService;
+  final ThemeProvider themeProvider;
 
-  const MainNavigation({super.key, required this.storageService});
+  const MainNavigation({
+    super.key,
+    required this.storageService,
+    required this.themeProvider,
+  });
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 0;
+  int _currentIndex = 1; // Domyślnie Apteczka (środkowy tab)
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
 
   @override
@@ -96,12 +82,16 @@ class _MainNavigationState extends State<MainNavigation> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
+          // 0: Kopia
+          BackupScreen(storageService: widget.storageService),
+          // 1: Apteczka (domyślny)
           _HomeScreenWrapper(
             key: _homeKey,
             storageService: widget.storageService,
+            themeProvider: widget.themeProvider,
           ),
+          // 2: Dodaj
           AddMedicineScreen(storageService: widget.storageService),
-          BackupScreen(storageService: widget.storageService),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -110,26 +100,26 @@ class _MainNavigationState extends State<MainNavigation> {
           setState(() {
             _currentIndex = index;
           });
-          // Odśwież listę po powrocie
-          if (index == 0) {
+          // Odśwież listę po powrocie do Apteczki
+          if (index == 1) {
             _homeKey.currentState?.refresh();
           }
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.medication_outlined),
-            selectedIcon: Icon(Icons.medication),
+            icon: Icon(LucideIcons.package),
+            selectedIcon: Icon(LucideIcons.package),
+            label: 'Kopia',
+          ),
+          NavigationDestination(
+            icon: Icon(LucideIcons.pill),
+            selectedIcon: Icon(LucideIcons.pill),
             label: 'Apteczka',
           ),
           NavigationDestination(
-            icon: Icon(Icons.add_circle_outline),
-            selectedIcon: Icon(Icons.add_circle),
+            icon: Icon(LucideIcons.plusCircle),
+            selectedIcon: Icon(LucideIcons.plusCircle),
             label: 'Dodaj',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.backup_outlined),
-            selectedIcon: Icon(Icons.backup),
-            label: 'Kopia',
           ),
         ],
       ),
@@ -140,8 +130,13 @@ class _MainNavigationState extends State<MainNavigation> {
 /// Wrapper dla HomeScreen z możliwością odświeżania
 class _HomeScreenWrapper extends StatefulWidget {
   final StorageService storageService;
+  final ThemeProvider themeProvider;
 
-  const _HomeScreenWrapper({super.key, required this.storageService});
+  const _HomeScreenWrapper({
+    super.key,
+    required this.storageService,
+    required this.themeProvider,
+  });
 
   @override
   State<_HomeScreenWrapper> createState() => _HomeScreenWrapperState();
@@ -158,6 +153,10 @@ class _HomeScreenWrapperState extends State<_HomeScreenWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    return HomeScreen(key: _refreshKey, storageService: widget.storageService);
+    return HomeScreen(
+      key: _refreshKey,
+      storageService: widget.storageService,
+      themeProvider: widget.themeProvider,
+    );
   }
 }
