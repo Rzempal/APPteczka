@@ -1,0 +1,27 @@
+buildscript {
+    ext.buildConfig = [
+            'minSdk'    : 21,
+            'targetSdk' : 30,
+            'compileSdk': 30
+    ]
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath libs.android.pluginGradle
+        classpath libs.kotlin.pluginGradle
+        classpath libs.androidx.benchmark.pluginGradle
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

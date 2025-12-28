@@ -303,6 +303,13 @@ class _FiltersSheetState extends State<FiltersSheet> {
                                 Text(filter.label),
                               ],
                             ),
+                            labelStyle: TextStyle(
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
                             onSelected: (selected) {
                               setState(() {
                                 _state = _state.copyWith(

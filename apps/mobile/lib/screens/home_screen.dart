@@ -302,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
             child: IconButton(
-              icon: const Icon(LucideIcons.slidersHorizontal, size: 20),
+              icon: const Icon(LucideIcons.settings2, size: 20),
               onPressed: _showFilterManagement,
               constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               padding: EdgeInsets.zero,
@@ -426,10 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // Header
             Row(
               children: [
-                Icon(
-                  LucideIcons.slidersHorizontal,
-                  color: theme.colorScheme.primary,
-                ),
+                Icon(LucideIcons.settings2, color: theme.colorScheme.primary),
                 const SizedBox(width: 12),
                 Text(
                   'Zarządzaj filtrami',
@@ -498,12 +495,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showTagManagement() {
     // Placeholder - przyszła funkcjonalność
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Zarządzanie tagami będzie dostępne wkrótce'),
-        behavior: SnackBarBehavior.floating,
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-    );
+      builder: (ctx) => _TagManagementSheet(
+        storageService: widget.storageService,
+        onChanged: () => _loadMedicines(),
+      ),
+    ).then((_) => _loadMedicines());
   }
 
   Future<bool> _confirmDelete(Medicine medicine) async {
@@ -975,6 +977,270 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
               widget.storageService.deleteLabel(label.id);
               widget.onChanged();
               _loadLabels();
+              Navigator.pop(ctx);
+            },
+            child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Sheet zarządzania tagami
+class _TagManagementSheet extends StatefulWidget {
+  final StorageService storageService;
+  final VoidCallback onChanged;
+
+  const _TagManagementSheet({
+    required this.storageService,
+    required this.onChanged,
+  });
+
+  @override
+  State<_TagManagementSheet> createState() => _TagManagementSheetState();
+}
+
+class _TagManagementSheetState extends State<_TagManagementSheet> {
+  late Set<String> _allTags;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTags();
+  }
+
+  void _loadTags() {
+    final medicines = widget.storageService.getMedicines();
+    final tags = <String>{};
+    for (final m in medicines) {
+      tags.addAll(m.tagi);
+    }
+    setState(() {
+      _allTags = tags;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final sortedTags = _allTags.toList()..sort();
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (context, scrollController) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(LucideIcons.hash, color: theme.colorScheme.primary),
+                const SizedBox(width: 12),
+                Text(
+                  'Zarządzaj tagami',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Edytuj lub usuń tagi ze wszystkich leków.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: sortedTags.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            LucideIcons.hash,
+                            size: 48,
+                            color: theme.colorScheme.onSurfaceVariant.withAlpha(
+                              128,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Brak tagów',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: sortedTags.length,
+                      itemBuilder: (context, index) {
+                        final tag = sortedTags[index];
+                        final medicineCount = _getMedicineCountForTag(tag);
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: NeuDecoration.flatSmall(
+                            isDark: isDark,
+                            radius: 8,
+                          ),
+                          child: ListTile(
+                            leading: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withAlpha(30),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                LucideIcons.tag,
+                                size: 18,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            title: Text(
+                              tag,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '$medicineCount ${medicineCount == 1 ? 'lek' : 'leków'}',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    LucideIcons.pen,
+                                    size: 18,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  onPressed: () => _editTag(tag),
+                                  tooltip: 'Edytuj',
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    LucideIcons.trash,
+                                    size: 18,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () => _deleteTag(tag),
+                                  tooltip: 'Usuń',
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  int _getMedicineCountForTag(String tag) {
+    return widget.storageService
+        .getMedicines()
+        .where((m) => m.tagi.contains(tag))
+        .length;
+  }
+
+  void _editTag(String oldTag) {
+    final controller = TextEditingController(text: oldTag);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edytuj tag'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Nazwa tagu',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final newTag = controller.text.trim();
+              if (newTag.isEmpty || newTag == oldTag) {
+                Navigator.pop(ctx);
+                return;
+              }
+
+              // Update all medicines with this tag
+              final medicines = widget.storageService.getMedicines();
+              for (final med in medicines) {
+                if (med.tagi.contains(oldTag)) {
+                  final newTags = med.tagi
+                      .map((t) => t == oldTag ? newTag : t)
+                      .toList();
+                  widget.storageService.saveMedicine(
+                    med.copyWith(tagi: newTags),
+                  );
+                }
+              }
+
+              widget.onChanged();
+              _loadTags();
+              Navigator.pop(ctx);
+            },
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteTag(String tag) {
+    final count = _getMedicineCountForTag(tag);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Usuń tag?'),
+        content: Text(
+          'Czy na pewno chcesz usunąć tag "$tag"? Zostanie usunięty z $count ${count == 1 ? 'leku' : 'leków'}.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              // Remove tag from all medicines
+              final medicines = widget.storageService.getMedicines();
+              for (final med in medicines) {
+                if (med.tagi.contains(tag)) {
+                  final newTags = med.tagi.where((t) => t != tag).toList();
+                  widget.storageService.saveMedicine(
+                    med.copyWith(tagi: newTags),
+                  );
+                }
+              }
+
+              widget.onChanged();
+              _loadTags();
               Navigator.pop(ctx);
             },
             child: const Text('Usuń'),
