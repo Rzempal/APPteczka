@@ -221,54 +221,67 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchBar(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: TextField(
-        controller: _searchController,
-        decoration: InputDecoration(
-          hintText: 'Szukaj leku...',
-          prefixIcon: const Icon(LucideIcons.search),
-          suffixIcon: _searchController.text.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(LucideIcons.x),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() {
-                      _filterState = _filterState.copyWith(searchQuery: '');
-                    });
-                  },
-                )
-              : null,
+      child: Container(
+        decoration: NeuDecoration.concave(isDark: isDark, radius: 12),
+        child: TextField(
+          controller: _searchController,
+          decoration: InputDecoration(
+            hintText: 'Szukaj leku...',
+            prefixIcon: const Icon(LucideIcons.search),
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    icon: const Icon(LucideIcons.x),
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() {
+                        _filterState = _filterState.copyWith(searchQuery: '');
+                      });
+                    },
+                  )
+                : null,
+          ),
+          onChanged: (value) {
+            setState(() {
+              _filterState = _filterState.copyWith(searchQuery: value);
+            });
+          },
         ),
-        onChanged: (value) {
-          setState(() {
-            _filterState = _filterState.copyWith(searchQuery: value);
-          });
-        },
       ),
     );
   }
 
   Widget _buildToolbar(ThemeData theme) {
+    final isDark = theme.brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Licznik
-          Text(
-            '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+          // Licznik z tlem neumorficznym
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            child: Text(
+              '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const Spacer(),
-          // Sortowanie - widoczne przyciski
+          // Sortowanie - neumorficzny kontener
           Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surface,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: theme.dividerColor),
-            ),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -278,7 +291,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   SortOption.nameDesc,
                   theme,
                 ),
-                Container(width: 1, height: 24, color: theme.dividerColor),
+                Container(
+                  width: 1,
+                  height: 24,
+                  color: theme.dividerColor.withValues(alpha: 0.5),
+                ),
                 _buildSortButton(
                   'Termin',
                   SortOption.expiryAsc,

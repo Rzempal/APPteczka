@@ -239,3 +239,211 @@ class AppTheme {
     );
   }
 }
+
+/// ===========================================
+/// NEUMORPHIC DECORATION HELPER
+/// Klasy pomocnicze do tworzenia efektów neumorficznych
+/// Dopasowane do stylu Web (globals.css)
+/// ===========================================
+class NeuDecoration {
+  // Dystans i blur dla cieni
+  static const double _neuDistance = 8.0;
+  static const double _neuBlur = 16.0;
+  static const double _neuDistanceSm = 4.0;
+  static const double _neuBlurSm = 8.0;
+
+  /// Flat - standardowy wypukły element (jak .neu-flat w CSS)
+  static BoxDecoration flat({
+    required bool isDark,
+    double radius = 20,
+    Color? backgroundColor,
+  }) {
+    final bgColor =
+        backgroundColor ??
+        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
+    final shadowLight = isDark
+        ? AppColors.darkShadowLight
+        : AppColors.lightShadowLight;
+    final shadowDark = isDark
+        ? AppColors.darkShadowDark
+        : AppColors.lightShadowDark;
+
+    return BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        BoxShadow(
+          color: shadowDark,
+          offset: const Offset(_neuDistance, _neuDistance),
+          blurRadius: _neuBlur,
+        ),
+        BoxShadow(
+          color: shadowLight,
+          offset: const Offset(-_neuDistance, -_neuDistance),
+          blurRadius: _neuBlur,
+        ),
+      ],
+    );
+  }
+
+  /// Concave - wklęsły element dla inputów (jak .neu-concave w CSS)
+  /// Flutter nie wspiera inset shadows, więc symulujemy gradient wewnętrzny
+  static BoxDecoration concave({
+    required bool isDark,
+    double radius = 12,
+    Color? backgroundColor,
+  }) {
+    final bgDark = isDark ? AppColors.darkSurface : AppColors.lightSurfaceDark;
+    final bgLight = isDark
+        ? AppColors.darkSurfaceLight
+        : AppColors.lightSurface;
+
+    // Symulacja inset shadow przez gradient (ciemny góra-lewo, jasny dół-prawo)
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [bgDark, bgLight],
+      ),
+      borderRadius: BorderRadius.circular(radius),
+    );
+  }
+
+  /// Convex - wypukły z gradientem (jak .neu-convex w CSS)
+  static BoxDecoration convex({required bool isDark, double radius = 20}) {
+    final bgLight = isDark
+        ? AppColors.darkSurfaceLight
+        : AppColors.lightSurface;
+    final bgDark = isDark ? AppColors.darkSurface : AppColors.lightSurfaceDark;
+    final shadowLight = isDark
+        ? AppColors.darkShadowLight
+        : AppColors.lightShadowLight;
+    final shadowDark = isDark
+        ? AppColors.darkShadowDark
+        : AppColors.lightShadowDark;
+
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [bgLight, bgDark],
+      ),
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        BoxShadow(
+          color: shadowDark,
+          offset: const Offset(_neuDistance, _neuDistance),
+          blurRadius: _neuBlur,
+        ),
+        BoxShadow(
+          color: shadowLight,
+          offset: const Offset(-_neuDistance, -_neuDistance),
+          blurRadius: _neuBlur,
+        ),
+      ],
+    );
+  }
+
+  /// Flat Small - mniejszy wariant dla tagów/chipów
+  static BoxDecoration flatSmall({
+    required bool isDark,
+    double radius = 12,
+    Color? backgroundColor,
+  }) {
+    final bgColor =
+        backgroundColor ??
+        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
+    final shadowLight = isDark
+        ? AppColors.darkShadowLight
+        : AppColors.lightShadowLight;
+    final shadowDark = isDark
+        ? AppColors.darkShadowDark
+        : AppColors.lightShadowDark;
+
+    return BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        BoxShadow(
+          color: shadowDark,
+          offset: const Offset(_neuDistanceSm, _neuDistanceSm),
+          blurRadius: _neuBlurSm,
+        ),
+        BoxShadow(
+          color: shadowLight,
+          offset: const Offset(-_neuDistanceSm, -_neuDistanceSm),
+          blurRadius: _neuBlurSm,
+        ),
+      ],
+    );
+  }
+
+  /// Concave Small - mniejszy wklęsły wariant
+  /// Flutter nie wspiera inset shadows, więc symulujemy gradient
+  static BoxDecoration concaveSmall({
+    required bool isDark,
+    double radius = 12,
+  }) {
+    final bgDark = isDark ? AppColors.darkSurface : AppColors.lightSurfaceDark;
+    final bgLight = isDark
+        ? AppColors.darkSurfaceLight
+        : AppColors.lightSurface;
+
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [bgDark, bgLight],
+      ),
+      borderRadius: BorderRadius.circular(radius),
+    );
+  }
+
+  /// Card status z cieniami neumorficznymi
+  /// Dla kart leków z gradientami statusu
+  static BoxDecoration statusCard({
+    required bool isDark,
+    required LinearGradient gradient,
+    double radius = 16,
+    Color? borderColor,
+  }) {
+    if (isDark) {
+      // Dark mode: subtelniejsze cienie + border
+      return BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(radius),
+        border: borderColor != null
+            ? Border.all(color: borderColor.withValues(alpha: 0.3), width: 1)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            offset: const Offset(0, 4),
+            blurRadius: 20,
+          ),
+        ],
+      );
+    } else {
+      // Light mode: pełne cienie neumorficzne
+      return BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(radius),
+        border: borderColor != null
+            ? Border.all(color: borderColor.withValues(alpha: 0.3), width: 1)
+            : null,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.lightShadowDark,
+            offset: const Offset(_neuDistance, _neuDistance),
+            blurRadius: _neuBlur,
+          ),
+          BoxShadow(
+            color: AppColors.lightShadowLight,
+            offset: const Offset(-_neuDistance, -_neuDistance),
+            blurRadius: _neuBlur,
+          ),
+        ],
+      );
+    }
+  }
+}

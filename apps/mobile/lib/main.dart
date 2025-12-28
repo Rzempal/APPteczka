@@ -78,6 +78,9 @@ class _MainNavigationState extends State<MainNavigation> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
@@ -94,34 +97,58 @@ class _MainNavigationState extends State<MainNavigation> {
           AddMedicineScreen(storageService: widget.storageService),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          // Odśwież listę po powrocie do Apteczki
-          if (index == 1) {
-            _homeKey.currentState?.refresh();
-          }
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(LucideIcons.package),
-            selectedIcon: Icon(LucideIcons.package),
-            label: 'Kopia',
-          ),
-          NavigationDestination(
-            icon: Icon(LucideIcons.pill),
-            selectedIcon: Icon(LucideIcons.pill),
-            label: 'Apteczka',
-          ),
-          NavigationDestination(
-            icon: Icon(LucideIcons.plusCircle),
-            selectedIcon: Icon(LucideIcons.plusCircle),
-            label: 'Dodaj',
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : AppColors.lightBackground,
+          boxShadow: [
+            BoxShadow(
+              color: isDark
+                  ? AppColors.darkShadowDark
+                  : AppColors.lightShadowDark,
+              offset: const Offset(0, -4),
+              blurRadius: 12,
+            ),
+            BoxShadow(
+              color: isDark
+                  ? AppColors.darkShadowLight
+                  : AppColors.lightShadowLight,
+              offset: const Offset(0, 4),
+              blurRadius: 12,
+            ),
+          ],
+        ),
+        child: NavigationBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+            // Odśwież listę po powrocie do Apteczki
+            if (index == 1) {
+              _homeKey.currentState?.refresh();
+            }
+          },
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(LucideIcons.package),
+              selectedIcon: Icon(LucideIcons.package),
+              label: 'Kopia',
+            ),
+            NavigationDestination(
+              icon: Icon(LucideIcons.pill),
+              selectedIcon: Icon(LucideIcons.pill),
+              label: 'Apteczka',
+            ),
+            NavigationDestination(
+              icon: Icon(LucideIcons.plusCircle),
+              selectedIcon: Icon(LucideIcons.plusCircle),
+              label: 'Dodaj',
+            ),
+          ],
+        ),
       ),
     );
   }

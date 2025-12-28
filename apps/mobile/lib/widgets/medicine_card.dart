@@ -34,24 +34,15 @@ class MedicineCard extends StatelessWidget {
         .toList();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          decoration: BoxDecoration(
+          decoration: NeuDecoration.statusCard(
+            isDark: isDark,
             gradient: gradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
-                offset: const Offset(0, 2),
-                blurRadius: 8,
-              ),
-            ],
-            border: Border.all(
-              color: statusColor.withValues(alpha: 0.3),
-              width: 1,
-            ),
+            radius: 20,
+            borderColor: statusColor,
           ),
           child: Padding(
             padding: const EdgeInsets.all(16),

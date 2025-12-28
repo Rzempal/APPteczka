@@ -1,5 +1,6 @@
 /// Model etykiety użytkownika - zgodny z wersją web
 /// Etykiety pozwalają użytkownikowi kategoryzować leki według własnych potrzeb
+library;
 
 /// Dostępne kolory etykiet
 enum LabelColor { red, orange, yellow, green, blue, purple, pink, gray }

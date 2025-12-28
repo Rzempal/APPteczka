@@ -6,8 +6,8 @@
 
 | Kategoria | Web (Next.js) | Mobile (Flutter) |
 | :--- | :--- | :--- |
-| **Wersja** | 1.1.0 | 1.1.0 |
-| **Styl** | Neumorphism (Soft UI) | Material Design 3 + Neumorphic colors |
+| **Wersja** | 1.1.0 | 1.2.0 |
+| **Styl** | Neumorphism (Soft UI) | Neumorphism (Soft UI) |
 | **Baza** | localStorage | Hive (NoSQL) |
 | **Dostęp** | Przeglądarka (PWA)| Aplikacja Android/iOS |
 
@@ -57,7 +57,7 @@
 
 | Funkcja | Szczegóły | Web | Mobile | Uwagi |
 | :--- | :--- | :--- | :--- | :--- |
-| **Styl** | Główny motyw | Neumorphism | Material 3 | Mobile używa natywnych widgetów |
+| **Styl** | Główny motyw | Neumorphism | Neumorphism | Spójny styl z wersją Web |
 | **Tryb Ciemny** | Dark Mode | ✅ Tak | ✅ Tak | Toggle switch w ustawieniach |
 | **Nawigacja** | Struktura | 3 Tabs | Bottom Bar | Kopia / Apteczka / Dodaj |
 | **Responsywność** | Mobile/Tablet/Desktop | ✅ Tak | ✅ Tak | Flutter skaluje się natywnie |
@@ -73,4 +73,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-27
+> 📅 **Ostatnia aktualizacja:** 2025-12-28

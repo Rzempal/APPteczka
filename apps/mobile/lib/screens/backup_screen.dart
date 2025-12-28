@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/storage_service.dart';
+import '../theme/app_theme.dart';
 
 /// Ekran kopii zapasowej - TYLKO EKSPORT
 class BackupScreen extends StatefulWidget {
@@ -35,6 +36,7 @@ class _BackupScreenState extends State<BackupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -52,17 +54,18 @@ class _BackupScreenState extends State<BackupScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Status
-            Card(
+            // Status - neumorficzna karta
+            Container(
+              decoration: NeuDecoration.flat(isDark: isDark, radius: 20),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
+                      decoration: NeuDecoration.convex(
+                        isDark: isDark,
+                        radius: 12,
                       ),
                       child: Image.asset(
                         'assets/backup.png',
@@ -70,7 +73,7 @@ class _BackupScreenState extends State<BackupScreen> {
                         height: 32,
                         errorBuilder: (context, error, stackTrace) => Icon(
                           LucideIcons.package,
-                          color: theme.colorScheme.onPrimaryContainer,
+                          color: theme.colorScheme.primary,
                         ),
                       ),
                     ),
@@ -109,8 +112,9 @@ class _BackupScreenState extends State<BackupScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Kopiuj do schowka
-            Card(
+            // Kopiuj do schowka - neumorficzna karta
+            Container(
+              decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -157,8 +161,9 @@ class _BackupScreenState extends State<BackupScreen> {
 
             const SizedBox(height: 12),
 
-            // Eksport do pliku
-            Card(
+            // Eksport do pliku - neumorficzna karta
+            Container(
+              decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -213,9 +218,9 @@ class _BackupScreenState extends State<BackupScreen> {
 
             const SizedBox(height: 24),
 
-            // Info o imporcie
-            Card(
-              color: theme.colorScheme.surfaceContainerHighest,
+            // Info o imporcie - neumorficzny styl concave
+            Container(
+              decoration: NeuDecoration.concave(isDark: isDark, radius: 16),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
