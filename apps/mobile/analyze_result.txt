@@ -1,0 +1,19 @@
+Analyzing mobile...
+
+  error - lib\screens\add_medicine_screen.dart:62:30 - The getter 'clipboardPlus' isn't defined for the type 'LucideIcons'. Try importing the library that defines 'clipboardPlus', correcting the name to the name of an existing getter, or defining a getter or field named 'clipboardPlus'. - undefined_getter
+  error - lib\screens\add_medicine_screen.dart:87:25 - Arguments of a constant creation must be constant expressions. Try making the argument a valid constant, or use 'new' to call the constructor. - const_with_non_constant_argument
+  error - lib\screens\add_medicine_screen.dart:87:37 - The getter 'clipboardPlus' isn't defined for the type 'LucideIcons'. Try importing the library that defines 'clipboardPlus', correcting the name to the name of an existing getter, or defining a getter or field named 'clipboardPlus'. - undefined_getter
+   info - lib\screens\home_screen.dart:197:33 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\home_screen.dart:197:33 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\home_screen.dart:197:37 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\home_screen.dart:197:37 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\home_screen.dart:564:33 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\home_screen.dart:564:33 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\home_screen.dart:564:37 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\home_screen.dart:564:37 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\manage_screen.dart:121:35 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\manage_screen.dart:121:35 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\manage_screen.dart:121:39 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+   info - lib\screens\manage_screen.dart:121:39 - Unnecessary use of multiple underscores. Try using '_'. - unnecessary_underscores
+
+15 issues found.

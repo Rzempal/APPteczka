@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'services/storage_service.dart';
 import 'services/theme_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_medicine_screen.dart';
-import 'screens/backup_screen.dart';
+import 'screens/manage_screen.dart';
+import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -57,7 +58,7 @@ class PudelkoNaLekiApp extends StatelessWidget {
   }
 }
 
-/// Główna nawigacja z bottom navigation bar
+/// Główna nawigacja z bottom navigation bar (4 zakładki)
 class MainNavigation extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
@@ -73,8 +74,9 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 1; // Domyślnie Apteczka (środkowy tab)
+  int _currentIndex = 1; // Domyślnie Apteczka (drugi tab)
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
+  final GlobalKey<ManageScreenState> _manageKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -85,8 +87,8 @@ class _MainNavigationState extends State<MainNavigation> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          // 0: Kopia
-          BackupScreen(storageService: widget.storageService),
+          // 0: Zarządzaj apteczką
+          ManageScreen(key: _manageKey, storageService: widget.storageService),
           // 1: Apteczka (domyślny)
           _HomeScreenWrapper(
             key: _homeKey,
@@ -95,6 +97,11 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
           // 2: Dodaj
           AddMedicineScreen(storageService: widget.storageService),
+          // 3: Ustawienia
+          SettingsScreen(
+            storageService: widget.storageService,
+            themeProvider: widget.themeProvider,
+          ),
         ],
       ),
       bottomNavigationBar: Container(
@@ -126,26 +133,33 @@ class _MainNavigationState extends State<MainNavigation> {
             setState(() {
               _currentIndex = index;
             });
-            // Odśwież listę po powrocie do Apteczki
-            if (index == 1) {
+            // Odśwież widok po przełączeniu taba
+            if (index == 0) {
+              _manageKey.currentState?.refresh();
+            } else if (index == 1) {
               _homeKey.currentState?.refresh();
             }
           },
           destinations: const [
             NavigationDestination(
-              icon: Icon(LucideIcons.package),
-              selectedIcon: Icon(LucideIcons.package),
-              label: 'Kopia',
+              icon: Icon(LucideIcons.folderCog),
+              selectedIcon: Icon(LucideIcons.folderCog),
+              label: 'Zarządzaj',
             ),
             NavigationDestination(
-              icon: Icon(LucideIcons.pill),
-              selectedIcon: Icon(LucideIcons.pill),
+              icon: Icon(LucideIcons.briefcaseMedical),
+              selectedIcon: Icon(LucideIcons.briefcaseMedical),
               label: 'Apteczka',
             ),
             NavigationDestination(
-              icon: Icon(LucideIcons.plusCircle),
-              selectedIcon: Icon(LucideIcons.plusCircle),
+              icon: Icon(LucideIcons.plus),
+              selectedIcon: Icon(LucideIcons.plus),
               label: 'Dodaj',
+            ),
+            NavigationDestination(
+              icon: Icon(LucideIcons.settings2),
+              selectedIcon: Icon(LucideIcons.settings2),
+              label: 'Ustawienia',
             ),
           ],
         ),

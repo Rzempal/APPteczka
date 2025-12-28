@@ -1,27 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/theme_provider.dart';
 import '../widgets/medicine_card.dart';
 import '../widgets/filters_sheet.dart';
-import '../widgets/settings_popup.dart';
 import '../theme/app_theme.dart';
 import 'edit_medicine_screen.dart';
 import 'medicine_detail_sheet.dart';
 
 /// Opcje sortowania
 enum SortOption {
-  nameAsc('Nazwa ↑', LucideIcons.arrowUpAZ),
-  nameDesc('Nazwa ↓', LucideIcons.arrowDownAZ),
-  expiryAsc('Termin ↑', LucideIcons.arrowUp),
-  expiryDesc('Termin ↓', LucideIcons.arrowDown);
+  nameAsc('Nazwa A-Z', LucideIcons.arrowUpAZ),
+  nameDesc('Nazwa Z-A', LucideIcons.arrowDownAZ),
+  expiryAsc('Termin ↑', LucideIcons.calendarClock),
+  expiryDesc('Termin ↓', LucideIcons.calendarClock),
+  dateAddedAsc('Data dodania ↑', LucideIcons.calendarPlus),
+  dateAddedDesc('Data dodania ↓', LucideIcons.calendarPlus);
 
   final String label;
   final IconData icon;
   const SortOption(this.label, this.icon);
 }
+
+/// Widok listy
+enum ViewMode { list, full }
 
 /// Główny ekran - lista leków (Apteczka)
 class HomeScreen extends StatefulWidget {
@@ -42,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Medicine> _medicines = [];
   FilterState _filterState = const FilterState();
   SortOption _sortOption = SortOption.nameAsc;
+  ViewMode _viewMode = ViewMode.full;
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
 
@@ -88,6 +93,10 @@ class _HomeScreenState extends State<HomeScreen> {
           final bDate = b.terminWaznosci ?? '0000-01-01';
           return bDate.compareTo(aDate);
         });
+      case SortOption.dateAddedAsc:
+        sorted.sort((a, b) => a.dataDodania.compareTo(b.dataDodania));
+      case SortOption.dateAddedDesc:
+        sorted.sort((a, b) => b.dataDodania.compareTo(a.dataDodania));
     }
     return sorted;
   }
@@ -107,19 +116,20 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            // Header z logo
-            _buildHeader(theme),
+            // Line 1: Logo + Title
+            _buildHeaderLine1(theme),
 
-            // Wyszukiwarka
-            _buildSearchBar(theme),
+            // Line 2: Search bar
+            _buildSearchBar(theme, isDark),
 
-            // Sortowanie i licznik
-            _buildToolbar(theme),
+            // Line 3: Counter | View | Sort | Filter
+            _buildToolbar(theme, isDark),
 
             // Lista leków
             Expanded(
@@ -159,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: MedicineCard(
                             medicine: medicine,
                             labels: _allLabels,
+                            isCompact: _viewMode == ViewMode.list,
                             onTap: () => _showMedicineDetails(medicine),
                           ),
                         );
@@ -171,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildHeaderLine1(ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -203,25 +214,12 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.primary,
             ),
           ),
-          const Spacer(),
-          // Przycisk ustawień (theme toggle)
-          SettingsPopup(themeProvider: widget.themeProvider),
-          // Przycisk filtrów
-          Badge(
-            isLabelVisible: _filterState.hasActiveFilters,
-            label: Text('${_filterState.activeFilterCount}'),
-            child: IconButton(
-              icon: const Icon(LucideIcons.filter),
-              onPressed: _showFilters,
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildSearchBar(ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
+  Widget _buildSearchBar(ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
@@ -230,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
           controller: _searchController,
           decoration: InputDecoration(
             hintText: 'Szukaj leku...',
-            prefixIcon: const Icon(LucideIcons.search),
+            prefixIcon: const Icon(LucideIcons.packageSearch),
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
@@ -260,13 +258,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildToolbar(ThemeData theme) {
-    final isDark = theme.brightness == Brightness.dark;
+  Widget _buildToolbar(ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Licznik z tlem neumorficznym
+          // Licznik
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
@@ -278,31 +275,26 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 8),
           const Spacer(),
-          // Sortowanie - neumorficzny kontener
-          Container(
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildSortButton(
-                  'Nazwa',
-                  SortOption.nameAsc,
-                  SortOption.nameDesc,
-                  theme,
-                ),
-                Container(
-                  width: 1,
-                  height: 24,
-                  color: theme.dividerColor.withValues(alpha: 0.5),
-                ),
-                _buildSortButton(
-                  'Termin',
-                  SortOption.expiryAsc,
-                  SortOption.expiryDesc,
-                  theme,
-                ),
-              ],
+          // Widok toggle
+          _buildViewToggle(theme, isDark),
+          const SizedBox(width: 8),
+          // Sortowanie popup
+          _buildSortButton(theme, isDark),
+          const SizedBox(width: 8),
+          // Filtry
+          Badge(
+            isLabelVisible: _filterState.hasActiveFilters,
+            label: Text('${_filterState.activeFilterCount}'),
+            child: Container(
+              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+              child: IconButton(
+                icon: const Icon(LucideIcons.filter, size: 20),
+                onPressed: _showFilters,
+                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+                padding: EdgeInsets.zero,
+              ),
             ),
           ),
         ],
@@ -310,55 +302,75 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSortButton(
-    String label,
-    SortOption asc,
-    SortOption desc,
-    ThemeData theme,
-  ) {
-    final isActive = _sortOption == asc || _sortOption == desc;
-    final isAsc = _sortOption == asc;
+  Widget _buildViewToggle(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+      child: IconButton(
+        icon: Icon(
+          _viewMode == ViewMode.full
+              ? LucideIcons.layoutGrid
+              : LucideIcons.list,
+          size: 20,
+        ),
+        onPressed: () {
+          setState(() {
+            _viewMode = _viewMode == ViewMode.full
+                ? ViewMode.list
+                : ViewMode.full;
+          });
+        },
+        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+        padding: EdgeInsets.zero,
+        tooltip: _viewMode == ViewMode.full ? 'Widok listy' : 'Pełny widok',
+      ),
+    );
+  }
 
-    return InkWell(
-      onTap: () {
-        setState(() {
-          if (_sortOption == asc) {
-            _sortOption = desc;
-          } else {
-            _sortOption = asc;
-          }
-        });
-      },
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.primary.withValues(alpha: 0.1) : null,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                color: isActive
-                    ? AppColors.primary
-                    : theme.colorScheme.onSurface,
-              ),
+  Widget _buildSortButton(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+      child: PopupMenuButton<SortOption>(
+        icon: const Icon(LucideIcons.arrowDownUp, size: 20),
+        tooltip: 'Sortowanie',
+        onSelected: (option) {
+          setState(() {
+            _sortOption = option;
+          });
+        },
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        itemBuilder: (context) => SortOption.values.map((option) {
+          final isSelected = option == _sortOption;
+          return PopupMenuItem<SortOption>(
+            value: option,
+            child: Row(
+              children: [
+                Icon(
+                  option.icon,
+                  size: 18,
+                  color: isSelected
+                      ? AppColors.primary
+                      : theme.colorScheme.onSurface,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    option.label,
+                    style: TextStyle(
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: isSelected
+                          ? AppColors.primary
+                          : theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                if (isSelected)
+                  Icon(LucideIcons.check, size: 16, color: AppColors.primary),
+              ],
             ),
-            if (isActive) ...[
-              const SizedBox(width: 4),
-              Icon(
-                isAsc ? LucideIcons.arrowUp : LucideIcons.arrowDown,
-                size: 14,
-                color: AppColors.primary,
-              ),
-            ],
-          ],
-        ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -381,14 +393,7 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
       ),
-    );
-  }
-
-  void _clearFilters() {
-    _searchController.clear();
-    setState(() {
-      _filterState = const FilterState();
-    });
+    ).then((_) => _loadMedicines()); // Refresh after filter sheet closes
   }
 
   Future<bool> _confirmDelete(Medicine medicine) async {
@@ -478,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
       ),
-    );
+    ).then((_) => _loadMedicines()); // Refresh after detail sheet closes
   }
 
   void _addDemoMedicines() async {
@@ -559,7 +564,7 @@ class _EmptyState extends StatelessWidget {
               errorBuilder: (_, __, ___) => Icon(
                 hasFilters ? LucideIcons.filterX : LucideIcons.pill,
                 size: 80,
-                color: AppColors.primary.withValues(alpha: 0.5),
+                color: AppColors.primary.withAlpha(128),
               ),
             ),
             const SizedBox(height: 24),

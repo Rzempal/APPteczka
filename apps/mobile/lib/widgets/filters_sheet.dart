@@ -312,7 +312,7 @@ class _FiltersSheetState extends State<FiltersSheet> {
 
                     // ========== TAGI ==========
                     Text(
-                      'Tagi',
+                      '#tags',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF6b7280),
@@ -486,6 +486,7 @@ class _FiltersSheetState extends State<FiltersSheet> {
   }
 
   Widget _buildOtherTagsSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final categorizedTags = tagCategories.values.expand((e) => e).toSet();
     final otherTags = widget.availableTags
         .where((t) => !categorizedTags.contains(t))
@@ -498,33 +499,38 @@ class _FiltersSheetState extends State<FiltersSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFe5e7eb),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.label_outline,
-                color: Color(0xFF6b7280),
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Inne',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF6b7280),
+        // Styled like other category sections
+        InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            setState(() {
+              // Toggle - show/hide other tags
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: NeuDecoration.flat(isDark: isDark, radius: 8),
+            child: Row(
+              children: [
+                Icon(Icons.label_outline, color: AppColors.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Inne',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                '${otherTags.length}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF9ca3af)),
-              ),
-            ],
+                const Spacer(),
+                Text(
+                  '${otherTags.length}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.primary.withAlpha(178),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 8),
