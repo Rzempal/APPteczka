@@ -3,6 +3,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import type { Medicine, MedicineImport, BackupImport } from './types';
+import { getLabels } from './labelStorage';
 
 const STORAGE_KEY = 'appteczka_medicines';
 
@@ -245,11 +246,12 @@ export function clearMedicines(): void {
 }
 
 /**
- * Eksportuje apteczkę jako JSON string (pełny backup)
+ * Eksportuje apteczkę jako JSON string (pełny backup z etykietami)
  */
 export function exportMedicines(): string {
     const medicines = getMedicines();
-    return JSON.stringify({ leki: medicines }, null, 2);
+    const labels = getLabels();
+    return JSON.stringify({ leki: medicines, labels }, null, 2);
 }
 
 /**
