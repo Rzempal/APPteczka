@@ -9,6 +9,7 @@
     "dev:web": "npm -w @appteczka/web run dev",
     "build:web": "npm -w @appteczka/web run build",
     "start:web": "npm -w @appteczka/web run start",
-    "lint:web": "npm -w @appteczka/web run lint"
+    "lint:web": "npm -w @appteczka/web run lint",
+    "vercel-build": "cd apps/web && npm run build"
   }
 }
