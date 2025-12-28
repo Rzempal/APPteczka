@@ -297,6 +297,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 8),
+          // Zarządzaj filtrami
+          Container(
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            child: IconButton(
+              icon: const Icon(LucideIcons.listFilter, size: 20),
+              onPressed: _showFilterManagement,
+              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+              padding: EdgeInsets.zero,
+              tooltip: 'Zarządzaj filtrami',
+            ),
+          ),
         ],
       ),
     );
@@ -394,6 +406,216 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     ).then((_) => _loadMedicines()); // Refresh after filter sheet closes
+  }
+
+  void _showFilterManagement() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(LucideIcons.listFilter, color: theme.colorScheme.primary),
+                const SizedBox(width: 12),
+                Text(
+                  'Zarządzaj filtrami',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Zarządzaj etykietami
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(LucideIcons.tags, color: theme.colorScheme.primary),
+              ),
+              title: const Text('Zarządzaj etykietami'),
+              subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
+              trailing: const Icon(LucideIcons.chevronRight),
+              onTap: () {
+                Navigator.pop(context);
+                _showLabelManagement();
+              },
+            ),
+
+            const Divider(height: 24),
+
+            // Zarządzaj tagami (inne)
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(LucideIcons.hash, color: theme.colorScheme.primary),
+              ),
+              title: const Text('Zarządzaj tagami'),
+              subtitle: const Text('Usuń niestandardowe tagi z apteczki'),
+              trailing: const Icon(LucideIcons.chevronRight),
+              onTap: () {
+                Navigator.pop(context);
+                _showTagManagement();
+              },
+            ),
+
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showLabelManagement() {
+    // Otwórz prosty modal z listą etykiet
+    final labels = widget.storageService.getLabels();
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(LucideIcons.tags, color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Zarządzaj etykietami',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Aby edytować lub usunąć etykietę, kliknij na nią w widoku szczegółów leku.',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: labels.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              LucideIcons.tag,
+                              size: 48,
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withAlpha(128),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Brak etykiet',
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Dodaj etykiety w szczegółach leku',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant
+                                    .withAlpha(180),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        controller: scrollController,
+                        itemCount: labels.length,
+                        itemBuilder: (context, index) {
+                          final label = labels[index];
+                          final colorInfo = labelColors[label.color];
+                          final color = colorInfo != null
+                              ? Color(colorInfo.colorValue)
+                              : Colors.grey;
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: NeuDecoration.flatSmall(
+                              isDark: isDark,
+                              radius: 8,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    label.name,
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  colorInfo?.name ?? 'Szary',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ).then((_) => _loadMedicines());
+  }
+
+  void _showTagManagement() {
+    // Placeholder - przyszła funkcjonalność
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Zarządzanie tagami będzie dostępne wkrótce'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<bool> _confirmDelete(Medicine medicine) async {

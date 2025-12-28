@@ -51,12 +51,12 @@ class MedicineCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Nagłówek: Nazwa + Badge etykiety + Status
+                // Nagłówek: Nazwa + Status (align right)
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nazwa leku
-                    Flexible(
+                    // Nazwa leku (flexible)
+                    Expanded(
                       child: Text(
                         medicine.nazwa ?? 'Nieznany lek',
                         style: theme.textTheme.titleMedium?.copyWith(
@@ -68,20 +68,8 @@ class MedicineCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    // Badge etykiety - obok nazwy
-                    if (medicineLabels.isNotEmpty) ...[
-                      const SizedBox(width: 8),
-                      ...medicineLabels.take(2).map((label) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: _buildBadge(label, isDark),
-                        );
-                      }),
-                      if (medicineLabels.length > 2)
-                        _buildBadgeCount(medicineLabels.length - 2, isDark),
-                    ],
-                    const Spacer(),
-                    // Status badge
+                    const SizedBox(width: 8),
+                    // Status badge (align right)
                     if (statusLabel != null)
                       Container(
                         padding: EdgeInsets.symmetric(
@@ -116,6 +104,22 @@ class MedicineCard extends StatelessWidget {
                       ),
                   ],
                 ),
+
+                // Etykiety (wrap na nową linię jeśli nie mieszczą się)
+                if (medicineLabels.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      ...medicineLabels
+                          .take(3)
+                          .map((label) => _buildBadge(label, isDark)),
+                      if (medicineLabels.length > 3)
+                        _buildBadgeCount(medicineLabels.length - 3, isDark),
+                    ],
+                  ),
+                ],
 
                 // Compact: tylko data
                 if (isCompact) ...[
