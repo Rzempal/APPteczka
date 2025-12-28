@@ -51,25 +51,37 @@ class MedicineCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Nagłówek: Nazwa + Status (align right)
+                // Nagłówek: [Nazwa + Etykiety] align left | [Badge] align right
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nazwa leku (flexible)
+                    // Lewa strona: Nazwa + Etykiety (wrap to 2 lines if needed)
                     Expanded(
-                      child: Text(
-                        medicine.nazwa ?? 'Nieznany lek',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface,
-                          fontSize: isCompact ? 15 : null,
-                        ),
-                        maxLines: isCompact ? 1 : 2,
-                        overflow: TextOverflow.ellipsis,
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          // Nazwa leku
+                          Text(
+                            medicine.nazwa ?? 'Nieznany lek',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                              fontSize: isCompact ? 15 : null,
+                            ),
+                          ),
+                          // Etykiety
+                          ...medicineLabels
+                              .take(3)
+                              .map((label) => _buildBadge(label, isDark)),
+                          if (medicineLabels.length > 3)
+                            _buildBadgeCount(medicineLabels.length - 3, isDark),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    // Status badge (align right)
+                    // Prawa strona: Status badge (align right)
                     if (statusLabel != null)
                       Container(
                         padding: EdgeInsets.symmetric(
@@ -104,22 +116,6 @@ class MedicineCard extends StatelessWidget {
                       ),
                   ],
                 ),
-
-                // Etykiety (wrap na nową linię jeśli nie mieszczą się)
-                if (medicineLabels.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    children: [
-                      ...medicineLabels
-                          .take(3)
-                          .map((label) => _buildBadge(label, isDark)),
-                      if (medicineLabels.length > 3)
-                        _buildBadgeCount(medicineLabels.length - 3, isDark),
-                    ],
-                  ),
-                ],
 
                 // Compact: tylko data
                 if (isCompact) ...[
