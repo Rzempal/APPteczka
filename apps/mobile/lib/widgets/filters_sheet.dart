@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'dart:math' as math;
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../theme/app_theme.dart';
@@ -136,6 +138,9 @@ class _FiltersSheetState extends State<FiltersSheet> {
   late FilterState _state;
   final Map<String, bool> _expandedCategories = {};
   bool _labelsExpanded = true;
+  bool _expiryExpanded = true;
+  bool _tagsExpanded = true;
+  bool _otherTagsExpanded = true;
 
   @override
   void initState() {
@@ -263,87 +268,91 @@ class _FiltersSheetState extends State<FiltersSheet> {
                     ],
 
                     // ========== TERMIN WAŻNOŚCI ==========
-                    Text(
-                      'Termin ważności',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF6b7280),
-                      ),
+                    _buildMainSectionHeader(
+                      icon: LucideIcons.calendarHeart,
+                      title: 'Termin ważności',
+                      isExpanded: _expiryExpanded,
+                      onTap: () =>
+                          setState(() => _expiryExpanded = !_expiryExpanded),
                     ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: ExpiryFilter.values.map((filter) {
-                        final isSelected = _state.expiryFilter == filter;
-                        return FilterChip(
-                          selected: isSelected,
-                          label: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (isSelected) ...[
-                                const Icon(Icons.check, size: 16),
+                    if (_expiryExpanded) ...[
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: ExpiryFilter.values.map((filter) {
+                          final isSelected = _state.expiryFilter == filter;
+                          return FilterChip(
+                            selected: isSelected,
+                            label: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isSelected) ...[
+                                  const Icon(Icons.check, size: 16),
+                                  const SizedBox(width: 4),
+                                ],
+                                Icon(_getExpiryIcon(filter), size: 16),
                                 const SizedBox(width: 4),
+                                Text(filter.label),
                               ],
-                              Icon(_getExpiryIcon(filter), size: 16),
-                              const SizedBox(width: 4),
-                              Text(filter.label),
-                            ],
-                          ),
-                          onSelected: (selected) {
-                            setState(() {
-                              _state = _state.copyWith(
-                                expiryFilter: selected
-                                    ? filter
-                                    : ExpiryFilter.all,
-                              );
-                            });
-                          },
-                          selectedColor: AppColors.primary.withValues(
-                            alpha: 0.2,
-                          ),
-                          checkmarkColor: AppColors.primary,
-                          showCheckmark: false,
-                        );
-                      }).toList(),
-                    ),
+                            ),
+                            onSelected: (selected) {
+                              setState(() {
+                                _state = _state.copyWith(
+                                  expiryFilter: selected
+                                      ? filter
+                                      : ExpiryFilter.all,
+                                );
+                              });
+                            },
+                            selectedColor: AppColors.primary.withValues(
+                              alpha: 0.2,
+                            ),
+                            checkmarkColor: AppColors.primary,
+                            showCheckmark: false,
+                          );
+                        }).toList(),
+                      ),
+                    ],
 
                     const SizedBox(height: 24),
 
                     // ========== TAGI ==========
-                    Text(
-                      'Tagi',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF6b7280),
-                      ),
+                    _buildMainSectionHeader(
+                      icon: LucideIcons.hash,
+                      title: '#tags',
+                      isExpanded: _tagsExpanded,
+                      onTap: () =>
+                          setState(() => _tagsExpanded = !_tagsExpanded),
                     ),
-                    const SizedBox(height: 12),
+                    if (_tagsExpanded) ...[
+                      const SizedBox(height: 12),
 
-                    // Kategorie tagów
-                    ...tagCategories.entries.map((entry) {
-                      final categoryName = entry.key;
-                      final categoryTags = entry.value;
-                      final availableInCategory = categoryTags
-                          .where((t) => widget.availableTags.contains(t))
-                          .toList();
+                      // Kategorie tagów
+                      ...tagCategories.entries.map((entry) {
+                        final categoryName = entry.key;
+                        final categoryTags = entry.value;
+                        final availableInCategory = categoryTags
+                            .where((t) => widget.availableTags.contains(t))
+                            .toList();
 
-                      if (availableInCategory.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
+                        if (availableInCategory.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
 
-                      final isExpanded =
-                          _expandedCategories[categoryName] ?? false;
+                        final isExpanded =
+                            _expandedCategories[categoryName] ?? false;
 
-                      return _buildCategorySection(
-                        categoryName,
-                        availableInCategory,
-                        isExpanded,
-                      );
-                    }),
+                        return _buildCategorySection(
+                          categoryName,
+                          availableInCategory,
+                          isExpanded,
+                        );
+                      }),
 
-                    // Inne tagi
-                    _buildOtherTagsSection(),
+                      // Inne tagi
+                      _buildOtherTagsSection(),
+                    ], // Close if (_tagsExpanded)
 
                     const SizedBox(height: 24),
                   ],
@@ -372,30 +381,32 @@ class _FiltersSheetState extends State<FiltersSheet> {
   }
 
   Widget _buildLabelsSectionHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: () => setState(() => _labelsExpanded = !_labelsExpanded),
       borderRadius: BorderRadius.circular(8),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: NeuDecoration.flat(isDark: isDark, radius: 8),
         child: Row(
           children: [
-            Icon(
-              _labelsExpanded ? Icons.expand_less : Icons.expand_more,
-              color: AppColors.primary,
-              size: 20,
+            // Chevron arrow with rotation
+            Transform.rotate(
+              angle: _labelsExpanded ? math.pi / 2 : 0,
+              child: Icon(
+                LucideIcons.chevronRight,
+                color: AppColors.primary,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.label, color: AppColors.primary, size: 18),
+            Icon(LucideIcons.tag, color: AppColors.primary, size: 18),
             const SizedBox(width: 8),
             Text(
               'Moje etykiety',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: AppColors.primary,
+                color: isDark ? Colors.white : Colors.black,
               ),
             ),
             const Spacer(),
@@ -415,6 +426,47 @@ class _FiltersSheetState extends State<FiltersSheet> {
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Main section header (Neu style) for Moje etykiety, Termin ważności, #tags
+  Widget _buildMainSectionHeader({
+    required IconData icon,
+    required String title,
+    required bool isExpanded,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: NeuDecoration.flat(isDark: isDark, radius: 8),
+        child: Row(
+          children: [
+            // Chevron arrow with rotation
+            Transform.rotate(
+              angle: isExpanded ? math.pi / 2 : 0,
+              child: Icon(
+                LucideIcons.chevronRight,
+                color: AppColors.primary,
+                size: 18,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(icon, color: AppColors.primary, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : Colors.black,
+              ),
+            ),
           ],
         ),
       ),
@@ -444,10 +496,14 @@ class _FiltersSheetState extends State<FiltersSheet> {
             ),
             child: Row(
               children: [
-                Icon(
-                  isExpanded ? Icons.expand_less : Icons.expand_more,
-                  color: AppColors.primary,
-                  size: 20,
+                // Chevron arrow with rotation
+                Transform.rotate(
+                  angle: isExpanded ? math.pi / 2 : 0,
+                  child: Icon(
+                    LucideIcons.chevronRight,
+                    color: AppColors.primary,
+                    size: 16,
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -498,44 +554,62 @@ class _FiltersSheetState extends State<FiltersSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFe5e7eb),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.label_outline,
-                color: Color(0xFF6b7280),
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Inne',
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF6b7280),
+        // Styled like other subcategory sections
+        InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: () {
+            setState(() {
+              _otherTagsExpanded = !_otherTagsExpanded;
+            });
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                // Chevron arrow with rotation
+                Transform.rotate(
+                  angle: _otherTagsExpanded ? math.pi / 2 : 0,
+                  child: Icon(
+                    LucideIcons.chevronRight,
+                    color: AppColors.primary,
+                    size: 16,
+                  ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                '${otherTags.length}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF9ca3af)),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Text(
+                  'Inne',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${otherTags.length}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.primary.withValues(alpha: 0.7),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 8),
-        Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: otherTags.map((tag) => _buildTagChip(tag)).toList(),
+        if (_otherTagsExpanded) ...[
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: otherTags.map((tag) => _buildTagChip(tag)).toList(),
+            ),
           ),
-        ),
+        ],
         const SizedBox(height: 12),
       ],
     );

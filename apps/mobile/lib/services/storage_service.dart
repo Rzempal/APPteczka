@@ -61,10 +61,14 @@ class StorageService {
     return count;
   }
 
-  /// Eksportuje wszystkie leki do JSON
+  /// Eksportuje wszystkie leki i etykiety do JSON (kompatybilny z web)
   String exportToJson() {
     final medicines = getMedicines();
-    return jsonEncode({'leki': medicines.map((m) => m.toJson()).toList()});
+    final labels = getLabels();
+    return jsonEncode({
+      'leki': medicines.map((m) => m.toJson()).toList(),
+      'labels': labels.map((l) => l.toJson()).toList(),
+    });
   }
 
   // ==================== LABELS ====================
@@ -118,5 +122,63 @@ class StorageService {
   /// Czyści wszystkie etykiety
   Future<void> clearLabels() async {
     await _labelsBox.clear();
+  }
+
+  // ==================== UTILITY METHODS ====================
+
+  /// Zwraca nazwy leków jako string "lek1, lek2, lek3"
+  String getMedicineNamesString() {
+    final medicines = getMedicines();
+    return medicines.map((m) => m.nazwa ?? 'Nieznany').join(', ');
+  }
+
+  /// Aktualizuje URL ulotki dla leku
+  Future<void> updateMedicineLeaflet(String id, String? leafletUrl) async {
+    final medicines = getMedicines();
+    final index = medicines.indexWhere((m) => m.id == id);
+    if (index != -1) {
+      final updated = medicines[index].copyWith(leafletUrl: leafletUrl);
+      await saveMedicine(updated);
+    }
+  }
+
+  /// Aktualizuje notatkę leku
+  Future<void> updateMedicineNote(String id, String? note) async {
+    final medicines = getMedicines();
+    final index = medicines.indexWhere((m) => m.id == id);
+    if (index != -1) {
+      final updated = medicines[index].copyWith(notatka: note);
+      await saveMedicine(updated);
+    }
+  }
+
+  /// Pobiera wszystkie custom tagi (nie predefiniowane)
+  List<String> getCustomTags(Set<String> predefinedTags) {
+    final allTags = <String>{};
+    for (final medicine in getMedicines()) {
+      allTags.addAll(medicine.tagi);
+    }
+    return allTags.where((t) => !predefinedTags.contains(t)).toList()..sort();
+  }
+
+  /// Usuwa custom tag ze wszystkich leków
+  Future<void> deleteCustomTag(String tag) async {
+    final medicines = getMedicines();
+    for (final medicine in medicines) {
+      if (medicine.tagi.contains(tag)) {
+        final updatedTags = medicine.tagi.where((t) => t != tag).toList();
+        await saveMedicine(medicine.copyWith(tagi: updatedTags));
+      }
+    }
+  }
+
+  /// Aktualizuje etykiety leku
+  Future<void> updateMedicineLabels(String id, List<String> labelIds) async {
+    final medicines = getMedicines();
+    final index = medicines.indexWhere((m) => m.id == id);
+    if (index != -1) {
+      final updated = medicines[index].copyWith(labels: labelIds);
+      await saveMedicine(updated);
+    }
   }
 }

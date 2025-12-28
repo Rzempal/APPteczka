@@ -48,8 +48,8 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   cupertino_icons: ^1.0.8
   
-  # Lucide Icons - SVG icons like in web version
-  lucide_icons: ^0.257.0
+  # Lucide Icons - SVG icons like in web version (newer package with full icon set)
+  lucide_icons_flutter: ^1.1.5
   
   # Theme persistence
   shared_preferences: ^2.2.2

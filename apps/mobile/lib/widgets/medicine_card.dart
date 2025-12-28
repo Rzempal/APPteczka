@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../theme/app_theme.dart';
@@ -9,12 +9,14 @@ class MedicineCard extends StatelessWidget {
   final Medicine medicine;
   final List<UserLabel> labels;
   final VoidCallback? onTap;
+  final bool isCompact;
 
   const MedicineCard({
     super.key,
     required this.medicine,
     this.labels = const [],
     this.onTap,
+    this.isCompact = false,
   });
 
   @override
@@ -45,164 +47,181 @@ class MedicineCard extends StatelessWidget {
             borderColor: statusColor,
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isCompact ? 12 : 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Nagłówek: Nazwa + Status
+                // Nagłówek: Nazwa + Badge etykiety + Status
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     // Nazwa leku
-                    Expanded(
+                    Flexible(
                       child: Text(
                         medicine.nazwa ?? 'Nieznany lek',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.onSurface,
+                          fontSize: isCompact ? 15 : null,
                         ),
+                        maxLines: isCompact ? 1 : 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    // Badge etykiety - obok nazwy
+                    if (medicineLabels.isNotEmpty) ...[
+                      const SizedBox(width: 8),
+                      ...medicineLabels.take(2).map((label) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 4),
+                          child: _buildBadge(label, isDark),
+                        );
+                      }),
+                      if (medicineLabels.length > 2)
+                        _buildBadgeCount(medicineLabels.length - 2, isDark),
+                    ],
+                    const Spacer(),
                     // Status badge
                     if (statusLabel != null)
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isCompact ? 8 : 10,
+                          vertical: isCompact ? 3 : 4,
                         ),
                         decoration: BoxDecoration(
                           color: statusColor,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(statusIcon, size: 14, color: Colors.white),
-                            const SizedBox(width: 4),
-                            Text(
-                              statusLabel,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            Icon(
+                              statusIcon,
+                              size: isCompact ? 12 : 14,
+                              color: Colors.white,
                             ),
+                            if (!isCompact) ...[
+                              const SizedBox(width: 4),
+                              Text(
+                                statusLabel,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
                   ],
                 ),
 
-                const SizedBox(height: 8),
+                // Compact: tylko data
+                if (isCompact) ...[
+                  if (medicine.terminWaznosci != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatDate(medicine.terminWaznosci!),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: statusColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ] else ...[
+                  // Full view
+                  const SizedBox(height: 8),
 
-                // Opis
-                Text(
-                  medicine.opis,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-
-                // Etykiety użytkownika
-                if (medicineLabels.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: medicineLabels.map((label) {
-                      final colorInfo = labelColors[label.color]!;
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Color(
-                            colorInfo.hexValue,
-                          ).withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Color(
-                              colorInfo.hexValue,
-                            ).withValues(alpha: 0.5),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: Color(colorInfo.hexValue),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              label.name,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(colorInfo.hexValue),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-
-                const SizedBox(height: 12),
-
-                // Tagi
-                if (medicine.tagi.isNotEmpty)
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: medicine.tagi.take(4).map((tag) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.dividerColor),
-                        ),
-                        child: Text(
-                          tag,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  // Opis
+                  Text(
+                    medicine.opis,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
 
-                // Termin ważności
-                if (medicine.terminWaznosci != null) ...[
                   const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(LucideIcons.calendar, size: 14, color: statusColor),
-                      const SizedBox(width: 6),
-                      Text(
-                        _formatDate(medicine.terminWaznosci!),
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: statusColor,
-                          fontWeight: FontWeight.w500,
+
+                  // #tags - uproszczony styl
+                  if (medicine.tagi.isNotEmpty)
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: medicine.tagi.take(4).map((tag) {
+                        return _buildTag(tag, isDark, theme);
+                      }).toList(),
+                    ),
+
+                  // Notatka jeśli istnieje
+                  if (medicine.notatka != null &&
+                      medicine.notatka!.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.transparent
+                            : theme.colorScheme.surfaceContainerHighest
+                                  .withAlpha(128),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isDark
+                              ? theme.dividerColor.withAlpha(50)
+                              : theme.dividerColor,
                         ),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            LucideIcons.stickyNote,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              medicine.notatka!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  // Data ważności
+                  if (medicine.terminWaznosci != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(
+                          LucideIcons.calendar,
+                          size: 14,
+                          color: statusColor,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Ważny do: ${_formatDate(medicine.terminWaznosci!)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: statusColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ],
             ),
@@ -212,33 +231,112 @@ class MedicineCard extends StatelessWidget {
     );
   }
 
+  /// Badge etykiety - kolorowe tło z białym tekstem
+  Widget _buildBadge(UserLabel label, bool isDark) {
+    final colorInfo = labelColors[label.color]!;
+    final bgColor = Color(colorInfo.hexValue);
+
+    // Określ kolor tekstu na podstawie jasności tła
+    final textColor = _getContrastColor(bgColor);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        label.name.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: textColor,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  /// Badge count indicator when more than 2 labels
+  Widget _buildBadgeCount(int count, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFe5e7eb),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        '+$count',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: isDark ? Colors.white : const Color(0xFF374151),
+        ),
+      ),
+    );
+  }
+
+  /// Tag - uproszczony styl (light: szary border, dark: ciemne tło)
+  Widget _buildTag(String tag, bool isDark, ThemeData theme) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF1e293b) // ciemny slate
+            : Colors.white,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF334155) // slate-700
+              : const Color(0xFFe2e8f0), // slate-200
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            tag,
+            style: TextStyle(
+              fontSize: 12,
+              color: isDark ? Colors.white : const Color(0xFF1e293b),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Zwraca kontrastowy kolor tekstu dla danego tła
+  Color _getContrastColor(Color background) {
+    // Oblicz jasność tła
+    final luminance = background.computeLuminance();
+    // Dla jasnych kolorów (yellow, orange) użyj ciemnego tekstu
+    return luminance > 0.5 ? const Color(0xFF1e293b) : Colors.white;
+  }
+
   LinearGradient _getGradient(ExpiryStatus status, bool isDark) {
-    if (isDark) {
-      switch (status) {
-        case ExpiryStatus.expired:
-          return AppColors.darkGradientExpired;
-        case ExpiryStatus.expiringSoon:
-          return AppColors.darkGradientExpiringSoon;
-        case ExpiryStatus.valid:
-          return AppColors.darkGradientValid;
-        case ExpiryStatus.unknown:
-          return LinearGradient(
-            colors: [AppColors.darkSurface, AppColors.darkSurfaceLight],
-          );
-      }
-    } else {
-      switch (status) {
-        case ExpiryStatus.expired:
-          return AppColors.lightGradientExpired;
-        case ExpiryStatus.expiringSoon:
-          return AppColors.lightGradientExpiringSoon;
-        case ExpiryStatus.valid:
-          return AppColors.lightGradientValid;
-        case ExpiryStatus.unknown:
-          return const LinearGradient(
-            colors: [Color(0xFFF9FAFB), Color(0xFFF3F4F6)],
-          );
-      }
+    switch (status) {
+      case ExpiryStatus.expired:
+        return isDark
+            ? AppColors.darkGradientExpired
+            : AppColors.lightGradientExpired;
+      case ExpiryStatus.expiringSoon:
+        return isDark
+            ? AppColors.darkGradientExpiringSoon
+            : AppColors.lightGradientExpiringSoon;
+      case ExpiryStatus.valid:
+        return isDark
+            ? AppColors.darkGradientValid
+            : AppColors.lightGradientValid;
+      case ExpiryStatus.unknown:
+        // Neutral gradient - light gray
+        return LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [const Color(0xFF1e293b), const Color(0xFF334155)]
+              : [const Color(0xFFF3F4F6), const Color(0xFFE5E7EB)],
+        );
     }
   }
 
@@ -271,13 +369,13 @@ class MedicineCard extends StatelessWidget {
   IconData _getStatusIcon(ExpiryStatus status) {
     switch (status) {
       case ExpiryStatus.expired:
-        return LucideIcons.xCircle;
+        return LucideIcons.circleX;
       case ExpiryStatus.expiringSoon:
-        return LucideIcons.alertTriangle;
+        return LucideIcons.triangleAlert;
       case ExpiryStatus.valid:
-        return LucideIcons.checkCircle;
+        return LucideIcons.circleCheck;
       case ExpiryStatus.unknown:
-        return LucideIcons.helpCircle;
+        return LucideIcons.circleHelp;
     }
   }
 

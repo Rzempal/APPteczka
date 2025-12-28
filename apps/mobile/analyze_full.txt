@@ -1,0 +1,17 @@
+Analyzing mobile...                                             
+
+  error - The getter 'edit' isn't defined for the type 'LucideIcons' - lib\screens\add_medicine_screen.dart:169:33 - undefined_getter
+   info - Unnecessary use of multiple underscores - lib\screens\home_screen.dart:197:33 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\screens\home_screen.dart:197:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\screens\home_screen.dart:564:33 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\screens\home_screen.dart:564:37 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\screens\manage_screen.dart:121:35 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\screens\manage_screen.dart:121:39 - unnecessary_underscores
+  error - The getter 'alertTriangle' isn't defined for the type 'LucideIcons' - lib\screens\manage_screen.dart:550:34 - undefined_getter
+  error - The getter 'alertTriangle' isn't defined for the type 'LucideIcons' - lib\screens\manage_screen.dart:682:30 - undefined_getter
+  error - The getter 'xCircle' isn't defined for the type 'LucideIcons' - lib\widgets\medicine_card.dart:352:28 - undefined_getter
+  error - The getter 'alertTriangle' isn't defined for the type 'LucideIcons' - lib\widgets\medicine_card.dart:354:28 - undefined_getter
+  error - The getter 'checkCircle' isn't defined for the type 'LucideIcons' - lib\widgets\medicine_card.dart:356:28 - undefined_getter
+  error - The getter 'helpCircle' isn't defined for the type 'LucideIcons' - lib\widgets\medicine_card.dart:358:28 - undefined_getter
+
+13 issues found. (ran in 1.9s)

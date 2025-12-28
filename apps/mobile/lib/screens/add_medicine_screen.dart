@@ -2,10 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/medicine.dart';
+import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/gemini_service.dart';
 import '../widgets/gemini_scanner.dart';
@@ -59,7 +60,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.plusCircle, color: theme.colorScheme.primary),
+            Icon(LucideIcons.clipboardPlus, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
             const Text('Dodaj leki'),
           ],
@@ -84,7 +85,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
-                        LucideIcons.plusCircle,
+                        LucideIcons.clipboardPlus,
                         color: Colors.white,
                         size: 24,
                       ),
@@ -118,9 +119,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
             // 1. Gemini AI Scanner
             _buildExpandableSection(
-              icon: LucideIcons.sparkles,
-              title: 'Gemini AI Vision',
-              subtitle: 'Skanuj zdjęcia leków automatycznie',
+              icon: LucideIcons.imagePlus,
+              title: 'Zrób zdjęcie i dodaj leki',
+              subtitle:
+                  'Gemini AI Vision\nWykorzystaj wsparcie AI i automatycznie dodaj informacje o leku',
               isExpanded: _geminiExpanded,
               onToggle: () =>
                   setState(() => _geminiExpanded = !_geminiExpanded),
@@ -165,7 +167,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
             // 4. Dodaj ręcznie
             _buildExpandableSection(
-              icon: LucideIcons.edit,
+              icon: LucideIcons.pencil,
               title: 'Dodaj ręcznie',
               subtitle: 'Wprowadź dane leku samodzielnie',
               isExpanded: _manualExpanded,
@@ -509,7 +511,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     setState(() => _isImporting = true);
 
     try {
-      final medicines = _parseJsonToMedicines(text);
+      final medicines = await _parseJsonAndImportLabels(text);
 
       if (medicines.isEmpty) {
         throw const FormatException('Brak leków do zaimportowania');
@@ -556,7 +558,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       final file = File(result.files.single.path!);
       final content = await file.readAsString();
 
-      final medicines = _parseJsonToMedicines(content);
+      final medicines = await _parseJsonAndImportLabels(content);
 
       if (medicines.isEmpty) {
         throw const FormatException('Brak leków w pliku');
@@ -585,13 +587,30 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     }
   }
 
-  List<Medicine> _parseJsonToMedicines(String text) {
+  /// Parsuje JSON i importuje leki + etykiety (jeśli są w backup)
+  Future<List<Medicine>> _parseJsonAndImportLabels(String text) async {
     final data = jsonDecode(text);
 
     if (data is! Map<String, dynamic>) {
       throw const FormatException('Nieprawidłowy format JSON');
     }
 
+    // Import etykiet (jeśli są w backup)
+    final labelsRaw = data['labels'];
+    if (labelsRaw is List && labelsRaw.isNotEmpty) {
+      for (final item in labelsRaw) {
+        if (item is Map<String, dynamic>) {
+          try {
+            final label = UserLabel.fromJson(item);
+            await widget.storageService.saveLabel(label);
+          } catch (_) {
+            // Ignoruj uszkodzone etykiety
+          }
+        }
+      }
+    }
+
+    // Import leków
     final lekiRaw = data['leki'];
     if (lekiRaw is! List) {
       throw const FormatException('Brak tablicy "leki" w JSON');

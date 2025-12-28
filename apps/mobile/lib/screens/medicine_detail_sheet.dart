@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/medicine.dart';
-import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../widgets/label_selector.dart';
 import '../theme/app_theme.dart';
@@ -40,7 +39,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
   Widget build(BuildContext context) {
     final status = _medicine.expiryStatus;
     final statusColor = _getStatusColor(status);
-    final labels = widget.storageService.getLabelsByIds(_medicine.labels);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
@@ -125,80 +123,25 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                       ),
                     ],
 
-                    // Etykiety
+                    // Etykiety - tylko LabelSelector (usuwa duplikację)
                     const SizedBox(height: 20),
                     _buildSection(
                       context,
                       title: 'Etykiety',
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Wyświetl przypisane etykiety
-                          if (labels.isNotEmpty) ...[
-                            Wrap(
-                              spacing: 6,
-                              runSpacing: 6,
-                              children: labels.map((label) {
-                                final colorInfo = labelColors[label.color]!;
-                                return Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Color(
-                                      colorInfo.hexValue,
-                                    ).withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Color(
-                                        colorInfo.hexValue,
-                                      ).withValues(alpha: 0.5),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Container(
-                                        width: 10,
-                                        height: 10,
-                                        decoration: BoxDecoration(
-                                          color: Color(colorInfo.hexValue),
-                                          shape: BoxShape.circle,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        label.name,
-                                        style: TextStyle(
-                                          color: Color(colorInfo.hexValue),
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }).toList(),
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-                          // LabelSelector dla edycji
-                          LabelSelector(
-                            storageService: widget.storageService,
-                            selectedLabelIds: _medicine.labels,
-                            onChanged: (newLabelIds) async {
-                              final updatedMedicine = _medicine.copyWith(
-                                labels: newLabelIds,
-                              );
-                              await widget.storageService.saveMedicine(
-                                updatedMedicine,
-                              );
-                              setState(() {
-                                _medicine = updatedMedicine;
-                              });
-                            },
-                          ),
-                        ],
+                      child: LabelSelector(
+                        storageService: widget.storageService,
+                        selectedLabelIds: _medicine.labels,
+                        onChanged: (newLabelIds) async {
+                          final updatedMedicine = _medicine.copyWith(
+                            labels: newLabelIds,
+                          );
+                          await widget.storageService.saveMedicine(
+                            updatedMedicine,
+                          );
+                          setState(() {
+                            _medicine = updatedMedicine;
+                          });
+                        },
                       ),
                     ),
 
@@ -218,8 +161,24 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text('• '),
-                                      Expanded(child: Text(w)),
+                                      Text(
+                                        '• ',
+                                        style: TextStyle(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurface,
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Text(
+                                          w,
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -229,54 +188,50 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                       ),
                     ],
 
-                    // Tagi
+                    // Tagi - fixed for dark mode
                     if (_medicine.tagi.isNotEmpty) ...[
                       const SizedBox(height: 20),
                       _buildSection(
                         context,
-                        title: 'Tagi',
+                        title: '#tags',
                         child: Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: _medicine.tagi
-                              .map(
-                                (tag) => ActionChip(
-                                  label: Text(tag),
-                                  onPressed: () => widget.onTagTap(tag),
-                                  backgroundColor: const Color(0xFFe5e7eb),
+                          children: _medicine.tagi.map((tag) {
+                            final isDark =
+                                Theme.of(context).brightness == Brightness.dark;
+                            return ActionChip(
+                              label: Text(
+                                tag,
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppColors.primary
+                                      : Theme.of(context).colorScheme.onSurface,
                                 ),
-                              )
-                              .toList(),
+                              ),
+                              onPressed: () => widget.onTagTap(tag),
+                              backgroundColor: isDark
+                                  ? AppColors.primary.withAlpha(30)
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.surfaceContainerHighest,
+                              side: BorderSide(
+                                color: isDark
+                                    ? AppColors.primary.withAlpha(80)
+                                    : Theme.of(context).dividerColor,
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
                     ],
 
-                    // Notatka
+                    // Notatka - editable with dark mode support
                     const SizedBox(height: 20),
                     _buildSection(
                       context,
                       title: 'Notatka',
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _medicine.notatka?.isNotEmpty == true
-                              ? _medicine.notatka!
-                              : 'Brak notatki',
-                          style: TextStyle(
-                            color: _medicine.notatka?.isNotEmpty == true
-                                ? const Color(0xFF374151)
-                                : const Color(0xFF9ca3af),
-                            fontStyle: _medicine.notatka?.isNotEmpty == true
-                                ? FontStyle.normal
-                                : FontStyle.italic,
-                          ),
-                        ),
-                      ),
+                      child: _buildNoteSection(context),
                     ),
 
                     // Termin ważności
@@ -368,6 +323,87 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         child,
       ],
     );
+  }
+
+  Widget _buildNoteSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hasNote = _medicine.notatka?.isNotEmpty == true;
+
+    return GestureDetector(
+      onTap: () => _showEditNoteDialog(context),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.transparent
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isDark
+                ? Theme.of(context).dividerColor.withAlpha(80)
+                : Theme.of(context).dividerColor,
+          ),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                hasNote ? _medicine.notatka! : 'Kliknij, aby dodać notatkę',
+                style: TextStyle(
+                  color: hasNote
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontStyle: hasNote ? FontStyle.normal : FontStyle.italic,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.edit_outlined,
+              size: 18,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showEditNoteDialog(BuildContext context) async {
+    final controller = TextEditingController(text: _medicine.notatka ?? '');
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edytuj notatkę'),
+        content: TextField(
+          controller: controller,
+          maxLines: 5,
+          decoration: const InputDecoration(
+            hintText: 'Wpisz notatkę...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      final updatedMedicine = _medicine.copyWith(notatka: result);
+      await widget.storageService.saveMedicine(updatedMedicine);
+      setState(() {
+        _medicine = updatedMedicine;
+      });
+    }
   }
 
   Future<void> _openPdf(BuildContext context) async {

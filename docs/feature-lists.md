@@ -21,7 +21,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **Lista leków** | Widok kart z detalami | ✅ Tak | ✅ Tak | Web ma animacje wejścia |
 | **Wyszukiwanie** | Po nazwie, opisie, tagach | ✅ Tak | ✅ Tak | |
-| **Sortowanie** | A-Z, Z-A, Termin ↑, Termin ↓ | ✅ Tak | ✅ Tak | Mobile: Menu w AppBar |
+| **Sortowanie** | A-Z, Z-A, Termin ↑, Termin ↓, Data dodania ↑/↓ | ✅ Tak | ✅ Tak | Mobile: Popup menu |
 | **Filtrowanie** | Po tagach | ✅ Tak | ✅ Tak | |
 | | Po terminie ważności | ✅ Tak | ✅ Tak | (Wszystkie/Ważne/Kończące się) |
 | | Licznik aktywnych filtrów | ✅ Tak | ✅ Tak | |
@@ -58,8 +58,9 @@
 | Funkcja | Szczegóły | Web | Mobile | Uwagi |
 | :--- | :--- | :--- | :--- | :--- |
 | **Styl** | Główny motyw | Neumorphism | Neumorphism | Spójny styl z wersją Web |
-| **Tryb Ciemny** | Dark Mode | ✅ Tak | ✅ Tak | Toggle switch w ustawieniach |
-| **Nawigacja** | Struktura | 3 Tabs | Bottom Bar | Kopia / Apteczka / Dodaj |
+| **Tryb Ciemny** | Dark Mode | ✅ Tak | ✅ Tak | Mobile: 3-way toggle (System/Light/Dark) |
+| **Nawigacja** | Struktura | 4 Tabs | Bottom Bar | Zarządzaj / Apteczka / Dodaj / Ustawienia |
+| **Widok listy** | Kompaktowy / Pełny | ✅ Tak | ✅ Tak | Toggle w toolbarze |
 | **Responsywność** | Mobile/Tablet/Desktop | ✅ Tak | ✅ Tak | Flutter skaluje się natywnie |
 | **Feedback** | Toasty/Snackbary | ✅ Tak | ✅ Tak | Potwierdzenia akcji |
 
