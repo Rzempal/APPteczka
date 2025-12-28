@@ -302,7 +302,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Container(
             decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
             child: IconButton(
-              icon: const Icon(LucideIcons.listFilter, size: 20),
+              icon: const Icon(LucideIcons.slidersHorizontal, size: 20),
               onPressed: _showFilterManagement,
               constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
               padding: EdgeInsets.zero,
@@ -426,7 +426,10 @@ class _HomeScreenState extends State<HomeScreen> {
             // Header
             Row(
               children: [
-                Icon(LucideIcons.listFilter, color: theme.colorScheme.primary),
+                Icon(
+                  LucideIcons.slidersHorizontal,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 12),
                 Text(
                   'Zarządzaj filtrami',
@@ -480,130 +483,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showLabelManagement() {
-    // Otwórz prosty modal z listą etykiet
-    final labels = widget.storageService.getLabels();
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(LucideIcons.tags, color: theme.colorScheme.primary),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Zarządzaj etykietami',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Aby edytować lub usunąć etykietę, kliknij na nią w widoku szczegółów leku.',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: labels.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              LucideIcons.tag,
-                              size: 48,
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withAlpha(128),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Brak etykiet',
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Dodaj etykiety w szczegółach leku',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant
-                                    .withAlpha(180),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: scrollController,
-                        itemCount: labels.length,
-                        itemBuilder: (context, index) {
-                          final label = labels[index];
-                          final colorInfo = labelColors[label.color];
-                          final color = colorInfo != null
-                              ? Color(colorInfo.colorValue)
-                              : Colors.grey;
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                            decoration: NeuDecoration.flatSmall(
-                              isDark: isDark,
-                              radius: 8,
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    label.name,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  colorInfo?.name ?? 'Szary',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
+      builder: (ctx) => _LabelManagementSheet(
+        storageService: widget.storageService,
+        onChanged: () => _loadMedicines(),
       ),
     ).then((_) => _loadMedicines());
   }
@@ -816,6 +704,282 @@ class _EmptyState extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Sheet zarządzania etykietami
+class _LabelManagementSheet extends StatefulWidget {
+  final StorageService storageService;
+  final VoidCallback onChanged;
+
+  const _LabelManagementSheet({
+    required this.storageService,
+    required this.onChanged,
+  });
+
+  @override
+  State<_LabelManagementSheet> createState() => _LabelManagementSheetState();
+}
+
+class _LabelManagementSheetState extends State<_LabelManagementSheet> {
+  late List<UserLabel> _labels;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLabels();
+  }
+
+  void _loadLabels() {
+    setState(() {
+      _labels = widget.storageService.getLabels();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (context, scrollController) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(LucideIcons.tags, color: theme.colorScheme.primary),
+                const SizedBox(width: 12),
+                Text(
+                  'Zarządzaj etykietami',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Kliknij na etykietę aby ją edytować lub usunąć.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _labels.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            LucideIcons.tag,
+                            size: 48,
+                            color: theme.colorScheme.onSurfaceVariant.withAlpha(
+                              128,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Brak etykiet',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Dodaj etykiety w szczegółach leku',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withAlpha(180),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: _labels.length,
+                      itemBuilder: (context, index) {
+                        final label = _labels[index];
+                        final colorInfo = labelColors[label.color];
+                        final color = colorInfo != null
+                            ? Color(colorInfo.colorValue)
+                            : Colors.grey;
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: NeuDecoration.flatSmall(
+                            isDark: isDark,
+                            radius: 8,
+                          ),
+                          child: ListTile(
+                            leading: Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            title: Text(
+                              label.name,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: Text(
+                              colorInfo?.name ?? 'Szary',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    LucideIcons.pen,
+                                    size: 18,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  onPressed: () => _editLabel(label),
+                                  tooltip: 'Edytuj',
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    LucideIcons.trash,
+                                    size: 18,
+                                    color: Colors.red,
+                                  ),
+                                  onPressed: () => _deleteLabel(label),
+                                  tooltip: 'Usuń',
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _editLabel(UserLabel label) {
+    final nameController = TextEditingController(text: label.name);
+    LabelColor selectedColor = label.color;
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Edytuj etykietę'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nazwa',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Kolor:', style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: LabelColor.values.map((c) {
+                  final info = labelColors[c]!;
+                  final isSelected = c == selectedColor;
+                  return GestureDetector(
+                    onTap: () => setDialogState(() => selectedColor = c),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Color(info.colorValue),
+                        shape: BoxShape.circle,
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 3)
+                            : null,
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: Color(info.colorValue),
+                                  blurRadius: 8,
+                                ),
+                              ]
+                            : null,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final newName = nameController.text.trim();
+                if (newName.isEmpty) return;
+
+                final updated = label.copyWith(
+                  name: newName,
+                  color: selectedColor,
+                );
+                widget.storageService.updateLabel(updated);
+                widget.onChanged();
+                _loadLabels();
+                Navigator.pop(ctx);
+              },
+              child: const Text('Zapisz'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _deleteLabel(UserLabel label) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Usuń etykietę?'),
+        content: Text(
+          'Czy na pewno chcesz usunąć etykietę "${label.name}"? Zostanie usunięta ze wszystkich leków.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              widget.storageService.deleteLabel(label.id);
+              widget.onChanged();
+              _loadLabels();
+              Navigator.pop(ctx);
+            },
+            child: const Text('Usuń'),
+          ),
+        ],
       ),
     );
   }

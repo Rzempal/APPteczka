@@ -241,6 +241,13 @@ class _FiltersSheetState extends State<FiltersSheet> {
                                   Text(label.name),
                                 ],
                               ),
+                              labelStyle: TextStyle(
+                                color:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
+                              ),
                               onSelected: (selected) {
                                 setState(() {
                                   final newLabels = Set<String>.from(
@@ -320,7 +327,7 @@ class _FiltersSheetState extends State<FiltersSheet> {
                     // ========== TAGI ==========
                     _buildMainSectionHeader(
                       icon: LucideIcons.hash,
-                      title: '#tags',
+                      title: 'Tagi',
                       isExpanded: _tagsExpanded,
                       onTap: () =>
                           setState(() => _tagsExpanded = !_tagsExpanded),
@@ -618,9 +625,12 @@ class _FiltersSheetState extends State<FiltersSheet> {
   Widget _buildTagChip(String tag) {
     final isSelected = _state.selectedTags.contains(tag);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return FilterChip(
       selected: isSelected,
       label: Text(tag),
+      labelStyle: TextStyle(color: isDark ? Colors.white : Colors.black),
       onSelected: (selected) {
         setState(() {
           final newTags = Set<String>.from(_state.selectedTags);
