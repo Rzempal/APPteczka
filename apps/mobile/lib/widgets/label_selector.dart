@@ -10,12 +10,20 @@ class LabelSelector extends StatefulWidget {
   final Function(List<String>) onChanged;
   final VoidCallback? onLabelsUpdated;
 
+  /// Jeśli true, dropdown jest otwarty (kontrolowane z zewnątrz)
+  final bool isOpen;
+
+  /// Callback do zamknięcia/otwarcia dropdowna z zewnątrz
+  final VoidCallback? onToggle;
+
   const LabelSelector({
     super.key,
     required this.storageService,
     required this.selectedLabelIds,
     required this.onChanged,
     this.onLabelsUpdated,
+    this.isOpen = false,
+    this.onToggle,
   });
 
   @override
@@ -24,7 +32,6 @@ class LabelSelector extends StatefulWidget {
 
 class _LabelSelectorState extends State<LabelSelector> {
   List<UserLabel> _allLabels = [];
-  bool _isOpen = false;
   bool _isCreating = false;
   final _newLabelController = TextEditingController();
   LabelColor _selectedColor = LabelColor.blue;
@@ -79,26 +86,8 @@ class _LabelSelectorState extends State<LabelSelector> {
           const SizedBox(height: 8),
         ],
 
-        // Przycisk edycji etykiet (ikona ołówka)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            IconButton(
-              onPressed: () => setState(() => _isOpen = !_isOpen),
-              icon: Icon(
-                _isOpen ? Icons.expand_less : Icons.edit_outlined,
-                size: 20,
-              ),
-              tooltip: selectedLabels.isEmpty
-                  ? 'Dodaj etykiety'
-                  : 'Zarządzaj etykietami (${selectedLabels.length}/$maxLabelsPerMedicine)',
-              style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
-            ),
-          ],
-        ),
-
-        // Dropdown z etykietami
-        if (_isOpen) ...[
+        // Dropdown z etykietami (kontrolowany przez widget.isOpen)
+        if (widget.isOpen) ...[
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(12),

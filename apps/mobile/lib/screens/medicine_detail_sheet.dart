@@ -28,6 +28,7 @@ class MedicineDetailSheet extends StatefulWidget {
 
 class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
   late Medicine _medicine;
+  bool _isLabelsOpen = false;
 
   @override
   void initState() {
@@ -309,6 +310,10 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
 
   /// Sekcja etykiet z tytułem i ikoną edycji w jednej linii
   Widget _buildLabelSection(BuildContext context) {
+    final selectedLabels = widget.storageService.getLabelsByIds(
+      _medicine.labels,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -323,14 +328,20 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               ),
             ),
             GestureDetector(
-              onTap: () => _showEditLabelsSheet(context),
+              onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.edit_outlined, size: 16, color: AppColors.primary),
+                  Icon(
+                    _isLabelsOpen ? Icons.expand_less : Icons.edit_outlined,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    'Edytuj',
+                    _isLabelsOpen
+                        ? 'Zamknij'
+                        : (selectedLabels.isEmpty ? 'Dodaj' : 'Edytuj'),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w500,
@@ -345,6 +356,8 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         LabelSelector(
           storageService: widget.storageService,
           selectedLabelIds: _medicine.labels,
+          isOpen: _isLabelsOpen,
+          onToggle: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
           onChanged: (newLabelIds) async {
             final updatedMedicine = _medicine.copyWith(labels: newLabelIds);
             await widget.storageService.saveMedicine(updatedMedicine);
@@ -354,19 +367,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
           },
         ),
       ],
-    );
-  }
-
-  /// Pokazuje bottom sheet do zarządzania etykietami
-  Future<void> _showEditLabelsSheet(BuildContext context) async {
-    // Otwórz LabelSelector w trybie edycji - tutaj po prostu fokus na LabelSelector
-    // W przyszłości można dodać dedykowany ekran zarządzania
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Użyj przycisków poniżej, aby dodać lub usunąć etykiety'),
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 2),
-      ),
     );
   }
 
