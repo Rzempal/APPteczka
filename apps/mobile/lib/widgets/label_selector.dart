@@ -79,16 +79,22 @@ class _LabelSelectorState extends State<LabelSelector> {
           const SizedBox(height: 8),
         ],
 
-        // Przycisk dodawania
-        OutlinedButton.icon(
-          onPressed: () => setState(() => _isOpen = !_isOpen),
-          icon: Icon(_isOpen ? Icons.expand_less : Icons.label_outline),
-          label: Text(
-            selectedLabels.isEmpty
-                ? 'Dodaj etykiety'
-                : 'Zarządzaj etykietami (${selectedLabels.length}/$maxLabelsPerMedicine)',
-          ),
-          style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+        // Przycisk edycji etykiet (ikona ołówka)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            IconButton(
+              onPressed: () => setState(() => _isOpen = !_isOpen),
+              icon: Icon(
+                _isOpen ? Icons.expand_less : Icons.edit_outlined,
+                size: 20,
+              ),
+              tooltip: selectedLabels.isEmpty
+                  ? 'Dodaj etykiety'
+                  : 'Zarządzaj etykietami (${selectedLabels.length}/$maxLabelsPerMedicine)',
+              style: IconButton.styleFrom(visualDensity: VisualDensity.compact),
+            ),
+          ],
         ),
 
         // Dropdown z etykietami
