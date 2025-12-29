@@ -73,7 +73,7 @@ class StorageService {
 
   // ==================== LABELS ====================
 
-  /// Pobiera wszystkie etykiety
+  /// Pobiera wszystkie etykiety (posortowane po kolejności)
   List<UserLabel> getLabels() {
     final List<UserLabel> labels = [];
     for (final key in _labelsBox.keys) {
@@ -86,6 +86,8 @@ class StorageService {
         }
       }
     }
+    // Sortuj po kolejności (order)
+    labels.sort((a, b) => a.order.compareTo(b.order));
     return labels;
   }
 
@@ -122,6 +124,14 @@ class StorageService {
   /// Czyści wszystkie etykiety
   Future<void> clearLabels() async {
     await _labelsBox.clear();
+  }
+
+  /// Zapisuje nową kolejność etykiet
+  Future<void> reorderLabels(List<UserLabel> labels) async {
+    for (int i = 0; i < labels.length; i++) {
+      final updatedLabel = labels[i].copyWith(order: i);
+      await saveLabel(updatedLabel);
+    }
   }
 
   // ==================== UTILITY METHODS ====================

@@ -757,7 +757,7 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Kliknij na etykietę aby ją edytować lub usunąć.',
+              'Przeciągnij etykietę aby zmienić kolejność.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -794,9 +794,27 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                         ],
                       ),
                     )
-                  : ListView.builder(
-                      controller: scrollController,
+                  : ReorderableListView.builder(
+                      scrollController: scrollController,
                       itemCount: _labels.length,
+                      onReorder: _onReorder,
+                      proxyDecorator: (child, index, animation) {
+                        return AnimatedBuilder(
+                          animation: animation,
+                          builder: (context, child) {
+                            final double elevation = Tween<double>(
+                              begin: 0,
+                              end: 6,
+                            ).evaluate(animation);
+                            return Material(
+                              elevation: elevation,
+                              borderRadius: BorderRadius.circular(8),
+                              child: child,
+                            );
+                          },
+                          child: child,
+                        );
+                      },
                       itemBuilder: (context, index) {
                         final label = _labels[index];
                         final colorInfo = labelColors[label.color];
@@ -804,19 +822,36 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                             ? Color(colorInfo.colorValue)
                             : Colors.grey;
                         return Container(
+                          key: ValueKey(label.id),
                           margin: const EdgeInsets.only(bottom: 8),
                           decoration: NeuDecoration.flatSmall(
                             isDark: isDark,
                             radius: 8,
                           ),
                           child: ListTile(
-                            leading: Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                              ),
+                            leading: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Drag handle
+                                ReorderableDragStartListener(
+                                  index: index,
+                                  child: Icon(
+                                    LucideIcons.gripVertical,
+                                    size: 20,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Color dot
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
                             ),
                             title: Text(
                               label.name,
@@ -862,6 +897,19 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
         ),
       ),
     );
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final item = _labels.removeAt(oldIndex);
+      _labels.insert(newIndex, item);
+    });
+    // Zapisz nową kolejność
+    widget.storageService.reorderLabels(_labels);
+    widget.onChanged();
   }
 
   void _editLabel(UserLabel label) {

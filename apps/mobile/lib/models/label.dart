@@ -37,8 +37,14 @@ class UserLabel {
   final String id;
   final String name;
   final LabelColor color;
+  final int order;
 
-  const UserLabel({required this.id, required this.name, required this.color});
+  const UserLabel({
+    required this.id,
+    required this.name,
+    required this.color,
+    this.order = 0,
+  });
 
   /// Tworzy z JSON
   factory UserLabel.fromJson(Map<String, dynamic> json) {
@@ -49,20 +55,27 @@ class UserLabel {
         (c) => c.name == json['color'],
         orElse: () => LabelColor.gray,
       ),
+      order: json['order'] as int? ?? 0,
     );
   }
 
   /// Eksport do JSON
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'color': color.name};
+    return {'id': id, 'name': name, 'color': color.name, 'order': order};
   }
 
   /// Kopiuje z nowymi wartościami
-  UserLabel copyWith({String? id, String? name, LabelColor? color}) {
+  UserLabel copyWith({
+    String? id,
+    String? name,
+    LabelColor? color,
+    int? order,
+  }) {
     return UserLabel(
       id: id ?? this.id,
       name: name ?? this.name,
       color: color ?? this.color,
+      order: order ?? this.order,
     );
   }
 

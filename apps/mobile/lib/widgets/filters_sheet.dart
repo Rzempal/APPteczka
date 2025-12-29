@@ -693,16 +693,16 @@ List<Medicine> applyFilters(List<Medicine> medicines, FilterState state) {
       }
     }
 
-    // Filtr tagów
+    // Filtr tagów (logika AND - lek musi mieć WSZYSTKIE wybrane tagi)
     if (state.selectedTags.isNotEmpty) {
-      if (!state.selectedTags.any((t) => m.tagi.contains(t))) {
+      if (!state.selectedTags.every((t) => m.tagi.contains(t))) {
         return false;
       }
     }
 
-    // Filtr etykiet
+    // Filtr etykiet (logika AND - lek musi mieć WSZYSTKIE wybrane etykiety)
     if (state.selectedLabels.isNotEmpty) {
-      if (!state.selectedLabels.any((l) => m.labels.contains(l))) {
+      if (!state.selectedLabels.every((l) => m.labels.contains(l))) {
         return false;
       }
     }
