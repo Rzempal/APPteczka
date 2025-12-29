@@ -7,6 +7,7 @@ import '../services/theme_provider.dart';
 import '../widgets/medicine_card.dart';
 import '../widgets/filters_sheet.dart';
 import '../theme/app_theme.dart';
+import '../widgets/neumorphic/neumorphic.dart';
 import 'edit_medicine_screen.dart';
 import 'medicine_detail_sheet.dart';
 
@@ -223,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        decoration: NeuDecoration.concave(isDark: isDark, radius: 12),
+        decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
         child: TextField(
           controller: _searchController,
           decoration: InputDecoration(
@@ -263,10 +264,11 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Licznik
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+          // Licznik - neumorficzny kontener
+          NeuStaticContainer(
+            isSmall: true,
+            borderRadius: 10,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Text(
               '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -278,62 +280,40 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 8),
           const Spacer(),
           // Widok toggle
-          _buildViewToggle(theme, isDark),
+          NeuIconButton(
+            icon: _viewMode == ViewMode.full
+                ? LucideIcons.layoutGrid
+                : LucideIcons.list,
+            onPressed: () {
+              setState(() {
+                _viewMode = _viewMode == ViewMode.full
+                    ? ViewMode.list
+                    : ViewMode.full;
+              });
+            },
+            tooltip: _viewMode == ViewMode.full ? 'Widok listy' : 'Pełny widok',
+          ),
           const SizedBox(width: 8),
           // Sortowanie popup
           _buildSortButton(theme, isDark),
           const SizedBox(width: 8),
           // Filtry
-          Badge(
-            isLabelVisible: _filterState.hasActiveFilters,
-            label: Text('${_filterState.activeFilterCount}'),
-            child: Container(
-              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-              child: IconButton(
-                icon: const Icon(LucideIcons.filter, size: 20),
-                onPressed: _showFilters,
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                padding: EdgeInsets.zero,
-              ),
+          NeuIconButtonBadge(
+            count: _filterState.activeFilterCount,
+            showBadge: _filterState.hasActiveFilters,
+            button: NeuIconButton(
+              icon: LucideIcons.filter,
+              onPressed: _showFilters,
             ),
           ),
           const SizedBox(width: 8),
           // Zarządzaj filtrami
-          Container(
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-            child: IconButton(
-              icon: const Icon(LucideIcons.settings2, size: 20),
-              onPressed: _showFilterManagement,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              padding: EdgeInsets.zero,
-              tooltip: 'Zarządzaj filtrami',
-            ),
+          NeuIconButton(
+            icon: LucideIcons.settings2,
+            onPressed: _showFilterManagement,
+            tooltip: 'Zarządzaj filtrami',
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildViewToggle(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-      child: IconButton(
-        icon: Icon(
-          _viewMode == ViewMode.full
-              ? LucideIcons.layoutGrid
-              : LucideIcons.list,
-          size: 20,
-        ),
-        onPressed: () {
-          setState(() {
-            _viewMode = _viewMode == ViewMode.full
-                ? ViewMode.list
-                : ViewMode.full;
-          });
-        },
-        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-        padding: EdgeInsets.zero,
-        tooltip: _viewMode == ViewMode.full ? 'Widok listy' : 'Pełny widok',
       ),
     );
   }
@@ -594,6 +574,14 @@ class _HomeScreenState extends State<HomeScreen> {
             _filterState = _filterState.copyWith(selectedTags: newTags);
           });
         },
+        onLabelTap: (labelId) {
+          Navigator.pop(context);
+          setState(() {
+            final newLabels = Set<String>.from(_filterState.selectedLabels);
+            newLabels.add(labelId);
+            _filterState = _filterState.copyWith(selectedLabels: newLabels);
+          });
+        },
       ),
     ).then((_) => _loadMedicines()); // Refresh after detail sheet closes
   }
@@ -769,7 +757,7 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Kliknij na etykietę aby ją edytować lub usunąć.',
+              'Przeciągnij etykietę aby zmienić kolejność.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -806,9 +794,27 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                         ],
                       ),
                     )
-                  : ListView.builder(
-                      controller: scrollController,
+                  : ReorderableListView.builder(
+                      scrollController: scrollController,
                       itemCount: _labels.length,
+                      onReorder: _onReorder,
+                      proxyDecorator: (child, index, animation) {
+                        return AnimatedBuilder(
+                          animation: animation,
+                          builder: (context, child) {
+                            final double elevation = Tween<double>(
+                              begin: 0,
+                              end: 6,
+                            ).evaluate(animation);
+                            return Material(
+                              elevation: elevation,
+                              borderRadius: BorderRadius.circular(8),
+                              child: child,
+                            );
+                          },
+                          child: child,
+                        );
+                      },
                       itemBuilder: (context, index) {
                         final label = _labels[index];
                         final colorInfo = labelColors[label.color];
@@ -816,19 +822,36 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                             ? Color(colorInfo.colorValue)
                             : Colors.grey;
                         return Container(
+                          key: ValueKey(label.id),
                           margin: const EdgeInsets.only(bottom: 8),
                           decoration: NeuDecoration.flatSmall(
                             isDark: isDark,
                             radius: 8,
                           ),
                           child: ListTile(
-                            leading: Container(
-                              width: 24,
-                              height: 24,
-                              decoration: BoxDecoration(
-                                color: color,
-                                shape: BoxShape.circle,
-                              ),
+                            leading: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Drag handle
+                                ReorderableDragStartListener(
+                                  index: index,
+                                  child: Icon(
+                                    LucideIcons.gripVertical,
+                                    size: 20,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Color dot
+                                Container(
+                                  width: 24,
+                                  height: 24,
+                                  decoration: BoxDecoration(
+                                    color: color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ],
                             ),
                             title: Text(
                               label.name,
@@ -874,6 +897,19 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
         ),
       ),
     );
+  }
+
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final item = _labels.removeAt(oldIndex);
+      _labels.insert(newIndex, item);
+    });
+    // Zapisz nową kolejność
+    widget.storageService.reorderLabels(_labels);
+    widget.onChanged();
   }
 
   void _editLabel(UserLabel label) {

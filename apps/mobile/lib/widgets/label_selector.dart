@@ -10,12 +10,24 @@ class LabelSelector extends StatefulWidget {
   final Function(List<String>) onChanged;
   final VoidCallback? onLabelsUpdated;
 
+  /// Jeśli true, dropdown jest otwarty (kontrolowane z zewnątrz)
+  final bool isOpen;
+
+  /// Callback do zamknięcia/otwarcia dropdowna z zewnątrz
+  final VoidCallback? onToggle;
+
+  /// Callback wywoływany po kliknięciu etykiety (do filtrowania)
+  final Function(String)? onLabelTap;
+
   const LabelSelector({
     super.key,
     required this.storageService,
     required this.selectedLabelIds,
     required this.onChanged,
     this.onLabelsUpdated,
+    this.isOpen = false,
+    this.onToggle,
+    this.onLabelTap,
   });
 
   @override
@@ -24,7 +36,6 @@ class LabelSelector extends StatefulWidget {
 
 class _LabelSelectorState extends State<LabelSelector> {
   List<UserLabel> _allLabels = [];
-  bool _isOpen = false;
   bool _isCreating = false;
   final _newLabelController = TextEditingController();
   LabelColor _selectedColor = LabelColor.blue;
@@ -57,42 +68,31 @@ class _LabelSelectorState extends State<LabelSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Wyświetl przypisane etykiety
+        // Wyświetl przypisane etykiety (klikalne do filtrowania, bez X)
         if (selectedLabels.isNotEmpty) ...[
           Wrap(
             spacing: 4,
             runSpacing: 4,
             children: selectedLabels.map((label) {
               final colorInfo = labelColors[label.color]!;
-              return Chip(
-                label: Text(label.name, style: const TextStyle(fontSize: 12)),
-                backgroundColor: Color(
-                  colorInfo.hexValue,
-                ).withValues(alpha: 0.2),
-                deleteIcon: const Icon(Icons.close, size: 16),
-                onDeleted: () => _toggleLabel(label.id),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
+              return GestureDetector(
+                onTap: () => widget.onLabelTap?.call(label.id),
+                child: Chip(
+                  label: Text(label.name, style: const TextStyle(fontSize: 12)),
+                  backgroundColor: Color(
+                    colorInfo.hexValue,
+                  ).withValues(alpha: 0.2),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                ),
               );
             }).toList(),
           ),
           const SizedBox(height: 8),
         ],
 
-        // Przycisk dodawania
-        OutlinedButton.icon(
-          onPressed: () => setState(() => _isOpen = !_isOpen),
-          icon: Icon(_isOpen ? Icons.expand_less : Icons.label_outline),
-          label: Text(
-            selectedLabels.isEmpty
-                ? 'Dodaj etykiety'
-                : 'Zarządzaj etykietami (${selectedLabels.length}/$maxLabelsPerMedicine)',
-          ),
-          style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
-        ),
-
-        // Dropdown z etykietami
-        if (_isOpen) ...[
+        // Dropdown z etykietami (kontrolowany przez widget.isOpen)
+        if (widget.isOpen) ...[
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(12),

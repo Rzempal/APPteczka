@@ -88,7 +88,15 @@ class _MainNavigationState extends State<MainNavigation> {
         index: _currentIndex,
         children: [
           // 0: Zarządzaj apteczką
-          ManageScreen(key: _manageKey, storageService: widget.storageService),
+          ManageScreen(
+            key: _manageKey,
+            storageService: widget.storageService,
+            onNavigateToAdd: () {
+              setState(() {
+                _currentIndex = 2; // Navigate to Dodaj tab
+              });
+            },
+          ),
           // 1: Apteczka (domyślny)
           _HomeScreenWrapper(
             key: _homeKey,

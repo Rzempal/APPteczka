@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/storage_service.dart';
-import '../theme/app_theme.dart';
+import '../widgets/neumorphic/neumorphic.dart';
 
 /// Ekran kopii zapasowej - TYLKO EKSPORT
 class BackupScreen extends StatefulWidget {
@@ -220,7 +220,7 @@ class _BackupScreenState extends State<BackupScreen> {
 
             // Info o imporcie - neumorficzny styl concave
             Container(
-              decoration: NeuDecoration.concave(isDark: isDark, radius: 16),
+              decoration: NeuDecoration.basin(isDark: isDark, radius: 16),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(

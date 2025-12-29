@@ -63,6 +63,7 @@
 | **Widok listy** | Kompaktowy / Pełny | ✅ Tak | ✅ Tak | Toggle w toolbarze |
 | **Responsywność** | Mobile/Tablet/Desktop | ✅ Tak | ✅ Tak | Flutter skaluje się natywnie |
 | **Feedback** | Toasty/Snackbary | ✅ Tak | ✅ Tak | Potwierdzenia akcji |
+| **Animacje** | Mikro-interakcje | ✅ Tak | ✅ Tak | Tap feedback, scale, haptic |
 
 ### 5. Planowane (Roadmap)
 
@@ -74,4 +75,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-28
+> 📅 **Ostatnia aktualizacja:** 2025-12-29

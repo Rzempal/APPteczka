@@ -12,6 +12,7 @@ class MedicineDetailSheet extends StatefulWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final Function(String) onTagTap;
+  final Function(String) onLabelTap;
 
   const MedicineDetailSheet({
     super.key,
@@ -20,6 +21,7 @@ class MedicineDetailSheet extends StatefulWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onTagTap,
+    required this.onLabelTap,
   });
 
   @override
@@ -28,6 +30,7 @@ class MedicineDetailSheet extends StatefulWidget {
 
 class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
   late Medicine _medicine;
+  bool _isLabelsOpen = false;
 
   @override
   void initState() {
@@ -123,27 +126,9 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                       ),
                     ],
 
-                    // Etykiety - tylko LabelSelector (usuwa duplikację)
+                    // Etykiety - tytuł i ikona edycji w jednej linii
                     const SizedBox(height: 20),
-                    _buildSection(
-                      context,
-                      title: 'Etykiety',
-                      child: LabelSelector(
-                        storageService: widget.storageService,
-                        selectedLabelIds: _medicine.labels,
-                        onChanged: (newLabelIds) async {
-                          final updatedMedicine = _medicine.copyWith(
-                            labels: newLabelIds,
-                          );
-                          await widget.storageService.saveMedicine(
-                            updatedMedicine,
-                          );
-                          setState(() {
-                            _medicine = updatedMedicine;
-                          });
-                        },
-                      ),
-                    ),
+                    _buildLabelSection(context),
 
                     // Wskazania
                     if (_medicine.wskazania.isNotEmpty) ...[
@@ -321,6 +306,69 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         ),
         const SizedBox(height: 8),
         child,
+      ],
+    );
+  }
+
+  /// Sekcja etykiet z tytułem i ikoną edycji w jednej linii
+  Widget _buildLabelSection(BuildContext context) {
+    final selectedLabels = widget.storageService.getLabelsByIds(
+      _medicine.labels,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Etykiety',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF6b7280),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _isLabelsOpen ? Icons.expand_less : Icons.edit_outlined,
+                    size: 16,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _isLabelsOpen
+                        ? 'Zamknij'
+                        : (selectedLabels.isEmpty ? 'Dodaj' : 'Edytuj'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LabelSelector(
+          storageService: widget.storageService,
+          selectedLabelIds: _medicine.labels,
+          isOpen: _isLabelsOpen,
+          onToggle: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
+          onLabelTap: (labelId) => widget.onLabelTap(labelId),
+          onChanged: (newLabelIds) async {
+            final updatedMedicine = _medicine.copyWith(labels: newLabelIds);
+            await widget.storageService.saveMedicine(updatedMedicine);
+            setState(() {
+              _medicine = updatedMedicine;
+            });
+          },
+        ),
       ],
     );
   }
