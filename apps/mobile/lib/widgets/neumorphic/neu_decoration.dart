@@ -159,69 +159,42 @@ class NeuDecoration {
 
   // ============================================
   // BASIN - Deeply concave (inset effect)
-  // Simulates inner shadow with gradient + asymmetric border
+  // Simulates inner shadow with gradient
   // Used for: input fields, nested containers inside flat parents
+  // NOTE: Asymmetric border widths don't work with BorderRadius in Flutter
   // ============================================
   static BoxDecoration basin({required bool isDark, double radius = 12}) {
-    // Kolory dla efektu wklęsłego:
-    // - Górny-lewy róg: ciemny (cień)
-    // - Dolny-prawy róg: jasny (highlight)
-
     if (isDark) {
-      // DARK MODE: delikatniejszy efekt
+      // DARK MODE
       return BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF1a1f1c), // ciemny cień
-            AppColors.darkSurface, // środek
-            const Color(0xFF2a3530), // jasny highlight
+            Color(0xFF181c1a), // ciemny cień (góra-lewo)
+            Color(0xFF222826), // środek
+            Color(0xFF2a302e), // jasny highlight (dół-prawo)
           ],
-          stops: const [0.0, 0.5, 1.0],
+          stops: [0.0, 0.5, 1.0],
         ),
         borderRadius: BorderRadius.circular(radius),
-        // Asymetryczny border symulujący inset shadow
-        border: Border(
-          top: BorderSide(color: Colors.black.withAlpha(80), width: 1.5),
-          left: BorderSide(color: Colors.black.withAlpha(80), width: 1.5),
-          bottom: BorderSide(color: Colors.white.withAlpha(15), width: 1),
-          right: BorderSide(color: Colors.white.withAlpha(15), width: 1),
-        ),
+        border: Border.all(color: Colors.black.withAlpha(60), width: 1),
       );
     } else {
-      // LIGHT MODE: wyraźniejszy efekt
+      // LIGHT MODE - wyraźniejszy efekt wklęsły
       return BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFFd8dcd6), // ciemny cień (góra-lewo)
-            const Color(0xFFe8ece8), // środek
-            const Color(0xFFF5F7F5), // jasny highlight (dół-prawo)
+            Color(0xFFd0d4cc), // ciemny cień (góra-lewo)
+            Color(0xFFdce0d8), // środek
+            Color(0xFFe8ece4), // jasny highlight (dół-prawo)
           ],
-          stops: const [0.0, 0.4, 1.0],
+          stops: [0.0, 0.4, 1.0],
         ),
         borderRadius: BorderRadius.circular(radius),
-        // Asymetryczny border symulujący inset shadow
-        border: Border(
-          top: BorderSide(
-            color: const Color(0xFFb8bcb8), // ciemny border góra
-            width: 1.5,
-          ),
-          left: BorderSide(
-            color: const Color(0xFFb8bcb8), // ciemny border lewo
-            width: 1.5,
-          ),
-          bottom: BorderSide(
-            color: Colors.white.withAlpha(200), // jasny border dół
-            width: 1,
-          ),
-          right: BorderSide(
-            color: Colors.white.withAlpha(200), // jasny border prawo
-            width: 1,
-          ),
-        ),
+        border: Border.all(color: const Color(0xFFc0c4bc), width: 1),
       );
     }
   }
