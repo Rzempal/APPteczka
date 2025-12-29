@@ -584,9 +584,20 @@ class ManageScreenState extends State<ManageScreen> {
   }
 
   /// Kopiuj JSON do schowka (wewnątrz sekcji Zaawansowane)
+  /// Używamy prostej dekoracji z border zamiast flat - uniknięcie zagnieżdżonych cieni
   Widget _buildAdvancedExportClipboard(ThemeData theme, bool isDark) {
     return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? theme.colorScheme.surfaceContainerHighest.withAlpha(100)
+            : theme.colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark
+              ? theme.dividerColor.withAlpha(50)
+              : theme.dividerColor.withAlpha(100),
+        ),
+      ),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -631,6 +642,7 @@ class ManageScreenState extends State<ManageScreen> {
   }
 
   /// Format pliku (wewnątrz sekcji Zaawansowane)
+  /// Używamy prostej dekoracji z border zamiast flat
   Widget _buildAdvancedFormatInfo(ThemeData theme, bool isDark) {
     const exampleBackup = '''{
   "leki": [
@@ -643,7 +655,17 @@ class ManageScreenState extends State<ManageScreen> {
 }''';
 
     return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? theme.colorScheme.surfaceContainerHighest.withAlpha(100)
+            : theme.colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark
+              ? theme.dividerColor.withAlpha(50)
+              : theme.dividerColor.withAlpha(100),
+        ),
+      ),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
