@@ -584,20 +584,10 @@ class ManageScreenState extends State<ManageScreen> {
   }
 
   /// Kopiuj JSON do schowka (wewnątrz sekcji Zaawansowane)
-  /// Używamy prostej dekoracji z border zamiast flat - uniknięcie zagnieżdżonych cieni
+  /// Używamy basin (wklęsły) dla hierarchii: flat > basin
   Widget _buildAdvancedExportClipboard(ThemeData theme, bool isDark) {
     return Container(
-      decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.surfaceContainerHighest.withAlpha(100)
-            : theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark
-              ? theme.dividerColor.withAlpha(50)
-              : theme.dividerColor.withAlpha(100),
-        ),
-      ),
+      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -642,7 +632,7 @@ class ManageScreenState extends State<ManageScreen> {
   }
 
   /// Format pliku (wewnątrz sekcji Zaawansowane)
-  /// Używamy prostej dekoracji z border zamiast flat
+  /// Używamy basin (wklęsły) dla hierarchii: flat > basin
   Widget _buildAdvancedFormatInfo(ThemeData theme, bool isDark) {
     const exampleBackup = '''{
   "leki": [
@@ -655,17 +645,7 @@ class ManageScreenState extends State<ManageScreen> {
 }''';
 
     return Container(
-      decoration: BoxDecoration(
-        color: isDark
-            ? theme.colorScheme.surfaceContainerHighest.withAlpha(100)
-            : theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark
-              ? theme.dividerColor.withAlpha(50)
-              : theme.dividerColor.withAlpha(100),
-        ),
-      ),
+      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

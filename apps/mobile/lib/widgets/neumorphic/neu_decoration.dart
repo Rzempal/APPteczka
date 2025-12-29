@@ -158,31 +158,72 @@ class NeuDecoration {
   }
 
   // ============================================
-  // BASIN - Deeply concave (input fields)
+  // BASIN - Deeply concave (inset effect)
+  // Simulates inner shadow with gradient + asymmetric border
+  // Used for: input fields, nested containers inside flat parents
   // ============================================
   static BoxDecoration basin({required bool isDark, double radius = 12}) {
-    final darkShade = isDark
-        ? AppColors.darkBackground
-        : AppColors.lightSurfaceDark.withOpacity(0.8);
-    final lightShade = isDark
-        ? AppColors.darkSurface
-        : AppColors.lightSurface.withOpacity(0.9);
+    // Kolory dla efektu wklęsłego:
+    // - Górny-lewy róg: ciemny (cień)
+    // - Dolny-prawy róg: jasny (highlight)
 
-    return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [darkShade, lightShade],
-        stops: const [0.0, 1.0],
-      ),
-      borderRadius: BorderRadius.circular(radius),
-      border: Border.all(
-        color: isDark
-            ? Colors.black.withOpacity(0.2)
-            : Colors.black.withOpacity(0.05),
-        width: 1,
-      ),
-    );
+    if (isDark) {
+      // DARK MODE: delikatniejszy efekt
+      return BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF1a1f1c), // ciemny cień
+            AppColors.darkSurface, // środek
+            const Color(0xFF2a3530), // jasny highlight
+          ],
+          stops: const [0.0, 0.5, 1.0],
+        ),
+        borderRadius: BorderRadius.circular(radius),
+        // Asymetryczny border symulujący inset shadow
+        border: Border(
+          top: BorderSide(color: Colors.black.withAlpha(80), width: 1.5),
+          left: BorderSide(color: Colors.black.withAlpha(80), width: 1.5),
+          bottom: BorderSide(color: Colors.white.withAlpha(15), width: 1),
+          right: BorderSide(color: Colors.white.withAlpha(15), width: 1),
+        ),
+      );
+    } else {
+      // LIGHT MODE: wyraźniejszy efekt
+      return BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFFd8dcd6), // ciemny cień (góra-lewo)
+            const Color(0xFFe8ece8), // środek
+            const Color(0xFFF5F7F5), // jasny highlight (dół-prawo)
+          ],
+          stops: const [0.0, 0.4, 1.0],
+        ),
+        borderRadius: BorderRadius.circular(radius),
+        // Asymetryczny border symulujący inset shadow
+        border: Border(
+          top: BorderSide(
+            color: const Color(0xFFb8bcb8), // ciemny border góra
+            width: 1.5,
+          ),
+          left: BorderSide(
+            color: const Color(0xFFb8bcb8), // ciemny border lewo
+            width: 1.5,
+          ),
+          bottom: BorderSide(
+            color: Colors.white.withAlpha(200), // jasny border dół
+            width: 1,
+          ),
+          right: BorderSide(
+            color: Colors.white.withAlpha(200), // jasny border prawo
+            width: 1,
+          ),
+        ),
+      );
+    }
   }
 
   // ============================================
