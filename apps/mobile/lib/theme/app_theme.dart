@@ -32,7 +32,8 @@ class AppColors {
   // Light mode card backgrounds
   static const Color lightCardExpired = Color(0xFFFEF2F2);
   static const Color lightCardExpiringSoon = Color(0xFFFFFBEB);
-  static const Color lightCardValid = Color(0xFFF0FDF4);
+  // Valid: neutralny szary (jak sekcja filtrów) - nie zielony
+  static const Color lightCardValid = Color(0xFFe8ece4);
   static const Color lightCardDefault = Color(0xFFF9FAFB);
 
   // Light mode gradients
@@ -48,10 +49,11 @@ class AppColors {
     colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
   );
 
+  // Valid: neutralny gradient (szary) - tylko badge informuje o statusie
   static const LinearGradient lightGradientValid = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFDCFCE7), Color(0xFFBBF7D0)],
+    colors: [Color(0xFFe0e6dc), Color(0xFFd4dcd0)],
   );
 
   // ============================================
@@ -68,7 +70,8 @@ class AppColors {
   // Dark mode card backgrounds (z przezroczystością jak w web)
   static const Color darkCardExpired = Color(0xFF7f1d1d);
   static const Color darkCardExpiringSoon = Color(0xFF78350f);
-  static const Color darkCardValid = Color(0xFF064e3b);
+  // Valid: neutralny szary (jak tło) - nie zielony
+  static const Color darkCardValid = Color(0xFF1e293b);
   static const Color darkCardDefault = Color(0xFF1e293b);
 
   // Dark mode gradients
@@ -84,10 +87,11 @@ class AppColors {
     colors: [Color(0xFF78350f), Color(0xFF92400e)],
   );
 
+  // Valid: neutralny gradient (szary) - tylko badge informuje o statusie
   static const LinearGradient darkGradientValid = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF064e3b), Color(0xFF065f46)],
+    colors: [Color(0xFF1e293b), Color(0xFF334155)],
   );
 }
 

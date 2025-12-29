@@ -159,38 +159,37 @@ class NeuDecoration {
 
   // ============================================
   // BASIN - Deeply concave (inset effect)
-  // Simulates inner shadow with gradient
+  // Strong inner shadow simulation with gradient
   // Used for: input fields, nested containers inside flat parents
-  // NOTE: Asymmetric border widths don't work with BorderRadius in Flutter
   // ============================================
   static BoxDecoration basin({required bool isDark, double radius = 12}) {
     if (isDark) {
-      // DARK MODE - efekt wklęsły bez border (czyste neumorphism)
+      // DARK MODE - silny efekt wklęsły
       return BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF151918), // ciemniejszy cień (góra-lewo)
-            Color(0xFF1e2422), // środek
-            Color(0xFF282e2c), // jasny highlight (dół-prawo)
+            Color(0xFF0a0d0c), // bardzo ciemny cień (góra-lewo)
+            Color(0xFF151918), // środek
+            Color(0xFF1e2422), // jasny highlight (dół-prawo)
           ],
-          stops: [0.0, 0.45, 1.0],
+          stops: [0.0, 0.35, 1.0],
         ),
         borderRadius: BorderRadius.circular(radius),
       );
     } else {
-      // LIGHT MODE - wyraźniejszy efekt wklęsły bez border
+      // LIGHT MODE - silny efekt wklęsły (jak w sekcji filtrów web)
       return BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFc8ccc4), // ciemniejszy cień (góra-lewo)
-            Color(0xFFd8dcd4), // środek
-            Color(0xFFe8ece4), // jasny highlight (dół-prawo)
+            Color(0xFFb8beb6), // ciemny cień (góra-lewo) - silniejszy
+            Color(0xFFcdd3c9), // środek
+            Color(0xFFe0e6dc), // jasny highlight (dół-prawo)
           ],
-          stops: [0.0, 0.4, 1.0],
+          stops: [0.0, 0.35, 1.0],
         ),
         borderRadius: BorderRadius.circular(radius),
       );
