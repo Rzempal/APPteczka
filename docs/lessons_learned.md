@@ -116,4 +116,81 @@ Kontenery z wieloma przyciskami lub elementami inline powinny używać `flex-wra
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-26
+## 4. Border psuje efekt neumorficzny (Flutter mobile)
+
+**Data:** 2025-12-29  
+**Kontekst:** Karty leków i pole wyszukiwania w aplikacji mobilnej
+
+### ❌ Błąd
+
+Użyłem `Border.all()` w dekoracjach neumorficznych (`basin`, `statusCard`), co dodawało widoczne obramowanie i łamało iluzję 3D.
+
+### ✅ Poprawne rozwiązanie
+
+W neumorphism elementy "wyłaniają się" z tła dzięki cieniom, nie obramowaniom. Usuń border i wzmocnij cienie:
+
+```dart
+// ❌ Błędnie
+BoxDecoration(
+  gradient: gradient,
+  borderRadius: BorderRadius.circular(16),
+  border: Border.all(color: borderColor.withOpacity(0.2), width: 1), // psuje efekt
+  boxShadow: [...],
+);
+
+// ✅ Poprawnie - tylko cienie
+BoxDecoration(
+  gradient: gradient,
+  borderRadius: BorderRadius.circular(16),
+  // bez border!
+  boxShadow: [
+    BoxShadow(color: shadowDark, offset: Offset(4, 4), blurRadius: 12),
+    BoxShadow(color: shadowLight, offset: Offset(-2, -2), blurRadius: 6),
+  ],
+);
+```
+
+### Zasada ogólna
+
+W neumorphism nigdy nie używaj `border` - efekt 3D uzyskujesz przez:
+
+- **Zewnętrzne cienie** (dark shadow dół-prawo, light shadow góra-lewo) dla elementów "wypukłych"
+- **Gradient** (ciemny góra-lewo → jasny dół-prawo) dla elementów "wklęsłych" (pola tekstowe)
+
+---
+
+## 5. Unifikacja design system (Flutter mobile)
+
+**Data:** 2025-12-29  
+**Kontekst:** Niespójne spacing i border-radius w aplikacji mobilnej
+
+### ❌ Błąd
+
+Używanie losowych wartości spacing (4, 6, 10, 12...) i border-radius (4, 8, 10, 12, 16, 20) - chaos wizualny.
+
+### ✅ Poprawne rozwiązanie
+
+Ustal i trzymaj się rytmu:
+
+- **Spacing:** skala 8px → `8, 16, 24, 32`
+- **Border-radius:** tylko 2 wartości → `12` (small), `20` (large)
+
+```dart
+// ❌ Błędnie - losowe wartości
+spacing: 6,
+runSpacing: 4,
+borderRadius: BorderRadius.circular(4),
+
+// ✅ Poprawnie - rytm 8px, radius 12/20
+spacing: 8,
+runSpacing: 8,
+borderRadius: BorderRadius.circular(12),
+```
+
+### Zasada ogólna
+
+Rytm spacingu i spójne radiusy są fundamentem jakości UI. Ich złamanie natychmiast obniża poziom wizualny projektu.
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2025-12-29

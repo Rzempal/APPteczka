@@ -165,36 +165,34 @@ class NeuDecoration {
   // ============================================
   static BoxDecoration basin({required bool isDark, double radius = 12}) {
     if (isDark) {
-      // DARK MODE
+      // DARK MODE - efekt wklęsły bez border (czyste neumorphism)
       return BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF181c1a), // ciemny cień (góra-lewo)
-            Color(0xFF222826), // środek
-            Color(0xFF2a302e), // jasny highlight (dół-prawo)
+            Color(0xFF151918), // ciemniejszy cień (góra-lewo)
+            Color(0xFF1e2422), // środek
+            Color(0xFF282e2c), // jasny highlight (dół-prawo)
           ],
-          stops: [0.0, 0.5, 1.0],
+          stops: [0.0, 0.45, 1.0],
         ),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: Colors.black.withAlpha(60), width: 1),
       );
     } else {
-      // LIGHT MODE - wyraźniejszy efekt wklęsły
+      // LIGHT MODE - wyraźniejszy efekt wklęsły bez border
       return BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFd0d4cc), // ciemny cień (góra-lewo)
-            Color(0xFFdce0d8), // środek
+            Color(0xFFc8ccc4), // ciemniejszy cień (góra-lewo)
+            Color(0xFFd8dcd4), // środek
             Color(0xFFe8ece4), // jasny highlight (dół-prawo)
           ],
           stops: [0.0, 0.4, 1.0],
         ),
         borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: const Color(0xFFc0c4bc), width: 1),
       );
     }
   }
@@ -245,7 +243,7 @@ class NeuDecoration {
     required bool isDark,
     required LinearGradient gradient,
     double radius = 16,
-    Color? borderColor,
+    Color? borderColor, // zachowane dla zgodności wstecznej, ale nieużywane
   }) {
     final shadowLight = isDark
         ? AppColors.darkShadowLight
@@ -255,40 +253,45 @@ class NeuDecoration {
         : AppColors.lightShadowDark;
 
     if (isDark) {
-      // Dark mode: subtle shadow + optional border
+      // Dark mode: czyste neumorphism bez border - cień daje efekt 3D
       return BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
-        border: borderColor != null
-            ? Border.all(color: borderColor.withOpacity(0.3), width: 1)
-            : null,
         boxShadow: [
+          // Główny cień (dół-prawo)
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
-            offset: const Offset(0, 4),
-            blurRadius: 16,
-            spreadRadius: -2,
+            color: Colors.black.withOpacity(0.5),
+            offset: const Offset(4, 4),
+            blurRadius: 12,
+            spreadRadius: -1,
+          ),
+          // Subtelny highlight (góra-lewo)
+          BoxShadow(
+            color: Colors.white.withOpacity(0.03),
+            offset: const Offset(-2, -2),
+            blurRadius: 6,
           ),
         ],
       );
     } else {
-      // Light mode: full neumorphic shadows
+      // Light mode: pełne neumorphic shadows bez border
       return BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
-        border: borderColor != null
-            ? Border.all(color: borderColor.withOpacity(0.2), width: 1)
-            : null,
         boxShadow: [
+          // Ciemny cień (dół-prawo)
           BoxShadow(
-            color: shadowDark.withOpacity(0.2),
+            color: shadowDark.withOpacity(0.25),
             offset: const Offset(shadowDistance, shadowDistance),
             blurRadius: shadowBlur,
+            spreadRadius: 0,
           ),
+          // Jasny cień/highlight (góra-lewo)
           BoxShadow(
-            color: shadowLight.withOpacity(0.7),
+            color: shadowLight.withOpacity(0.8),
             offset: const Offset(-shadowDistanceSm, -shadowDistanceSm),
             blurRadius: shadowBlurSm,
+            spreadRadius: 0,
           ),
         ],
       );
