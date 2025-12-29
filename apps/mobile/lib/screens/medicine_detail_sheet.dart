@@ -12,6 +12,7 @@ class MedicineDetailSheet extends StatefulWidget {
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final Function(String) onTagTap;
+  final Function(String) onLabelTap;
 
   const MedicineDetailSheet({
     super.key,
@@ -20,6 +21,7 @@ class MedicineDetailSheet extends StatefulWidget {
     required this.onEdit,
     required this.onDelete,
     required this.onTagTap,
+    required this.onLabelTap,
   });
 
   @override
@@ -358,6 +360,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
           selectedLabelIds: _medicine.labels,
           isOpen: _isLabelsOpen,
           onToggle: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
+          onLabelTap: (labelId) => widget.onLabelTap(labelId),
           onChanged: (newLabelIds) async {
             final updatedMedicine = _medicine.copyWith(labels: newLabelIds);
             await widget.storageService.saveMedicine(updatedMedicine);

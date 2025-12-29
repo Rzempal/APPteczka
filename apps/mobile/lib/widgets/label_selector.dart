@@ -16,6 +16,9 @@ class LabelSelector extends StatefulWidget {
   /// Callback do zamknięcia/otwarcia dropdowna z zewnątrz
   final VoidCallback? onToggle;
 
+  /// Callback wywoływany po kliknięciu etykiety (do filtrowania)
+  final Function(String)? onLabelTap;
+
   const LabelSelector({
     super.key,
     required this.storageService,
@@ -24,6 +27,7 @@ class LabelSelector extends StatefulWidget {
     this.onLabelsUpdated,
     this.isOpen = false,
     this.onToggle,
+    this.onLabelTap,
   });
 
   @override
@@ -64,22 +68,23 @@ class _LabelSelectorState extends State<LabelSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Wyświetl przypisane etykiety
+        // Wyświetl przypisane etykiety (klikalne do filtrowania, bez X)
         if (selectedLabels.isNotEmpty) ...[
           Wrap(
             spacing: 4,
             runSpacing: 4,
             children: selectedLabels.map((label) {
               final colorInfo = labelColors[label.color]!;
-              return Chip(
-                label: Text(label.name, style: const TextStyle(fontSize: 12)),
-                backgroundColor: Color(
-                  colorInfo.hexValue,
-                ).withValues(alpha: 0.2),
-                deleteIcon: const Icon(Icons.close, size: 16),
-                onDeleted: () => _toggleLabel(label.id),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
+              return GestureDetector(
+                onTap: () => widget.onLabelTap?.call(label.id),
+                child: Chip(
+                  label: Text(label.name, style: const TextStyle(fontSize: 12)),
+                  backgroundColor: Color(
+                    colorInfo.hexValue,
+                  ).withValues(alpha: 0.2),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                ),
               );
             }).toList(),
           ),

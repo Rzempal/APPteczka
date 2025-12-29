@@ -574,6 +574,14 @@ class _HomeScreenState extends State<HomeScreen> {
             _filterState = _filterState.copyWith(selectedTags: newTags);
           });
         },
+        onLabelTap: (labelId) {
+          Navigator.pop(context);
+          setState(() {
+            final newLabels = Set<String>.from(_filterState.selectedLabels);
+            newLabels.add(labelId);
+            _filterState = _filterState.copyWith(selectedLabels: newLabels);
+          });
+        },
       ),
     ).then((_) => _loadMedicines()); // Refresh after detail sheet closes
   }
