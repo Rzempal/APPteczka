@@ -6,6 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/neumorphic/neumorphic.dart';
 
 /// Ekran zarządzania apteczką - eksport, kopiowanie, danger zone
 class ManageScreen extends StatefulWidget {
@@ -206,7 +207,7 @@ class ManageScreenState extends State<ManageScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: NeuDecoration.concave(isDark: isDark, radius: 10),
+              decoration: NeuDecoration.basin(isDark: isDark, radius: 10),
               child: Icon(
                 LucideIcons.fileSpreadsheet,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -296,7 +297,7 @@ class ManageScreenState extends State<ManageScreen> {
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: NeuDecoration.concave(isDark: isDark, radius: 8),
+              decoration: NeuDecoration.basin(isDark: isDark, radius: 8),
               child: Row(
                 children: [
                   Icon(

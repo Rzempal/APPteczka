@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../theme/app_theme.dart';
+import 'neumorphic/neumorphic.dart';
 
 /// Stan filtra - wersja Mobile kompatybilna z logiką Web
 class FilterState {

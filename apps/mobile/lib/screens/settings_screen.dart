@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/theme_provider.dart';
-import '../theme/app_theme.dart';
+import '../widgets/neumorphic/neumorphic.dart';
 
 /// Ekran ustawień aplikacji (uproszczony)
 class SettingsScreen extends StatelessWidget {
@@ -54,7 +54,7 @@ class SettingsScreen extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: NeuDecoration.concave(isDark: isDark, radius: 10),
+              decoration: NeuDecoration.basin(isDark: isDark, radius: 10),
               child: Icon(
                 LucideIcons.cloudCog,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -144,7 +144,7 @@ class SettingsScreen extends StatelessWidget {
     final currentMode = themeProvider.themeMode;
 
     return Container(
-      decoration: NeuDecoration.concave(isDark: isDark, radius: 12),
+      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
       padding: const EdgeInsets.all(4),
       child: Row(
         children: [

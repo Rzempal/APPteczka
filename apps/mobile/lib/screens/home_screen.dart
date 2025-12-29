@@ -7,6 +7,7 @@ import '../services/theme_provider.dart';
 import '../widgets/medicine_card.dart';
 import '../widgets/filters_sheet.dart';
 import '../theme/app_theme.dart';
+import '../widgets/neumorphic/neumorphic.dart';
 import 'edit_medicine_screen.dart';
 import 'medicine_detail_sheet.dart';
 
@@ -223,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
-        decoration: NeuDecoration.concave(isDark: isDark, radius: 12),
+        decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
         child: TextField(
           controller: _searchController,
           decoration: InputDecoration(
@@ -263,10 +264,11 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          // Licznik
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+          // Licznik - neumorficzny kontener
+          NeuStaticContainer(
+            isSmall: true,
+            borderRadius: 10,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Text(
               '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -278,62 +280,40 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 8),
           const Spacer(),
           // Widok toggle
-          _buildViewToggle(theme, isDark),
+          NeuIconButton(
+            icon: _viewMode == ViewMode.full
+                ? LucideIcons.layoutGrid
+                : LucideIcons.list,
+            onPressed: () {
+              setState(() {
+                _viewMode = _viewMode == ViewMode.full
+                    ? ViewMode.list
+                    : ViewMode.full;
+              });
+            },
+            tooltip: _viewMode == ViewMode.full ? 'Widok listy' : 'Pełny widok',
+          ),
           const SizedBox(width: 8),
           // Sortowanie popup
           _buildSortButton(theme, isDark),
           const SizedBox(width: 8),
           // Filtry
-          Badge(
-            isLabelVisible: _filterState.hasActiveFilters,
-            label: Text('${_filterState.activeFilterCount}'),
-            child: Container(
-              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-              child: IconButton(
-                icon: const Icon(LucideIcons.filter, size: 20),
-                onPressed: _showFilters,
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                padding: EdgeInsets.zero,
-              ),
+          NeuIconButtonBadge(
+            count: _filterState.activeFilterCount,
+            showBadge: _filterState.hasActiveFilters,
+            button: NeuIconButton(
+              icon: LucideIcons.filter,
+              onPressed: _showFilters,
             ),
           ),
           const SizedBox(width: 8),
           // Zarządzaj filtrami
-          Container(
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-            child: IconButton(
-              icon: const Icon(LucideIcons.settings2, size: 20),
-              onPressed: _showFilterManagement,
-              constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-              padding: EdgeInsets.zero,
-              tooltip: 'Zarządzaj filtrami',
-            ),
+          NeuIconButton(
+            icon: LucideIcons.settings2,
+            onPressed: _showFilterManagement,
+            tooltip: 'Zarządzaj filtrami',
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildViewToggle(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-      child: IconButton(
-        icon: Icon(
-          _viewMode == ViewMode.full
-              ? LucideIcons.layoutGrid
-              : LucideIcons.list,
-          size: 20,
-        ),
-        onPressed: () {
-          setState(() {
-            _viewMode = _viewMode == ViewMode.full
-                ? ViewMode.list
-                : ViewMode.full;
-          });
-        },
-        constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-        padding: EdgeInsets.zero,
-        tooltip: _viewMode == ViewMode.full ? 'Widok listy' : 'Pełny widok',
       ),
     );
   }
