@@ -86,24 +86,16 @@ class ManageScreenState extends State<ManageScreen> {
             ),
             const SizedBox(height: 12),
 
-            // Eksport do schowka
-            _buildExportClipboardSection(theme, isDark),
+            // Eksport do pliku (podstawowa funkcja - widoczna)
+            _buildExportFileSection(theme, isDark),
             const SizedBox(height: 12),
 
-            // Eksport do pliku
-            _buildExportFileSection(theme, isDark),
-            const SizedBox(height: 16),
-
-            // Przywracanie kopii zapasowej
+            // Przywracanie kopii zapasowej (podstawowa funkcja - widoczna)
             _buildRestoreSection(theme, isDark),
             const SizedBox(height: 16),
 
-            // Format pliku
-            _buildFormatSection(theme, isDark),
-            const SizedBox(height: 16),
-
-            // Danger Zone
-            _buildDangerZone(theme, isDark),
+            // Sekcja Zaawansowane (zwinięta)
+            _buildAdvancedSection(theme, isDark),
             const SizedBox(height: 24),
 
             // Disclaimer (na samym dole, żółty/pomarańczowy)
@@ -537,6 +529,225 @@ class ManageScreenState extends State<ManageScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Sekcja "Zaawansowane" - ukrywa mniej używane opcje
+  Widget _buildAdvancedSection(ThemeData theme, bool isDark) {
+    return NeuCollapsibleContainer(
+      initiallyExpanded: false,
+      header: Row(
+        children: [
+          Icon(
+            LucideIcons.settings2,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Zaawansowane',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  'Opcje dla zaawansowanych użytkowników',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Kopiuj do schowka
+          _buildAdvancedExportClipboard(theme, isDark),
+          const SizedBox(height: 12),
+
+          // Format pliku
+          _buildAdvancedFormatInfo(theme, isDark),
+          const SizedBox(height: 12),
+
+          // Strefa niebezpieczna
+          _buildAdvancedDangerZone(theme, isDark),
+        ],
+      ),
+    );
+  }
+
+  /// Kopiuj JSON do schowka (wewnątrz sekcji Zaawansowane)
+  Widget _buildAdvancedExportClipboard(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.clipboard,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Kopiuj JSON do schowka',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Przydatne gdy przeglądarka blokuje pobieranie plików',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: _medicineCount > 0 ? _exportToClipboard : null,
+              icon: const Icon(LucideIcons.copy, size: 16),
+              label: const Text('Kopiuj JSON'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Format pliku (wewnątrz sekcji Zaawansowane)
+  Widget _buildAdvancedFormatInfo(ThemeData theme, bool isDark) {
+    const exampleBackup = '''{
+  "leki": [
+    {
+      "id": "abc-123",
+      "nazwa": "Paracetamol",
+      "terminWaznosci": "2025-12-31"
+    }
+  ]
+}''';
+
+    return Container(
+      decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.fileCode,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Format pliku JSON',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1a1f1c) : const Color(0xFF1e293b),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              exampleBackup,
+              style: TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 10,
+                color: isDark
+                    ? AppColors.primary.withAlpha(200)
+                    : const Color(0xFF94a3b8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Strefa niebezpieczna (wewnątrz sekcji Zaawansowane)
+  Widget _buildAdvancedDangerZone(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.expired.withAlpha(100), width: 1),
+        borderRadius: BorderRadius.circular(12),
+        color: AppColors.expired.withAlpha(isDark ? 15 : 10),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.triangleAlert,
+                color: AppColors.expired,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Strefa niebezpieczna',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.expired,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Nieodwracalne akcje - upewnij się, że masz kopię zapasową.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _medicineCount > 0 ? _showDeleteAllDialog : null,
+              icon: Icon(
+                LucideIcons.trash2,
+                color: AppColors.expired,
+                size: 16,
+              ),
+              label: Text(
+                'Usuń wszystkie leki',
+                style: TextStyle(color: AppColors.expired),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppColors.expired.withAlpha(150)),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

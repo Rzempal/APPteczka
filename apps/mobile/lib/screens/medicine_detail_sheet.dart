@@ -123,27 +123,9 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                       ),
                     ],
 
-                    // Etykiety - tylko LabelSelector (usuwa duplikację)
+                    // Etykiety - tytuł i ikona edycji w jednej linii
                     const SizedBox(height: 20),
-                    _buildSection(
-                      context,
-                      title: 'Etykiety',
-                      child: LabelSelector(
-                        storageService: widget.storageService,
-                        selectedLabelIds: _medicine.labels,
-                        onChanged: (newLabelIds) async {
-                          final updatedMedicine = _medicine.copyWith(
-                            labels: newLabelIds,
-                          );
-                          await widget.storageService.saveMedicine(
-                            updatedMedicine,
-                          );
-                          setState(() {
-                            _medicine = updatedMedicine;
-                          });
-                        },
-                      ),
-                    ),
+                    _buildLabelSection(context),
 
                     // Wskazania
                     if (_medicine.wskazania.isNotEmpty) ...[
@@ -322,6 +304,69 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         const SizedBox(height: 8),
         child,
       ],
+    );
+  }
+
+  /// Sekcja etykiet z tytułem i ikoną edycji w jednej linii
+  Widget _buildLabelSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Etykiety',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF6b7280),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _showEditLabelsSheet(context),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.edit_outlined, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Edytuj',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        LabelSelector(
+          storageService: widget.storageService,
+          selectedLabelIds: _medicine.labels,
+          onChanged: (newLabelIds) async {
+            final updatedMedicine = _medicine.copyWith(labels: newLabelIds);
+            await widget.storageService.saveMedicine(updatedMedicine);
+            setState(() {
+              _medicine = updatedMedicine;
+            });
+          },
+        ),
+      ],
+    );
+  }
+
+  /// Pokazuje bottom sheet do zarządzania etykietami
+  Future<void> _showEditLabelsSheet(BuildContext context) async {
+    // Otwórz LabelSelector w trybie edycji - tutaj po prostu fokus na LabelSelector
+    // W przyszłości można dodać dedykowany ekran zarządzania
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Użyj przycisków poniżej, aby dodać lub usunąć etykiety'),
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 2),
+      ),
     );
   }
 
