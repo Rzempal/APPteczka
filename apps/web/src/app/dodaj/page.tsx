@@ -65,14 +65,21 @@ export default function DodajLekiPage() {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
+            console.log('[Import] Loading file:', file.name, 'size:', file.size);
             const text = await file.text();
+            console.log('[Import] File content length:', text.length);
             const data = JSON.parse(text);
+            console.log('[Import] Parsed data, leki count:', data.leki?.length, 'labels count:', data.labels?.length);
             if (data.leki) {
                 setScanResult(data);
-                setShowImport(true);
+                // ImportForm is shown automatically via {scanResult && ...} section
+            } else {
+                console.warn('[Import] File does not contain leki array');
+                alert('Plik nie zawiera tablicy "leki"');
             }
-        } catch {
-            alert('Nieprawidłowy format pliku backup');
+        } catch (err) {
+            console.error('[Import] Error loading file:', err);
+            alert('Nieprawidłowy format pliku backup: ' + (err instanceof Error ? err.message : String(err)));
         }
         if (backupInputRef.current) backupInputRef.current.value = '';
     };

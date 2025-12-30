@@ -1644,5 +1644,27 @@
         "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee"
       ]
     }
+  ],
+  "labels": [
+    {
+      "id": "4edbb891-ffa4-4d11-bf15-a3c7b8afdbee",
+      "name": "^",
+      "color": "orange"
+    },
+    {
+      "id": "720b444a-92b9-4b26-9d62-8ee0cd1010f8",
+      "name": "v",
+      "color": "gray"
+    },
+    {
+      "id": "59e2f58d-39a8-4e80-b679-6117f780bc0d",
+      "name": "T",
+      "color": "purple"
+    },
+    {
+      "id": "cd55d2a7-624a-4b61-9fb6-bfdab357d700",
+      "name": "M",
+      "color": "blue"
+    }
   ]
 }
