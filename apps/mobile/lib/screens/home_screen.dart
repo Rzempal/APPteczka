@@ -15,10 +15,10 @@ import 'medicine_detail_sheet.dart';
 enum SortOption {
   nameAsc('Nazwa A-Z', LucideIcons.arrowUpAZ),
   nameDesc('Nazwa Z-A', LucideIcons.arrowDownAZ),
-  expiryAsc('Termin ↑', LucideIcons.calendarClock),
-  expiryDesc('Termin ↓', LucideIcons.calendarClock),
-  dateAddedAsc('Data dodania ↑', LucideIcons.calendarPlus),
-  dateAddedDesc('Data dodania ↓', LucideIcons.calendarPlus);
+  expiryAsc('Termin ważności rosnąco', LucideIcons.clockArrowUp),
+  expiryDesc('Termin ważności malejąco', LucideIcons.clockArrowDown),
+  dateAddedAsc('Data dodania rosnąco', LucideIcons.calendarArrowUp),
+  dateAddedDesc('Data dodania malejąco', LucideIcons.calendarArrowDown);
 
   final String label;
   final IconData icon;
@@ -79,9 +79,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final sorted = List<Medicine>.from(medicines);
     switch (_sortOption) {
       case SortOption.nameAsc:
-        sorted.sort((a, b) => (a.nazwa ?? '').compareTo(b.nazwa ?? ''));
+        sorted.sort(
+          (a, b) => (a.nazwa ?? '').toLowerCase().compareTo(
+            (b.nazwa ?? '').toLowerCase(),
+          ),
+        );
       case SortOption.nameDesc:
-        sorted.sort((a, b) => (b.nazwa ?? '').compareTo(a.nazwa ?? ''));
+        sorted.sort(
+          (a, b) => (b.nazwa ?? '').toLowerCase().compareTo(
+            (a.nazwa ?? '').toLowerCase(),
+          ),
+        );
       case SortOption.expiryAsc:
         sorted.sort((a, b) {
           final aDate = a.terminWaznosci ?? '9999-12-31';
@@ -304,8 +312,22 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: _viewMode == ViewMode.full ? 'Widok listy' : 'Pełny widok',
           ),
           const SizedBox(width: 8),
-          // Sortowanie popup
-          _buildSortButton(theme, isDark),
+          // Sortowanie - neumorphic menu
+          NeuSortMenu<SortOption>(
+            currentValue: _sortOption,
+            items: SortOption.values
+                .map(
+                  (opt) => NeuSortMenuItem(
+                    value: opt,
+                    label: opt.label,
+                    icon: opt.icon,
+                  ),
+                )
+                .toList(),
+            onSelected: (option) => setState(() => _sortOption = option),
+            icon: LucideIcons.arrowDownUp,
+            tooltip: 'Sortowanie',
+          ),
           const SizedBox(width: 8),
           // Filtry
           NeuIconButtonBadge(
@@ -324,62 +346,6 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: 'Wyczyść filtry',
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSortButton(ThemeData theme, bool isDark) {
-    // SizedBox zapewnia identyczną wysokość jak NeuIconButton (40px)
-    return SizedBox(
-      height: 40,
-      child: Container(
-        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-        child: PopupMenuButton<SortOption>(
-          icon: const Icon(LucideIcons.arrowDownUp, size: 20),
-          tooltip: 'Sortowanie',
-          padding: EdgeInsets.zero,
-          onSelected: (option) {
-            setState(() {
-              _sortOption = option;
-            });
-          },
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          itemBuilder: (context) => SortOption.values.map((option) {
-            final isSelected = option == _sortOption;
-            return PopupMenuItem<SortOption>(
-              value: option,
-              child: Row(
-                children: [
-                  Icon(
-                    option.icon,
-                    size: 18,
-                    color: isSelected
-                        ? AppColors.primary
-                        : theme.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      option.label,
-                      style: TextStyle(
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                        color: isSelected
-                            ? AppColors.primary
-                            : theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  if (isSelected)
-                    Icon(LucideIcons.check, size: 16, color: AppColors.primary),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
       ),
     );
   }
