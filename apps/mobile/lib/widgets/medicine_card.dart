@@ -287,15 +287,27 @@ class _MedicineCardState extends State<MedicineCard>
   }
 
   /// Dekoracja dla stanu pressed - subtelniejsze cienie
+  /// Dekoracja dla stanu pressed - skalowanie załatwia sprawę,
+  /// ale możemy zmniejszyć cień.
   BoxDecoration _getPressedDecoration(
     bool isDark,
     LinearGradient gradient,
     Color statusColor,
   ) {
+    // W stanie pressed używamy po prostu statusCard ale z mniejszymi cieniami
+    // (symulowanymi przz NeuDecoration.statusCard parametry? Nie mamy ich tam).
+    // Więc zwracamy to samo, ale scaleAnimation zrobi robotę.
+    // Ewentualnie możemy zwrócić "płaską" wersję bez cienia.
+
+    // Używamy helpera z NeuDecoration.statusCard ale modyfikujemy shadow ręcznie
+    // dla efektu "wciśnięcia" (mniejszy blur/distance)
+
     return BoxDecoration(
       gradient: gradient,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: statusColor.withAlpha(80), width: 2),
+      // Brak cienia lub szczątkowy cień "inner" (trudne na gradiencie)
+      // Zostawiamy czyste, scale załatwia wizualny feedback
+      boxShadow: [],
     );
   }
 
@@ -347,7 +359,7 @@ class _MedicineCardState extends State<MedicineCard>
   /// Tag - styl neumorficzny (cienie zamiast border)
   Widget _buildTag(String tag, bool isDark, ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
       child: Text(
         tag,

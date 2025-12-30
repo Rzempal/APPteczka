@@ -35,7 +35,16 @@ class NeuBasinContainer extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Kolory cieni - dostosowane do motywu
+    // Colors matching CSS .neu-concave gradient
+    // CSS: linear-gradient(145deg, var(--color-bg-dark), var(--color-bg-light))
+    final bgDark = isDark
+        ? AppColors.darkSurfaceLight
+        : AppColors.lightSurfaceDark;
+    final bgLight = isDark ? AppColors.darkBackground : AppColors.lightSurface;
+    // Note: In CSS it is bg-dark top-left to bg-light bottom-right for concave?
+    // CSS .neu-concave: bg-dark (top-left) -> bg-light (bottom-right) YES.
+
+    // Shadow colors
     final shadowDark = isDark
         ? AppColors.darkShadowDark.withValues(alpha: 0.8 * depth)
         : AppColors.lightShadowDark.withValues(alpha: 0.5 * depth);
@@ -44,43 +53,27 @@ class NeuBasinContainer extends StatelessWidget {
         ? AppColors.darkShadowLight.withValues(alpha: 0.3 * depth)
         : AppColors.lightShadowLight.withValues(alpha: 0.9 * depth);
 
-    // Odległość cienia (proporcjonalna do depth)
-    final shadowDistance = 4.0 * depth;
-    final blurRadius = 8.0 * depth;
-
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        // Gradient symulujący wklęsłość - ciemniejszy góra-lewo
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF0a0f1a), // bardzo ciemny (góra-lewo)
-                  const Color(0xFF131b2e), // środek
-                  const Color(0xFF1a2540), // jaśniejszy (dół-prawo)
-                ]
-              : [
-                  const Color(0xFFc8d4cc), // ciemniejszy (góra-lewo)
-                  const Color(0xFFdae4de), // środek
-                  const Color(0xFFe8f0ea), // jaśniejszy (dół-prawo)
-                ],
-          stops: const [0.0, 0.4, 1.0],
+          colors: [
+            isDark
+                ? const Color(0xFF0b1120)
+                : const Color(0xFFd1ddd7), // bg-dark
+            isDark
+                ? const Color(0xFF1e293b)
+                : const Color(0xFFedf3ef), // bg-light
+          ],
         ),
-        // Zewnętrzne cienie symulujące "wciśnięcie" w powierzchnię
         boxShadow: [
-          // Cień wewnętrzny góra-lewo (ciemny) - symulowany przez odwrócone cienie zewnętrzne
+          // Outer subtle shadows to ground it
           BoxShadow(
-            color: shadowDark,
-            offset: Offset(shadowDistance, shadowDistance),
-            blurRadius: blurRadius,
-          ),
-          // Odbicie wewnętrzne dół-prawo (jasny)
-          BoxShadow(
-            color: shadowLight,
-            offset: Offset(-shadowDistance * 0.5, -shadowDistance * 0.5),
-            blurRadius: blurRadius * 0.5,
+            color: shadowLight.withValues(alpha: 0.1),
+            offset: const Offset(1, 1),
+            blurRadius: 1,
           ),
         ],
       ),
@@ -88,14 +81,14 @@ class NeuBasinContainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         child: Stack(
           children: [
-            // Warstwa główna z paddingiem
+            // Main Content
             Padding(
               padding:
                   padding ??
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: child,
             ),
-            // Warstwa górna - symulacja cienia inset (góra-lewo)
+            // Inner Shadow Simulation (Top-Left Dark)
             Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
@@ -105,16 +98,16 @@ class NeuBasinContainer extends StatelessWidget {
                       begin: Alignment.topLeft,
                       end: Alignment.center,
                       colors: [
-                        shadowDark.withValues(alpha: 0.4),
+                        shadowDark.withValues(alpha: isDark ? 0.6 : 0.25),
                         Colors.transparent,
                       ],
-                      stops: const [0.0, 0.5],
+                      stops: const [0.0, 0.4],
                     ),
                   ),
                 ),
               ),
             ),
-            // Warstwa dolna - symulacja odbicia (dół-prawo)
+            // Inner Highlight Simulation (Bottom-Right Light)
             Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
@@ -124,87 +117,10 @@ class NeuBasinContainer extends StatelessWidget {
                       begin: Alignment.bottomRight,
                       end: Alignment.center,
                       colors: [
-                        shadowLight.withValues(alpha: isDark ? 0.15 : 0.4),
+                        shadowLight.withValues(alpha: isDark ? 0.1 : 0.6),
                         Colors.transparent,
                       ],
                       stops: const [0.0, 0.4],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Górna krawędź - subtelna linia cienia
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: IgnorePointer(
-                child: Container(
-                  height: 2,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(borderRadius),
-                      topRight: Radius.circular(borderRadius),
-                    ),
-                    gradient: LinearGradient(
-                      colors: [
-                        shadowDark.withValues(alpha: 0.6),
-                        shadowDark.withValues(alpha: 0.3),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.3, 1.0],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Lewa krawędź - subtelna linia cienia
-            Positioned(
-              top: 0,
-              left: 0,
-              bottom: 0,
-              child: IgnorePointer(
-                child: Container(
-                  width: 2,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(borderRadius),
-                      bottomLeft: Radius.circular(borderRadius),
-                    ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        shadowDark.withValues(alpha: 0.6),
-                        shadowDark.withValues(alpha: 0.3),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.3, 1.0],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Dolna krawędź - highlight
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: IgnorePointer(
-                child: Container(
-                  height: 1,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(borderRadius),
-                      bottomRight: Radius.circular(borderRadius),
-                    ),
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        shadowLight.withValues(alpha: isDark ? 0.15 : 0.5),
-                        shadowLight.withValues(alpha: isDark ? 0.2 : 0.6),
-                      ],
-                      stops: const [0.0, 0.7, 1.0],
                     ),
                   ),
                 ),
