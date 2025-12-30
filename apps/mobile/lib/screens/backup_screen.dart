@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -280,27 +281,25 @@ class _BackupScreenState extends State<BackupScreen> {
       final json = widget.storageService.exportToJson();
       final fileName =
           'apteczka_backup_${DateTime.now().toIso8601String().split('T')[0]}.json';
+      final bytes = utf8.encode(json);
 
-      // Wybierz lokalizację do zapisu
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Zapisz kopię zapasową',
         fileName: fileName,
         type: FileType.custom,
         allowedExtensions: ['json'],
+        bytes: Uint8List.fromList(bytes),
       );
 
-      if (result != null) {
-        final file = File(result);
-        await file.writeAsString(json, encoding: utf8);
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Zapisano kopię do: ${file.path.split('/').last}'),
-              behavior: SnackBarBehavior.floating,
+      if (result != null && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Zapisano kopię: ${result.split('/').last.split('\\').last}',
             ),
-          );
-        }
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
