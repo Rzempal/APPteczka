@@ -193,4 +193,60 @@ Rytm spacingu i spójne radiusy są fundamentem jakości UI. Ich złamanie natyc
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-29
+## 6. Symulacja inset shadow w Flutter (basin effect)
+
+**Data:** 2025-12-30  
+**Kontekst:** Pole wyszukiwania - efekt wklęsłości (basin) w neumorfizmie
+
+### ❌ Błąd
+
+Użyto tylko gradientu w `NeuDecoration.basin()`, co nie dawało prawdziwego efektu wklęsłości - Flutter `BoxDecoration` nie wspiera `inset box-shadow`.
+
+### ✅ Poprawne rozwiązanie
+
+Stworzono dedykowany widget `NeuBasinContainer` który symuluje inset shadow za pomocą warstw:
+
+```dart
+// Struktura warstw (Stack):
+// 1. Kontener bazowy z gradientem (ciemny góra-lewo → jasny dół-prawo)
+// 2. Overlay gradient (góra-lewo do centrum) - symulacja cienia
+// 3. Overlay gradient (dół-prawo do centrum) - symulacja odbicia
+// 4. Górna/lewa krawędź z ciemnym gradientem (2px)
+// 5. Dolna krawędź z jasnym gradientem (1px highlight)
+```
+
+### Kod
+
+```dart
+// ❌ Błędnie - tylko gradient, brak efektu 3D
+Container(
+  decoration: NeuDecoration.basin(isDark: isDark),
+  child: TextField(...),
+);
+
+// ✅ Poprawnie - prawdziwy efekt wklęsłości
+NeuBasinContainer(
+  borderRadius: 12,
+  child: TextField(...),
+);
+```
+
+### Dlaczego nie pakiet zewnętrzny?
+
+Rozważono `flutter_inset_box_shadow`, ale odrzucono z powodów:
+
+- Dodatkowa zależność (YAGNI, KISS)
+- Brak kontroli nad kolorami (niespójność z `AppColors`)
+- Ryzyko porzucenia pakietu ("unverified uploader")
+
+### Zasada ogólna
+
+W Flutter efekty niedostępne natywnie (jak inset shadow) można symulować przez Stack z warstwami gradientów. Widget własny > pakiet zewnętrzny gdy:
+
+- Potrzebujesz integracji z istniejącym design system
+- Chcesz pełną kontrolę nad stylami
+- Zależność zewnętrzna nie jest niezbędna
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2025-12-30

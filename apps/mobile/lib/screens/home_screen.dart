@@ -215,6 +215,13 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.primary,
             ),
           ),
+          const Spacer(),
+          // Zarządzaj filtrami (przeniesiony z toolbara)
+          NeuIconButton(
+            icon: LucideIcons.settings2,
+            onPressed: _showFilterManagement,
+            tooltip: 'Zarządzaj filtrami',
+          ),
         ],
       ),
     );
@@ -223,8 +230,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSearchBar(ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+      child: NeuBasinContainer(
+        borderRadius: 12,
+        padding: EdgeInsets.zero,
         child: TextField(
           controller: _searchController,
           decoration: InputDecoration(
@@ -233,6 +241,8 @@ class _HomeScreenState extends State<HomeScreen> {
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
+            filled: true,
+            fillColor: Colors.transparent,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
@@ -307,11 +317,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          // Zarządzaj filtrami
+          // Wyczyść filtry
           NeuIconButton(
-            icon: LucideIcons.settings2,
-            onPressed: _showFilterManagement,
-            tooltip: 'Zarządzaj filtrami',
+            icon: LucideIcons.filterX,
+            onPressed: _filterState.hasActiveFilters ? _clearFilters : null,
+            tooltip: 'Wyczyść filtry',
           ),
         ],
       ),
@@ -393,6 +403,13 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
     ).then((_) => _loadMedicines()); // Refresh after filter sheet closes
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _filterState = const FilterState();
+      _searchController.clear();
+    });
   }
 
   void _showFilterManagement() {
