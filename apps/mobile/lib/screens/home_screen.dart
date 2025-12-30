@@ -267,7 +267,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Licznik - neumorficzny kontener
           NeuStaticContainer(
             isSmall: true,
-            borderRadius: 10,
+            borderRadius: 12,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Text(
               '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
@@ -319,50 +319,57 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSortButton(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-      child: PopupMenuButton<SortOption>(
-        icon: const Icon(LucideIcons.arrowDownUp, size: 20),
-        tooltip: 'Sortowanie',
-        onSelected: (option) {
-          setState(() {
-            _sortOption = option;
-          });
-        },
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        itemBuilder: (context) => SortOption.values.map((option) {
-          final isSelected = option == _sortOption;
-          return PopupMenuItem<SortOption>(
-            value: option,
-            child: Row(
-              children: [
-                Icon(
-                  option.icon,
-                  size: 18,
-                  color: isSelected
-                      ? AppColors.primary
-                      : theme.colorScheme.onSurface,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    option.label,
-                    style: TextStyle(
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                      color: isSelected
-                          ? AppColors.primary
-                          : theme.colorScheme.onSurface,
+    // SizedBox zapewnia identyczną wysokość jak NeuIconButton (40px)
+    return SizedBox(
+      height: 40,
+      child: Container(
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+        child: PopupMenuButton<SortOption>(
+          icon: const Icon(LucideIcons.arrowDownUp, size: 20),
+          tooltip: 'Sortowanie',
+          padding: EdgeInsets.zero,
+          onSelected: (option) {
+            setState(() {
+              _sortOption = option;
+            });
+          },
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          itemBuilder: (context) => SortOption.values.map((option) {
+            final isSelected = option == _sortOption;
+            return PopupMenuItem<SortOption>(
+              value: option,
+              child: Row(
+                children: [
+                  Icon(
+                    option.icon,
+                    size: 18,
+                    color: isSelected
+                        ? AppColors.primary
+                        : theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      option.label,
+                      style: TextStyle(
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: isSelected
+                            ? AppColors.primary
+                            : theme.colorScheme.onSurface,
+                      ),
                     ),
                   ),
-                ),
-                if (isSelected)
-                  Icon(LucideIcons.check, size: 16, color: AppColors.primary),
-              ],
-            ),
-          );
-        }).toList(),
+                  if (isSelected)
+                    Icon(LucideIcons.check, size: 16, color: AppColors.primary),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

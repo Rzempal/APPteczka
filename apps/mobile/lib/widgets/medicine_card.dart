@@ -104,7 +104,6 @@ class _MedicineCardState extends State<MedicineCard>
                     isDark: isDark,
                     gradient: gradient,
                     radius: 20,
-                    borderColor: statusColor,
                   ),
             child: Padding(
               padding: EdgeInsets.all(widget.isCompact ? 12 : 16),
@@ -118,8 +117,8 @@ class _MedicineCardState extends State<MedicineCard>
                       // Lewa strona: Nazwa + Etykiety (wrap to 2 lines if needed)
                       Expanded(
                         child: Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
+                          spacing: 8,
+                          runSpacing: 8,
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             // Nazwa leku
@@ -183,7 +182,7 @@ class _MedicineCardState extends State<MedicineCard>
                   // Compact: tylko data
                   if (widget.isCompact) ...[
                     if (widget.medicine.terminWaznosci != null) ...[
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Text(
                         _formatDate(widget.medicine.terminWaznosci!),
                         style: TextStyle(
@@ -209,33 +208,25 @@ class _MedicineCardState extends State<MedicineCard>
 
                     const SizedBox(height: 12),
 
-                    // #tags - uproszczony styl
+                    // #tags - styl neumorficzny
                     if (widget.medicine.tagi.isNotEmpty)
                       Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
+                        spacing: 8,
+                        runSpacing: 8,
                         children: widget.medicine.tagi.take(4).map((tag) {
                           return _buildTag(tag, isDark, theme);
                         }).toList(),
                       ),
 
-                    // Notatka jeśli istnieje
+                    // Notatka jeśli istnieje - styl neumorficzny basin
                     if (widget.medicine.notatka != null &&
                         widget.medicine.notatka!.isNotEmpty) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 8),
                       Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? Colors.transparent
-                              : theme.colorScheme.surfaceContainerHighest
-                                    .withAlpha(128),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isDark
-                                ? theme.dividerColor.withAlpha(50)
-                                : theme.dividerColor,
-                          ),
+                        padding: const EdgeInsets.all(8),
+                        decoration: NeuDecoration.basin(
+                          isDark: isDark,
+                          radius: 12,
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,7 +256,7 @@ class _MedicineCardState extends State<MedicineCard>
 
                     // Data ważności
                     if (widget.medicine.terminWaznosci != null) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           Icon(
@@ -273,7 +264,7 @@ class _MedicineCardState extends State<MedicineCard>
                             size: 14,
                             color: statusColor,
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 8),
                           Text(
                             'Ważny do: ${_formatDate(widget.medicine.terminWaznosci!)}',
                             style: TextStyle(
@@ -353,32 +344,18 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  /// Tag - uproszczony styl (light: szary border, dark: ciemne tło)
+  /// Tag - styl neumorficzny (cienie zamiast border)
   Widget _buildTag(String tag, bool isDark, ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF1e293b) // ciemny slate
-            : Colors.white,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: isDark
-              ? const Color(0xFF334155) // slate-700
-              : const Color(0xFFe2e8f0), // slate-200
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+      child: Text(
+        tag,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: theme.colorScheme.onSurfaceVariant,
         ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            tag,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white : const Color(0xFF1e293b),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -12,7 +12,8 @@ import {
     isBackupFormat,
     type DuplicateAction
 } from '@/lib/storage';
-import type { Medicine } from '@/lib/types';
+import { importLabels } from '@/lib/labelStorage';
+import type { Medicine, UserLabel } from '@/lib/types';
 
 interface ImportFormProps {
     onImportSuccess: (medicines: Medicine[]) => void;
@@ -116,7 +117,12 @@ export default function ImportForm({ onImportSuccess, initialData }: ImportFormP
             let imported: Medicine[];
 
             if (backupFormat) {
-                imported = importBackup(data as { leki: Medicine[] }, actions);
+                // Import etykiet z backupu (jeśli są)
+                const backupData = data as { leki: Medicine[]; labels?: UserLabel[] };
+                if (backupData.labels && Array.isArray(backupData.labels)) {
+                    importLabels({ labels: backupData.labels });
+                }
+                imported = importBackup(backupData, actions);
             } else {
                 const validationResult = validateMedicineImport(data);
                 if (!validationResult.success) {

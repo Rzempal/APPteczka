@@ -29,7 +29,7 @@ class NeuIconButton extends StatefulWidget {
     this.isActive = false,
     this.size = 40,
     this.iconSize = 20,
-    this.borderRadius = 10,
+    this.borderRadius = 12,
     this.activeColor,
     this.iconColor,
   });
