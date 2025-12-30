@@ -122,6 +122,36 @@ export default function DodajLekiPage() {
                 />
             </div>
 
+            {/* 📂 Import z pliku backup - pokazuje się gdy załadowano plik */}
+            {scanResult && (
+                <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
+                    <div className="flex items-start gap-4 mb-4">
+                        <div className="neu-convex flex h-10 w-10 shrink-0 items-center justify-center font-bold" style={{ color: 'var(--color-accent)', borderRadius: '50%' }}>
+                            <SvgIcon name="folder-input" size={20} />
+                        </div>
+                        <div>
+                            <h2 className="font-semibold" style={{ color: 'var(--color-text)' }}>
+                                Zaimportuj dane z pliku
+                            </h2>
+                            <p className="mt-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                                Wykryto {scanResult.leki.length} leków do importu
+                            </p>
+                        </div>
+                        <button
+                            onClick={() => setScanResult(null)}
+                            className="ml-auto neu-btn neu-btn-secondary text-sm"
+                            title="Anuluj import"
+                        >
+                            <SvgIcon name="x-circle" size={16} />
+                        </button>
+                    </div>
+                    <ImportForm
+                        onImportSuccess={handleImportSuccess}
+                        initialData={scanResult}
+                    />
+                </div>
+            )}
+
             {/* Separator - alternatywa ręczna */}
             <details className="group animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
                 <summary className="neu-flat p-4 cursor-pointer flex items-center gap-2 list-none" style={{ color: 'var(--color-text-muted)' }}>
