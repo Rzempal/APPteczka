@@ -50,6 +50,8 @@ class _HomeScreenState extends State<HomeScreen> {
   ViewMode _viewMode = ViewMode.full;
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
+  bool _isFiltersSheetOpen = false;
+  bool _isManagementSheetOpen = false;
 
   @override
   void initState() {
@@ -229,6 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: LucideIcons.settings2,
             onPressed: _showFilterManagement,
             tooltip: 'Zarządzaj filtrami',
+            isActive: _isManagementSheetOpen,
           ),
         ],
       ),
@@ -238,9 +241,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSearchBar(ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: NeuBasinContainer(
-        borderRadius: 12,
-        padding: EdgeInsets.zero,
+      child: Container(
+        decoration: NeuDecoration.pressed(isDark: isDark, radius: 12),
         child: TextField(
           controller: _searchController,
           decoration: InputDecoration(
@@ -336,6 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
             button: NeuIconButton(
               icon: LucideIcons.filter,
               onPressed: _showFilters,
+              isActive: _isFiltersSheetOpen,
             ),
           ),
           const SizedBox(width: 8),
@@ -344,6 +347,10 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: LucideIcons.filterX,
             onPressed: _filterState.hasActiveFilters ? _clearFilters : null,
             tooltip: 'Wyczyść filtry',
+            mode: _filterState.hasActiveFilters
+                ? NeuIconButtonMode.visible
+                : NeuIconButtonMode.iconOnly,
+            iconColor: _filterState.hasActiveFilters ? AppColors.expired : null,
           ),
         ],
       ),
@@ -351,24 +358,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showFilters() {
+    setState(() => _isFiltersSheetOpen = true);
     final labels = widget.storageService.getLabels();
     showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => FiltersSheet(
-        initialState: _filterState,
-        availableTags: _allTags,
-        availableLabels: labels,
-        onApply: (newState) {
-          setState(() {
-            _filterState = newState;
-          });
-        },
-      ),
-    ).then((_) => _loadMedicines()); // Refresh after filter sheet closes
+          context: context,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (context) => FiltersSheet(
+            initialState: _filterState,
+            availableTags: _allTags,
+            availableLabels: labels,
+            onApply: (newState) {
+              setState(() {
+                _filterState = newState;
+              });
+            },
+          ),
+        )
+        .then((_) {
+          _loadMedicines();
+        })
+        .whenComplete(() {
+          if (mounted) setState(() => _isFiltersSheetOpen = false);
+        });
   }
 
   void _clearFilters() {
@@ -379,6 +393,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showFilterManagement() {
+    setState(() => _isManagementSheetOpen = true);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -446,7 +461,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    );
+    ).whenComplete(() {
+      if (mounted) setState(() => _isManagementSheetOpen = false);
+    });
   }
 
   void _showLabelManagement() {

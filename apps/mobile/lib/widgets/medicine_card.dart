@@ -393,7 +393,9 @@ class _MedicineCardState extends State<MedicineCard>
       case ExpiryStatus.valid:
         return isDark
             ? AppColors.darkGradientValid
-            : AppColors.lightGradientValid;
+            : const LinearGradient(
+                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
+              );
       case ExpiryStatus.unknown:
         // Neutral gradient - light gray
         return LinearGradient(
@@ -401,7 +403,7 @@ class _MedicineCardState extends State<MedicineCard>
           end: Alignment.bottomRight,
           colors: isDark
               ? [const Color(0xFF1e293b), const Color(0xFF334155)]
-              : [const Color(0xFFF3F4F6), const Color(0xFFE5E7EB)],
+              : [const Color(0xFFe0e8e4), const Color(0xFFe0e8e4)],
         );
     }
   }
