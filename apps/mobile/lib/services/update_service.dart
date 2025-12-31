@@ -11,6 +11,7 @@ class UpdateService extends ChangeNotifier {
       'https://michalrapala.app/releases/version.json';
 
   String? _currentVersion;
+  String? _currentVersionName; // Full version like 0.1.253651505
   String? _latestVersion;
   String? _apkUrl;
   bool _updateAvailable = false;
@@ -22,6 +23,7 @@ class UpdateService extends ChangeNotifier {
 
   // Getters
   String? get currentVersion => _currentVersion;
+  String? get currentVersionName => _currentVersionName; // User-visible version
   String? get latestVersion => _latestVersion;
   bool get updateAvailable => _updateAvailable;
   double get downloadProgress => _downloadProgress;
@@ -34,8 +36,10 @@ class UpdateService extends ChangeNotifier {
   Future<void> init() async {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
-      // Use buildNumber as version (format: YYYYMMDD_HHMM)
+      // buildNumber for comparison (versionCode: yyDDDHHmm)
       _currentVersion = packageInfo.buildNumber;
+      // version for display (versionName: 0.1.253651505)
+      _currentVersionName = packageInfo.version;
       notifyListeners();
 
       // Auto-check for updates on init

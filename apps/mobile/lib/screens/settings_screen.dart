@@ -22,21 +22,42 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen>
+    with SingleTickerProviderStateMixin {
+  bool _badgeVisible = false; // Badge hidden until manual check
+  late AnimationController _dotsController;
+
   @override
   void initState() {
     super.initState();
+    _badgeVisible = false; // Reset on entry
     widget.updateService.addListener(_onUpdateServiceChanged);
+    _dotsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat();
   }
 
   @override
   void dispose() {
     widget.updateService.removeListener(_onUpdateServiceChanged);
+    _dotsController.dispose();
     super.dispose();
   }
 
   void _onUpdateServiceChanged() {
+    // Show badge after check completes
+    if (widget.updateService.status == UpdateStatus.idle &&
+        (widget.updateService.isUpToDate ||
+            widget.updateService.updateAvailable)) {
+      _badgeVisible = true;
+    }
     if (mounted) setState(() {});
+  }
+
+  Future<void> _handleCheckUpdate() async {
+    await widget.updateService.checkForUpdate();
+    // Badge will be shown via _onUpdateServiceChanged
   }
 
   @override
@@ -116,22 +137,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       Row(
                         children: [
                           Text(
-                            'Aktualizacje',
+                            'Sprawdź aktualizacje',
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          // Status badge
-                          if (updateAvailable)
-                            _buildStatusBadge('Dostępna!', AppColors.primary)
-                          else if (isUpToDate)
-                            _buildStatusBadge('Aktualna', AppColors.valid),
+                          // Status badge (only visible after manual check or during checking)
+                          if (status == UpdateStatus.checking)
+                            _buildAnimatedCheckingBadge()
+                          else if (_badgeVisible && updateAvailable)
+                            _buildStatusBadge(
+                              'Dostępna!',
+                              AppColors.primary,
+                              isAccent: true,
+                            )
+                          else if (_badgeVisible && isUpToDate)
+                            _buildStatusBadge(
+                              'Aktualna',
+                              theme.colorScheme.onSurfaceVariant,
+                              isAccent: false,
+                            ),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Wersja: ${updateService.currentVersion ?? "Nieznana"}',
+                        'Wersja: v${updateService.currentVersionName ?? updateService.currentVersion ?? "Nieznana"}',
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -149,30 +180,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                 ),
-                // Compact Sprawdź button
+                // Compact Sprawdz button
                 GestureDetector(
                   onTap:
                       status == UpdateStatus.checking ||
                           status == UpdateStatus.downloading
                       ? null
-                      : () => updateService.checkForUpdate(),
+                      : _handleCheckUpdate,
                   child: Container(
                     padding: const EdgeInsets.all(10),
-                    decoration: NeuDecoration.flat(isDark: isDark, radius: 10),
-                    child: status == UpdateStatus.checking
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: theme.colorScheme.primary,
-                            ),
-                          )
-                        : Icon(
-                            LucideIcons.refreshCw,
-                            size: 20,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                    decoration: status == UpdateStatus.checking
+                        ? NeuDecoration.pressed(isDark: isDark, radius: 10)
+                        : NeuDecoration.flat(isDark: isDark, radius: 10),
+                    child: Icon(
+                      LucideIcons.refreshCw,
+                      size: 20,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
               ],
@@ -282,21 +306,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildStatusBadge(String text, Color color) {
+  Widget _buildStatusBadge(String text, Color color, {bool isAccent = true}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withAlpha(30),
+        color: color.withAlpha(isAccent ? 30 : 20),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         text,
         style: TextStyle(
           fontSize: 10,
-          fontWeight: FontWeight.bold,
+          fontWeight: isAccent ? FontWeight.bold : FontWeight.normal,
           color: color,
         ),
       ),
+    );
+  }
+
+  Widget _buildAnimatedCheckingBadge() {
+    return AnimatedBuilder(
+      animation: _dotsController,
+      builder: (context, child) {
+        final dotCount = (_dotsController.value * 4).floor() % 4;
+        final dots = '.' * dotCount;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(15),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            'Sprawdzam$dots',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.normal,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        );
+      },
     );
   }
 
