@@ -12,29 +12,42 @@ Instrukcja tworzenia i wdrażania nowych wersji aplikacji APPteczka.
 Skrypt automatycznie:
 
 1. Buduje APK w trybie release.
-2. Kopiuje plik do `releases/` z nazwą `Pudelko_na_leki_<RRRRMMDD_HHMM>.apk`.
-3. Generuje/aktualizuje `version.json`.
+2. Generuje wersję `v0.1.253651452`.
+3. Kopiuje plik do `releases/`.
+4. Generuje `version.json`.
 
-## Wersjonowanie
+## Strategia Wersjonowania
 
-### Build Number (Android versionCode)
+### Format
 
-Format: `(Rok-2024)MMDDHHmm`
+```
+versionName: Major.Minor.Timestamp
+versionCode: Timestamp (tylko liczba)
+```
 
-| Data/Czas | Build Number |
-|-----------|--------------|
-| 2025-12-31 08:31 | `112310831` |
-| 2026-06-15 14:00 | `206151400` |
+### Składniki
 
-- Unika limitu Androida (max 2.1 mld).
-- Bezpieczne do 2045 roku.
-- Zawsze rosnące (wymagane przez Google Play).
+| Pole | Wartość | Opis |
+|------|---------|------|
+| `Major` | 0 | Faza rozwoju (1 = beta) |
+| `Minor` | 1 | Funkcjonalna (rośnie przy nowych funkcjach) |
+| `Timestamp` | `yyDDDHHmm` | yy=rok, DDD=dzień roku, HH=godz, mm=min |
 
-### Nazwa Pliku APK
+### Przykład (2025-12-31 14:52)
 
-`Pudelko_na_leki_<RRRRMMDD_HHMM>.apk`
+```
+versionName: 0.1.253651452
+versionCode: 253651452
+APK: Pudelko_na_leki_0.1.253651452.apk
+```
 
-Przykład: `Pudelko_na_leki_20251231_0831.apk`
+### Co robisz jako developer
+
+| Typ Release | Edycja pubspec.yaml? | Co się zmienia? |
+|-------------|---------------------|-----------------|
+| **Patch** | ❌ Nie | Tylko timestamp |
+| **Minor** | ✅ `0.1` → `0.2` | Minor + timestamp |
+| **Major** | ✅ `0.2` → `1.0` | Major + timestamp |
 
 ## Struktura Plików
 
@@ -42,84 +55,27 @@ Przykład: `Pudelko_na_leki_20251231_0831.apk`
 APPteczka/
 ├── scripts/
 │   ├── deploy_apk.ps1    # Główny skrypt
-│   └── run_deploy.bat    # Wrapper (uruchamia PowerShell)
+│   └── run_deploy.bat    # Wrapper
 ├── releases/
 │   ├── Pudelko_na_leki_*.apk
-│   └── version.json      # Metadane dla OTA
-└── .env                  # Konfiguracja uploadu (opcjonalne)
+│   └── version.json
+└── apps/mobile/
+    └── pubspec.yaml      # Major.Minor tutaj
 ```
 
-## Konfiguracja Uploadu (Opcjonalne)
-
-Aby włączyć automatyczny upload przez WinSCP, utwórz plik `.env`:
-
-```env
-DEPLOY_HOST=michalrapala.app
-DEPLOY_USER=twoj_login_ftp
-DEPLOY_PASS=twoje_haslo_ftp
-DEPLOY_REMOTE_PATH=/public_html/releases/
-```
-
-Następnie uruchom skrypt **bez** flagi `-SkipUpload`:
-
-```powershell
-.\scripts\deploy_apk.ps1 -SkipUpload:$false
-```
-
-## Opcje Skryptu
-
-| Flaga | Domyślnie | Opis |
-|-------|-----------|------|
-| `-SkipBuild` | `$false` | Pomija budowanie APK |
-| `-SkipUpload` | `$true` | Pomija upload na serwer |
-
-## System OTA (Over-The-Air Updates)
-
-Aplikacja automatycznie sprawdza nowe wersje z:
-`http://michalrapala.app/releases/version.json`
-
-### Format version.json
+## Format version.json
 
 ```json
 {
-  "version": "20251231_0831",
-  "apkUrl": "http://michalrapala.app/releases/Pudelko_na_leki_20251231_0831.apk",
-  "releaseDate": "2025-12-31T08:31:00Z"
+  "version": "0.1.253651452",
+  "versionCode": 253651452,
+  "apkUrl": "https://michalrapala.app/releases/Pudelko_na_leki_0.1.253651452.apk",
+  "releaseDate": "2025-12-31T14:52:00Z"
 }
 ```
 
-### UI Aktualizacji
+## System OTA
 
-- **HomeScreen**: Badge "Aktualizacja" (nawiguje do ustawień).
-- **SettingsScreen**: Sekcja z przyciskami "Sprawdź" i "Aktualizuj".
-
-## Zmiany Techniczne (2025-12-31)
-
-### Nowe Pliki
-
-- `lib/services/update_service.dart` - Logika OTA.
-- `scripts/deploy_apk.ps1` - Skrypt deploymentu.
-- `scripts/run_deploy.bat` - Wrapper.
-
-### Zmodyfikowane Pliki
-
-- `pubspec.yaml` - Dodano `ota_update`, `package_info_plus`.
-- `android/app/build.gradle.kts` - Core Library Desugaring.
-- `lib/main.dart` - Integracja `UpdateService`.
-- `lib/screens/home_screen.dart` - Badge aktualizacji.
-- `lib/screens/settings_screen.dart` - Sekcja aktualizacji.
-- `lib/widgets/neumorphic/neu_button.dart` - Parametr `child`.
-
-## Troubleshooting
-
-### Błąd: "buildNumber is greater than maximum"
-
-Stary format wersjonowania (`YYYYMMDDHHmm`) przekraczał limit. Naprawione przez Offset Date.
-
-### Błąd: "requires core library desugaring"
-
-Dodano `isCoreLibraryDesugaringEnabled = true` i zależność `desugar_jdk_libs:2.1.4` w `build.gradle.kts`.
-
-### Błąd: "TerminatorExpectedAtEndOfString"
-
-Polskie znaki w skrypcie PowerShell. Naprawione przez ASCII-only.
+- `versionCode` porównywane jako int
+- Automatyczne sprawdzanie przy starcie
+- Badge "Aktualizacja" na stronie głównej

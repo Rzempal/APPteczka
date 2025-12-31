@@ -59,13 +59,13 @@ class UpdateService extends ChangeNotifier {
         _latestVersion = data['version'] as String?;
         _apkUrl = data['apkUrl'] as String?;
 
-        // Read buildNumber from JSON for comparison
-        final latestBuildNumber = data['buildNumber'] as int?;
+        // Read versionCode from JSON for comparison (yyDDDHHmm format)
+        final latestVersionCode = data['versionCode'] as int?;
 
-        if (latestBuildNumber != null && _currentVersion != null) {
-          // Parse current version as int for comparison
-          final currentBuildNumber = int.tryParse(_currentVersion!) ?? 0;
-          _updateAvailable = latestBuildNumber > currentBuildNumber;
+        if (latestVersionCode != null && _currentVersion != null) {
+          // Parse current version (buildNumber) as int for comparison
+          final currentVersionCode = int.tryParse(_currentVersion!) ?? 0;
+          _updateAvailable = latestVersionCode > currentVersionCode;
           _isUpToDate = !_updateAvailable;
         }
 

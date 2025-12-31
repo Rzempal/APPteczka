@@ -61,19 +61,50 @@ $DEPLOY_USER = if ($env:DEPLOY_USER) { $env:DEPLOY_USER } else { "" }
 $DEPLOY_PASS = if ($env:DEPLOY_PASS) { $env:DEPLOY_PASS } else { "" }
 $DEPLOY_PROTOCOL = if ($env:DEPLOY_PROTOCOL) { $env:DEPLOY_PROTOCOL } else { "sftp" }
 $DEPLOY_REMOTE_PATH = if ($env:DEPLOY_REMOTE_PATH) { $env:DEPLOY_REMOTE_PATH } else { "/public_html/releases/" }
-$DEPLOY_PUBLIC_URL = if ($env:DEPLOY_PUBLIC_URL) { $env:DEPLOY_PUBLIC_URL } else { "http://michalrapala.app/releases" }
+$DEPLOY_PUBLIC_URL = if ($env:DEPLOY_PUBLIC_URL) { $env:DEPLOY_PUBLIC_URL } else { "https://michalrapala.app/releases" }
 
-$VERSION = Get-Date -Format "yyyyMMdd_HHmm"
-# Format YYMMDDHHmm (np. 2512310800) przekracza limit Androida (2.1 mld).
-# Stosujemy offset od roku 2024: (Rok-2024)MMDDHHmm.
-# 2025 -> 1MMDDHHmm (np. 112310805). Bezpieczne do 2045 roku.
+# ========================================
+# Semantic Versioning: Major.Minor.Timestamp
+# ========================================
+# versionName: Major.Minor.Timestamp (user-visible)
+# versionCode: Timestamp only (yyDDDHHmm) - for Android
+#
+# Timestamp format: yy + DDD + HH + mm
+#   yy  = 2-digit year (25 for 2025)
+#   DDD = day of year (001-366)
+#   HH  = hour (00-23)
+#   mm  = minute (00-59)
+#
+# Example: 2025-12-31 14:52 -> 253651452
+# ========================================
+
+# Read Major.Minor from pubspec.yaml
+$PUBSPEC_PATH = Join-Path $MOBILE_DIR "pubspec.yaml"
+$PubspecContent = Get-Content $PUBSPEC_PATH -Raw
+if ($PubspecContent -match 'version:\s*(\d+)\.(\d+)\.') {
+    $MAJOR = $Matches[1]
+    $MINOR = $Matches[2]
+}
+else {
+    $MAJOR = "0"
+    $MINOR = "1"
+    Print-Warn "Nie znaleziono wersji w pubspec.yaml, uzywam domyslnej: $MAJOR.$MINOR"
+}
+
+# Generate timestamp: yyDDDHHmm
 $Date = Get-Date
-$YearOffset = $Date.Year - 2024
-$BUILD_NUMBER = "{0}{1:MMddHHmm}" -f $YearOffset, $Date
-$APK_NAME = "Pudelko_na_leki_$VERSION.apk"
+$Year2Digit = $Date.ToString("yy")
+$DayOfYear = $Date.DayOfYear.ToString("000")
+$HourMinute = $Date.ToString("HHmm")
+$TIMESTAMP = "$Year2Digit$DayOfYear$HourMinute"
 
-Print-Info "Wersja pliku: $VERSION"
-Print-Info "Build Number: $BUILD_NUMBER (Offset Date)"
+# Full version strings
+$VERSION_NAME = "$MAJOR.$MINOR.$TIMESTAMP"
+$VERSION_CODE = [int64]$TIMESTAMP
+$APK_NAME = "Pudelko_na_leki_$VERSION_NAME.apk"
+
+Print-Info "Wersja: v$VERSION_NAME"
+Print-Info "versionCode: $VERSION_CODE (yyDDDHHmm)"
 Print-Info "APK: $APK_NAME"
 Write-Host ""
 
@@ -83,7 +114,7 @@ if (-not $SkipBuild) {
     Push-Location $MOBILE_DIR
     
     try {
-        flutter build apk --release --build-number=$BUILD_NUMBER
+        flutter build apk --release --build-name=$VERSION_NAME --build-number=$VERSION_CODE
         
         if ($LASTEXITCODE -ne 0) {
             Pop-Location
@@ -120,8 +151,8 @@ Print-Success "[2/4] APK skopiowane: $APK_NAME"
 # 3. Generowanie version.json
 Print-Warn "[3/4] Generowanie version.json..."
 $VERSION_JSON = @{
-    version     = $VERSION
-    buildNumber = [int]$BUILD_NUMBER
+    version     = $VERSION_NAME
+    versionCode = $VERSION_CODE
     apkUrl      = "$DEPLOY_PUBLIC_URL/$APK_NAME"
     releaseDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
 } | ConvertTo-Json -Depth 2
