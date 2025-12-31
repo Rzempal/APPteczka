@@ -59,7 +59,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | **Styl** | Główny motyw | Neumorphism | Neumorphism | Spójny styl z wersją Web |
 | **Tryb Ciemny** | Dark Mode | ✅ Tak | ✅ Tak | Mobile: 3-way toggle (System/Light/Dark) |
-| **Nawigacja** | Struktura | 4 Tabs | Bottom Bar | Zarządzaj / Apteczka / Dodaj / Ustawienia |
+| **Nawigacja** | Struktura | 3 Tabs | Bottom Bar | Apteczka / Dodaj / Ustawienia |
 | **Widok listy** | Kompaktowy / Pełny | ✅ Tak | ✅ Tak | Toggle w toolbarze |
 | **Responsywność** | Mobile/Tablet/Desktop | ✅ Tak | ✅ Tak | Flutter skaluje się natywnie |
 | **Feedback** | Toasty/Snackbary | ✅ Tak | ✅ Tak | Potwierdzenia akcji |
@@ -75,4 +75,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-29
+> 📅 **Ostatnia aktualizacja:** 2025-12-31

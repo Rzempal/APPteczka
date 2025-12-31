@@ -5,7 +5,6 @@ import 'services/theme_provider.dart';
 import 'services/update_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_medicine_screen.dart';
-import 'screens/manage_screen.dart';
 import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -85,9 +84,8 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 1; // Domyślnie Apteczka (drugi tab)
+  int _currentIndex = 0; // Domyślnie Apteczka (pierwszy tab)
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
-  final GlobalKey<ManageScreenState> _manageKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -98,17 +96,7 @@ class _MainNavigationState extends State<MainNavigation> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          // 0: Zarządzaj apteczką
-          ManageScreen(
-            key: _manageKey,
-            storageService: widget.storageService,
-            onNavigateToAdd: () {
-              setState(() {
-                _currentIndex = 2; // Navigate to Dodaj tab
-              });
-            },
-          ),
-          // 1: Apteczka (domyślny)
+          // 0: Apteczka (domyślny)
           _HomeScreenWrapper(
             key: _homeKey,
             storageService: widget.storageService,
@@ -116,13 +104,13 @@ class _MainNavigationState extends State<MainNavigation> {
             updateService: widget.updateService,
             onNavigateToSettings: () {
               setState(() {
-                _currentIndex = 3; // Navigate to Ustawienia tab
+                _currentIndex = 2; // Navigate to Ustawienia tab
               });
             },
           ),
-          // 2: Dodaj
+          // 1: Dodaj
           AddMedicineScreen(storageService: widget.storageService),
-          // 3: Ustawienia
+          // 2: Ustawienia
           SettingsScreen(
             storageService: widget.storageService,
             themeProvider: widget.themeProvider,
@@ -161,17 +149,10 @@ class _MainNavigationState extends State<MainNavigation> {
             });
             // Odśwież widok po przełączeniu taba
             if (index == 0) {
-              _manageKey.currentState?.refresh();
-            } else if (index == 1) {
               _homeKey.currentState?.refresh();
             }
           },
           destinations: const [
-            NavigationDestination(
-              icon: Icon(LucideIcons.folderCog),
-              selectedIcon: Icon(LucideIcons.folderCog),
-              label: 'Zarządzaj',
-            ),
             NavigationDestination(
               icon: Icon(LucideIcons.briefcaseMedical),
               selectedIcon: Icon(LucideIcons.briefcaseMedical),

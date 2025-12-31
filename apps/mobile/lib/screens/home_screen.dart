@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
@@ -152,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             // Line 1: Logo + Title
-            _buildHeaderLine1(theme),
+            _buildHeaderLine1(theme, isDark),
 
             // Line 2: Search bar
             _buildSearchBar(theme, isDark),
@@ -211,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeaderLine1(ThemeData theme) {
+  Widget _buildHeaderLine1(ThemeData theme, bool isDark) {
     final updateAvailable = widget.updateService.updateAvailable;
 
     return Container(
@@ -280,12 +281,33 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
           const Spacer(),
-          // Zarządzaj filtrami (przeniesiony z toolbara)
-          NeuIconButton(
-            icon: LucideIcons.settings2,
-            onPressed: _showFilterManagement,
-            tooltip: 'Zarządzaj filtrami',
-            isActive: _isManagementSheetOpen,
+          // Zarządzaj Apteczką - przycisk z ikoną i tekstem
+          GestureDetector(
+            onTap: _showFilterManagement,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: _isManagementSheetOpen
+                  ? NeuDecoration.pressed(isDark: isDark, radius: 12)
+                  : NeuDecoration.flat(isDark: isDark, radius: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.boxes,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Zarządzaj',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -464,71 +486,240 @@ class _HomeScreenState extends State<HomeScreen> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Icon(LucideIcons.settings2, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Text(
-                  'Zarządzaj filtrami',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    LucideIcons.briefcaseMedical,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Zarządzaj Apteczką',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Zarządzaj etykietami
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.tags,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Zarządzaj etykietami
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-                child: Icon(LucideIcons.tags, color: theme.colorScheme.primary),
+                title: const Text('Zarządzaj etykietami'),
+                subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showLabelManagement();
+                },
               ),
-              title: const Text('Zarządzaj etykietami'),
-              subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
-              trailing: const Icon(LucideIcons.chevronRight),
-              onTap: () {
-                Navigator.pop(context);
-                _showLabelManagement();
-              },
-            ),
 
-            const Divider(height: 24),
+              const Divider(height: 24),
 
-            // Zarządzaj tagami (inne)
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-                child: Icon(LucideIcons.hash, color: theme.colorScheme.primary),
+              // Zarządzaj tagami
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.hash,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                title: const Text('Zarządzaj tagami'),
+                subtitle: const Text('Usuń niestandardowe tagi z apteczki'),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showTagManagement();
+                },
               ),
-              title: const Text('Zarządzaj tagami'),
-              subtitle: const Text('Usuń niestandardowe tagi z apteczki'),
-              trailing: const Icon(LucideIcons.chevronRight),
-              onTap: () {
-                Navigator.pop(context);
-                _showTagManagement();
-              },
-            ),
 
-            const SizedBox(height: 16),
-          ],
+              const Divider(height: 24),
+
+              // Skopiuj listę leków
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.list,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                title: const Text('Skopiuj listę leków'),
+                subtitle: const Text('Format: "lek1, lek2, lek3, ..."'),
+                trailing: const Icon(LucideIcons.copy),
+                onTap: () {
+                  Navigator.pop(context);
+                  _copyMedicineList();
+                },
+              ),
+
+              const Divider(height: 24),
+
+              // Tabela do PDF (coming soon)
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.fileSpreadsheet,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                title: Row(
+                  children: [
+                    const Text('Tabela leków do PDF'),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Wkrótce',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                subtitle: const Text(
+                  'Eksportuj tabelę leków gotową do wydruku',
+                ),
+                enabled: false,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Disclaimer
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.expiringSoon.withAlpha(30)
+                      : AppColors.expiringSoon.withAlpha(20),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.expiringSoon.withAlpha(100),
+                  ),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      LucideIcons.shieldAlert,
+                      color: AppColors.expiringSoon,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Informacja prawna',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.expiringSoon,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Aplikacja "Pudełko na leki" służy wyłącznie do organizacji domowej apteczki. Nie jest to wyrób medyczny. Przed użyciem leku zawsze skonsultuj się z lekarzem lub farmaceutą.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isDark
+                                  ? theme.colorScheme.onSurface
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     ).whenComplete(() {
       if (mounted) setState(() => _isManagementSheetOpen = false);
     });
+  }
+
+  /// Kopiuje listę nazw leków do schowka
+  Future<void> _copyMedicineList() async {
+    final medicines = widget.storageService.getMedicines();
+    if (medicines.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Brak leków do skopiowania'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    final names = medicines.map((m) => m.nazwa ?? 'Bez nazwy').toList();
+    final text = names.join(', ');
+    await Clipboard.setData(ClipboardData(text: text));
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Skopiowano ${medicines.length} leków do schowka'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _showLabelManagement() {
