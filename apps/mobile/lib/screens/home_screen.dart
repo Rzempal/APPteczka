@@ -4,6 +4,7 @@ import '../models/medicine.dart';
 import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/theme_provider.dart';
+import '../services/update_service.dart';
 import '../widgets/medicine_card.dart';
 import '../widgets/filters_sheet.dart';
 import '../theme/app_theme.dart';
@@ -32,11 +33,15 @@ enum ViewMode { list, full }
 class HomeScreen extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
+  final UpdateService updateService;
+  final VoidCallback? onNavigateToSettings;
 
   const HomeScreen({
     super.key,
     required this.storageService,
     required this.themeProvider,
+    required this.updateService,
+    this.onNavigateToSettings,
   });
 
   @override
@@ -52,16 +57,29 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isFiltersSheetOpen = false;
   bool _isManagementSheetOpen = false;
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _loadMedicines();
+    _searchFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
+    // Check for updates on init
+    widget.updateService.addListener(_onUpdateChanged);
+    widget.updateService.checkForUpdate();
+  }
+
+  void _onUpdateChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
+    widget.updateService.removeListener(_onUpdateChanged);
     super.dispose();
   }
 
@@ -194,6 +212,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeaderLine1(ThemeData theme) {
+    final updateAvailable = widget.updateService.updateAvailable;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -225,6 +245,40 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppColors.primary,
             ),
           ),
+          // Update badge
+          if (updateAvailable) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: widget.onNavigateToSettings,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(30),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary.withAlpha(80)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.download,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Aktualizacja',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           const Spacer(),
           // Zarządzaj filtrami (przeniesiony z toolbara)
           NeuIconButton(
@@ -241,18 +295,29 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSearchBar(ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        decoration: NeuDecoration.pressed(isDark: isDark, radius: 12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: _searchFocusNode.hasFocus
+            ? NeuDecoration.pressedSmall(isDark: isDark, radius: 24)
+            : NeuDecoration.flatSmall(isDark: isDark, radius: 24),
         child: TextField(
           controller: _searchController,
+          focusNode: _searchFocusNode,
           decoration: InputDecoration(
             hintText: 'Szukaj leku...',
-            prefixIcon: const Icon(LucideIcons.packageSearch),
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            prefixIcon: Icon(
+              LucideIcons.search,
+              size: 20,
+              color: theme.colorScheme.primary,
+            ),
+            filled: false,
+            fillColor: Colors.transparent,
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
-            filled: true,
-            fillColor: Colors.transparent,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,

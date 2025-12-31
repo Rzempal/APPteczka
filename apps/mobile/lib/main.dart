@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'services/storage_service.dart';
 import 'services/theme_provider.dart';
+import 'services/update_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_medicine_screen.dart';
 import 'screens/manage_screen.dart';
@@ -19,10 +20,15 @@ void main() async {
   final themeProvider = ThemeProvider();
   await themeProvider.init();
 
+  // Inicjalizacja update service
+  final updateService = UpdateService();
+  await updateService.init();
+
   runApp(
     PudelkoNaLekiApp(
       storageService: storageService,
       themeProvider: themeProvider,
+      updateService: updateService,
     ),
   );
 }
@@ -30,11 +36,13 @@ void main() async {
 class PudelkoNaLekiApp extends StatelessWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
+  final UpdateService updateService;
 
   const PudelkoNaLekiApp({
     super.key,
     required this.storageService,
     required this.themeProvider,
+    required this.updateService,
   });
 
   @override
@@ -51,6 +59,7 @@ class PudelkoNaLekiApp extends StatelessWidget {
           home: MainNavigation(
             storageService: storageService,
             themeProvider: themeProvider,
+            updateService: updateService,
           ),
         );
       },
@@ -62,11 +71,13 @@ class PudelkoNaLekiApp extends StatelessWidget {
 class MainNavigation extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
+  final UpdateService updateService;
 
   const MainNavigation({
     super.key,
     required this.storageService,
     required this.themeProvider,
+    required this.updateService,
   });
 
   @override
@@ -102,6 +113,12 @@ class _MainNavigationState extends State<MainNavigation> {
             key: _homeKey,
             storageService: widget.storageService,
             themeProvider: widget.themeProvider,
+            updateService: widget.updateService,
+            onNavigateToSettings: () {
+              setState(() {
+                _currentIndex = 3; // Navigate to Ustawienia tab
+              });
+            },
           ),
           // 2: Dodaj
           AddMedicineScreen(storageService: widget.storageService),
@@ -109,6 +126,7 @@ class _MainNavigationState extends State<MainNavigation> {
           SettingsScreen(
             storageService: widget.storageService,
             themeProvider: widget.themeProvider,
+            updateService: widget.updateService,
           ),
         ],
       ),
@@ -180,11 +198,15 @@ class _MainNavigationState extends State<MainNavigation> {
 class _HomeScreenWrapper extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
+  final UpdateService updateService;
+  final VoidCallback onNavigateToSettings;
 
   const _HomeScreenWrapper({
     super.key,
     required this.storageService,
     required this.themeProvider,
+    required this.updateService,
+    required this.onNavigateToSettings,
   });
 
   @override
@@ -206,6 +228,8 @@ class _HomeScreenWrapperState extends State<_HomeScreenWrapper> {
       key: _refreshKey,
       storageService: widget.storageService,
       themeProvider: widget.themeProvider,
+      updateService: widget.updateService,
+      onNavigateToSettings: widget.onNavigateToSettings,
     );
   }
 }

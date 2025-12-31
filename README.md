@@ -21,6 +21,7 @@ Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, ś
 - ✅ Sortowanie leków (A-Z, termin ważności)
 - ✅ 3-tabowa nawigacja (Apteczka, Dodaj leki, Kopia zapasowa)
 - ✅ Design neumorficzny z animacjami scroll
+- ✅ **Aktualizacje OTA** – automatyczne sprawdzanie i instalacja nowych wersji APK
 - ✅ 100% offline – dane lokalne w przeglądarce
 
 ---
@@ -104,6 +105,7 @@ Szczegóły: [docs/road_map.md](docs/road_map.md)
 | [Architektura](docs/architecture.md) | Stack, przepływ danych |
 | [Road Map](docs/road_map.md) | Plan rozwoju projektu |
 | [Model Danych](docs/data_model.md) | Encje, schematy |
+| [Release Guide](docs/release.md) | Deployment APK i OTA |
 | [Bezpieczeństwo](docs/security.md) | Lokalne dane, disclaimer |
 
 ---
@@ -130,4 +132,4 @@ MIT License
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-27
+> 📅 **Ostatnia aktualizacja:** 2025-12-31

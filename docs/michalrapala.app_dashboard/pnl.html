@@ -618,13 +618,13 @@
                         Otwórz wersję webową
                     </a>
 
-                    <a href="http://michalrapala.app/releases/Pudelko_na_leki.apk" class="btn btn-primary"
-                        target="_blank" rel="noopener">
+                    <a href="#" id="apkDownloadBtn" class="btn btn-primary" target="_blank" rel="noopener"
+                        onclick="return this.href !== '#'">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
                             <line x1="12" y1="18" x2="12.01" y2="18" />
                         </svg>
-                        Pobierz APK na Android
+                        <span id="apkBtnText">Pobierz APK na Android</span>
                     </a>
                 </div>
             </div>
@@ -806,7 +806,41 @@
 
             // Initialize video animation
             initVideoAnimation();
+
+            // Fetch latest APK version from version.json
+            fetchLatestApkVersion();
         })();
+
+        // ========================================
+        // Fetch Latest APK Version
+        // ========================================
+        async function fetchLatestApkVersion() {
+            const btn = document.getElementById('apkDownloadBtn');
+            const btnText = document.getElementById('apkBtnText');
+            const versionUrl = 'https://michalrapala.app/releases/version.json';
+
+            // Loading state
+            btnText.textContent = 'Ladowanie...';
+
+            try {
+                const response = await fetch(versionUrl + '?t=' + Date.now()); // Cache-bust
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const data = await response.json();
+
+                if (data.apkUrl) {
+                    // Ensure https
+                    btn.href = data.apkUrl.replace('http://', 'https://');
+                }
+                if (data.version) {
+                    btnText.textContent = 'Pobierz APK (v' + data.version + ')';
+                }
+            } catch (error) {
+                console.warn('Nie udalo sie pobrac wersji APK:', error);
+                // Fallback: link to releases folder
+                btn.href = 'https://michalrapala.app/releases/';
+                btnText.textContent = 'Pobierz APK (zobacz folder)';
+            }
+        }
     </script>
 </body>
 

@@ -54,6 +54,10 @@ dependencies:
   # Theme persistence
   shared_preferences: ^2.2.2
 
+  # Auto-update OTA
+  package_info_plus: ^8.0.0
+  ota_update: ^7.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

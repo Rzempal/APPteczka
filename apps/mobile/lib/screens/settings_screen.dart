@@ -1,18 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/theme_provider.dart';
+import '../services/update_service.dart';
 import '../widgets/neumorphic/neumorphic.dart';
+import '../theme/app_theme.dart';
 
-/// Ekran ustawień aplikacji (uproszczony)
-class SettingsScreen extends StatelessWidget {
+/// Ekran ustawień aplikacji
+class SettingsScreen extends StatefulWidget {
   final dynamic storageService; // kept for API compatibility
   final ThemeProvider themeProvider;
+  final UpdateService updateService;
 
   const SettingsScreen({
     super.key,
     required this.storageService,
     required this.themeProvider,
+    required this.updateService,
   });
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    widget.updateService.addListener(_onUpdateServiceChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.updateService.removeListener(_onUpdateServiceChanged);
+    super.dispose();
+  }
+
+  void _onUpdateServiceChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +58,10 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Aktualizacje
+          _buildUpdateSection(context, theme, isDark),
+          const SizedBox(height: 24),
+
           // Synchronizacja (coming soon)
           _buildSyncSection(context, theme, isDark),
           const SizedBox(height: 24),
@@ -43,6 +72,244 @@ class SettingsScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildUpdateSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final updateService = widget.updateService;
+    final status = updateService.status;
+    final updateAvailable = updateService.updateAvailable;
+    final isUpToDate = updateService.isUpToDate;
+
+    return Container(
+      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row: Icon + Title/Status + Sprawdź button
+            Row(
+              children: [
+                // Icon
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: NeuDecoration.basin(isDark: isDark, radius: 10),
+                  child: Icon(
+                    LucideIcons.download,
+                    color: updateAvailable
+                        ? AppColors.primary
+                        : isUpToDate
+                        ? AppColors.valid
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Title + Version + Last check
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Aktualizacje',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          // Status badge
+                          if (updateAvailable)
+                            _buildStatusBadge('Dostępna!', AppColors.primary)
+                          else if (isUpToDate)
+                            _buildStatusBadge('Aktualna', AppColors.valid),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Wersja: ${updateService.currentVersion ?? "Nieznana"}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (updateService.lastCheckTime != null)
+                        Text(
+                          'Sprawdzono: ${_formatLastCheck(updateService.lastCheckTime!)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant.withAlpha(
+                              150,
+                            ),
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                // Compact Sprawdź button
+                GestureDetector(
+                  onTap:
+                      status == UpdateStatus.checking ||
+                          status == UpdateStatus.downloading
+                      ? null
+                      : () => updateService.checkForUpdate(),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: NeuDecoration.flat(isDark: isDark, radius: 10),
+                    child: status == UpdateStatus.checking
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.primary,
+                            ),
+                          )
+                        : Icon(
+                            LucideIcons.refreshCw,
+                            size: 20,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                  ),
+                ),
+              ],
+            ),
+
+            // Progress bar for download
+            if (status == UpdateStatus.downloading) ...[
+              const SizedBox(height: 16),
+              LinearProgressIndicator(
+                value: updateService.downloadProgress / 100,
+                backgroundColor: isDark
+                    ? AppColors.darkShadowDark
+                    : AppColors.lightShadowDark,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Pobieranie: ${updateService.downloadProgress.toStringAsFixed(0)}%',
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+
+            // Error message
+            if (status == UpdateStatus.error &&
+                updateService.errorMessage != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.expired.withAlpha(20),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      LucideIcons.circleAlert,
+                      size: 16,
+                      color: AppColors.expired,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        updateService.errorMessage!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.expired,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Aktualizuj button (only when update available)
+            if (updateAvailable) ...[
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  // New version info
+                  Expanded(
+                    child: Text(
+                      '→ Nowa: ${updateService.latestVersion}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  // Aktualizuj button
+                  NeuButton.primary(
+                    onPressed:
+                        status == UpdateStatus.downloading ||
+                            status == UpdateStatus.installing
+                        ? null
+                        : () => updateService.startUpdate(),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (status == UpdateStatus.downloading ||
+                            status == UpdateStatus.installing)
+                          SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        else
+                          Icon(LucideIcons.download, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          status == UpdateStatus.installing
+                              ? 'Instaluję...'
+                              : 'Aktualizuj',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusBadge(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  String _formatLastCheck(DateTime time) {
+    return '${time.day}.${time.month.toString().padLeft(2, '0')} ${time.hour}:${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _getVersionText(UpdateService service) {
+    final current = service.currentVersion ?? 'Nieznana';
+    if (service.updateAvailable && service.latestVersion != null) {
+      return 'Obecna: $current → Nowa: ${service.latestVersion}';
+    }
+    return 'Wersja: $current';
   }
 
   Widget _buildSyncSection(BuildContext context, ThemeData theme, bool isDark) {
@@ -141,7 +408,7 @@ class SettingsScreen extends StatelessWidget {
   }
 
   Widget _buildThemeToggle(BuildContext context, ThemeData theme, bool isDark) {
-    final currentMode = themeProvider.themeMode;
+    final currentMode = widget.themeProvider.themeMode;
 
     return Container(
       decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
@@ -155,7 +422,7 @@ class SettingsScreen extends StatelessWidget {
             icon: LucideIcons.sunMoon,
             label: 'System',
             isSelected: currentMode == ThemeMode.system,
-            onTap: () => themeProvider.setThemeMode(ThemeMode.system),
+            onTap: () => widget.themeProvider.setThemeMode(ThemeMode.system),
           ),
           _buildThemeOption(
             context,
@@ -164,7 +431,7 @@ class SettingsScreen extends StatelessWidget {
             icon: LucideIcons.sun,
             label: 'Jasny',
             isSelected: currentMode == ThemeMode.light,
-            onTap: () => themeProvider.setThemeMode(ThemeMode.light),
+            onTap: () => widget.themeProvider.setThemeMode(ThemeMode.light),
           ),
           _buildThemeOption(
             context,
@@ -173,7 +440,7 @@ class SettingsScreen extends StatelessWidget {
             icon: LucideIcons.moon,
             label: 'Ciemny',
             isSelected: currentMode == ThemeMode.dark,
-            onTap: () => themeProvider.setThemeMode(ThemeMode.dark),
+            onTap: () => widget.themeProvider.setThemeMode(ThemeMode.dark),
           ),
         ],
       ),

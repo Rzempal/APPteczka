@@ -389,7 +389,9 @@ class _MedicineCardState extends State<MedicineCard>
       case ExpiryStatus.expiringSoon:
         return isDark
             ? AppColors.darkGradientExpiringSoon
-            : AppColors.lightGradientExpiringSoon;
+            : const LinearGradient(
+                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
+              );
       case ExpiryStatus.valid:
         return isDark
             ? AppColors.darkGradientValid

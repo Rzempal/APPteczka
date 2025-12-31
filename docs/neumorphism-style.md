@@ -64,22 +64,14 @@ Container(
 )
 ```
 
-### Pole tekstowe (Basin)
+### Pole tekstowe (Search Bar - Dynamic)
 
 ```dart
-// Opcja 1: Użycie gotowego widgetu (Zalecane)
-NeuBasinContainer(
-  child: TextField(
-    decoration: InputDecoration(hintText: "Wpisz nazwę..."),
-  ),
-)
-
-// Opcja 2: Ręczna dekoracja
-Container(
-  decoration: NeuDecoration.basin(
-    isDark: isDark, 
-    radius: 12
-  ),
+AnimatedContainer(
+  duration: Duration(milliseconds: 200),
+  decoration: hasFocus 
+    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 24) // Focus
+    : NeuDecoration.flatSmall(isDark: isDark, radius: 24),   // Idle
   child: TextField(...),
 )
 ```
