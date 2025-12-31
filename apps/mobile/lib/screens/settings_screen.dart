@@ -721,7 +721,7 @@ class _SettingsScreenState extends State<SettingsScreen>
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Przywracanie kopii',
+                  'Przywracanie kopii zapasowej',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -729,14 +729,52 @@ class _SettingsScreenState extends State<SettingsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Przejdź do zakładki Dodaj → Import z pliku',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              children: [
+                const TextSpan(
+                  text:
+                      'Aby przywrócić dane z kopii zapasowej, przejdź do zakładki "',
+                ),
+                TextSpan(
+                  text: 'Dodaj leki',
+                  style: TextStyle(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const TextSpan(
+                  text: '" i wczytaj plik .json lub wklej skopiowany JSON.',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _navigateToImport,
+              icon: const Icon(LucideIcons.arrowRight, size: 16),
+              label: const Text('Przejdź do importu'),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToImport() {
+    // Navigate to Dodaj tab (index 1)
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    // This will be handled by parent - for now just show message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Przejdź do zakładki "Dodaj" aby zaimportować dane'),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
@@ -847,12 +885,26 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _buildAdvancedFormatInfo(ThemeData theme, bool isDark) {
-    const exampleBackup =
-        '{"leki": [{"id": "...", "nazwa": "Paracetamol", "terminWaznosci": "2025-12-31"}]}';
+    const exampleBackup = '''
+{
+  "leki": [
+    {
+      "id": "abc-123",
+      "nazwa": "Paracetamol",
+      "opis": "Lek przeciwbólowy...",
+      "wskazania": ["ból głowy"],
+      "tagi": ["przeciwbólowy"],
+      "labels": ["label-id-1"],
+      "notatka": "Dawkowanie: 1 tabletka co 6h",
+      "terminWaznosci": "2025-12-31",
+      "dataDodania": "2024-01-15"
+    }
+  ]
+}''';
 
     return Container(
       decoration: NeuDecoration.basin(isDark: isDark, radius: 10),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -864,31 +916,76 @@ class _SettingsScreenState extends State<SettingsScreen>
                 size: 18,
               ),
               const SizedBox(width: 6),
-              Text(
-                'Format JSON',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: Text(
+                  'Format pliku kopii zapasowej',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
+          Text(
+            'Jeśli chcesz ręcznie utworzyć lub edytować plik, użyj tego formatu:',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: isDark ? const Color(0xFF1a1f1c) : const Color(0xFF1e293b),
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               exampleBackup,
               style: TextStyle(
                 fontFamily: 'monospace',
-                fontSize: 9,
+                fontSize: 10,
+                height: 1.4,
                 color: isDark
                     ? AppColors.primary.withAlpha(200)
                     : const Color(0xFF94a3b8),
               ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          RichText(
+            text: TextSpan(
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 11,
+              ),
+              children: [
+                const TextSpan(text: 'Pola '),
+                TextSpan(
+                  text: 'id',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    backgroundColor: isDark
+                        ? Colors.white.withAlpha(20)
+                        : Colors.black.withAlpha(10),
+                  ),
+                ),
+                const TextSpan(text: ' i '),
+                TextSpan(
+                  text: 'dataDodania',
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    backgroundColor: isDark
+                        ? Colors.white.withAlpha(20)
+                        : Colors.black.withAlpha(10),
+                  ),
+                ),
+                const TextSpan(
+                  text:
+                      ' zostaną wygenerowane automatycznie przy imporcie, jeśli ich brakuje.',
+                ),
+              ],
             ),
           ),
         ],
@@ -924,7 +1021,14 @@ class _SettingsScreenState extends State<SettingsScreen>
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
+          Text(
+            'Nieodwracalne akcje - upewnij się, że masz kopię zapasową przed ich wykonaniem.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
