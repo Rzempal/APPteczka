@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 import 'screens/add_medicine_screen.dart';
 import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
+import 'widgets/floating_nav_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -84,19 +85,18 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 0; // Domyślnie Apteczka (pierwszy tab)
+  int _currentIndex = 1; // Domyślnie Apteczka (środkowy tab)
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          // 0: Apteczka (domyślny)
+          // 0: Dodaj
+          AddMedicineScreen(storageService: widget.storageService),
+          // 1: Apteczka (domyślny, środkowy)
           _HomeScreenWrapper(
             key: _homeKey,
             storageService: widget.storageService,
@@ -108,8 +108,6 @@ class _MainNavigationState extends State<MainNavigation> {
               });
             },
           ),
-          // 1: Dodaj
-          AddMedicineScreen(storageService: widget.storageService),
           // 2: Ustawienia
           SettingsScreen(
             storageService: widget.storageService,
@@ -118,58 +116,22 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : AppColors.lightBackground,
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? AppColors.darkShadowDark
-                  : AppColors.lightShadowDark,
-              offset: const Offset(0, -4),
-              blurRadius: 12,
-            ),
-            BoxShadow(
-              color: isDark
-                  ? AppColors.darkShadowLight
-                  : AppColors.lightShadowLight,
-              offset: const Offset(0, 4),
-              blurRadius: 12,
-            ),
-          ],
-        ),
-        child: NavigationBar(
-          backgroundColor: Colors.transparent,
-          surfaceTintColor: Colors.transparent,
-          elevation: 0,
-          selectedIndex: _currentIndex,
-          onDestinationSelected: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-            // Odśwież widok po przełączeniu taba
-            if (index == 0) {
-              _homeKey.currentState?.refresh();
-            }
-          },
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(LucideIcons.briefcaseMedical),
-              selectedIcon: Icon(LucideIcons.briefcaseMedical),
-              label: 'Apteczka',
-            ),
-            NavigationDestination(
-              icon: Icon(LucideIcons.plus),
-              selectedIcon: Icon(LucideIcons.plus),
-              label: 'Dodaj',
-            ),
-            NavigationDestination(
-              icon: Icon(LucideIcons.settings2),
-              selectedIcon: Icon(LucideIcons.settings2),
-              label: 'Ustawienia',
-            ),
-          ],
-        ),
+      bottomNavigationBar: FloatingNavBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          // Odśwież widok po przełączeniu na Apteczkę
+          if (index == 1) {
+            _homeKey.currentState?.refresh();
+          }
+        },
+        items: const [
+          NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
+          NavItem(icon: LucideIcons.briefcaseMedical, label: 'Apteczka'),
+          NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+        ],
       ),
     );
   }
