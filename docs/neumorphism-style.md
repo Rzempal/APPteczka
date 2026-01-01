@@ -30,7 +30,9 @@ Metody statyczne klasy `NeuDecoration`, używane w `Container(decoration: ...)` 
 | **`.flatSmall()`** | Wypukły, mniejszy cień, radius 12px | Mniejsze elementy: tagi, chipy | Tagi w `MedicineDetailSheet`, małe przyciski |
 | **`.pressed()`** | Wklęsły (wciśnięty) | Stan aktywny przycisku, włączone toggle | Wciśnięte przyciski menu |
 | **`.pressedSmall()`** | Wklęsły, subtelniejszy | Stan aktywny małych elementów, **aktywny NeuIconButton** | Wybrane filtry, aktywne tagi, toolbar buttons (pressed/active) |
-| **`.basin()`** | **Mocno wklęsły (Inset)** | Wnętrze pól tekstowych, inputy | `TextField` decoration, Search Bar container |
+| **`.basin()`** | **Mocno wklęsły (Inset)** | Wnętrze pól tekstowych, inputy | `TextField` decoration |
+| **`.searchBar()`** | **Floating pill** z mocnymi cieniami "lewitacji" | Główny pasek wyszukiwania | `HomeScreen` (wyszukiwarka) |
+| **`.searchBarFocused()`** | Wciśnięty pasek wyszukiwania | Fokus na polu wyszukiwania | `HomeScreen` (aktywna wyszukiwarka) |
 | **`.convex()`** | Wypukły z gradientem | Elementy interaktywne "3D" | (Opcjonalne) Przyciski specjalne |
 | **`.statusCard()`** | Wypukły + kolor statusu | Karty zależne od stanu | `MedicineCard` (status: OK, expiring, expired) |
 
@@ -64,15 +66,22 @@ Container(
 )
 ```
 
-### Pole tekstowe (Search Bar - Dynamic)
+### Pole tekstowe (Search Bar - Floating Pill)
 
 ```dart
 AnimatedContainer(
   duration: Duration(milliseconds: 200),
+  height: 56,
   decoration: hasFocus 
-    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 24) // Focus
-    : NeuDecoration.flatSmall(isDark: isDark, radius: 24),   // Idle
-  child: TextField(...),
+    ? NeuDecoration.searchBarFocused(isDark: isDark) // Focus
+    : NeuDecoration.searchBar(isDark: isDark),       // Idle
+  child: Row(
+    children: [
+      Icon(LucideIcons.search),
+      Expanded(child: TextField(...)),
+      Icon(LucideIcons.arrowRight), // Submit
+    ],
+  ),
 )
 ```
 

@@ -155,37 +155,39 @@ class NeuDecoration {
 
   // ============================================
   // BASIN - Deeply concave (inset effect)
-  // Strong inner shadow simulation with gradient
+  // Edge-focused gradient for depth on wide elements
   // Used for: input fields, nested containers inside flat parents
   // ============================================
   static BoxDecoration basin({required bool isDark, double radius = 12}) {
     if (isDark) {
-      // DARK MODE - silny efekt wklęsły
+      // DARK MODE - edge-focused depth
       return BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF0a0d0c), // bardzo ciemny cień (góra-lewo)
-            Color(0xFF151918), // środek
+            Color(0xFF0a0d0c), // ciemny cień (góra-lewo)
+            Color(0xFF151918), // środek 1
+            Color(0xFF151918), // środek 2 (plateau)
             Color(0xFF1e2422), // jasny highlight (dół-prawo)
           ],
-          stops: [0.0, 0.35, 1.0],
+          stops: [0.0, 0.12, 0.88, 1.0], // głębia tylko przy krawędziach
         ),
         borderRadius: BorderRadius.circular(radius),
       );
     } else {
-      // LIGHT MODE - silny efekt wklęsły (jak w sekcji filtrów web)
+      // LIGHT MODE - edge-focused depth
       return BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFb8beb6), // ciemny cień (góra-lewo) - silniejszy
-            Color(0xFFcdd3c9), // środek
-            Color(0xFFe0e6dc), // jasny highlight (dół-prawo)
+            Color(0xFFb8beb6), // ciemny cień (góra-lewo)
+            Color(0xFFd5dbd1), // środek 1
+            Color(0xFFd5dbd1), // środek 2 (plateau)
+            Color(0xFFe8eee4), // jasny highlight (dół-prawo)
           ],
-          stops: [0.0, 0.35, 1.0],
+          stops: [0.0, 0.12, 0.88, 1.0], // głębia tylko przy krawędziach
         ),
         borderRadius: BorderRadius.circular(radius),
       );
@@ -369,6 +371,79 @@ class NeuDecoration {
           offset: const Offset(0, 4),
           blurRadius: 12,
           spreadRadius: -2,
+        ),
+      ],
+    );
+  }
+
+  // ============================================
+  // SEARCH BAR - Floating pill with levitation effect
+  // Stronger shadows for prominent "floating" appearance
+  // ============================================
+  static const double _searchShadowDistance = 8.0;
+  static const double _searchShadowBlur = 20.0;
+
+  static BoxDecoration searchBar({required bool isDark, double radius = 32}) {
+    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
+    final shadowLight = isDark
+        ? AppColors.darkShadowLight
+        : AppColors.lightShadowLight;
+    final shadowDark = isDark
+        ? AppColors.darkShadowDark
+        : AppColors.lightShadowDark;
+
+    return BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(radius),
+      boxShadow: [
+        // Dark shadow (bottom-right) - stronger for floating effect
+        BoxShadow(
+          color: shadowDark.withValues(alpha: isDark ? 0.7 : 0.5),
+          offset: const Offset(_searchShadowDistance, _searchShadowDistance),
+          blurRadius: _searchShadowBlur,
+        ),
+        // Light shadow (top-left) - highlight for 3D effect
+        BoxShadow(
+          color: shadowLight.withValues(alpha: isDark ? 0.15 : 1.0),
+          offset: const Offset(-_searchShadowDistance, -_searchShadowDistance),
+          blurRadius: _searchShadowBlur,
+        ),
+      ],
+    );
+  }
+
+  // ============================================
+  // SEARCH BAR FOCUSED - Hybrid "sinking" effect
+  // Reduced shadows + subtle border = element "sinks" visually
+  // ============================================
+  static BoxDecoration searchBarFocused({
+    required bool isDark,
+    double radius = 32,
+  }) {
+    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
+    final shadowDark = isDark
+        ? AppColors.darkShadowDark
+        : AppColors.lightShadowDark;
+    final borderColor = isDark
+        ? AppColors.darkShadowDark.withValues(alpha: 0.4)
+        : AppColors.lightShadowDark.withValues(alpha: 0.15);
+
+    return BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(radius),
+      // Subtle top-left inner border for depth
+      border: Border(
+        top: BorderSide(color: borderColor, width: 1.5),
+        left: BorderSide(color: borderColor, width: 1.0),
+        right: BorderSide.none,
+        bottom: BorderSide.none,
+      ),
+      // Reduced shadows = element "sinks"
+      boxShadow: [
+        BoxShadow(
+          color: shadowDark.withValues(alpha: isDark ? 0.3 : 0.2),
+          offset: const Offset(2, 2),
+          blurRadius: 6,
         ),
       ],
     );
