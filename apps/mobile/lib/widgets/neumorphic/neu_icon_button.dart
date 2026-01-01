@@ -10,6 +10,16 @@ import 'neu_decoration.dart';
 /// - Active state with primary color
 /// - Tooltip support
 /// - Animated press state
+/// Mode for NeuIconButton display
+enum NeuIconButtonMode {
+  /// Standard look with background and shadow
+  visible,
+
+  /// Minimal look, only icon is visible (no background/shadow)
+  /// Background appears only when pressed or active
+  iconOnly,
+}
+
 class NeuIconButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback? onPressed;
@@ -20,6 +30,7 @@ class NeuIconButton extends StatefulWidget {
   final double borderRadius;
   final Color? activeColor;
   final Color? iconColor;
+  final NeuIconButtonMode mode;
 
   const NeuIconButton({
     super.key,
@@ -32,6 +43,7 @@ class NeuIconButton extends StatefulWidget {
     this.borderRadius = 12,
     this.activeColor,
     this.iconColor,
+    this.mode = NeuIconButtonMode.visible,
   });
 
   @override
@@ -88,23 +100,20 @@ class _NeuIconButtonState extends State<NeuIconButton>
     final activeColor = widget.activeColor ?? AppColors.primary;
 
     // Determine decoration
-    BoxDecoration decoration;
-    if (widget.isActive) {
-      decoration = BoxDecoration(
-        color: activeColor.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(widget.borderRadius),
-        border: Border.all(color: activeColor.withOpacity(0.3), width: 1.5),
-      );
-    } else if (_isPressed) {
+    BoxDecoration? decoration;
+    if (widget.isActive || _isPressed) {
       decoration = NeuDecoration.pressedSmall(
         isDark: isDark,
         radius: widget.borderRadius,
       );
-    } else {
+    } else if (widget.mode == NeuIconButtonMode.visible) {
       decoration = NeuDecoration.flatSmall(
         isDark: isDark,
         radius: widget.borderRadius,
       );
+    } else {
+      // iconOnly mode and not pressed/active -> transparent
+      decoration = null;
     }
 
     // Icon color

@@ -1,5 +1,5 @@
-name: pudelko_na_leki
-description: "A new Flutter project."
+name: karton_z_lekami
+description: "Nie kop w pudle. Sprawdź w telefonie."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.1.0+2
+version: 0.1.0+0
 
 environment:
   sdk: ^3.10.1
@@ -54,6 +54,10 @@ dependencies:
   # Theme persistence
   shared_preferences: ^2.2.2
 
+  # Auto-update OTA
+  package_info_plus: ^8.0.0
+  ota_update: ^7.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -87,10 +91,10 @@ flutter:
   # Assets
   assets:
     - assets/favicon.png
-    - assets/apteczka.png
-    - assets/backup.png
-    - assets/twoja_apteczka.png
-    - assets/backup_closed.png
+    - assets/karton.png
+    - assets/karton_otwarty.png
+    - assets/karton_set.png
+    - assets/karton_header.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

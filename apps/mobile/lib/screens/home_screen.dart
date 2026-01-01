@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/theme_provider.dart';
+import '../services/update_service.dart';
 import '../widgets/medicine_card.dart';
 import '../widgets/filters_sheet.dart';
 import '../theme/app_theme.dart';
@@ -15,10 +17,10 @@ import 'medicine_detail_sheet.dart';
 enum SortOption {
   nameAsc('Nazwa A-Z', LucideIcons.arrowUpAZ),
   nameDesc('Nazwa Z-A', LucideIcons.arrowDownAZ),
-  expiryAsc('Termin ↑', LucideIcons.calendarClock),
-  expiryDesc('Termin ↓', LucideIcons.calendarClock),
-  dateAddedAsc('Data dodania ↑', LucideIcons.calendarPlus),
-  dateAddedDesc('Data dodania ↓', LucideIcons.calendarPlus);
+  expiryAsc('Termin ważności rosnąco', LucideIcons.clockArrowUp),
+  expiryDesc('Termin ważności malejąco', LucideIcons.clockArrowDown),
+  dateAddedAsc('Data dodania rosnąco', LucideIcons.calendarArrowUp),
+  dateAddedDesc('Data dodania malejąco', LucideIcons.calendarArrowDown);
 
   final String label;
   final IconData icon;
@@ -32,11 +34,15 @@ enum ViewMode { list, full }
 class HomeScreen extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
+  final UpdateService updateService;
+  final VoidCallback? onNavigateToSettings;
 
   const HomeScreen({
     super.key,
     required this.storageService,
     required this.themeProvider,
+    required this.updateService,
+    this.onNavigateToSettings,
   });
 
   @override
@@ -50,16 +56,31 @@ class _HomeScreenState extends State<HomeScreen> {
   ViewMode _viewMode = ViewMode.full;
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
+  bool _isFiltersSheetOpen = false;
+  bool _isManagementSheetOpen = false;
+  final FocusNode _searchFocusNode = FocusNode();
 
   @override
   void initState() {
     super.initState();
     _loadMedicines();
+    _searchFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
+    // Check for updates on init
+    widget.updateService.addListener(_onUpdateChanged);
+    widget.updateService.checkForUpdate();
+  }
+
+  void _onUpdateChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
+    widget.updateService.removeListener(_onUpdateChanged);
     super.dispose();
   }
 
@@ -79,9 +100,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final sorted = List<Medicine>.from(medicines);
     switch (_sortOption) {
       case SortOption.nameAsc:
-        sorted.sort((a, b) => (a.nazwa ?? '').compareTo(b.nazwa ?? ''));
+        sorted.sort(
+          (a, b) => (a.nazwa ?? '').toLowerCase().compareTo(
+            (b.nazwa ?? '').toLowerCase(),
+          ),
+        );
       case SortOption.nameDesc:
-        sorted.sort((a, b) => (b.nazwa ?? '').compareTo(a.nazwa ?? ''));
+        sorted.sort(
+          (a, b) => (b.nazwa ?? '').toLowerCase().compareTo(
+            (a.nazwa ?? '').toLowerCase(),
+          ),
+        );
       case SortOption.expiryAsc:
         sorted.sort((a, b) {
           final aDate = a.terminWaznosci ?? '9999-12-31';
@@ -124,7 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             // Line 1: Logo + Title
-            _buildHeaderLine1(theme),
+            _buildHeaderLine1(theme, isDark),
 
             // Line 2: Search bar
             _buildSearchBar(theme, isDark),
@@ -183,7 +212,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeaderLine1(ThemeData theme) {
+  Widget _buildHeaderLine1(ThemeData theme, bool isDark) {
+    final updateAvailable = widget.updateService.updateAvailable;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -192,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.asset(
-              'assets/favicon.png',
+              'assets/karton_header.png',
               width: 40,
               height: 40,
               errorBuilder: (_, __, ___) => Container(
@@ -209,10 +240,73 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 12),
           // Tytuł
           Text(
-            'Pudełko na leki',
+            'Karton z lekami',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
+            ),
+          ),
+          // Update badge
+          if (updateAvailable) ...[
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: widget.onNavigateToSettings,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withAlpha(30),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.primary.withAlpha(80)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.download,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Aktualizacja',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          const Spacer(),
+          // Zarządzaj Apteczką - przycisk z ikoną i tekstem
+          GestureDetector(
+            onTap: _showFilterManagement,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: _isManagementSheetOpen
+                  ? NeuDecoration.pressed(isDark: isDark, radius: 12)
+                  : NeuDecoration.flat(isDark: isDark, radius: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.boxes,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Zarządzaj',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -223,13 +317,26 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSearchBar(ThemeData theme, bool isDark) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: _searchFocusNode.hasFocus
+            ? NeuDecoration.pressedSmall(isDark: isDark, radius: 24)
+            : NeuDecoration.flatSmall(isDark: isDark, radius: 24),
         child: TextField(
           controller: _searchController,
+          focusNode: _searchFocusNode,
           decoration: InputDecoration(
             hintText: 'Szukaj leku...',
-            prefixIcon: const Icon(LucideIcons.packageSearch),
+            hintStyle: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            prefixIcon: Icon(
+              LucideIcons.search,
+              size: 20,
+              color: theme.colorScheme.primary,
+            ),
+            filled: false,
+            fillColor: Colors.transparent,
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,
@@ -294,8 +401,22 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: _viewMode == ViewMode.full ? 'Widok listy' : 'Pełny widok',
           ),
           const SizedBox(width: 8),
-          // Sortowanie popup
-          _buildSortButton(theme, isDark),
+          // Sortowanie - neumorphic menu
+          NeuSortMenu<SortOption>(
+            currentValue: _sortOption,
+            items: SortOption.values
+                .map(
+                  (opt) => NeuSortMenuItem(
+                    value: opt,
+                    label: opt.label,
+                    icon: opt.icon,
+                  ),
+                )
+                .toList(),
+            onSelected: (option) => setState(() => _sortOption = option),
+            icon: LucideIcons.arrowDownUp,
+            tooltip: 'Sortowanie',
+          ),
           const SizedBox(width: 8),
           // Filtry
           NeuIconButtonBadge(
@@ -304,166 +425,301 @@ class _HomeScreenState extends State<HomeScreen> {
             button: NeuIconButton(
               icon: LucideIcons.filter,
               onPressed: _showFilters,
+              isActive: _isFiltersSheetOpen,
             ),
           ),
           const SizedBox(width: 8),
-          // Zarządzaj filtrami
+          // Wyczyść filtry
           NeuIconButton(
-            icon: LucideIcons.settings2,
-            onPressed: _showFilterManagement,
-            tooltip: 'Zarządzaj filtrami',
+            icon: LucideIcons.filterX,
+            onPressed: _filterState.hasActiveFilters ? _clearFilters : null,
+            tooltip: 'Wyczyść filtry',
+            mode: _filterState.hasActiveFilters
+                ? NeuIconButtonMode.visible
+                : NeuIconButtonMode.iconOnly,
+            iconColor: _filterState.hasActiveFilters ? AppColors.expired : null,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSortButton(ThemeData theme, bool isDark) {
-    // SizedBox zapewnia identyczną wysokość jak NeuIconButton (40px)
-    return SizedBox(
-      height: 40,
-      child: Container(
-        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-        child: PopupMenuButton<SortOption>(
-          icon: const Icon(LucideIcons.arrowDownUp, size: 20),
-          tooltip: 'Sortowanie',
-          padding: EdgeInsets.zero,
-          onSelected: (option) {
-            setState(() {
-              _sortOption = option;
-            });
-          },
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+  void _showFilters() {
+    setState(() => _isFiltersSheetOpen = true);
+    final labels = widget.storageService.getLabels();
+    showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          itemBuilder: (context) => SortOption.values.map((option) {
-            final isSelected = option == _sortOption;
-            return PopupMenuItem<SortOption>(
-              value: option,
-              child: Row(
-                children: [
-                  Icon(
-                    option.icon,
-                    size: 18,
-                    color: isSelected
-                        ? AppColors.primary
-                        : theme.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      option.label,
-                      style: TextStyle(
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.normal,
-                        color: isSelected
-                            ? AppColors.primary
-                            : theme.colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  if (isSelected)
-                    Icon(LucideIcons.check, size: 16, color: AppColors.primary),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-    );
+          builder: (context) => FiltersSheet(
+            initialState: _filterState,
+            availableTags: _allTags,
+            availableLabels: labels,
+            onApply: (newState) {
+              setState(() {
+                _filterState = newState;
+              });
+            },
+          ),
+        )
+        .then((_) {
+          _loadMedicines();
+        })
+        .whenComplete(() {
+          if (mounted) setState(() => _isFiltersSheetOpen = false);
+        });
   }
 
-  void _showFilters() {
-    final labels = widget.storageService.getLabels();
+  void _clearFilters() {
+    setState(() {
+      _filterState = const FilterState();
+      _searchController.clear();
+    });
+  }
+
+  void _showFilterManagement() {
+    setState(() => _isManagementSheetOpen = true);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => FiltersSheet(
-        initialState: _filterState,
-        availableTags: _allTags,
-        availableLabels: labels,
-        onApply: (newState) {
-          setState(() {
-            _filterState = newState;
-          });
-        },
-      ),
-    ).then((_) => _loadMedicines()); // Refresh after filter sheet closes
-  }
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.65,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    LucideIcons.briefcaseMedical,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Zarządzaj Apteczką',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
 
-  void _showFilterManagement() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Icon(LucideIcons.settings2, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Text(
-                  'Zarządzaj filtrami',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+              // Zarządzaj etykietami
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.tags,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Zarządzaj etykietami
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-                child: Icon(LucideIcons.tags, color: theme.colorScheme.primary),
+                title: const Text('Zarządzaj etykietami'),
+                subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showLabelManagement();
+                },
               ),
-              title: const Text('Zarządzaj etykietami'),
-              subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
-              trailing: const Icon(LucideIcons.chevronRight),
-              onTap: () {
-                Navigator.pop(context);
-                _showLabelManagement();
-              },
-            ),
 
-            const Divider(height: 24),
+              const Divider(height: 24),
 
-            // Zarządzaj tagami (inne)
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-                child: Icon(LucideIcons.hash, color: theme.colorScheme.primary),
+              // Zarządzaj tagami
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.hash,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                title: const Text('Zarządzaj tagami'),
+                subtitle: const Text('Usuń niestandardowe tagi z apteczki'),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showTagManagement();
+                },
               ),
-              title: const Text('Zarządzaj tagami'),
-              subtitle: const Text('Usuń niestandardowe tagi z apteczki'),
-              trailing: const Icon(LucideIcons.chevronRight),
-              onTap: () {
-                Navigator.pop(context);
-                _showTagManagement();
-              },
-            ),
 
-            const SizedBox(height: 16),
-          ],
+              const Divider(height: 24),
+
+              // Skopiuj listę leków
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.list,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                title: const Text('Skopiuj listę leków'),
+                subtitle: const Text('Format: "lek1, lek2, lek3, ..."'),
+                trailing: const Icon(LucideIcons.copy),
+                onTap: () {
+                  Navigator.pop(context);
+                  _copyMedicineList();
+                },
+              ),
+
+              const Divider(height: 24),
+
+              // Tabela do PDF (coming soon)
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.fileSpreadsheet,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                title: Row(
+                  children: [
+                    const Text('Tabela leków do PDF'),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.secondaryContainer,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Wkrótce',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: theme.colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                subtitle: const Text(
+                  'Eksportuj tabelę leków gotową do wydruku',
+                ),
+                enabled: false,
+              ),
+
+              const SizedBox(height: 24),
+
+              // Disclaimer
+              Container(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.expiringSoon.withAlpha(30)
+                      : AppColors.expiringSoon.withAlpha(20),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.expiringSoon.withAlpha(100),
+                  ),
+                ),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      LucideIcons.shieldAlert,
+                      color: AppColors.expiringSoon,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Informacja prawna',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.expiringSoon,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Aplikacja "Karton z lekami" służy wyłącznie do organizacji domowej apteczki. Nie jest to wyrób medyczny. Przed użyciem leku zawsze skonsultuj się z lekarzem lub farmaceutą.',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isDark
+                                  ? theme.colorScheme.onSurface
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      if (mounted) setState(() => _isManagementSheetOpen = false);
+    });
+  }
+
+  /// Kopiuje listę nazw leków do schowka
+  Future<void> _copyMedicineList() async {
+    final medicines = widget.storageService.getMedicines();
+    if (medicines.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Brak leków do skopiowania'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    final names = medicines.map((m) => m.nazwa ?? 'Bez nazwy').toList();
+    final text = names.join(', ');
+    await Clipboard.setData(ClipboardData(text: text));
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Skopiowano ${medicines.length} leków do schowka'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _showLabelManagement() {
@@ -665,7 +921,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/apteczka.png',
+              'assets/karton.png',
               width: 120,
               height: 120,
               errorBuilder: (_, __, ___) => Icon(

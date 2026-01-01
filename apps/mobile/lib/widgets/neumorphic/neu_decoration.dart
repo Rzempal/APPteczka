@@ -52,17 +52,15 @@ class NeuDecoration {
       boxShadow: [
         // Dark shadow (bottom-right)
         BoxShadow(
-          color: shadowDark.withOpacity(isDark ? 0.5 : 0.25),
+          color: shadowDark.withValues(alpha: isDark ? 0.6 : 0.6),
           offset: const Offset(shadowDistance, shadowDistance),
           blurRadius: shadowBlur,
-          spreadRadius: 0,
         ),
         // Light shadow (top-left)
         BoxShadow(
-          color: shadowLight.withOpacity(isDark ? 0.05 : 0.8),
+          color: shadowLight.withValues(alpha: isDark ? 0.1 : 1.0),
           offset: const Offset(-shadowDistance, -shadowDistance),
           blurRadius: shadowBlur,
-          spreadRadius: 0,
         ),
       ],
     );
@@ -91,16 +89,14 @@ class NeuDecoration {
       borderRadius: BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: shadowDark.withOpacity(isDark ? 0.4 : 0.2),
+          color: shadowDark.withValues(alpha: isDark ? 0.6 : 0.6),
           offset: const Offset(shadowDistanceSm, shadowDistanceSm),
           blurRadius: shadowBlurSm,
-          spreadRadius: 0,
         ),
         BoxShadow(
-          color: shadowLight.withOpacity(isDark ? 0.03 : 0.7),
+          color: shadowLight.withValues(alpha: isDark ? 0.1 : 1.0),
           offset: const Offset(-shadowDistanceSm, -shadowDistanceSm),
           blurRadius: shadowBlurSm,
-          spreadRadius: 0,
         ),
       ],
     );
@@ -242,59 +238,74 @@ class NeuDecoration {
     required bool isDark,
     required LinearGradient gradient,
     double radius = 16,
-    Color? borderColor, // zachowane dla zgodności wstecznej, ale nieużywane
+    Color? paramsBorderColor, // kept for compatibility
   }) {
-    final shadowLight = isDark
-        ? AppColors.darkShadowLight
-        : AppColors.lightShadowLight;
-    final shadowDark = isDark
-        ? AppColors.darkShadowDark
-        : AppColors.lightShadowDark;
-
-    if (isDark) {
-      // Dark mode: czyste neumorphism bez border - cień daje efekt 3D
+    // Light mode: clean neumorphism
+    if (!isDark) {
       return BoxDecoration(
         gradient: gradient,
         borderRadius: BorderRadius.circular(radius),
         boxShadow: [
-          // Główny cień (dół-prawo)
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
-            offset: const Offset(4, 4),
-            blurRadius: 12,
-            spreadRadius: -1,
-          ),
-          // Subtelny highlight (góra-lewo)
-          BoxShadow(
-            color: Colors.white.withOpacity(0.03),
-            offset: const Offset(-2, -2),
-            blurRadius: 6,
-          ),
-        ],
-      );
-    } else {
-      // Light mode: pełne neumorphic shadows bez border
-      return BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(radius),
-        boxShadow: [
-          // Ciemny cień (dół-prawo)
-          BoxShadow(
-            color: shadowDark.withOpacity(0.25),
+            color: AppColors.lightShadowDark.withValues(alpha: 0.25),
             offset: const Offset(shadowDistance, shadowDistance),
             blurRadius: shadowBlur,
-            spreadRadius: 0,
           ),
-          // Jasny cień/highlight (góra-lewo)
           BoxShadow(
-            color: shadowLight.withOpacity(0.8),
+            color: AppColors.lightShadowLight.withValues(alpha: 0.8),
             offset: const Offset(-shadowDistanceSm, -shadowDistanceSm),
             blurRadius: shadowBlurSm,
-            spreadRadius: 0,
           ),
         ],
       );
     }
+
+    // Dark Mode: Glass Effect (Web match)
+    // CSS: border: 1px solid rgba(148, 163, 184, 0.1);
+    // CSS: box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+    // Determine status type for border color (heuristic based on gradient)
+    Color baseColor = gradient.colors.first;
+    Color borderColor = const Color(
+      0xFF94a3b8,
+    ).withValues(alpha: 0.1); // default
+    Color glowColor = Colors.transparent;
+
+    // Check for "Valid" (Green)
+    if (baseColor.value == 0xFF064e3b || baseColor == AppColors.valid) {
+      borderColor = const Color(0xFF10b981).withValues(alpha: 0.3);
+      glowColor = const Color(0xFF10b981).withValues(alpha: 0.1);
+    }
+    // Check for "Warning/Expiring" (Amber/Orange)
+    else if (baseColor.value == 0xFF78350f ||
+        baseColor == AppColors.expiringSoon) {
+      borderColor = const Color(0xFFf59e0b).withValues(alpha: 0.3);
+      glowColor = const Color(0xFFf59e0b).withValues(alpha: 0.1);
+    }
+    // Check for "Expired" (Red)
+    else if (baseColor.value == 0xFF7f1d1d || baseColor == AppColors.expired) {
+      borderColor = const Color(0xFFef4444).withValues(alpha: 0.3);
+      glowColor = const Color(0xFFef4444).withValues(alpha: 0.1);
+    }
+
+    return BoxDecoration(
+      gradient: gradient,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(color: borderColor, width: 1),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withValues(alpha: 0.4),
+          offset: const Offset(0, 8),
+          blurRadius: 32,
+        ),
+        if (glowColor != Colors.transparent)
+          BoxShadow(
+            color: glowColor,
+            offset: const Offset(0, 0),
+            blurRadius: 12,
+          ),
+      ],
+    );
   }
 
   // ============================================

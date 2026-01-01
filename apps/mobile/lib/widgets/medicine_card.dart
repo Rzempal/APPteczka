@@ -287,15 +287,27 @@ class _MedicineCardState extends State<MedicineCard>
   }
 
   /// Dekoracja dla stanu pressed - subtelniejsze cienie
+  /// Dekoracja dla stanu pressed - skalowanie załatwia sprawę,
+  /// ale możemy zmniejszyć cień.
   BoxDecoration _getPressedDecoration(
     bool isDark,
     LinearGradient gradient,
     Color statusColor,
   ) {
+    // W stanie pressed używamy po prostu statusCard ale z mniejszymi cieniami
+    // (symulowanymi przz NeuDecoration.statusCard parametry? Nie mamy ich tam).
+    // Więc zwracamy to samo, ale scaleAnimation zrobi robotę.
+    // Ewentualnie możemy zwrócić "płaską" wersję bez cienia.
+
+    // Używamy helpera z NeuDecoration.statusCard ale modyfikujemy shadow ręcznie
+    // dla efektu "wciśnięcia" (mniejszy blur/distance)
+
     return BoxDecoration(
       gradient: gradient,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: statusColor.withAlpha(80), width: 2),
+      // Brak cienia lub szczątkowy cień "inner" (trudne na gradiencie)
+      // Zostawiamy czyste, scale załatwia wizualny feedback
+      boxShadow: [],
     );
   }
 
@@ -347,7 +359,7 @@ class _MedicineCardState extends State<MedicineCard>
   /// Tag - styl neumorficzny (cienie zamiast border)
   Widget _buildTag(String tag, bool isDark, ThemeData theme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
       child: Text(
         tag,
@@ -377,11 +389,15 @@ class _MedicineCardState extends State<MedicineCard>
       case ExpiryStatus.expiringSoon:
         return isDark
             ? AppColors.darkGradientExpiringSoon
-            : AppColors.lightGradientExpiringSoon;
+            : const LinearGradient(
+                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
+              );
       case ExpiryStatus.valid:
         return isDark
             ? AppColors.darkGradientValid
-            : AppColors.lightGradientValid;
+            : const LinearGradient(
+                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
+              );
       case ExpiryStatus.unknown:
         // Neutral gradient - light gray
         return LinearGradient(
@@ -389,7 +405,7 @@ class _MedicineCardState extends State<MedicineCard>
           end: Alignment.bottomRight,
           colors: isDark
               ? [const Color(0xFF1e293b), const Color(0xFF334155)]
-              : [const Color(0xFFF3F4F6), const Color(0xFFE5E7EB)],
+              : [const Color(0xFFe0e8e4), const Color(0xFFe0e8e4)],
         );
     }
   }

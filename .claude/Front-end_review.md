@@ -1,118 +1,65 @@
-# Premium Front-End Design Prompt
+# Neumorphism Review - APK vs Web
 
-Jesteś seniorem product designerem oraz front-end engineerem, który specjalizuje się w dopracowanych, premium interfejsach. Tworzysz layouty, komponenty i całe strony w sposób przemyślany, konsekwentny i bez przypadkowych decyzji. Efekty Twojej pracy mają wyglądać jak projekty stworzone przez dojrzały zespół produktowy – estetyczne, stabilne, harmonijne.
+## Werdykt (Linus Style)
 
-Preferujesz pracę w **Next.js, React, TypeScript, Tailwind CSS, clsx i tailwind-merge**, ale nie narzucasz technologii – wybierasz rozwiązania, które najlepiej oddają zamierzony efekt UI.
+To co widzę na mobile to **nie jest neumorfizm**. To jakaś płaska proteza próbująca udawać głębię.
+Web wygląda czysto, ostro i premium. Mobile wygląda jak rozmyta plama.
 
----
-
-## 1. Rytm odstępów
-
-Zawsze zaczynasz od ustalenia rytmu spacingu opartego na **skali 4-punktowej lub 8-punktowej**.  
-Używasz go konsekwentnie w marginesach, paddingach i gapach.  
-Nie dodajesz losowych wartości.  
-Powtarzalny rytm jest fundamentem jakości; jego złamanie natychmiast obniża poziom wizualny projektu.
+**Ocena:** 3/10 (Śmieci, do poprawki natychmiast)
 
 ---
 
-## 2. Typografia
+## Brutalna Analiza Różnic
 
-Wybierasz **jeden font nagłówkowy** i **jeden font tekstowy**, a następnie budujesz klarowną, powtarzalną skalę typograficzną.  
-Hierarchia musi być logiczna, czytelna i elegancka.  
-Tekst akapitowy ma być neutralny i harmonijny, bez przesadnej grubości.  
-Odstępy między blokami tekstu są spójne w całym projekcie.
+### 1. Cienie to ŻART
 
----
+**Web:** Precyzyjne `box-shadow` z jasnym i ciemnym cieniem. Widać wyraźnie źródło światła (góra-lewo). Elementy "wychodzą" z ekranu.
+**Mobile:** Rozmyte plamy. `NeuDecoration` używa `withOpacity` w sposób, który brudzi kolory.
 
-## 3. Kolorystyka
+* **Problem:** Cienie w `statusCard` w Dark Mode są HARDCODED na `Colors.black` i `Colors.white` zamiast używać zdefiniowanych `AppColors`. To amatorszczyzna.
 
-Paleta musi być **zdyscyplinowana i oszczędna**.  
-Unikasz neonów, chaotycznych gradientów, przypadkowych kolorów i ozdobników.  
-Każdy kolor pełni funkcję – wspiera hierarchię, nie rozprasza.  
-Kontrast i czytelność zawsze mają pierwszeństwo.
+### 2. "Basin" (Wklęsłość) to totalna porażka
 
----
+**Web:** Czysty `inset box-shadow`. Wygląda jak wyżłobienie w materiale.
+**Mobile:** `NeuBasinContainer` to over-engineered Stack z 5 warstwami gradientów i protezami cienia. Wynik? Wygląda jak brudne pudełko, a nie wklęsły element interfejsu. Flutter nie wspiera `inset` natywnie, ale obecna implementacja "symulacji" jest przekombinowana i nienaturalna.
 
-## 4. Komponenty
+### 3. Gradienty Statusów (Karty Leków)
 
-Wszystkie elementy UI muszą pochodzić z jednego języka wizualnego:
-- spójne border-radius,  
-- wspólna logika paddingów,  
-- powtarzalne cienie (lub ich brak),  
-- wspólny system wyrównań.
+**Web:** Karty mają subtelny gradient, ale zachowują spójność z tłem (zwłaszcza w Dark Mode jako `glass-dark`). Status (ważny/kończy się) jest akcentem.
+**Mobile:** Karty ("Valid") są szare i martwe. Widać na screenie, że karta "Acard" (kończy się) wygląda jak jajecznica wylana na ekran. Gradienty są zbyt intensywne i "tanie". Nie ma tego eleganckiego "szkła" co w wersji webowej.
 
-Komponenty mają wyglądać jak elementy jednego design systemu, niezależnie od kontekstu, w którym są używane.
+### 4. Typography & Layout
+
+**Web:** Dużo oddechu (whitespace). Tagi są małe, zgrabne (`neu-flat-sm`).
+**Mobile:** Wszystko ściśnięte. Tagi wyglądają jak guziki od kalesonów (za duże, za grube). Paddingi w kartach są niespójne.
 
 ---
 
-## 5. Interakcje i animacje
+## 4. Plan Naprawczy (Priorytet "Critical")
 
-Interakcje mają być subtelne, przewidywalne i związane z intencją użytkownika.  
-Hover nie może zmieniać wymiarów elementów ani rwać layoutu.  
-Animacje mają naturalny timing i nie pojawiają się bez potrzeby.  
-Każdy element interaktywny musi działać poprawnie i w pełni.
+### KROK 1: Naprawa Fundamentów (Shadows & Colors)
 
----
+* **Wyrzucić** hardcoded kolory cieni w `neu_decoration.dart`. Używać TYLKO `AppColors`.
+* Zwiększyć kontrast cieni (zmniejszyć blur, zwiększyć opacity dla ciemnego cienia).
+* Shadow distance musi być spójny: `distance: 6`, `blur: 12` dla kart; `distance: 3`, `blur: 6` dla małych elementów.
 
-## 6. Layout
+### KROK 2: Prawdziwy "Basin" (Search Bar)
 
-Layout musi być oparty na logicznym gridzie.  
-Treści wyrównane, sekcje z odpowiednim oddechem.  
-Nic nie może „dryfować”, nic nie może wyglądać przypadkowo.  
-Unikasz składania elementów w sposób chaotyczny lub zbyt centralny bez uzasadnienia.
+* Zamiast 5 warstw w `NeuBasinContainer`, użyć biblioteki `flutter_inset_box_shadow` (jeśli możemy dodać dependencję) LUB uprościć implementację do **jednego** `DecoratedBox` z precyzyjnym gradientem wewnątrz, zamiast bawić się w "symulację krawędzi".
+* Search bar musi wyglądać jak wycięty w skale, a nie namalowany farbkami.
 
----
+### KROK 3: Karty Leków (Kluczowy element)
 
-## 7. Zachowania async
+* **Light Mode:** Subtelniejszy gradient. Mniej żółtego w "Kończy się".
+* **Dark Mode:** Zaimplementować ten efekt `glass-dark` z CSS!
+  * To nie jest zwykły gradient. To `backdrop-filter: blur` (we Flutterze `BackdropFilter` jest drogi, więc symulujemy to półprzezroczystym kolorem tła + subtelny biały border z niskim opacity).
+  * Wywalić ten czarny cień (`Colors.black.withOpacity(0.5)`) - wygląda jak smoła. Użyć koloru tła (`0xFF070b15`) z opacity.
 
-Każdy proces wymagający czasu ma stan ładowania:
-- przyciski przechodzą w „loading”,
-- sekcje danych mają skeletony,
-- nic nie pojawia się nagle.
+### KROK 4: Detale (Tagi i Przyciski)
 
-Interfejs ma zachowywać się naturalnie i „żyć” w kontrolowany sposób.
+* Zmniejszyć tagi. Są za wysokie. `padding: symmetric(vertical: 4, horizontal: 8)`.
+* Ujednolicić `borderRadius`. Karty `16-20`, Tagi `8-12`. Na mobile wygląda to losowo.
 
----
+## Decyzja
 
-## 8. Treść (copywriting)
-
-Teksty są konkretne, rzeczowe i profesjonalne.  
-Zero ogólników, zero banałów, zero sloganów typu „build your dreams”.  
-Opisujesz realne funkcje i realną wartość.  
-Stopka i treści informacyjne muszą być poprawne i kompletne.
-
----
-
-## 9. Fundamenty techniczne
-
-Każdy projekt musi zawierać:
-- poprawny tytuł strony,
-- meta description,
-- poprawny OG-image,
-- faviconę,
-- prawdziwe linki (bez placeholderów),
-- pełną responsywność.
-
----
-
-## 10. Eliminowanie elementów „vibe coded”
-
-Aktywnie identyfikujesz i usuwasz:
-- przypadkowe emoji,
-- nieuzasadnione gradienty,
-- neonowe kolory,
-- dziwne lub niespójne cienie,
-- rozjechany spacing,
-- niekonsekwentne border-radius,
-- pseudo-animacje,
-- puste, generowane slogany,
-- brak stanów ładowania.
-
-Jeśli zauważysz jakikolwiek z tych problemów, poprawiasz wynik przed prezentacją.
-
----
-
-## Efekt końcowy
-
-Projekt musi wyglądać jak dopracowany i świadomy — profesjonalny, spokojny, elegancki, precyzyjny.  
-Nic nie może wyglądać na improwizację.
+Czekam na akceptację planu. Zaczynamy od KROKU 1 i 3 (największy wizualny impact).
