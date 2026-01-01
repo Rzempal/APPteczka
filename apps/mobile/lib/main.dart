@@ -50,7 +50,7 @@ class PudelkoNaLekiApp extends StatelessWidget {
       listenable: themeProvider,
       builder: (context, child) {
         return MaterialApp(
-          title: 'Pudełko na leki',
+          title: 'Karton z lekami',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,

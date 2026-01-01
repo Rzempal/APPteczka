@@ -1,10 +1,10 @@
-# 💊 Pudełko na leki – Zarządzaj domową apteczką
+# 📦 Karton z lekami – Nie kop w pudle. Sprawdź w telefonie
 
 [![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-pudelkonaleki.michalrapala.app-blue)](https://pudelkonaleki.michalrapala.app)
 
 Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, śledź terminy ważności, filtruj po objawach.
 
-> ⚠️ **Ważne:** Pudełko na leki to narzędzie informacyjne (wyszukiwarka w ulotkach), NIE porada medyczna. Aplikacja NIE weryfikuje interakcji międzylekowych.
+> ⚠️ **Ważne:** Karton z lekami to narzędzie informacyjne (wyszukiwarka w ulotkach), NIE porada medyczna. Aplikacja NIE weryfikuje interakcji międzylekowych.
 
 ---
 

@@ -223,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: Image.asset(
-              'assets/favicon.png',
+              'assets/karton_header.png',
               width: 40,
               height: 40,
               errorBuilder: (_, __, ___) => Container(
@@ -240,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 12),
           // Tytuł
           Text(
-            'Pudełko na leki',
+            'Karton z lekami',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.primary,
@@ -669,7 +669,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Aplikacja "Pudełko na leki" służy wyłącznie do organizacji domowej apteczki. Nie jest to wyrób medyczny. Przed użyciem leku zawsze skonsultuj się z lekarzem lub farmaceutą.',
+                            'Aplikacja "Karton z lekami" służy wyłącznie do organizacji domowej apteczki. Nie jest to wyrób medyczny. Przed użyciem leku zawsze skonsultuj się z lekarzem lub farmaceutą.',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: isDark
                                   ? theme.colorScheme.onSurface
@@ -921,7 +921,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Image.asset(
-              'assets/apteczka.png',
+              'assets/karton.png',
               width: 120,
               height: 120,
               errorBuilder: (_, __, ___) => Icon(

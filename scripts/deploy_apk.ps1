@@ -101,7 +101,7 @@ $TIMESTAMP = "$Year2Digit$DayOfYear$HourMinute"
 # Full version strings
 $VERSION_NAME = "$MAJOR.$MINOR.$TIMESTAMP"
 $VERSION_CODE = [int64]$TIMESTAMP
-$APK_NAME = "Pudelko_na_leki_$VERSION_NAME.apk"
+$APK_NAME = "karton-z-lekami_$VERSION_NAME.apk"
 
 Print-Info "Wersja: v$VERSION_NAME"
 Print-Info "versionCode: $VERSION_CODE (yyDDDHHmm)"

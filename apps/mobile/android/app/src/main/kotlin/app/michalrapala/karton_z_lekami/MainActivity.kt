@@ -1,4 +1,4 @@
-package app.michalrapala.pudelko_na_leki
+package app.michalrapala.karton_z_lekami
 
 import io.flutter.embedding.android.FlutterActivity
 

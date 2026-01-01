@@ -587,7 +587,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Aplikacja "Pudełko na leki" służy wyłącznie do organizacji domowej apteczki. Nie jest to wyrób medyczny. Przed użyciem leku zawsze skonsultuj się z lekarzem lub farmaceutą.',
+                  'Aplikacja "Karton z lekami" służy wyłącznie do organizacji domowej apteczki. Nie jest to wyrób medyczny. Przed użyciem leku zawsze skonsultuj się z lekarzem lub farmaceutą.',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: isDark
                         ? theme.colorScheme.onSurface
@@ -1165,3 +1165,4 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 }
+

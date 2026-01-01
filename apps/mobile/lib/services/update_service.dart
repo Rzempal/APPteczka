@@ -113,7 +113,7 @@ class UpdateService extends ChangeNotifier {
 
     try {
       OtaUpdate()
-          .execute(_apkUrl!, destinationFilename: 'pudelko_na_leki_update.apk')
+          .execute(_apkUrl!, destinationFilename: 'karton_z_lekami_update.apk')
           .listen(
             (OtaEvent event) {
               switch (event.status) {
