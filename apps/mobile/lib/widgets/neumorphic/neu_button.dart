@@ -11,6 +11,7 @@ import 'neu_decoration.dart';
 class NeuButton extends StatefulWidget {
   final String? label;
   final IconData? icon;
+  final Widget? child; // Custom content (overrides label/icon)
   final VoidCallback? onPressed;
   final bool isPrimary;
   final bool isDestructive;
@@ -24,6 +25,7 @@ class NeuButton extends StatefulWidget {
     super.key,
     this.label,
     this.icon,
+    this.child,
     this.onPressed,
     this.isPrimary = false,
     this.isDestructive = false,
@@ -39,6 +41,7 @@ class NeuButton extends StatefulWidget {
     super.key,
     this.label,
     this.icon,
+    this.child,
     this.onPressed,
     this.isExpanded = false,
     this.borderRadius = 12,
@@ -53,6 +56,7 @@ class NeuButton extends StatefulWidget {
     super.key,
     this.label,
     this.icon,
+    this.child,
     this.onPressed,
     this.isExpanded = false,
     this.borderRadius = 12,
@@ -143,29 +147,35 @@ class _NeuButtonState extends State<NeuButton>
     final contentColor = _getContentColor(theme);
     final isDisabled = widget.onPressed == null;
 
-    Widget content = Row(
-      mainAxisSize: widget.isExpanded ? MainAxisSize.max : MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        if (widget.icon != null) ...[
-          Icon(
-            widget.icon,
-            size: widget.iconSize,
-            color: isDisabled ? contentColor.withOpacity(0.5) : contentColor,
-          ),
-          if (widget.label != null) const SizedBox(width: 8),
-        ],
-        if (widget.label != null)
-          Text(
-            widget.label!,
-            style: TextStyle(
-              fontSize: widget.fontSize,
-              fontWeight: FontWeight.w600,
-              color: isDisabled ? contentColor.withOpacity(0.5) : contentColor,
-            ),
-          ),
-      ],
-    );
+    Widget content =
+        widget.child ??
+        Row(
+          mainAxisSize: widget.isExpanded ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (widget.icon != null) ...[
+              Icon(
+                widget.icon,
+                size: widget.iconSize,
+                color: isDisabled
+                    ? contentColor.withOpacity(0.5)
+                    : contentColor,
+              ),
+              if (widget.label != null) const SizedBox(width: 8),
+            ],
+            if (widget.label != null)
+              Text(
+                widget.label!,
+                style: TextStyle(
+                  fontSize: widget.fontSize,
+                  fontWeight: FontWeight.w600,
+                  color: isDisabled
+                      ? contentColor.withOpacity(0.5)
+                      : contentColor,
+                ),
+              ),
+          ],
+        );
 
     return GestureDetector(
       onTapDown: isDisabled ? null : _handleTapDown,

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'services/storage_service.dart';
 import 'services/theme_provider.dart';
+import 'services/update_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/add_medicine_screen.dart';
-import 'screens/manage_screen.dart';
 import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -19,10 +19,15 @@ void main() async {
   final themeProvider = ThemeProvider();
   await themeProvider.init();
 
+  // Inicjalizacja update service
+  final updateService = UpdateService();
+  await updateService.init();
+
   runApp(
     PudelkoNaLekiApp(
       storageService: storageService,
       themeProvider: themeProvider,
+      updateService: updateService,
     ),
   );
 }
@@ -30,11 +35,13 @@ void main() async {
 class PudelkoNaLekiApp extends StatelessWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
+  final UpdateService updateService;
 
   const PudelkoNaLekiApp({
     super.key,
     required this.storageService,
     required this.themeProvider,
+    required this.updateService,
   });
 
   @override
@@ -43,7 +50,7 @@ class PudelkoNaLekiApp extends StatelessWidget {
       listenable: themeProvider,
       builder: (context, child) {
         return MaterialApp(
-          title: 'Pudełko na leki',
+          title: 'Karton z lekami',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
@@ -51,6 +58,7 @@ class PudelkoNaLekiApp extends StatelessWidget {
           home: MainNavigation(
             storageService: storageService,
             themeProvider: themeProvider,
+            updateService: updateService,
           ),
         );
       },
@@ -62,11 +70,13 @@ class PudelkoNaLekiApp extends StatelessWidget {
 class MainNavigation extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
+  final UpdateService updateService;
 
   const MainNavigation({
     super.key,
     required this.storageService,
     required this.themeProvider,
+    required this.updateService,
   });
 
   @override
@@ -74,9 +84,8 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 1; // Domyślnie Apteczka (drugi tab)
+  int _currentIndex = 0; // Domyślnie Apteczka (pierwszy tab)
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
-  final GlobalKey<ManageScreenState> _manageKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -87,28 +96,25 @@ class _MainNavigationState extends State<MainNavigation> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          // 0: Zarządzaj apteczką
-          ManageScreen(
-            key: _manageKey,
-            storageService: widget.storageService,
-            onNavigateToAdd: () {
-              setState(() {
-                _currentIndex = 2; // Navigate to Dodaj tab
-              });
-            },
-          ),
-          // 1: Apteczka (domyślny)
+          // 0: Apteczka (domyślny)
           _HomeScreenWrapper(
             key: _homeKey,
             storageService: widget.storageService,
             themeProvider: widget.themeProvider,
+            updateService: widget.updateService,
+            onNavigateToSettings: () {
+              setState(() {
+                _currentIndex = 2; // Navigate to Ustawienia tab
+              });
+            },
           ),
-          // 2: Dodaj
+          // 1: Dodaj
           AddMedicineScreen(storageService: widget.storageService),
-          // 3: Ustawienia
+          // 2: Ustawienia
           SettingsScreen(
             storageService: widget.storageService,
             themeProvider: widget.themeProvider,
+            updateService: widget.updateService,
           ),
         ],
       ),
@@ -143,17 +149,10 @@ class _MainNavigationState extends State<MainNavigation> {
             });
             // Odśwież widok po przełączeniu taba
             if (index == 0) {
-              _manageKey.currentState?.refresh();
-            } else if (index == 1) {
               _homeKey.currentState?.refresh();
             }
           },
           destinations: const [
-            NavigationDestination(
-              icon: Icon(LucideIcons.folderCog),
-              selectedIcon: Icon(LucideIcons.folderCog),
-              label: 'Zarządzaj',
-            ),
             NavigationDestination(
               icon: Icon(LucideIcons.briefcaseMedical),
               selectedIcon: Icon(LucideIcons.briefcaseMedical),
@@ -180,11 +179,15 @@ class _MainNavigationState extends State<MainNavigation> {
 class _HomeScreenWrapper extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
+  final UpdateService updateService;
+  final VoidCallback onNavigateToSettings;
 
   const _HomeScreenWrapper({
     super.key,
     required this.storageService,
     required this.themeProvider,
+    required this.updateService,
+    required this.onNavigateToSettings,
   });
 
   @override
@@ -206,6 +209,8 @@ class _HomeScreenWrapperState extends State<_HomeScreenWrapper> {
       key: _refreshKey,
       storageService: widget.storageService,
       themeProvider: widget.themeProvider,
+      updateService: widget.updateService,
+      onNavigateToSettings: widget.onNavigateToSettings,
     );
   }
 }

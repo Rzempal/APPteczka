@@ -1,9 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Required for Gemini API calls -->
+    <!-- Required for Gemini API calls and OTA updates -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Required for OTA APK installation -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     
     <application
-        android:label="pudelko_na_leki"
+        android:label="Karton z lekami"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
@@ -33,6 +37,17 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        
+        <!-- OTA Update FileProvider (required by ota_update package) -->
+        <provider
+            android:name="sk.fourq.otaupdate.OtaUpdateFileProvider"
+            android:authorities="${applicationId}.ota_update_provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepaths" />
+        </provider>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and
@@ -43,6 +58,11 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Required for APK installation intent -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:mimeType="application/vnd.android.package-archive"/>
         </intent>
     </queries>
 </manifest>
