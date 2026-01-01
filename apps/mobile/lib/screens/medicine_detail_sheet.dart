@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
 import '../services/storage_service.dart';
+import '../services/pdf_cache_service.dart';
 import '../widgets/label_selector.dart';
+import '../widgets/leaflet_search_sheet.dart';
+import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
+import 'pdf_viewer_screen.dart';
 
 /// Bottom sheet ze szczegółami leku
 class MedicineDetailSheet extends StatefulWidget {
@@ -108,23 +112,8 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                     ),
 
                     // Ulotka PDF
-                    if (_medicine.leafletUrl != null &&
-                        _medicine.leafletUrl!.isNotEmpty) ...[
-                      const SizedBox(height: 20),
-                      _buildSection(
-                        context,
-                        title: 'Ulotka PDF',
-                        child: Row(
-                          children: [
-                            OutlinedButton.icon(
-                              onPressed: () => _openPdf(context),
-                              icon: const Icon(Icons.picture_as_pdf),
-                              label: const Text('Pokaż ulotkę PDF'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    const SizedBox(height: 20),
+                    _buildLeafletSection(context),
 
                     // Etykiety - tytuł i ikona edycji w jednej linii
                     const SizedBox(height: 20),
@@ -454,19 +443,167 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     }
   }
 
-  Future<void> _openPdf(BuildContext context) async {
+  /// Sekcja ulotki PDF z wyszukiwarką lub przyciskami akcji
+  Widget _buildLeafletSection(BuildContext context) {
+    final hasLeaflet =
+        _medicine.leafletUrl != null && _medicine.leafletUrl!.isNotEmpty;
+
+    return _buildSection(
+      context,
+      title: 'Ulotka PDF:',
+      child: hasLeaflet
+          ? _buildLeafletActions(context)
+          : _buildLeafletSearchButton(context),
+    );
+  }
+
+  /// Przyciski gdy ulotka jest przypisana
+  Widget _buildLeafletActions(BuildContext context) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      children: [
+        NeuButton(
+          onPressed: () => _showPdfViewer(context),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.fileText, size: 16, color: AppColors.valid),
+              const SizedBox(width: 8),
+              Text(
+                'Pokaż ulotkę PDF',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+        NeuButton(
+          onPressed: () => _detachLeaflet(),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.pinOff, size: 16, color: AppColors.expired),
+              const SizedBox(width: 8),
+              Text(
+                'Odepnij',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Przycisk gdy brak ulotki
+  Widget _buildLeafletSearchButton(BuildContext context) {
+    return NeuButton(
+      onPressed: () => _showLeafletSearch(context),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            LucideIcons.fileSearch,
+            size: 16,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'Znajdź i podepnij ulotkę',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Pokazuje bottom sheet z wyszukiwarką ulotek
+  void _showLeafletSearch(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (_, scrollController) => LeafletSearchSheet(
+            initialQuery: _medicine.nazwa ?? '',
+            onLeafletSelected: (url) => _attachLeaflet(url),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Przypisuje ulotkę do leku
+  Future<void> _attachLeaflet(String url) async {
+    final updatedMedicine = _medicine.copyWith(leafletUrl: url);
+    await widget.storageService.saveMedicine(updatedMedicine);
+    setState(() {
+      _medicine = updatedMedicine;
+    });
+
+    // Pobierz PDF do cache w tle
+    final cacheService = PdfCacheService();
+    cacheService.getPdfFile(url, _medicine.id);
+  }
+
+  /// Odłącza ulotkę od leku
+  Future<void> _detachLeaflet() async {
+    // Wyczyść cache
+    final cacheService = PdfCacheService();
+    await cacheService.clearCache(_medicine.id);
+
+    // Aktualizuj lek (używamy pustego stringa bo copyWith nie obsługuje null)
+    final updatedMedicine = Medicine(
+      id: _medicine.id,
+      nazwa: _medicine.nazwa,
+      opis: _medicine.opis,
+      wskazania: _medicine.wskazania,
+      tagi: _medicine.tagi,
+      labels: _medicine.labels,
+      notatka: _medicine.notatka,
+      terminWaznosci: _medicine.terminWaznosci,
+      leafletUrl: null,
+      dataDodania: _medicine.dataDodania,
+    );
+    await widget.storageService.saveMedicine(updatedMedicine);
+    setState(() {
+      _medicine = updatedMedicine;
+    });
+  }
+
+  /// Otwiera pełnoekranowy viewer PDF
+  void _showPdfViewer(BuildContext context) {
     if (_medicine.leafletUrl == null) return;
 
-    final uri = Uri.parse(_medicine.leafletUrl!);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nie można otworzyć linku PDF')),
-        );
-      }
-    }
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PdfViewerScreen(
+          url: _medicine.leafletUrl!,
+          title: _medicine.nazwa ?? 'Ulotka leku',
+          medicineId: _medicine.id,
+        ),
+      ),
+    );
   }
 
   Color _getStatusColor(ExpiryStatus status) {
