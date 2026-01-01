@@ -49,7 +49,7 @@
 | Funkcja | Szczegóły | Web | Mobile | Uwagi |
 | :--- | :--- | :--- | :--- | :--- |
 | **Eksport JSON** | Kopia zapasowa do schowka | ✅ Tak | ✅ Tak | Pełna zgodność formatu |
-| **Eksport PDF** | Gotowy druk dla lekarza | ✅ Tak | ❌ Nie | Biblioteka `jspdf` w Web |
+| **Eksport PDF** | Gotowy druk dla lekarza | ✅ Tak | ✅ Tak | Web: `jspdf`, Mobile: `pdf`+`printing` |
 | **Offline** | Działanie bez internetu | ✅ Tak | ✅ Tak | Web: localStorage, Mobile: Hive |
 | **Synchronizacja** | Przenoszenie danych | Manual | Manual | Automatyczna sync planowana w Fazie 3 |
 
@@ -75,4 +75,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-31
+> 📅 **Ostatnia aktualizacja:** 2026-01-01

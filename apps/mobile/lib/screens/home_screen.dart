@@ -6,6 +6,7 @@ import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/theme_provider.dart';
 import '../services/update_service.dart';
+import '../services/pdf_export_service.dart';
 import '../widgets/medicine_card.dart';
 import '../widgets/filters_sheet.dart';
 import '../theme/app_theme.dart';
@@ -632,7 +633,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const Divider(height: 24),
 
-              // Tabela do PDF (coming soon)
+              // Tabela do PDF
               ListTile(
                 leading: Container(
                   padding: const EdgeInsets.all(8),
@@ -642,36 +643,42 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   child: Icon(
                     LucideIcons.fileSpreadsheet,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
-                title: Row(
-                  children: [
-                    const Text('Tabela leków do PDF'),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Wkrótce',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: theme.colorScheme.onSecondaryContainer,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                title: const Text('Tabela leków do PDF'),
                 subtitle: const Text(
                   'Eksportuj tabelę leków gotową do wydruku',
                 ),
-                enabled: false,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Zapisz PDF
+                    IconButton(
+                      icon: Icon(
+                        LucideIcons.download,
+                        color: theme.colorScheme.primary,
+                      ),
+                      tooltip: 'Zapisz PDF',
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _exportToPdf();
+                      },
+                    ),
+                    // Drukuj
+                    IconButton(
+                      icon: Icon(
+                        LucideIcons.printer,
+                        color: theme.colorScheme.primary,
+                      ),
+                      tooltip: 'Drukuj',
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _printMedicines();
+                      },
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 24),
@@ -759,6 +766,77 @@ class _HomeScreenState extends State<HomeScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
+    }
+  }
+
+  /// Eksportuje przefiltrowane leki do PDF
+  Future<void> _exportToPdf() async {
+    final medicines = _filteredMedicines;
+    if (medicines.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Brak leków do eksportu'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final service = PdfExportService();
+      await service.sharePdf(medicines);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Wygenerowano PDF z ${medicines.length} lekami'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd eksportu: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.expired,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Drukuje przefiltrowane leki
+  Future<void> _printMedicines() async {
+    final medicines = _filteredMedicines;
+    if (medicines.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Brak leków do wydruku'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final service = PdfExportService();
+      await service.printPdf(medicines);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd drukowania: $e'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.expired,
+          ),
+        );
+      }
     }
   }
 
