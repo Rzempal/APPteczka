@@ -1,0 +1,97 @@
+import 'package:flutter/material.dart';
+
+class MintNavbar extends StatelessWidget {
+  final int currentIndex;
+  final Function(int) onTap;
+
+  // Lista ikon do wyświetlenia
+  final List<IconData> items = [
+    Icons.home_rounded,
+    Icons.search_rounded,
+    Icons.favorite_rounded,
+    Icons.person_rounded,
+  ];
+
+  MintNavbar({
+    Key? key,
+    required this.currentIndex,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // Kolor miętowy
+    const Color mintColor = Color(0xFF69F0AE); 
+    // Ciemniejszy odcień dla aktywnej ikony
+    const Color activeIconColor = Color(0xFF00695C); 
+
+    return Container(
+      // Marginesy, aby navbar "wisiał" nad krawędzią (styl floating)
+      margin: const EdgeInsets.all(20.0), 
+      height: 70,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(35), // Mocno zaokrąglone rogi (kapsuła)
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // 1. Animowane tło (Miętowy "Bąbelek")
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.spring, // Sprężysty ruch
+            alignment: Alignment(
+              // Przeliczamy indeks (0..3) na zakres Alignment (-1.0 .. 1.0)
+              -1.0 + (currentIndex / (items.length - 1)) * 2.0,
+              0.0
+            ),
+            child: Container(
+              width: 50, // Szerokość elementu aktywnego (powinna pasować do szerokości sekcji ikony)
+              height: 50,
+              margin: const EdgeInsets.symmetric(horizontal: 20), // Margines, żeby nie dotykało krawędzi
+              // Jeśli chcesz, aby tło przesuwało się idealnie pod ikonami, trzeba to dokładnie wyliczyć
+              // W tym prostym podejściu używamy FractionallySizedBox wiersza, ale tu dla uproszczenia AnimatedAlign
+              // Alternatywne podejście dla idealnego pozycjonowania:
+              // Zamiast marginesów w alignment, zróbmy to inaczej wewnątrz Row, ale AnimatedAlign jest efektowny.
+              decoration: BoxDecoration(
+                color: mintColor,
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+          ),
+          
+          // 2. Ikony
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: items.asMap().entries.map((entry) {
+              final int index = entry.key;
+              final IconData icon = entry.value;
+              final bool isSelected = currentIndex == index;
+
+              return GestureDetector(
+                onTap: () => onTap(index),
+                behavior: HitTestBehavior.opaque, // Ważne dla klikalności
+                child: SizedBox(
+                  width: 70, 
+                  height: 70,
+                  child: Icon(
+                    icon,
+                    // Animacja koloru ikony
+                    color: isSelected ? activeIconColor : Colors.grey.shade400,
+                    size: 28,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}

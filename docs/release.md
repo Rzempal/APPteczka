@@ -55,7 +55,8 @@ APK: Pudelko_na_leki_0.1.253651452.apk
 APPteczka/
 ├── scripts/
 │   ├── deploy_apk.ps1    # Główny skrypt
-│   └── run_deploy.bat    # Wrapper
+│   └── run_deploy.banavbar
+t    # Wrapper
 ├── releases/
 │   ├── Pudelko_na_leki_*.apk
 │   └── version.json

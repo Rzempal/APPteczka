@@ -86,3 +86,31 @@ Container(
   child: Text("Tag"),
 )
 ```
+
+---
+
+## 5. Nawigacja (`FloatingNavBar`)
+
+Custom bottom navigation bar z efektem "lewitowania".
+
+| Właściwość | Wartość |
+|------------|---------|
+| **Efekt** | Floating (marginesy 16px, uniesiony nad krawędź) |
+| **BorderRadius** | 24px |
+| **Cienie** | Neumorficzne (ciemny dół + jasna góra) |
+| **Animacje** | `AnimatedContainer` (250ms), `AnimatedScale` (200ms) |
+| **Aktywny element** | Tło miętowe (15% opacity), ikona powiększona, tekst widoczny |
+
+### Użycie
+
+```dart
+FloatingNavBar(
+  currentIndex: _currentIndex,
+  onTap: (index) => setState(() => _currentIndex = index),
+  items: const [
+    NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
+    NavItem(icon: LucideIcons.briefcaseMedical, label: 'Apteczka'),
+    NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+  ],
+)
+```
