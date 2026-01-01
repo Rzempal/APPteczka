@@ -185,18 +185,18 @@ class _NavBarItem extends StatelessWidget {
                 ),
               ),
             ),
-            // Etykieta tekstowa - tylko dla aktywnego
+            // Etykieta tekstowa - tylko dla NIEAKTYWNYCH
             AnimatedOpacity(
               duration: const Duration(milliseconds: 200),
-              opacity: isSelected ? 1.0 : 0.0,
+              opacity: isSelected ? 0.0 : 1.0,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                height: isSelected ? 16 : 0,
+                height: isSelected ? 0 : 16,
                 child: Text(
                   item.label,
                   style: TextStyle(
-                    color: activeColor,
-                    fontWeight: FontWeight.w600,
+                    color: inactiveColor,
+                    fontWeight: FontWeight.w500,
                     fontSize: 11,
                   ),
                   overflow: TextOverflow.ellipsis,
