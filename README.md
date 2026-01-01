@@ -132,4 +132,4 @@ MIT License
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-31
+> 📅 **Ostatnia aktualizacja:** 2026-01-01

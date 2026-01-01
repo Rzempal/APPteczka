@@ -62,6 +62,8 @@ $DEPLOY_PASS = if ($env:DEPLOY_PASS) { $env:DEPLOY_PASS } else { "" }
 $DEPLOY_PROTOCOL = if ($env:DEPLOY_PROTOCOL) { $env:DEPLOY_PROTOCOL } else { "sftp" }
 $DEPLOY_REMOTE_PATH = if ($env:DEPLOY_REMOTE_PATH) { $env:DEPLOY_REMOTE_PATH } else { "/public_html/releases/" }
 $DEPLOY_PUBLIC_URL = if ($env:DEPLOY_PUBLIC_URL) { $env:DEPLOY_PUBLIC_URL } else { "https://michalrapala.app/releases" }
+$DEPLOY_KEY_PATH = if ($env:DEPLOY_KEY_PATH) { $env:DEPLOY_KEY_PATH } else { "" }
+$DEPLOY_PORT = if ($env:DEPLOY_PORT) { $env:DEPLOY_PORT } else { "" }
 
 # ========================================
 # Semantic Versioning: Major.Minor.Timestamp
@@ -165,11 +167,13 @@ Print-Success "[3/4] version.json zaktualizowany!"
 if (-not $SkipUpload) {
     Print-Warn "[4/4] Upload na serwer..."
     
-    if (-not $DEPLOY_HOST -or -not $DEPLOY_USER -or -not $DEPLOY_PASS) {
-        Print-Error "BLAD: Brak konfiguracji deploymentu w .env!"
-        Print-Info "Ustaw DEPLOY_HOST, DEPLOY_USER, DEPLOY_PASS w pliku .env"
-        Write-Host "Nacisnij Enter aby zamknac..."
-        $null = Read-Host
+    if (-not $DEPLOY_HOST -or -not $DEPLOY_USER) {
+        Print-Error "BLAD: Brak Hosta lub Uzytkownika w .env!"
+        exit 1
+    }
+    
+    if (-not $DEPLOY_PASS -and -not $DEPLOY_KEY_PATH) {
+        Print-Error "BLAD: Brak hasla (DEPLOY_PASS) lub klucza (DEPLOY_KEY_PATH) w .env!"
         exit 1
     }
 
@@ -191,8 +195,30 @@ if (-not $SkipUpload) {
     "option batch on" | Out-File $tempScript -Encoding UTF8
     "option confirm off" | Out-File $tempScript -Append -Encoding UTF8
     
-    $openCmd = "open {0}://{1}:{2}@{3}/ -hostkey=*" -f $DEPLOY_PROTOCOL, $DEPLOY_USER, $DEPLOY_PASS, $DEPLOY_HOST
+    $userEncoded = [Uri]::EscapeDataString($DEPLOY_USER)
+    
+    $hostString = $DEPLOY_HOST
+    if ($DEPLOY_PORT) {
+        $hostString = "${DEPLOY_HOST}:${DEPLOY_PORT}"
+    }
+
+    $switchString = "-hostkey=*"
+    if ($DEPLOY_KEY_PATH) {
+        $switchString += " -privatekey=""$DEPLOY_KEY_PATH"""
+        # Jeśli mamy klucz, pomijamy hasło w URL (chyba że jest wymagane do klucza - passphrase)
+        # Tutaj zakładamy klucz bez hasła lub puste hasło w URL
+        $openCmd = "open {0}://{1}@{2}/ {3}" -f $DEPLOY_PROTOCOL, $userEncoded, $hostString, $switchString
+    }
+    else {
+        $passEncoded = [Uri]::EscapeDataString($DEPLOY_PASS)
+        $openCmd = "open {0}://{1}:{2}@{3}/ {4}" -f $DEPLOY_PROTOCOL, $userEncoded, $passEncoded, $hostString, $switchString
+    }
     $openCmd | Out-File $tempScript -Append -Encoding UTF8
+    
+    # Utworz katalog jesli nie istnieje (ignorujac bledy)
+    "option batch continue" | Out-File $tempScript -Append -Encoding UTF8
+    "mkdir ""$DEPLOY_REMOTE_PATH""" | Out-File $tempScript -Append -Encoding UTF8
+    "option batch on" | Out-File $tempScript -Append -Encoding UTF8
     
     "put ""$DEST_APK"" ""$DEPLOY_REMOTE_PATH""" | Out-File $tempScript -Append -Encoding UTF8
     "put ""$VERSION_JSON_PATH"" ""$DEPLOY_REMOTE_PATH""" | Out-File $tempScript -Append -Encoding UTF8
