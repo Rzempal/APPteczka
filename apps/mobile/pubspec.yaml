@@ -97,9 +97,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Assets (cleaned up - only used files)
-  assets:
-    - assets/karton_header.png
+  # Assets (all replaced with vector widgets - no PNG assets needed)
+  # assets:
+  #   - assets/karton_header.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

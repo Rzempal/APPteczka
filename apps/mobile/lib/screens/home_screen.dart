@@ -225,23 +225,22 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Logo
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(
-              'assets/karton_header.png',
-              width: 40,
-              height: 40,
-              errorBuilder: (_, __, ___) => Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(8),
+          // Logo (Vector Icon)
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-                child: const Icon(LucideIcons.pill, color: Colors.white),
-              ),
+              ],
             ),
+            child: Center(child: KartonClosedIcon(size: 32, isDark: isDark)),
           ),
           const SizedBox(width: 12),
           // Tytuł
