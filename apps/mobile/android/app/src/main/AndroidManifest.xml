@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <!-- Required for full gallery access on Android 13+ (falls back to Photo Picker if denied) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     
     <application
         android:label="Karton"

@@ -983,7 +983,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 /// Stan pusty - brak leków
-class _EmptyState extends StatelessWidget {
+class _EmptyState extends StatefulWidget {
   final VoidCallback? onAddPressed;
   final VoidCallback onDemoPressed;
   final bool hasFilters;
@@ -995,12 +995,31 @@ class _EmptyState extends StatelessWidget {
   });
 
   @override
+  State<_EmptyState> createState() => _EmptyStateState();
+}
+
+class _EmptyStateState extends State<_EmptyState> {
+  // Niezależne toggle dla każdej ikony
+  bool _showLeftTitle = false; // "Nie kop w pudle."
+  bool _showRightTitle = false; // "Sprawdź w telefonie."
+
+  void _onIconTap(int index) {
+    setState(() {
+      if (index == 0) {
+        _showLeftTitle = !_showLeftTitle;
+      } else {
+        _showRightTitle = !_showRightTitle;
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     // Widok z filtrami - prosty komunikat
-    if (hasFilters) {
+    if (widget.hasFilters) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -1041,19 +1060,51 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Slogan (main title)
-            Text(
-              'Nie kop w pudle.\nSprawdź w telefonie.',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                height: 1.3,
+            // Slogan - dwa niezależne tytuły, stała wysokość
+            SizedBox(
+              height: 80, // Stała wysokość - ikony nie przesuwają się
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // "Nie kop w pudle." - z lewej
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: _showLeftTitle ? 1.0 : 0.0,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Nie kop w pudle.',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // "Sprawdź w telefonie." - z prawej
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: _showRightTitle ? 1.0 : 0.0,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        'Sprawdź w telefonie.',
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
 
             // Ilustracja transformacji (bałagan → porządek)
-            TransformationIllustration(iconSize: 72, isDark: isDark),
+            TransformationIllustration(
+              iconSize: 72,
+              isDark: isDark,
+              onIconTap: _onIconTap,
+            ),
             const SizedBox(height: 32),
 
             // Podtytuł
@@ -1074,7 +1125,7 @@ class _EmptyState extends StatelessWidget {
                 NeuButton(
                   label: 'Dodaj leki',
                   icon: LucideIcons.plus,
-                  onPressed: onAddPressed,
+                  onPressed: widget.onAddPressed,
                   borderRadius: 16,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -1086,7 +1137,7 @@ class _EmptyState extends StatelessWidget {
                 NeuButton.primary(
                   label: 'Przetestuj',
                   icon: LucideIcons.sparkles,
-                  onPressed: onDemoPressed,
+                  onPressed: widget.onDemoPressed,
                   borderRadius: 16,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,

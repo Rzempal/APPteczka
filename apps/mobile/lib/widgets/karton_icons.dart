@@ -411,54 +411,62 @@ class _KartonOpenPainter extends CustomPainter {
 }
 
 /// Widget ilustracji transformacji: bałagan → porządek
-class TransformationIllustration extends StatelessWidget {
+/// Z animacją pressed i callbackami do zmiany nagłówka
+class TransformationIllustration extends StatefulWidget {
   final double iconSize;
   final bool isDark;
+  final ValueChanged<int>?
+  onIconTap; // 0 = left (bałagan), 1 = right (porządek)
 
   const TransformationIllustration({
     super.key,
     this.iconSize = 80,
     this.isDark = true,
+    this.onIconTap,
   });
+
+  @override
+  State<TransformationIllustration> createState() =>
+      _TransformationIllustrationState();
+}
+
+class _TransformationIllustrationState extends State<TransformationIllustration>
+    with TickerProviderStateMixin {
+  bool _leftPressed = false;
+  bool _rightPressed = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final neuBg = isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
-    final shadowDark = isDark
-        ? Colors.black.withOpacity(0.4)
-        : Colors.black.withOpacity(0.15);
-    final shadowLight = isDark
-        ? Colors.white.withOpacity(0.05)
-        : Colors.white.withOpacity(0.8);
+
+    // Użyj kolorów z AppColors dla spójności z aplikacją
+    final neuBg = widget.isDark
+        ? AppColors.darkSurface
+        : AppColors.lightSurface;
+    final shadowDark = widget.isDark
+        ? AppColors.darkShadowDark
+        : AppColors.lightShadowDark;
+    final shadowLight = widget.isDark
+        ? AppColors.darkShadowLight
+        : AppColors.lightShadowLight;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
         // Lewa ikona - bałagan (otwarte pudło)
-        Container(
-          width: iconSize + 32,
-          height: iconSize + 32,
-          decoration: BoxDecoration(
-            color: neuBg,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: shadowDark,
-                offset: const Offset(6, 6),
-                blurRadius: 12,
-              ),
-              BoxShadow(
-                color: shadowLight,
-                offset: const Offset(-6, -6),
-                blurRadius: 12,
-              ),
-            ],
-          ),
-          child: Center(
-            child: KartonOpenIcon(size: iconSize, isDark: isDark),
-          ),
+        _buildIconButton(
+          isPressed: _leftPressed,
+          onTapDown: () => setState(() => _leftPressed = true),
+          onTapUp: () {
+            setState(() => _leftPressed = false);
+            widget.onIconTap?.call(0);
+          },
+          onTapCancel: () => setState(() => _leftPressed = false),
+          neuBg: neuBg,
+          shadowDark: shadowDark,
+          shadowLight: shadowLight,
+          child: KartonOpenIcon(size: widget.iconSize, isDark: widget.isDark),
         ),
 
         // Strzałka
@@ -466,36 +474,86 @@ class TransformationIllustration extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Icon(
             Icons.arrow_forward,
-            size: 32,
-            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+            size: 28,
+            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
           ),
         ),
 
         // Prawa ikona - porządek (zamknięte pudło)
-        Container(
-          width: iconSize + 32,
-          height: iconSize + 32,
+        _buildIconButton(
+          isPressed: _rightPressed,
+          onTapDown: () => setState(() => _rightPressed = true),
+          onTapUp: () {
+            setState(() => _rightPressed = false);
+            widget.onIconTap?.call(1);
+          },
+          onTapCancel: () => setState(() => _rightPressed = false),
+          neuBg: neuBg,
+          shadowDark: shadowDark,
+          shadowLight: shadowLight,
+          child: KartonClosedIcon(size: widget.iconSize, isDark: widget.isDark),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildIconButton({
+    required bool isPressed,
+    required VoidCallback onTapDown,
+    required VoidCallback onTapUp,
+    required VoidCallback onTapCancel,
+    required Color neuBg,
+    required Color shadowDark,
+    required Color shadowLight,
+    required Widget child,
+  }) {
+    final containerSize = widget.iconSize + 32;
+
+    return GestureDetector(
+      onTapDown: (_) => onTapDown(),
+      onTapUp: (_) => onTapUp(),
+      onTapCancel: onTapCancel,
+      child: AnimatedScale(
+        scale: isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: containerSize,
+          height: containerSize,
           decoration: BoxDecoration(
             color: neuBg,
             shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: shadowDark,
-                offset: const Offset(6, 6),
-                blurRadius: 12,
-              ),
-              BoxShadow(
-                color: shadowLight,
-                offset: const Offset(-6, -6),
-                blurRadius: 12,
-              ),
-            ],
+            boxShadow: isPressed
+                ? [
+                    // Pressed - mniejsze cienie (efekt wciśnięcia)
+                    BoxShadow(
+                      color: shadowDark,
+                      offset: const Offset(2, 2),
+                      blurRadius: 4,
+                    ),
+                    BoxShadow(
+                      color: shadowLight,
+                      offset: const Offset(-2, -2),
+                      blurRadius: 4,
+                    ),
+                  ]
+                : [
+                    // Normal - wypukłe cienie
+                    BoxShadow(
+                      color: shadowDark,
+                      offset: const Offset(6, 6),
+                      blurRadius: 12,
+                    ),
+                    BoxShadow(
+                      color: shadowLight,
+                      offset: const Offset(-6, -6),
+                      blurRadius: 12,
+                    ),
+                  ],
           ),
-          child: Center(
-            child: KartonClosedIcon(size: iconSize, isDark: isDark),
-          ),
+          child: Center(child: child),
         ),
-      ],
+      ),
     );
   }
 }
