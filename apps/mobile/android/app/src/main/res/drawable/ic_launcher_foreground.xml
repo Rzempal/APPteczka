@@ -1,69 +1,74 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Android Adaptive Icon Foreground Layer -->
-<!-- Based on apk_icons_strategy.html: android-fg symbol (icon-closed-color) -->
-<!-- Isometric 3D closed box with tape and medical cross -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     
-    <!-- Safe zone: translate(11,11) scale(0.44) applied to 200x200 viewBox -->
-    <!-- Colors: box top=#E6C590, left=#C29B55, right=#D4B070, tape=#10b981/#059669 -->
-    
-    <!-- Drop shadow (simplified) -->
-    <path
-        android:fillColor="#000000"
-        android:fillAlpha="0.2"
-        android:pathData="M17,45 L54,62 L54,93 L91,76 L91,45 L54,28 Z"
-        android:translateY="3"/>
-    
-    <!-- TOP FACE (light beige #E6C590) -->
-    <path
-        android:fillColor="#E6C590"
-        android:pathData="M54,22 L90,39 L54,56 L18,39 Z"/>
-    
-    <!-- TAPE ON TOP (mint #10b981) -->
-    <path
-        android:fillColor="#10b981"
-        android:pathData="M27,44 L39,50 L76,33 L64,27 Z"/>
-    
-    <!-- LEFT FACE (darker beige #C29B55) -->
-    <path
-        android:fillColor="#C29B55"
-        android:pathData="M17,41 L53,58 L53,90 L17,73 Z"/>
-    
-    <!-- TAPE ON LEFT (dark green #059669) -->
-    <path
-        android:fillColor="#059669"
-        android:pathData="M27,47 L39,53 L39,70 L27,64 Z"/>
-    
-    <!-- RIGHT FACE (medium beige #D4B070) -->
-    <path
-        android:fillColor="#D4B070"
-        android:pathData="M91,41 L91,73 L55,90 L55,58 Z"/>
-    
-    <!-- MEDICAL CROSS ON RIGHT (mint #10b981) - horizontal bar -->
-    <path
-        android:fillColor="#10b981"
-        android:pathData="M63,62 L83,55 L83,61 L63,68 Z"/>
-    
-    <!-- MEDICAL CROSS ON RIGHT - vertical bar -->
-    <path
-        android:fillColor="#10b981"
-        android:pathData="M70,52 L76,50 L76,75 L70,77 Z"/>
-    
-    <!-- TAPE CONNECTOR (dark green #059669) -->
-    <path
-        android:fillColor="#059669"
-        android:pathData="M27,44 L39,50 L39,53 L27,47 Z"/>
-    
-    <!-- Top edge highlight -->
-    <path
-        android:fillColor="#ffffff"
-        android:fillAlpha="0.3"
-        android:pathData="M18,39 L54,22 L90,39"
-        android:strokeWidth="1"
-        android:strokeColor="#ffffff"
-        android:strokeAlpha="0.4"/>
+    <!-- Transformation to map 200x200 path data to 108x108 icon -->
+    <!-- HTML: scale(0.44), center 108. 200*0.44 = 88. (108-88)/2 = 10 padding. -->
+    <!-- Here we use scale 0.44 and translate 10. -->
+    <group
+        android:translateX="10"
+        android:translateY="10"
+        android:scaleX="0.44"
+        android:scaleY="0.44">
+        
+        <!-- Box Top Face -->
+        <path
+            android:fillColor="#E6C590"
+            android:pathData="M100 24 L186 64 L100 104 L14 64 Z"/>
+            
+        <!-- Box Left Face -->
+        <path
+            android:fillColor="#C29B55"
+            android:pathData="M12 68 L98 108 L98 186 L12 146 Z"/>
+            
+        <!-- Box Right Face -->
+        <path
+            android:fillColor="#D4B070"
+            android:pathData="M188 68 L188 146 L102 186 L102 108 Z"/>
+            
+        <!-- Tape Top -->
+        <path
+            android:fillColor="#10b981"
+            android:pathData="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z"/>
+            
+        <!-- Tape Left -->
+        <path
+            android:fillColor="#059669"
+            android:pathData="M 35 78.7 L 65 92.7 L 65 140 L 35 125 Z"/>
+            
+        <!-- Tape Connector (Top-Left Edge) -->
+        <path
+            android:fillColor="#059669"
+            android:pathData="M 35 73.8 L 65 87.7 L 65 92.7 L 35 78.7 Z"/>
+            
+        <!-- Cross Group -->
+        <!-- Skew manually applied to path data (since vector doesn't support group skew) -->
+        <!-- Approximate skew -25 deg: x' = x + y * tan(-25) -->
+        <!-- Center pivot (145, 127) -->
+        <group android:translateX="133" android:translateY="115">
+             <!-- Simplified cross for vector compatibility (no skew) -->
+             <!-- Making it a simple rotated cross to resemble the look -->
+             <path
+                android:fillColor="#10b981"
+                android:pathData="M-4,0 L24,0 L24,8 L-4,8 Z"
+                android:rotation="-25"
+                android:pivotX="10"
+                android:pivotY="4"/>
+             <path
+                android:fillColor="#10b981"
+                android:pathData="M6,-14 L14,-14 L14,22 L6,22 Z"
+                android:rotation="-25"
+                android:pivotX="10"
+                android:pivotY="4"/>
+        </group>
+        
+        <!-- Top Highlight (simulating gloss edge) -->
+        <path
+             android:strokeColor="#FFFFFF"
+             android:strokeWidth="2"
+             android:strokeAlpha="0.4"
+             android:pathData="M14 64 L100 24 L186 64"/>
+    </group>
 </vector>
