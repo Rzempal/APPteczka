@@ -11,6 +11,8 @@ import '../services/storage_service.dart';
 import '../services/gemini_service.dart';
 import '../widgets/gemini_scanner.dart';
 import '../widgets/karton_icons.dart';
+import '../widgets/neumorphic/neumorphic.dart';
+import '../theme/app_theme.dart';
 
 /// Ekran dodawania leków - wszystkie metody importu
 class AddMedicineScreen extends StatefulWidget {
@@ -36,11 +38,11 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final _jsonController = TextEditingController();
   bool _isImporting = false;
 
-  // Expanded sections
-  bool _geminiExpanded = true;
-  bool _jsonExpanded = false;
-  bool _fileExpanded = false;
-  bool _manualExpanded = false;
+  // Expanded sections - nowa kolejność
+  bool _geminiExpanded = true;   // 1. Zrób zdjęcie
+  bool _manualExpanded = false;  // 2. Dodaj ręcznie
+  bool _fileExpanded = false;    // 3. Import kopii
+  bool _isAdvancedOpen = false;  // 4. Zaawansowane (zagnieżdżone)
 
   @override
   void dispose() {
@@ -55,6 +57,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -73,21 +76,18 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Header info
-            Card(
-              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+            Container(
+              decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
                       child: KartonOpenIcon(
                         size: 32,
-                        isDark: theme.brightness == Brightness.dark,
+                        isDark: isDark,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -137,35 +137,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   );
                 },
               ),
+              isDark: isDark,
             ),
 
             const SizedBox(height: 12),
 
-            // 2. Wklej JSON
-            _buildExpandableSection(
-              icon: LucideIcons.clipboard,
-              title: 'Wklej JSON',
-              subtitle: 'Importuj dane z AI lub kopii zapasowej',
-              isExpanded: _jsonExpanded,
-              onToggle: () => setState(() => _jsonExpanded = !_jsonExpanded),
-              child: _buildJsonImportSection(theme),
-            ),
-
-            const SizedBox(height: 12),
-
-            // 3. Import z pliku
-            _buildExpandableSection(
-              icon: LucideIcons.folderDown,
-              title: 'Import kopii zapasowej',
-              subtitle: 'Wczytaj plik JSON z urządzenia',
-              isExpanded: _fileExpanded,
-              onToggle: () => setState(() => _fileExpanded = !_fileExpanded),
-              child: _buildFileImportSection(theme),
-            ),
-
-            const SizedBox(height: 12),
-
-            // 4. Dodaj ręcznie
+            // 2. Dodaj ręcznie (przesunięte)
             _buildExpandableSection(
               icon: LucideIcons.pencil,
               title: 'Dodaj ręcznie',
@@ -173,49 +150,29 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               isExpanded: _manualExpanded,
               onToggle: () =>
                   setState(() => _manualExpanded = !_manualExpanded),
-              child: _buildManualForm(theme),
+              child: _buildManualForm(theme, isDark),
+              isDark: isDark,
             ),
+
+            const SizedBox(height: 12),
+
+            // 3. Import z pliku (przesunięte)
+            _buildExpandableSection(
+              icon: LucideIcons.folderDown,
+              title: 'Import kopii zapasowej',
+              subtitle: 'Wczytaj plik JSON z urządzenia',
+              isExpanded: _fileExpanded,
+              onToggle: () => setState(() => _fileExpanded = !_fileExpanded),
+              child: _buildFileImportSection(theme, isDark),
+              isDark: isDark,
+            ),
+
+            const SizedBox(height: 12),
+
+            // 4. Zaawansowane (nowa sekcja rozwijalna)
+            _buildAdvancedSection(theme, isDark),
 
             const SizedBox(height: 24),
-
-            // Prompt AI info
-            Card(
-              color: theme.colorScheme.surfaceContainerHighest,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          LucideIcons.lightbulb,
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Wskazówka',
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Możesz też użyć ChatGPT/Claude z ręcznym promptem. Skopiuj prompt poniżej i wklej odpowiedź w sekcji "Wklej JSON".',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 12),
-                    OutlinedButton.icon(
-                      onPressed: _copyAiPrompt,
-                      icon: const Icon(LucideIcons.copy),
-                      label: const Text('Kopiuj prompt AI'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -229,10 +186,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     required bool isExpanded,
     required VoidCallback onToggle,
     required Widget child,
+    required bool isDark,
   }) {
     final theme = Theme.of(context);
 
-    return Card(
+    return Container(
+      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
@@ -283,50 +242,198 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
   }
 
-  Widget _buildJsonImportSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          controller: _jsonController,
-          maxLines: 5,
-          decoration: InputDecoration(
-            hintText: '{"leki": [...]}',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            filled: true,
+  // ================== SEKCJA ZAAWANSOWANE ==================
+
+  Widget _buildAdvancedSection(ThemeData theme, bool isDark) {
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        return Container(
+          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () =>
+                    setLocalState(() => _isAdvancedOpen = !_isAdvancedOpen),
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.brainCog,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Zaawansowane',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'Wklej JSON, prompt AI',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _isAdvancedOpen
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Zawartość zwijana
+              if (_isAdvancedOpen) ...[
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // 4.1 Wklej JSON
+                      _buildJsonImportSection(theme, isDark),
+                      const SizedBox(height: 16),
+                      // 4.2 Wskazówka
+                      _buildHintSection(theme, isDark),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _pasteFromClipboard,
-                icon: const Icon(LucideIcons.clipboardCheck),
-                label: const Text('Wklej'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: _isImporting ? null : _importFromJson,
-                icon: _isImporting
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(LucideIcons.download),
-                label: const Text('Importuj'),
-              ),
-            ),
-          ],
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildFileImportSection(ThemeData theme) {
+  Widget _buildJsonImportSection(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.clipboard,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Wklej JSON',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Importuj dane z AI lub kopii zapasowej',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _jsonController,
+            maxLines: 5,
+            decoration: InputDecoration(
+              hintText: '{"leki": [...]}',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              filled: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _pasteFromClipboard,
+                  icon: const Icon(LucideIcons.clipboardCheck, size: 16),
+                  label: const Text('Wklej'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _isImporting ? null : _importFromJson,
+                  icon: _isImporting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(LucideIcons.download, size: 16),
+                  label: const Text('Importuj'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHintSection(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.lightbulb,
+                color: theme.colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Wskazówka',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Możesz też użyć ChatGPT/Claude z ręcznym promptem. Skopiuj prompt poniżej i wklej odpowiedź w sekcji "Wklej JSON".',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _copyAiPrompt,
+              icon: const Icon(LucideIcons.copy, size: 16),
+              label: const Text('Kopiuj prompt AI'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFileImportSection(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -350,7 +457,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
   }
 
-  Widget _buildManualForm(ThemeData theme) {
+  Widget _buildManualForm(ThemeData theme, bool isDark) {
     return Form(
       key: _formKey,
       child: Column(
@@ -423,18 +530,35 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           const SizedBox(height: 16),
 
           // Termin ważności
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(LucideIcons.calendar),
-            title: const Text('Termin ważności'),
-            subtitle: Text(
-              _terminWaznosci != null
-                  ? '${_terminWaznosci!.day.toString().padLeft(2, '0')}.${_terminWaznosci!.month.toString().padLeft(2, '0')}.${_terminWaznosci!.year}'
-                  : 'Nie ustawiono',
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+          Container(
+            decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
               children: [
+                Icon(
+                  LucideIcons.calendar,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Termin ważności',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      Text(
+                        _terminWaznosci != null
+                            ? '${_terminWaznosci!.day.toString().padLeft(2, '0')}.${_terminWaznosci!.month.toString().padLeft(2, '0')}.${_terminWaznosci!.year}'
+                            : 'Nie ustawiono',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 if (_terminWaznosci != null)
                   IconButton(
                     icon: const Icon(LucideIcons.x),
