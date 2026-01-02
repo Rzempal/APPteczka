@@ -162,7 +162,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
                   child: Row(
                     children: [
                       Icon(
-                        LucideIcons.alertCircle,
+                        LucideIcons.circleAlert,
                         color: theme.colorScheme.error,
                         size: 20,
                       ),
