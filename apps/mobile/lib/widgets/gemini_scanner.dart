@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/gemini_service.dart';
+import 'bug_report_sheet.dart';
 
 /// Widget do skanowania leków przez Gemini Vision
 class GeminiScanner extends StatefulWidget {
@@ -133,18 +134,38 @@ class _GeminiScannerState extends State<GeminiScanner> {
                   color: theme.colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.error_outline,
-                      color: theme.colorScheme.onErrorContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _error!,
-                        style: TextStyle(
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.error_outline,
                           color: theme.colorScheme.onErrorContainer,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _error!,
+                            style: TextStyle(
+                              color: theme.colorScheme.onErrorContainer,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () => BugReportSheet.show(
+                          context,
+                          error: _error,
+                        ),
+                        icon: const Icon(Icons.bug_report, size: 18),
+                        label: const Text('Zgłoś problem'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: theme.colorScheme.onErrorContainer,
                         ),
                       ),
                     ),

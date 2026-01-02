@@ -56,6 +56,7 @@ dependencies:
 
   # Auto-update OTA
   package_info_plus: ^8.0.0
+  device_info_plus: ^11.0.0
   ota_update: ^7.0.1
 
   # PDF Viewer dla ulotek lekowych
