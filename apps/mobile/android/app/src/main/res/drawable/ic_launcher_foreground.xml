@@ -6,10 +6,10 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
   
-  <!-- Scaling Group (Center 18,16 | Scale 0.32 = CENTERED ZOOM OUT) -->
+  <!-- Scaling Group (Center 22,20 | Scale 0.32) -->
   <group 
-      android:translateX="18" 
-      android:translateY="16" 
+      android:translateX="22" 
+      android:translateY="20" 
       android:scaleX="0.32" 
       android:scaleY="0.32">
       
