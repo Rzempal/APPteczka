@@ -179,19 +179,47 @@ class _MedicineCardState extends State<MedicineCard>
                     ],
                   ),
 
-                  // Compact: tylko data
+                  // Compact: opis (left) + data (right) z fade-out
                   if (widget.isCompact) ...[
-                    if (widget.medicine.terminWaznosci != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        _formatDate(widget.medicine.terminWaznosci!),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: statusColor,
-                          fontWeight: FontWeight.w500,
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        // Opis z fade-out po prawej
+                        Expanded(
+                          child: ShaderMask(
+                            shaderCallback: (bounds) => LinearGradient(
+                              colors: [
+                                Colors.white,
+                                Colors.white,
+                                Colors.white.withOpacity(0),
+                              ],
+                              stops: const [0.0, 0.85, 1.0],
+                            ).createShader(bounds),
+                            blendMode: BlendMode.dstIn,
+                            child: Text(
+                              widget.medicine.opis,
+                              maxLines: 1,
+                              overflow: TextOverflow.clip,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                        // Data ważności (right)
+                        if (widget.medicine.terminWaznosci != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            _formatDate(widget.medicine.terminWaznosci!),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: statusColor,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ] else ...[
                     // Full view
                     const SizedBox(height: 8),
@@ -229,7 +257,7 @@ class _MedicineCardState extends State<MedicineCard>
                           radius: 12,
                         ),
                         child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Icon(
                               LucideIcons.stickyNote,
@@ -387,8 +415,9 @@ class _MedicineCardState extends State<MedicineCard>
             ? AppColors.darkGradientExpired
             : AppColors.lightGradientExpired;
       case ExpiryStatus.expiringSoon:
+        // Dark mode: neutralne tło (jak valid) - tylko expired ma czerwone
         return isDark
-            ? AppColors.darkGradientExpiringSoon
+            ? AppColors.darkGradientValid
             : const LinearGradient(
                 colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
               );
