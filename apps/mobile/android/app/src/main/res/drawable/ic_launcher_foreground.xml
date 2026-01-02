@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android Adaptive Icon Foreground Layer -->
+<!-- Based on apk_icons_strategy.html: android-fg symbol (icon-closed-color) -->
+<!-- Isometric 3D closed box with tape and medical cross -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Safe zone: translate(11,11) scale(0.44) applied to 200x200 viewBox -->
+    <!-- Colors: box top=#E6C590, left=#C29B55, right=#D4B070, tape=#10b981/#059669 -->
+    
+    <!-- Drop shadow (simplified) -->
+    <path
+        android:fillColor="#000000"
+        android:fillAlpha="0.2"
+        android:pathData="M17,45 L54,62 L54,93 L91,76 L91,45 L54,28 Z"
+        android:translateY="3"/>
+    
+    <!-- TOP FACE (light beige #E6C590) -->
+    <path
+        android:fillColor="#E6C590"
+        android:pathData="M54,22 L90,39 L54,56 L18,39 Z"/>
+    
+    <!-- TAPE ON TOP (mint #10b981) -->
+    <path
+        android:fillColor="#10b981"
+        android:pathData="M27,44 L39,50 L76,33 L64,27 Z"/>
+    
+    <!-- LEFT FACE (darker beige #C29B55) -->
+    <path
+        android:fillColor="#C29B55"
+        android:pathData="M17,41 L53,58 L53,90 L17,73 Z"/>
+    
+    <!-- TAPE ON LEFT (dark green #059669) -->
+    <path
+        android:fillColor="#059669"
+        android:pathData="M27,47 L39,53 L39,70 L27,64 Z"/>
+    
+    <!-- RIGHT FACE (medium beige #D4B070) -->
+    <path
+        android:fillColor="#D4B070"
+        android:pathData="M91,41 L91,73 L55,90 L55,58 Z"/>
+    
+    <!-- MEDICAL CROSS ON RIGHT (mint #10b981) - horizontal bar -->
+    <path
+        android:fillColor="#10b981"
+        android:pathData="M63,62 L83,55 L83,61 L63,68 Z"/>
+    
+    <!-- MEDICAL CROSS ON RIGHT - vertical bar -->
+    <path
+        android:fillColor="#10b981"
+        android:pathData="M70,52 L76,50 L76,75 L70,77 Z"/>
+    
+    <!-- TAPE CONNECTOR (dark green #059669) -->
+    <path
+        android:fillColor="#059669"
+        android:pathData="M27,44 L39,50 L39,53 L27,47 Z"/>
+    
+    <!-- Top edge highlight -->
+    <path
+        android:fillColor="#ffffff"
+        android:fillAlpha="0.3"
+        android:pathData="M18,39 L54,22 L90,39"
+        android:strokeWidth="1"
+        android:strokeColor="#ffffff"
+        android:strokeAlpha="0.4"/>
+</vector>
