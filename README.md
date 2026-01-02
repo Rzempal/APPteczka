@@ -67,11 +67,10 @@ Pudełko-na-leki/
 
 | Faza | Nazwa | Status |
 |------|-------|--------|
-| 0 | Dokumentacja | ✅ Ukończona |
-| 1 | MVP Web (Next.js) | ✅ Ukończona |
-| 2 | MVP Mobile (Flutter) | ✅ Ukończona |
-| 3 | Backend + Sync | 📋 Planowana |
-| 4 | Gemini API | ✅ Ukończona |
+| 0-3 | MVP Web + Mobile + Gemini API | ✅ Ukończona |
+| 4 | Web → Landing Page + API | 📋 Planowana |
+| 5 | Google Play Store Release | 📋 Planowana |
+| 6 | Backend + Sync | 🔮 Przyszłość |
 
 Szczegóły: [docs/road_map.md](docs/road_map.md)
 
@@ -132,4 +131,4 @@ MIT License
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-01
+> 📅 **Ostatnia aktualizacja:** 2026-01-02

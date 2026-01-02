@@ -1,42 +1,49 @@
-# 🗺️ Road Map – Pudełko na leki
+# 🗺️ Road Map – Karton (Pudełko na leki)
 
-> **Powiązane:** [Architektura](architecture.md) | [Model Danych](data_model.md)
+> **Powiązane:** [Architektura](architecture.md) | [Model Danych](data_model.md) | [Feature Lists](feature-lists.md)
 
 ---
 
 ## Wizja Produktu
 
-**Pudełko na leki** to aplikacja do zarządzania domową apteczką z integracją AI. Umożliwia:
+**Karton** to aplikacja mobilna do zarządzania domową apteczką z integracją AI. Umożliwia:
 
-- Katalogowanie leków w domu
-- Filtrowanie po objawach, działaniu, grupie użytkowników
-- Śledzenie terminów ważności
-- Analizę apteczki pod kątem objawów (z pomocą AI)
+- 📦 Katalogowanie leków w domu
+- 🔍 Filtrowanie po objawach, działaniu, grupie użytkowników
+- ⏰ Śledzenie terminów ważności
+- 📷 Automatyczne rozpoznawanie leków ze zdjęć (Gemini AI)
+- 🏷️ Własne etykiety i notatki
 
 ---
 
-## Dwie ścieżki rozwoju
+## Strategia Rozwoju
 
-### 🅰️ Opcja A: Full Local (MVP)
+**Platforma docelowa:** Android (Google Play Store)  
+**Backend:** Vercel (API-only) – Gemini OCR proxy  
+**Model:** Darmowa aplikacja, offline-first
 
-**100% offline, dane lokalne, zero backendu**
-
-| Platforma | Przechowywanie | AI | Koszt użytkownika |
-|-----------|----------------|-----|-------------------|
-| Web | localStorage / IndexedDB | Prompt copy-paste | Darmowe |
-| Android | Hive / Isar | Prompt copy-paste | Darmowe |
-
-### 🅱️ Opcja B: Backend Premium
-
-**Konta użytkowników, sync, automatyczne AI**
-
-| Funkcja | Opis | Koszt |
-|---------|------|-------|
-| Konta użytkowników | Logowanie Google/email | Darmowe |
-| Synchronizacja | Cross-device sync (web ↔ mobile) | Darmowe |
-| Gemini API | Automatyczne rozpoznawanie ze zdjęć | Premium (przyszłość) |
-
-**Hosting testowy:** Vercel (frontend) + Railway/Supabase (backend)
+```
+┌─────────────────────────────────────────────────────┐
+│                   ARCHITEKTURA                      │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│   Google Play ──► Flutter APK (offline-first)      │
+│                        │                           │
+│                        ▼                           │
+│               Vercel API (proxy)                   │
+│               ├── /api/gemini-ocr                  │
+│               └── /api/pdf-proxy                   │
+│                        │                           │
+│                        ▼                           │
+│               Gemini API (Google)                  │
+│                                                     │
+│   Landing Page ──► karton.michalrapala.app         │
+│               ├── Hero + Features                  │
+│               ├── Screenshots                      │
+│               └── Privacy Policy                   │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -47,87 +54,135 @@
 | 0 | Dokumentacja i Schematy | ✅ Ukończona |
 | 1 | MVP Web (Next.js) | ✅ Ukończona |
 | 2 | MVP Mobile (Flutter) | ✅ Ukończona |
-| 3 | Backend + Sync (Opcja B) | 📋 Planowana |
-| 4 | Gemini API (Opcja B) | ✅ Ukończona |
+| 3 | Gemini API Integration | ✅ Ukończona |
+| 4 | Web → Landing Page + API | 📋 Planowana |
+| 5 | Google Play Store Release | 📋 Planowana |
+| 6 | Backend + Sync (opcjonalne) | 🔮 Przyszłość |
 
 ---
 
-## ✅ FAZA 0: Dokumentacja i Schematy
+## ✅ FAZA 0-3: Zakończone
+
+<details>
+<summary>Szczegóły ukończonych faz</summary>
+
+### Faza 0: Dokumentacja
+
+- Schema danych (JSON/YAML)
+- Prompty dla AI
+- Kontrolowana lista tagów
+
+### Faza 1: MVP Web (Next.js)
+
+- Pełna aplikacja webowa z design neumorficznym
+- Import/eksport JSON, PDF
+- Etykiety, notatki, filtrowanie
+
+### Faza 2: MVP Mobile (Flutter)
+
+- Natywna aplikacja Android
+- Hive local storage
+- Design neumorficzny
+
+### Faza 3: Gemini API
+
+- Backend proxy na Vercel
+- Automatyczne rozpoznawanie leków ze zdjęć
+- Rate limiting
+
+</details>
+
+---
+
+## 📋 FAZA 4: Web → Landing Page + API
+
+**Cel:** Przekształcenie wersji webowej w stronę promocyjną + zachowanie API dla aplikacji mobilnej
+
+### Do usunięcia
+
+| Element | Ścieżka |
+|---------|---------|
+| Stare UI aplikacji | `apps/web/src/app/page.tsx` |
+| Strona dodawania | `apps/web/src/app/dodaj/` |
+| Strona backup | `apps/web/src/app/backup/` |
+| Komponenty UI | `apps/web/src/components/*` |
+
+### Do zachowania
+
+| Element | Ścieżka |
+|---------|---------|
+| Gemini OCR API | `apps/web/src/app/api/gemini-ocr/` |
+| PDF Proxy API | `apps/web/src/app/api/pdf-proxy/` |
+| Lib (prompts, gemini) | `apps/web/src/lib/` |
+
+### Do stworzenia
+
+| Element | Opis |
+|---------|------|
+| Landing Page | Hero, features, screenshots, CTA do Play Store |
+| Privacy Policy | Wymagane przez Google Play |
+| SEO + Open Graph | Meta tagi dla wyszukiwarek i social |
+
+---
+
+## 📋 FAZA 5: Google Play Store Release
+
+### Checklist Wymagań
+
+#### Prawne
 
 | Element | Status |
 |---------|--------|
-| Schema danych (JSON/YAML) | ✅ `docs/schema/` |
-| Prompty dla AI | ✅ `docs/prompts/` |
-| Kontrolowana lista tagów | ✅ `docs/example_input/` |
+| Privacy Policy URL | ⬜ |
+| Target Age Group (nie dla dzieci <13) | ⬜ |
+| Data Safety Form | ⬜ |
 
----
+#### Graficzne
 
-## ✅ FAZA 1: MVP Web (Next.js)
+| Element | Wymiary | Status |
+|---------|---------|--------|
+| App Icon | 512×512 | ✅ |
+| Feature Graphic | 1024×500 | ⬜ |
+| Screenshots (min. 2) | 1080×1920 | ⬜ |
 
-**Stack:** Next.js 16 + TypeScript + Tailwind CSS 4
+#### Tekstowe
 
-| Funkcja | Status |
+| Element | Limit | Status |
+|---------|-------|--------|
+| App Name | 30 znaków | ✅ "Karton" |
+| Short Description | 80 znaków | ⬜ |
+| Full Description | 4000 znaków | ⬜ |
+| Contact Email | - | ⬜ |
+
+#### Techniczne
+
+| Element | Status |
 |---------|--------|
-| Model danych TypeScript | ✅ |
-| Lista leków z kartami | ✅ |
-| Filtrowanie (tagi, terminy) | ✅ |
-| Import JSON z walidacją Zod | ✅ |
-| Edycja terminu ważności | ✅ |
-| Alerty o przeterminowaniu | ✅ |
-| Generator promptów AI | ✅ |
-| Eksport JSON + kopiowanie | ✅ |
-| **Eksport do PDF** | ✅ |
-| **Sortowanie (A-Z, termin)** | ✅ |
-| **3-tabowa nawigacja** | ✅ |
-| **Design neumorficzny** | ✅ |
-| **Animacje scroll + button press** | ✅ |
-| **Etykiety użytkownika (labels)** | ✅ |
-| **Notatki użytkownika** | ✅ |
-| **Kopiowanie listy leków** | ✅ |
-| Persistencja localStorage | ✅ |
+| App Bundle (.aab) | ⬜ |
+| Signing Keystore | ⬜ |
+| Content Rating (IARC) | ⬜ |
+
+#### Opłaty
+
+| Element | Koszt | Status |
+|---------|-------|--------|
+| Google Play Developer | $25 jednorazowo | ⬜ |
 
 ---
 
-## ⏳ FAZA 2: MVP Mobile (Flutter)
+## � FAZA 6: Backend + Sync (Przyszłość)
 
-**Cel:** Natywna aplikacja Android (offline-first, jak Opcja A)
+**Cel:** Opcjonalne konta użytkowników i synchronizacja cross-device
 
-| Element | Opis |
-|---------|------|
-| Framework | Flutter + Dart |
-| Lokalna baza | Hive lub Isar |
-| UI | Material Design 3 |
-| Funkcje | Prawie identyczne (zobacz plik [feature-lists.md](feature-lists.md)) |
-| Kamera | Skanowanie opakowań (z promptem) |
-| Powiadomienia | Lokalne alerty o terminach |
-
----
-
-## 📋 FAZA 3: Backend + Synchronizacja (Opcja B)
-
-**Cel:** Opcjonalne konta i sync dla użytkowników premium
+> [!NOTE]
+> Ta faza jest opcjonalna i planowana na przyszłość, gdy baza użytkowników wzrośnie.
 
 | Element | Technologia |
 |---------|-------------|
-| Hosting | Vercel (Next.js) + Railway/Supabase |
-| Autentykacja | NextAuth.js (Google OAuth) |
-| Baza danych | PostgreSQL (Supabase) |
-| API | Next.js API Routes |
-| Sync | Real-time z Supabase |
+| Autentykacja | Firebase Auth / Supabase |
+| Baza danych | Firestore / PostgreSQL |
+| Sync | Real-time synchronization |
 
 ---
 
-## 📋 FAZA 4: Gemini API (Opcja B)
-
-**Cel:** Automatyczne rozpoznawanie leków bez kopiowania promptów
-
-| Element | Opis |
-|---------|------|
-| Provider | Gemini 2.0 Flash (Vision) |
-| Architektura | Backend proxy (nasz klucz API) |
-| Limit | Rate limiting per user |
-| Model biznesowy | Premium feature (przyszłość) |
-
----
-
-> 📅 **Ostatnia aktualizacja:** 2025-12-29
+> 📅 **Ostatnia aktualizacja:** 2026-01-02
