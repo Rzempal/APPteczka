@@ -156,7 +156,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             // 3. Import z pliku
             _buildExpandableSection(
               icon: LucideIcons.folderDown,
-              title: 'Import z pliku',
+              title: 'Import kopii zapasowej',
               subtitle: 'Wczytaj plik JSON z urządzenia',
               isExpanded: _fileExpanded,
               onToggle: () => setState(() => _fileExpanded = !_fileExpanded),

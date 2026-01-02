@@ -538,7 +538,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Icon(LucideIcons.boxes, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Text(
-                    'Zarządzaj Apteczką',
+                    'Zarządzaj apteczką',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -560,7 +560,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: theme.colorScheme.primary,
                   ),
                 ),
-                title: const Text('Zarządzaj etykietami'),
+                title: const Text('Etykiety'),
                 subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () {
@@ -584,8 +584,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: theme.colorScheme.primary,
                   ),
                 ),
-                title: const Text('Zarządzaj tagami'),
-                subtitle: const Text('Usuń niestandardowe tagi z apteczki'),
+                title: const Text('Tagi'),
+                subtitle: const Text(
+                  'Dodawaj, edytuj i usuwaj niestandardowe tagi z apteczki',
+                ),
                 trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () {
                   Navigator.pop(context);
@@ -609,7 +611,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 title: const Text('Skopiuj listę leków'),
-                subtitle: const Text('Format: "lek1, lek2, lek3, ..."'),
+                subtitle: const Text(
+                  'Zwraca liste leków oddzielonych przecinkami',
+                ),
                 trailing: const Icon(LucideIcons.copy),
                 onTap: () {
                   Navigator.pop(context);
