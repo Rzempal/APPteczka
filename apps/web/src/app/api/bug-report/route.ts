@@ -6,7 +6,8 @@ import { NextRequest, NextResponse } from 'next/server';
 // Konfiguracja
 const BUG_REPORT_EMAIL = process.env.BUG_REPORT_EMAIL || 'michal.rapala@resztatokod.pl';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const RESEND_FROM = process.env.RESEND_FROM || 'Karton Bug Reporter <bugs@resend.dev>';
+// Używamy testowej domeny Resend - działa bez weryfikacji własnej domeny
+const RESEND_FROM = process.env.RESEND_FROM || 'Karton Bug Reporter <onboarding@resend.dev>';
 
 interface BugReportRequest {
     log?: string;
