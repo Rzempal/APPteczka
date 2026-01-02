@@ -78,12 +78,13 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_launcher_icons: "^0.13.1"
 
-flutter_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/favicon.png"
-  adaptive_icon_background: "#0f172a"
-  adaptive_icon_foreground: "assets/favicon.png"
+# DISABLED: Using manual XML adaptive icons in res/drawable/ and mipmap-anydpi-v26/
+# flutter_icons:
+#   android: "launcher_icon"
+#   ios: true
+#   image_path: "assets/favicon.png"
+#   adaptive_icon_background: "#0f172a"
+#   adaptive_icon_foreground: "assets/favicon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -96,12 +97,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  # Assets
+  # Assets (cleaned up - only used files)
   assets:
-    - assets/favicon.png
-    - assets/karton.png
-    - assets/karton_otwarty.png
-    - assets/karton_set.png
     - assets/karton_header.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
