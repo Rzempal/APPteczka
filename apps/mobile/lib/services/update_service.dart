@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:ota_update/ota_update.dart';
+import '../config/app_config.dart';
 
 /// Service for checking and installing OTA updates.
 /// Version format: YYYYMMDD_HHMM (e.g., 20251230_2248)
 class UpdateService extends ChangeNotifier {
-  static const String _versionUrl =
-      'https://michalrapala.app/releases/version.json';
 
   String? _currentVersion;
   String? _currentVersionName; // Full version like 0.1.253651505
@@ -56,7 +55,7 @@ class UpdateService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await http.get(Uri.parse(_versionUrl));
+      final response = await http.get(Uri.parse(AppConfig.versionJsonUrl));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);

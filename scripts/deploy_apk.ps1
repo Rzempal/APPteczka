@@ -1,10 +1,12 @@
 # deploy_apk.ps1
 # Skrypt do budowania i deploymentu APK (Build + Copy + Versioning + WinSCP Upload)
-# Uzycie: .\scripts\deploy_apk.ps1 [-SkipBuild] [-SkipUpload]
+# Uzycie: .\scripts\deploy_apk.ps1 [-SkipBuild] [-SkipUpload] [-Channel internal|production]
 
 param(
     [switch]$SkipBuild,
-    [switch]$SkipUpload = $true
+    [switch]$SkipUpload = $true,
+    [ValidateSet("internal", "production")]
+    [string]$Channel = "production"
 )
 
 $ErrorActionPreference = "Stop"
@@ -103,8 +105,18 @@ $TIMESTAMP = "$Year2Digit$DayOfYear$HourMinute"
 # Full version strings
 $VERSION_NAME = "$MAJOR.$MINOR.$TIMESTAMP"
 $VERSION_CODE = [int64]$TIMESTAMP
-$APK_NAME = "karton-z-lekami_$VERSION_NAME.apk"
 
+# Channel-specific naming
+if ($Channel -eq "internal") {
+    $APK_NAME = "karton-dev_$VERSION_NAME.apk"
+    $VERSION_JSON_NAME = "version-internal.json"
+}
+else {
+    $APK_NAME = "karton-z-lekami_$VERSION_NAME.apk"
+    $VERSION_JSON_NAME = "version.json"
+}
+
+Print-Info "Kanal: $Channel"
 Print-Info "Wersja: v$VERSION_NAME"
 Print-Info "versionCode: $VERSION_CODE (yyDDDHHmm)"
 Print-Info "APK: $APK_NAME"
@@ -116,7 +128,7 @@ if (-not $SkipBuild) {
     Push-Location $MOBILE_DIR
     
     try {
-        flutter build apk --release --build-name=$VERSION_NAME --build-number=$VERSION_CODE
+        flutter build apk --release --flavor $Channel --build-name=$VERSION_NAME --build-number=$VERSION_CODE --dart-define=CHANNEL=$Channel
         
         if ($LASTEXITCODE -ne 0) {
             Pop-Location
@@ -143,7 +155,7 @@ else {
 
 # 2. Kopiowanie
 Print-Warn "[2/4] Kopiowanie do releases..."
-$SOURCE_APK = Join-Path $MOBILE_DIR "build\app\outputs\flutter-apk\app-release.apk"
+$SOURCE_APK = Join-Path $MOBILE_DIR "build\app\outputs\flutter-apk\app-$Channel-release.apk"
 $DEST_APK = Join-Path $RELEASES_DIR $APK_NAME
 
 if (-not (Test-Path $RELEASES_DIR)) { New-Item -ItemType Directory -Path $RELEASES_DIR | Out-Null }
@@ -151,17 +163,26 @@ Copy-Item $SOURCE_APK $DEST_APK -Force
 Print-Success "[2/4] APK skopiowane: $APK_NAME"
 
 # 3. Generowanie version.json
-Print-Warn "[3/4] Generowanie version.json..."
+Print-Warn "[3/4] Generowanie $VERSION_JSON_NAME..."
+
+# Determine public URL for APK
+if ($Channel -eq "internal") {
+    $APK_PUBLIC_URL = "$DEPLOY_PUBLIC_URL/internal/$APK_NAME"
+}
+else {
+    $APK_PUBLIC_URL = "$DEPLOY_PUBLIC_URL/$APK_NAME"
+}
+
 $VERSION_JSON = @{
     version     = $VERSION_NAME
     versionCode = $VERSION_CODE
-    apkUrl      = "$DEPLOY_PUBLIC_URL/$APK_NAME"
+    apkUrl      = $APK_PUBLIC_URL
     releaseDate = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
 } | ConvertTo-Json -Depth 2
 
-$VERSION_JSON_PATH = Join-Path $RELEASES_DIR "version.json"
+$VERSION_JSON_PATH = Join-Path $RELEASES_DIR $VERSION_JSON_NAME
 Set-Content -Path $VERSION_JSON_PATH -Value $VERSION_JSON -Encoding UTF8
-Print-Success "[3/4] version.json zaktualizowany!"
+Print-Success "[3/4] $VERSION_JSON_NAME zaktualizowany!"
 
 # 4. Upload
 if (-not $SkipUpload) {
@@ -216,12 +237,18 @@ if (-not $SkipUpload) {
     $openCmd | Out-File $tempScript -Append -Encoding UTF8
     
     # Utworz katalog jesli nie istnieje (ignorujac bledy)
+    # Adjust remote path for internal channel
+    $UPLOAD_REMOTE_PATH = $DEPLOY_REMOTE_PATH
+    if ($Channel -eq "internal") {
+        $UPLOAD_REMOTE_PATH = $DEPLOY_REMOTE_PATH + "internal/"
+    }
+    
     "option batch continue" | Out-File $tempScript -Append -Encoding UTF8
-    "mkdir ""$DEPLOY_REMOTE_PATH""" | Out-File $tempScript -Append -Encoding UTF8
+    "mkdir ""$UPLOAD_REMOTE_PATH""" | Out-File $tempScript -Append -Encoding UTF8
     "option batch on" | Out-File $tempScript -Append -Encoding UTF8
     
-    "put ""$DEST_APK"" ""$DEPLOY_REMOTE_PATH""" | Out-File $tempScript -Append -Encoding UTF8
-    "put ""$VERSION_JSON_PATH"" ""$DEPLOY_REMOTE_PATH""" | Out-File $tempScript -Append -Encoding UTF8
+    "put ""$DEST_APK"" ""$UPLOAD_REMOTE_PATH""" | Out-File $tempScript -Append -Encoding UTF8
+    "put ""$VERSION_JSON_PATH"" ""$UPLOAD_REMOTE_PATH""" | Out-File $tempScript -Append -Encoding UTF8
     "exit" | Out-File $tempScript -Append -Encoding UTF8
 
     try {

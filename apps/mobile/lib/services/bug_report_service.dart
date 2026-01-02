@@ -124,15 +124,28 @@ class BugReportService {
         body: jsonEncode(body),
       );
 
+      log('Bug report response: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         log('Bug report sent successfully');
         return BugReportResult.success();
       } else {
-        final data = jsonDecode(response.body);
-        final error = data['error'] ?? 'Nieznany błąd';
-        log('Bug report failed: $error');
-        return BugReportResult.failure(error);
+        // Bezpieczne parsowanie odpowiedzi
+        String errorMsg = 'Błąd serwera (${response.statusCode})';
+        if (response.body.isNotEmpty) {
+          try {
+            final data = jsonDecode(response.body);
+            errorMsg = data['error'] ?? errorMsg;
+          } catch (_) {
+            // Ignoruj błędy parsowania
+          }
+        }
+        log('Bug report failed: $errorMsg');
+        return BugReportResult.failure(errorMsg);
       }
+    } on SocketException catch (e) {
+      log('Bug report network error: $e');
+      return BugReportResult.failure('Brak połączenia z internetem');
     } catch (e) {
       log('Bug report error: $e');
       return BugReportResult.failure('Błąd wysyłania: $e');

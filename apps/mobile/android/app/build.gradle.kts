@@ -38,6 +38,19 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    flavorDimensions += "channel"
+    productFlavors {
+        create("internal") {
+            dimension = "channel"
+            applicationIdSuffix = ".dev"
+            resValue("string", "app_name", "Karton DEV")
+        }
+        create("production") {
+            dimension = "channel"
+            resValue("string", "app_name", "Karton z lekami")
+        }
+    }
 }
 
 flutter {
