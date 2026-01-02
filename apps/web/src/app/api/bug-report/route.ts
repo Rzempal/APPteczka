@@ -128,9 +128,13 @@ export async function POST(request: NextRequest) {
 
         if (!resendResponse.ok) {
             const errorData = await resendResponse.json().catch(() => ({}));
-            console.error('Resend API error:', errorData);
+            console.error('Resend API error:', JSON.stringify(errorData));
+            console.error('Resend status:', resendResponse.status);
+            console.error('Send config:', { from: RESEND_FROM, to: BUG_REPORT_EMAIL });
+
+            const errorMessage = errorData?.message || errorData?.error || 'Nieznany błąd Resend';
             return NextResponse.json(
-                { error: 'Nie udało się wysłać raportu', code: 'SEND_ERROR' },
+                { error: `Błąd wysyłki: ${errorMessage}`, code: 'SEND_ERROR', details: errorData },
                 { status: 500 }
             );
         }
