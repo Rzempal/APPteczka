@@ -6,10 +6,10 @@
     android:viewportHeight="108">
   
   <group 
-      android:translateX="12" 
-      android:translateY="12" 
-      android:scaleX="0.42" 
-      android:scaleY="0.42">
+      android:translateX="18" 
+      android:translateY="18" 
+      android:scaleX="0.36" 
+      android:scaleY="0.36">
       
       <!-- Box Outline -->
       <path android:pathData="M100,24 L186,64 L186,146 L100,186 L14,146 L14,64 Z"

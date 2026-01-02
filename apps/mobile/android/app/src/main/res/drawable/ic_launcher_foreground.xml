@@ -6,12 +6,12 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
   
-  <!-- Scaling Group (Center 11,11 | Scale 0.44) -->
+  <!-- Scaling Group (Center 16,16 | Scale 0.38 = ZOOM OUT) -->
   <group 
-      android:translateX="11" 
-      android:translateY="11" 
-      android:scaleX="0.44" 
-      android:scaleY="0.44">
+      android:translateX="16" 
+      android:translateY="16" 
+      android:scaleX="0.38" 
+      android:scaleY="0.38">
       
       <!-- Shadow -->
       <path android:pathData="M12,68 L98,108 L98,186 L188,146 L188,68 L100,24 Z"
