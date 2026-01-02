@@ -13,7 +13,7 @@ import '../theme/app_theme.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import 'edit_medicine_screen.dart';
 import 'medicine_detail_sheet.dart';
-import 'pdf_preview_screen.dart';
+import 'pdf_viewer_screen.dart';
 
 /// Opcje sortowania
 enum SortOption {
@@ -779,7 +779,7 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
           MaterialPageRoute(
             builder: (context) =>
-                PdfPreviewScreen(pdfFile: file, title: 'Podgląd PDF'),
+                PdfViewerScreen(file: file, title: 'Podgląd wydruku'),
           ),
         );
       }
