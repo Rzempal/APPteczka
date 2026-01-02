@@ -94,9 +94,29 @@ export async function recognizeMedicinesFromImage(
 
         console.log('Gemini text response:', text);
 
-        // Wyciągnij JSON z odpowiedzi (może być owinięty w ```json ... ```)
-        const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/\{[\s\S]*\}/);
-        const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : text;
+        // Wyciągnij JSON z odpowiedzi (może być owinięty w ```json ... ``` lub ``` ... ```)
+        // Próbujemy kilka wzorców, od najbardziej specyficznego do ogólnego
+        let jsonString = text.trim();
+
+        // Wzorzec 1: ```json ... ``` (z opcjonalnym whitespace)
+        const jsonCodeBlockMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonCodeBlockMatch && jsonCodeBlockMatch[1]) {
+            jsonString = jsonCodeBlockMatch[1].trim();
+        } else {
+            // Wzorzec 2: ``` ... ``` (bez specyfikacji języka)
+            const codeBlockMatch = jsonString.match(/```\s*([\s\S]*?)\s*```/);
+            if (codeBlockMatch && codeBlockMatch[1]) {
+                jsonString = codeBlockMatch[1].trim();
+            } else {
+                // Wzorzec 3: szukaj pierwszego { do ostatniego } 
+                const jsonObjectMatch = jsonString.match(/\{[\s\S]*\}/);
+                if (jsonObjectMatch) {
+                    jsonString = jsonObjectMatch[0].trim();
+                }
+            }
+        }
+
+        console.log('Extracted JSON string:', jsonString.substring(0, 300));
 
         try {
             const parsed = JSON.parse(jsonString);

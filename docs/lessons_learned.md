@@ -249,4 +249,57 @@ W Flutter efekty niedostępne natywnie (jak inset shadow) można symulować prze
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-30
+## 7. Parsowanie odpowiedzi AI z markdown code blocks
+
+**Data:** 2026-01-02  
+**Kontekst:** Gemini API zwraca JSON opakowany w markdown ` ```json ... ``` `
+
+### ❌ Błąd
+
+Pojedynczy regex zakładający konkretny format odpowiedzi AI:
+
+```typescript
+const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/\{[\s\S]*\}/);
+const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : text;
+```
+
+Zawiódł gdy Gemini zwrócił wieloliniowy JSON z niestandardowym formatowaniem.
+
+### ✅ Poprawne rozwiązanie
+
+Kaskadowe próbowanie różnych wzorców, od najbardziej specyficznego do ogólnego:
+
+```typescript
+let jsonString = text.trim();
+
+// Wzorzec 1: ```json ... ```
+const jsonCodeBlockMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
+if (jsonCodeBlockMatch && jsonCodeBlockMatch[1]) {
+    jsonString = jsonCodeBlockMatch[1].trim();
+} else {
+    // Wzorzec 2: ``` ... ``` (bez języka)
+    const codeBlockMatch = jsonString.match(/```\s*([\s\S]*?)\s*```/);
+    if (codeBlockMatch && codeBlockMatch[1]) {
+        jsonString = codeBlockMatch[1].trim();
+    } else {
+        // Wzorzec 3: surowy JSON { ... }
+        const jsonObjectMatch = jsonString.match(/\{[\s\S]*\}/);
+        if (jsonObjectMatch) {
+            jsonString = jsonObjectMatch[0].trim();
+        }
+    }
+}
+```
+
+### Zasada ogólna
+
+Odpowiedzi AI są nieprzewidywalne. Przy parsowaniu:
+
+- Zawsze używaj `.trim()` przed i po ekstrakcji
+- Loguj surową odpowiedź dla debugowania
+- Implementuj fallbacki dla różnych formatów
+- Nigdy nie zakładaj konkretnego formatowania markdown
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-02
