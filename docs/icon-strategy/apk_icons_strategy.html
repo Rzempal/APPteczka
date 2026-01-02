@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karton System - Master Final</title>
+    <style>
+        /* =========================================
+           1. ZMIENNE I MOTYWY
+           ========================================= */
+        :root {
+            /* Branding */
+            --color-mint: #10b981;
+            --color-mint-light: #34d399;
+            --color-mint-dark: #059669;
+            --bg-primary: #0f172a;
+            --text-primary: #f1f5f9;
+            --border-glass: rgba(148, 163, 184, 0.2);
+
+            /* Paleta Kartonu (Color) */
+            --box-face-top: #E6C590;
+            --box-face-right: #D4B070;
+            --box-face-left: #C29B55;
+            --box-inner: #654321;
+            --box-flap: #B08D55;
+
+            /* Akcenty Leków (Color) */
+            --item-bottle: #f59e0b;
+            --item-bottle-dark: #d97706;
+            --item-cap: #f1f5f9;
+            --item-box: #ffffff;
+            --item-box-side: #cbd5e1;
+            --item-blister: #94a3b8;
+            --item-blister-pill: var(--color-mint);
+            --item-tube: var(--color-mint-light);
+            --item-tube-dark: var(--color-mint-dark);
+
+            /* Akcenty Taśmy */
+            --tape-light: var(--color-mint);
+            --tape-dark: var(--color-mint-dark);
+
+            /* Paleta Systemowa (Material You Simulation) */
+            --sys-blue-bg: #d0bcff;
+            --sys-blue-fg: #381e72;
+            --sys-green-bg: #bdfcc9;
+            --sys-green-fg: #00522b;
+            --sys-dark-bg: #303030;
+            --sys-dark-fg: #e2e2e2;
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0fdf4;
+            --text-primary: #1e293b;
+            --border-glass: rgba(148, 163, 184, 0.3);
+
+            --box-face-top: #FFE5B4;
+            --box-face-right: #FFD180;
+            --box-face-left: #FFB74D;
+            --box-inner: #8D5E2A;
+            --box-flap: #E0C090;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, sans-serif;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            transition: background 0.3s;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+        }
+
+        h2 {
+            margin-top: 60px;
+            margin-bottom: 20px;
+            border-top: 1px solid var(--border-glass);
+            padding-top: 40px;
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+        }
+
+        p.subtitle {
+            opacity: 0.6;
+            margin-bottom: 40px;
+            font-family: monospace;
+            text-align: center;
+        }
+
+        /* =========================================
+           2. GRID PREZENTACJI
+           ========================================= */
+        .review-grid {
+            display: grid;
+            grid-template-columns: 140px repeat(6, auto);
+            gap: 30px;
+            align-items: end;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--border-glass);
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .row-label {
+            font-weight: bold;
+            text-align: right;
+            padding-right: 20px;
+            padding-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-end;
+        }
+
+        .row-label span {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            font-weight: normal;
+            font-family: monospace;
+        }
+
+        .size-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            min-width: 80px;
+        }
+
+        .size-label {
+            font-size: 0.75rem;
+            opacity: 0.5;
+            font-family: monospace;
+        }
+
+        /* SVG Styles */
+        svg {
+            overflow: visible;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.15));
+        }
+
+        /* Klasy pomocnicze Mono */
+        .text-mint {
+            color: var(--color-mint);
+        }
+
+        .text-gray {
+            color: #64748b;
+        }
+
+        /* =========================================
+           3. ANIMACJA HERO
+           ========================================= */
+        .hero-animation-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            padding: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .hero-stage {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Keyframes */
+        .anim-items {
+            animation: dropDeep 4.5s cubic-bezier(0.5, 0, 1, 1) infinite;
+            transform-origin: center bottom;
+        }
+
+        #anim-blister {
+            animation-delay: 0.1s;
+        }
+
+        #anim-box {
+            animation-delay: 0.05s;
+        }
+
+        #anim-tube {
+            animation-delay: 0.15s;
+        }
+
+        #anim-bottle {
+            animation-delay: 0s;
+        }
+
+        @keyframes dropDeep {
+            0% {
+                transform: translateY(-80px) scale(1);
+                opacity: 1;
+            }
+
+            15% {
+                transform: translateY(0px) scale(1);
+                opacity: 1;
+            }
+
+            25% {
+                transform: translateY(50px) scale(0.9);
+                opacity: 0;
+            }
+
+            26% {
+                opacity: 0;
+            }
+
+            85% {
+                transform: translateY(-80px) scale(1);
+                opacity: 0;
+            }
+
+            90% {
+                transform: translateY(-80px) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-80px) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .anim-flaps {
+            animation: toggleFlaps 4.5s linear infinite;
+        }
+
+        @keyframes toggleFlaps {
+
+            0%,
+            28% {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+
+            30% {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+
+            90% {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+
+            95% {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+        }
+
+        .anim-lid {
+            animation: lidSlam 4.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite;
+            transform-origin: center 70px;
+            opacity: 0;
+        }
+
+        @keyframes lidSlam {
+
+            0%,
+            28% {
+                opacity: 0;
+                transform: scale(0.8) translateY(-30px);
+            }
+
+            30% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+
+            35% {
+                transform: scale(1);
+            }
+
+            90% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+
+            95% {
+                opacity: 0;
+                transform: scale(0.9) translateY(-10px);
+            }
+        }
+
+        .anim-box-shake {
+            animation: boxImpact 4.5s ease infinite;
+            transform-origin: center bottom;
+        }
+
+        @keyframes boxImpact {
+
+            0%,
+            29% {
+                transform: scale(1);
+            }
+
+            30% {
+                transform: scale(1.05, 0.95) translateY(2px);
+            }
+
+            33% {
+                transform: scale(0.98, 1.02) translateY(-1px);
+            }
+
+            36% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* SVG Helper Classes */
+        .fill-top {
+            fill: var(--box-face-top);
+        }
+
+        .fill-left {
+            fill: var(--box-face-left);
+        }
+
+        .fill-right {
+            fill: var(--box-face-right);
+        }
+
+        .fill-inner {
+            fill: var(--box-inner);
+        }
+
+        .fill-flap {
+            fill: var(--box-flap);
+        }
+
+        .fill-bottle {
+            fill: var(--item-bottle);
+        }
+
+        .fill-bottle-dark {
+            fill: var(--item-bottle-dark);
+        }
+
+        .fill-box {
+            fill: var(--item-box);
+        }
+
+        .fill-box-side {
+            fill: var(--item-box-side);
+        }
+
+        .fill-blister {
+            fill: var(--item-blister);
+        }
+
+        .fill-tube {
+            fill: var(--item-tube);
+        }
+
+        .fill-tube-dark {
+            fill: var(--item-tube-dark);
+        }
+
+        .fill-tape-light {
+            fill: var(--tape-light);
+        }
+
+        .fill-tape-dark {
+            fill: var(--tape-dark);
+        }
+
+        .mono-base {
+            fill: currentColor;
+        }
+
+        /* =========================================
+           4. ANDROID STRATEGY STYLES
+           ========================================= */
+        .android-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .preview-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-glass);
+            padding: 30px;
+            border-radius: 20px;
+        }
+
+        /* Launcher Icon Preview */
+        .launcher-icon {
+            width: 108px;
+            height: 108px;
+            position: relative;
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4));
+        }
+
+        .mask-circle {
+            clip-path: circle(42% at 50% 50%);
+        }
+
+        .mask-squircle {
+            clip-path: path("M 54,0 C 15,0 0,15 0,54 0,93 15,108 54,108 93,108 108,93 108,54 108,15 93,0 54,0 Z");
+        }
+
+        .layer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Themed Icon Preview */
+        .themed-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .themed-preview svg {
+            width: 50px;
+            height: 50px;
+        }
+
+        .theme-blue {
+            background: var(--sys-blue-bg);
+            color: var(--sys-blue-fg);
+        }
+
+        .theme-green {
+            background: var(--sys-green-bg);
+            color: var(--sys-green-fg);
+        }
+
+        .theme-dark {
+            background: var(--sys-dark-bg);
+            color: var(--sys-dark-fg);
+        }
+
+        .desc {
+            font-size: 0.85rem;
+            opacity: 0.6;
+            text-align: center;
+        }
+
+        .code-snippet {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            margin-top: 5px;
+        }
+
+        button.theme-btn {
+            margin-top: 50px;
+            padding: 12px 24px;
+            border-radius: 99px;
+            border: none;
+            background: var(--color-mint);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            transition: 0.2s;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =============================================
+         BIBLIOTEKA SYMBOLI (SOURCE OF TRUTH)
+         ============================================= -->
+    <svg width="0" height="0" style="position: absolute;">
+        <defs>
+
+            <!-- 1. ICON: CLOSED COLOR (Safe Zone 90%) -->
+            <symbol id="icon-closed-color" viewBox="0 0 200 200">
+                <g transform="translate(10, 15) scale(0.9)">
+                    <defs>
+                        <path id="mask-t" d="M100 24 L186 64 L100 104 L14 64 Z" />
+                        <path id="mask-l" d="M12 68 L98 108 L98 186 L12 146 Z" />
+                        <path id="mask-r" d="M188 68 L188 146 L102 186 L102 108 Z" />
+                    </defs>
+                    <g>
+                        <use href="#mask-t" class="fill-top" />
+                        <g clip-path="url(#mask-t)">
+                            <path class="fill-tape-light" d="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z" />
+                        </g>
+                    </g>
+                    <g>
+                        <use href="#mask-l" class="fill-left" />
+                        <g clip-path="url(#mask-l)">
+                            <path class="fill-tape-dark" d="M 35 78.7 L 65 92.7 L 65 140 L 35 125 Z" />
+                        </g>
+                    </g>
+                    <g>
+                        <use href="#mask-r" class="fill-right" />
+                        <g clip-path="url(#mask-r)">
+                            <g transform="translate(145, 127) skewY(-25)">
+                                <rect x="-25" y="-8" width="50" height="16" class="fill-tape-light" rx="1" />
+                                <rect x="-8" y="-25" width="16" height="50" class="fill-tape-light" rx="1" />
+                            </g>
+                        </g>
+                    </g>
+                    <path class="fill-tape-dark" d="M 35 73.8 L 65 87.7 L 65 92.7 L 35 78.7 Z" />
+                </g>
+            </symbol>
+
+            <!-- 2. ICON: OPEN COLOR (Safe Zone 90%, 4 Items, Center Bottle) -->
+            <symbol id="icon-open-color" viewBox="0 0 200 200">
+                <g transform="translate(10, 15) scale(0.9)">
+                    <path class="fill-flap" d="M14 64 L100 34 L85 5 L5 30 Z" opacity="0.9" />
+                    <path class="fill-flap" d="M186 64 L100 34 L115 5 L195 30 Z" opacity="0.9" />
+                    <path class="fill-inner" d="M100 108 L186 64 L100 34 L14 64 Z" />
+                    <!-- Butelka Center -->
+                    <g transform="translate(100, 45) rotate(5)">
+                        <rect x="-12" y="0" width="24" height="42" rx="4" class="fill-bottle" />
+                        <rect x="-12" y="0" width="8" height="42" rx="4" class="fill-bottle-dark" />
+                        <rect x="-14" y="-8" width="28" height="8" fill="var(--item-cap)" rx="2" />
+                        <rect x="-8" y="10" width="16" height="20" fill="rgba(255,255,255,0.9)" rx="2" />
+                    </g>
+                    <path d="M12 68 L98 108 L98 186 L12 146 Z" class="fill-left" />
+                    <path d="M188 68 L188 146 L102 186 L102 108 Z" class="fill-right" />
+                    <!-- Tubka -->
+                    <g transform="translate(45, 55) rotate(45)">
+                        <rect x="-8" y="25" width="16" height="8" fill="var(--item-cap)" rx="1" />
+                        <path class="fill-tube" d="M-10 25 L10 25 L8 -15 L-8 -15 Z" />
+                        <path class="fill-tube-dark" d="M-10 25 L0 25 L0 -15 L-8 -15 Z" />
+                        <path class="fill-tube" d="M-8 -15 L8 -15 L10 -20 L-10 -20 Z" />
+                        <rect x="-9" y="5" width="18" height="5" fill="white" opacity="0.3" />
+                    </g>
+                    <!-- Pudełko Simple -->
+                    <g transform="translate(155, 65) rotate(-25)">
+                        <path class="fill-box-side" d="M-12 -18 L-20 -24 L-20 12 L-12 18 Z" />
+                        <path class="fill-box" d="M-12 -18 L12 -18 L12 18 L-12 18 Z" />
+                        <path fill="#ffffff" d="M-12 -18 L12 -18 L4 -24 L-20 -24 Z" />
+                        <rect x="-6" y="-6" width="12" height="12" fill="var(--color-mint)" rx="1" opacity="0.9" />
+                    </g>
+                    <!-- Blister Fix -->
+                    <g transform="translate(75, 15) rotate(-20)">
+                        <rect x="-18" y="-24" width="36" height="48" rx="4" class="fill-blister" />
+                        <rect x="-16" y="-22" width="32" height="44" fill="none" stroke="rgba(255,255,255,0.4)"
+                            stroke-width="1" rx="3" />
+                        <g fill="var(--item-blister-pill)">
+                            <circle cx="-9" cy="-12" r="5" />
+                            <circle cx="-9" cy="0" r="5" />
+                            <circle cx="-9" cy="12" r="5" />
+                            <circle cx="9" cy="-12" r="5" />
+                            <circle cx="9" cy="0" r="5" />
+                            <circle cx="9" cy="12" r="5" />
+                        </g>
+                    </g>
+                    <!-- Krzyż -->
+                    <g clip-path="url(#mask-r)">
+                        <g transform="translate(145, 127) skewY(-25)">
+                            <rect x="-20" y="-6" width="40" height="12" fill="var(--color-mint)" rx="1" />
+                            <rect x="-6" y="-20" width="12" height="40" fill="var(--color-mint)" rx="1" />
+                        </g>
+                    </g>
+                </g>
+            </symbol>
+
+            <!-- 3. ICON: CLOSED MONO (Opacity based) -->
+            <symbol id="icon-closed-mono" viewBox="0 0 200 200">
+                <g transform="translate(10, 15) scale(0.9)">
+                    <defs>
+                        <path id="mask-tm" d="M100 24 L186 64 L100 104 L14 64 Z" />
+                        <path id="mask-lm" d="M12 68 L98 108 L98 186 L12 146 Z" />
+                        <path id="mask-rm" d="M188 68 L188 146 L102 186 L102 108 Z" />
+                    </defs>
+                    <g>
+                        <use href="#mask-tm" class="mono-base" opacity="0.15" />
+                        <g clip-path="url(#mask-tm)">
+                            <path class="mono-base" d="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z" opacity="1" />
+                        </g>
+                    </g>
+                    <g>
+                        <use href="#mask-lm" class="mono-base" opacity="0.5" />
+                        <g clip-path="url(#mask-lm)">
+                            <path class="mono-base" d="M 35 78.7 L 65 92.7 L 65 140 L 35 125 Z" opacity="1" />
+                        </g>
+                    </g>
+                    <g>
+                        <use href="#mask-rm" class="mono-base" opacity="0.3" />
+                        <g clip-path="url(#mask-rm)">
+                            <g transform="translate(145, 127) skewY(-25)">
+                                <rect x="-25" y="-8" width="50" height="16" class="mono-base" rx="1" opacity="1" />
+                                <rect x="-8" y="-25" width="16" height="50" class="mono-base" rx="1" opacity="1" />
+                            </g>
+                        </g>
+                    </g>
+                    <path class="mono-base" d="M 35 73.8 L 65 87.7 L 65 92.7 L 35 78.7 Z" opacity="1" />
+                </g>
+            </symbol>
+
+            <!-- 4. ICON: OPEN MONO (4 Items, Opacity based) -->
+            <symbol id="icon-open-mono" viewBox="0 0 200 200">
+                <g transform="translate(10, 15) scale(0.9)">
+                    <path class="mono-base" d="M14 64 L100 34 L85 5 L5 30 Z" opacity="0.1" />
+                    <path class="mono-base" d="M186 64 L100 34 L115 5 L195 30 Z" opacity="0.1" />
+                    <path class="mono-base" d="M100 108 L186 64 L100 34 L14 64 Z" opacity="0.25" />
+                    <g transform="translate(100, 45) rotate(5)">
+                        <rect x="-12" y="0" width="8" height="42" rx="4" class="mono-base" opacity="1" />
+                        <rect x="-12" y="0" width="24" height="42" rx="4" class="mono-base" opacity="0.5" />
+                        <rect x="-14" y="-8" width="28" height="8" class="mono-base" rx="2" opacity="0.8" />
+                        <rect x="-8" y="10" width="16" height="20" class="mono-base" rx="2" opacity="0.3" />
+                    </g>
+                    <path d="M12 68 L98 108 L98 186 L12 146 Z" class="mono-base" opacity="0.5" />
+                    <path d="M188 68 L188 146 L102 186 L102 108 Z" class="mono-base" opacity="0.3" />
+                    <g transform="translate(45, 55) rotate(45)">
+                        <rect x="-8" y="25" width="16" height="8" class="mono-base" rx="1" opacity="0.8" />
+                        <path class="mono-base" d="M-10 25 L10 25 L8 -15 L-8 -15 Z" opacity="0.9" />
+                        <path class="mono-base" d="M-8 -15 L8 -15 L10 -20 L-10 -20 Z" opacity="0.6" />
+                        <rect x="-9" y="5" width="18" height="5" class="mono-base" opacity="0.2" />
+                    </g>
+                    <g transform="translate(155, 65) rotate(-25)">
+                        <path class="mono-base" d="M-12 -18 L-20 -24 L-20 12 L-12 18 Z" opacity="0.8" />
+                        <path class="mono-base" d="M-12 -18 L12 -18 L12 18 L-12 18 Z" opacity="1" />
+                        <path class="mono-base" d="M-12 -18 L12 -18 L4 -24 L-20 -24 Z" opacity="0.4" />
+                        <rect x="-6" y="-6" width="12" height="12" class="mono-base" rx="1" opacity="0.3" />
+                    </g>
+                    <g transform="translate(75, 15) rotate(-20)">
+                        <rect x="-18" y="-24" width="36" height="48" rx="4" class="mono-base" opacity="0.4" />
+                        <rect x="-16" y="-22" width="32" height="44" fill="none" stroke="currentColor" stroke-width="2"
+                            rx="3" opacity="0.8" />
+                        <g class="mono-base" opacity="1">
+                            <circle cx="-9" cy="-12" r="5" />
+                            <circle cx="-9" cy="0" r="5" />
+                            <circle cx="-9" cy="12" r="5" />
+                            <circle cx="9" cy="-12" r="5" />
+                            <circle cx="9" cy="0" r="5" />
+                            <circle cx="9" cy="12" r="5" />
+                        </g>
+                    </g>
+                    <g transform="translate(145, 127) skewY(-25)">
+                        <rect x="-20" y="-6" width="40" height="12" class="mono-base" rx="1" opacity="0.8" />
+                        <rect x="-6" y="-20" width="12" height="40" class="mono-base" rx="1" opacity="0.8" />
+                    </g>
+                </g>
+            </symbol>
+
+            <!-- 5. ANDROID: BACKGROUND (Radial) -->
+            <symbol id="android-bg" viewBox="0 0 108 108">
+                <defs>
+                    <radialGradient id="grad-center" cx="50%" cy="50%" r="65%" fx="50%" fy="50%">
+                        <stop offset="0%" stop-color="#6ee7b7" stop-opacity="0.8" />
+                        <stop offset="40%" stop-color="#10b981" stop-opacity="0.6" />
+                        <stop offset="100%" stop-color="#022c22" stop-opacity="1" />
+                    </radialGradient>
+                    <filter id="blur-bg" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="15" />
+                    </filter>
+                </defs>
+                <rect width="108" height="108" fill="#022c22" />
+                <rect width="108" height="108" fill="url(#grad-center)" />
+                <g filter="url(#blur-bg)">
+                    <circle cx="54" cy="54" r="25" fill="#ffffff" opacity="0.15" />
+                </g>
+            </symbol>
+
+            <!-- 6. ANDROID: FOREGROUND (Scaled for 108dp) -->
+            <symbol id="android-fg" viewBox="0 0 108 108">
+                <g transform="translate(11, 11) scale(0.44)">
+                    <defs>
+                        <radialGradient id="gloss-fg" cx="50%" cy="50%" r="60%" fx="50%" fy="50%">
+                            <stop offset="0%" stop-color="white" stop-opacity="0.5" />
+                            <stop offset="100%" stop-color="white" stop-opacity="0" />
+                        </radialGradient>
+                    </defs>
+                    <path d="M12 68 L98 108 L98 186 L188 146 L188 68 L100 24 Z" fill="black" opacity="0.3"
+                        transform="translate(0, 18)" filter="blur(12px)" />
+                    <path d="M100 24 L186 64 L100 104 L14 64 Z" fill="var(--box-face-top)" />
+                    <path d="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z" fill="var(--tape-light)" />
+                    <path d="M12 68 L98 108 L98 186 L12 146 Z" fill="var(--box-face-left)" />
+                    <path d="M 35 78.7 L 65 92.7 L 65 140 L 35 125 Z" fill="var(--tape-dark)" />
+                    <path d="M188 68 L188 146 L102 186 L102 108 Z" fill="var(--box-face-right)" />
+                    <g transform="translate(145, 127) skewY(-25)">
+                        <rect x="-25" y="-8" width="50" height="16" fill="var(--tape-light)" rx="1" />
+                        <rect x="-8" y="-25" width="16" height="50" fill="var(--tape-light)" rx="1" />
+                    </g>
+                    <path d="M 35 73.8 L 65 87.7 L 65 92.7 L 35 78.7 Z" fill="var(--tape-dark)" />
+                    <path d="M100 24 L186 64 L100 104 L14 64 Z" fill="url(#gloss-fg)"
+                        style="mix-blend-mode: soft-light;" />
+                    <path d="M14 64 L100 24 L186 64" fill="none" stroke="white" stroke-width="2" stroke-opacity="0.4" />
+                </g>
+            </symbol>
+
+            <!-- 7. ANDROID: MONOCHROME (Themed Icon) -->
+            <symbol id="android-mono" viewBox="0 0 108 108">
+                <g transform="translate(12, 12) scale(0.42)">
+                    <path fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"
+                        d="M100 24 L186 64 L186 146 L100 186 L14 146 L14 64 Z" />
+                    <path fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"
+                        d="M14 64 L100 104 L186 64 M100 104 L100 186" />
+                    <path fill="currentColor" d="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z" />
+                    <path fill="currentColor" d="M 35 73.8 L 65 87.7 L 65 140 L 35 125 Z" />
+                    <g transform="translate(145, 127) skewY(-25)">
+                        <rect x="-25" y="-8" width="50" height="16" fill="currentColor" rx="4" />
+                        <rect x="-8" y="-25" width="16" height="50" fill="currentColor" rx="4" />
+                    </g>
+                </g>
+            </symbol>
+        </defs>
+    </svg>
+
+    <h1>Design System: Master Final</h1>
+    <p class="subtitle">Complete Icon Set & Animation Logic</p>
+
+    <!-- FULL COLOR GRID -->
+    <div class="review-grid">
+        <div class="row-label">Full Color Closed<span>Master</span></div>
+        <div class="size-col"><svg width="16" height="16">
+                <use href="#icon-closed-color" />
+            </svg><span class="size-label">16px</span></div>
+        <div class="size-col"><svg width="24" height="24">
+                <use href="#icon-closed-color" />
+            </svg><span class="size-label">24px</span></div>
+        <div class="size-col"><svg width="32" height="32">
+                <use href="#icon-closed-color" />
+            </svg><span class="size-label">32px</span></div>
+        <div class="size-col"><svg width="48" height="48">
+                <use href="#icon-closed-color" />
+            </svg><span class="size-label">48px</span></div>
+        <div class="size-col"><svg width="64" height="64">
+                <use href="#icon-closed-color" />
+            </svg><span class="size-label">64px</span></div>
+        <div class="size-col"><svg width="128" height="128">
+                <use href="#icon-closed-color" />
+            </svg><span class="size-label">128px</span></div>
+
+        <div style="grid-column: 1 / -1; height: 10px;"></div>
+
+        <div class="row-label">Full Color Open<span>4 Items</span></div>
+        <div class="size-col"><svg width="16" height="16">
+                <use href="#icon-open-color" />
+            </svg><span class="size-label">16px</span></div>
+        <div class="size-col"><svg width="24" height="24">
+                <use href="#icon-open-color" />
+            </svg><span class="size-label">24px</span></div>
+        <div class="size-col"><svg width="32" height="32">
+                <use href="#icon-open-color" />
+            </svg><span class="size-label">32px</span></div>
+        <div class="size-col"><svg width="48" height="48">
+                <use href="#icon-open-color" />
+            </svg><span class="size-label">48px</span></div>
+        <div class="size-col"><svg width="64" height="64">
+                <use href="#icon-open-color" />
+            </svg><span class="size-label">64px</span></div>
+        <div class="size-col"><svg width="128" height="128">
+                <use href="#icon-open-color" />
+            </svg><span class="size-label">128px</span></div>
+    </div>
+
+    <br><br>
+
+    <!-- MONO GRID -->
+    <div class="review-grid">
+        <div class="row-label text-mint">Mono Closed<span>(color: mint)</span></div>
+        <div class="size-col text-mint"><svg width="16" height="16">
+                <use href="#icon-closed-mono" />
+            </svg><span class="size-label">16px</span></div>
+        <div class="size-col text-mint"><svg width="24" height="24">
+                <use href="#icon-closed-mono" />
+            </svg><span class="size-label">24px</span></div>
+        <div class="size-col text-mint"><svg width="32" height="32">
+                <use href="#icon-closed-mono" />
+            </svg><span class="size-label">32px</span></div>
+        <div class="size-col text-mint"><svg width="48" height="48">
+                <use href="#icon-closed-mono" />
+            </svg><span class="size-label">48px</span></div>
+        <div class="size-col text-mint"><svg width="64" height="64">
+                <use href="#icon-closed-mono" />
+            </svg><span class="size-label">64px</span></div>
+        <div class="size-col text-mint"><svg width="128" height="128">
+                <use href="#icon-closed-mono" />
+            </svg><span class="size-label">128px</span></div>
+
+        <div style="grid-column: 1 / -1; height: 10px;"></div>
+
+        <div class="row-label text-gray">Mono Open<span>(color: gray)</span></div>
+        <div class="size-col text-gray"><svg width="16" height="16">
+                <use href="#icon-open-mono" />
+            </svg><span class="size-label">16px</span></div>
+        <div class="size-col text-gray"><svg width="24" height="24">
+                <use href="#icon-open-mono" />
+            </svg><span class="size-label">24px</span></div>
+        <div class="size-col text-gray"><svg width="32" height="32">
+                <use href="#icon-open-mono" />
+            </svg><span class="size-label">32px</span></div>
+        <div class="size-col text-gray"><svg width="48" height="48">
+                <use href="#icon-open-mono" />
+            </svg><span class="size-label">48px</span></div>
+        <div class="size-col text-gray"><svg width="64" height="64">
+                <use href="#icon-open-mono" />
+            </svg><span class="size-label">64px</span></div>
+        <div class="size-col text-gray"><svg width="128" height="128">
+                <use href="#icon-open-mono" />
+            </svg><span class="size-label">128px</span></div>
+    </div>
+
+    <!-- ANDROID APP ICON STRATEGY -->
+    <h2>Android App Icon Strategy</h2>
+    <p class="subtitle">Integration with Material You (Android 13+)</p>
+
+    <div class="android-grid">
+        <!-- 1. FULL COLOR ADAPTIVE -->
+        <div class="preview-box">
+            <div class="launcher-icon mask-circle">
+                <svg class="layer">
+                    <use href="#android-bg" />
+                </svg>
+                <svg class="layer">
+                    <use href="#android-fg" />
+                </svg>
+            </div>
+            <div class="desc" style="margin-top: 15px;">Standard Adaptive<br>Pixel / Default</div>
+            <div class="code-snippet">ic_launcher.xml</div>
+        </div>
+
+        <!-- 2. MATERIAL YOU (Blue Theme) -->
+        <div class="preview-box">
+            <div class="themed-preview theme-blue">
+                <svg>
+                    <use href="#android-mono" />
+                </svg>
+            </div>
+            <div class="desc" style="margin-top: 15px;">Themed Icon (Blue)<br>System Wallpaper</div>
+            <div class="code-snippet">ic_launcher_monochrome.xml</div>
+        </div>
+
+        <!-- 3. MATERIAL YOU (Green Theme) -->
+        <div class="preview-box">
+            <div class="themed-preview theme-green">
+                <svg>
+                    <use href="#android-mono" />
+                </svg>
+            </div>
+            <div class="desc" style="margin-top: 15px;">Themed Icon (Green)<br>Brand Wallpaper</div>
+        </div>
+
+        <!-- 4. MATERIAL YOU (Dark Theme) -->
+        <div class="preview-box">
+            <div class="themed-preview theme-dark">
+                <svg>
+                    <use href="#android-mono" />
+                </svg>
+            </div>
+            <div class="desc" style="margin-top: 15px;">Themed Icon (Dark)<br>Dark Mode</div>
+        </div>
+    </div>
+
+    <!-- ANIMATION -->
+    <h2>Hero Animation</h2>
+    <p class="subtitle">Deep Drop with Box Shake</p>
+
+    <div class="hero-animation-card">
+        <div class="hero-stage">
+            <svg viewBox="0 0 200 200">
+                <g class="anim-box-shake" transform="translate(10, 15) scale(0.9)">
+                    <g class="anim-flaps">
+                        <path class="fill-flap" d="M14 64 L100 34 L85 5 L5 30 Z" opacity="0.9" />
+                        <path class="fill-flap" d="M186 64 L100 34 L115 5 L195 30 Z" opacity="0.9" />
+                        <path class="fill-inner" d="M100 108 L186 64 L100 34 L14 64 Z" />
+                    </g>
+
+                    <g class="anim-items" id="anim-bottle">
+                        <g transform="translate(100, 45) rotate(5)">
+                            <rect x="-12" y="0" width="24" height="42" rx="4" class="fill-bottle" />
+                            <rect x="-12" y="0" width="8" height="42" rx="4" class="fill-bottle-dark" />
+                            <rect x="-14" y="-8" width="28" height="8" fill="var(--item-cap)" rx="2" />
+                            <rect x="-8" y="10" width="16" height="20" fill="rgba(255,255,255,0.9)" rx="2" />
+                        </g>
+                    </g>
+                    <g class="anim-items" id="anim-tube">
+                        <g transform="translate(45, 55) rotate(45)">
+                            <rect x="-8" y="25" width="16" height="8" fill="var(--item-cap)" rx="1" />
+                            <path class="fill-tube" d="M-10 25 L10 25 L8 -15 L-8 -15 Z" />
+                            <path class="fill-tube-dark" d="M-10 25 L0 25 L0 -15 L-8 -15 Z" />
+                            <path class="fill-tube" d="M-8 -15 L8 -15 L10 -20 L-10 -20 Z" />
+                            <rect x="-9" y="5" width="18" height="5" fill="white" opacity="0.3" />
+                        </g>
+                    </g>
+                    <g class="anim-items" id="anim-box">
+                        <g transform="translate(155, 65) rotate(-25)">
+                            <path class="fill-box-side" d="M-12 -18 L-20 -24 L-20 12 L-12 18 Z" />
+                            <path class="fill-box" d="M-12 -18 L12 -18 L12 18 L-12 18 Z" />
+                            <path fill="#ffffff" d="M-12 -18 L12 -18 L4 -24 L-20 -24 Z" />
+                            <rect x="-6" y="-6" width="12" height="12" fill="var(--color-mint)" rx="1" opacity="0.9" />
+                        </g>
+                    </g>
+                    <g class="anim-items" id="anim-blister">
+                        <g transform="translate(75, 15) rotate(-20)">
+                            <rect x="-18" y="-24" width="36" height="48" rx="4" class="fill-blister" />
+                            <rect x="-16" y="-22" width="32" height="44" fill="none" stroke="rgba(255,255,255,0.4)"
+                                stroke-width="1" rx="3" />
+                            <g fill="var(--item-blister-pill)">
+                                <circle cx="-9" cy="-12" r="5" />
+                                <circle cx="-9" cy="0" r="5" />
+                                <circle cx="-9" cy="12" r="5" />
+                                <circle cx="9" cy="-12" r="5" />
+                                <circle cx="9" cy="0" r="5" />
+                                <circle cx="9" cy="12" r="5" />
+                            </g>
+                        </g>
+                    </g>
+
+                    <path d="M12 68 L98 108 L98 186 L12 146 Z" class="fill-left" />
+                    <path d="M188 68 L188 146 L102 186 L102 108 Z" class="fill-right" />
+
+                    <g class="anim-lid">
+                        <path d="M100 24 L186 64 L100 104 L14 64 Z" class="fill-top" />
+                        <path class="fill-tape-light" d="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z" />
+                        <path class="fill-tape-dark" d="M 35 73.8 L 65 87.7 L 65 92.7 L 35 78.7 Z" />
+                        <path class="fill-tape-dark" d="M 35 78.7 L 65 92.7 L 65 140 L 35 125 Z" />
+                        <g transform="translate(145, 127) skewY(-25)">
+                            <rect x="-25" y="-8" width="50" height="16" class="fill-tape-light" rx="1" />
+                            <rect x="-8" y="-25" width="16" height="50" class="fill-tape-light" rx="1" />
+                        </g>
+                    </g>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <button class="theme-btn" onclick="toggleTheme()">Przełącz Motyw (Light/Dark)</button>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        }
+    </script>
+</body>
+
+</html>
