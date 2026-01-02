@@ -13,6 +13,7 @@ import '../theme/app_theme.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import 'edit_medicine_screen.dart';
 import 'medicine_detail_sheet.dart';
+import 'pdf_preview_screen.dart';
 
 /// Opcje sortowania
 enum SortOption {
@@ -648,37 +649,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 title: const Text('Tabela leków do PDF'),
                 subtitle: const Text(
-                  'Eksportuj tabelę leków gotową do wydruku',
+                  'Podgląd, udostępnianie i drukowanie tabeli',
                 ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Zapisz PDF
-                    IconButton(
-                      icon: Icon(
-                        LucideIcons.download,
-                        color: theme.colorScheme.primary,
-                      ),
-                      tooltip: 'Zapisz PDF',
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _exportToPdf();
-                      },
-                    ),
-                    // Drukuj
-                    IconButton(
-                      icon: Icon(
-                        LucideIcons.printer,
-                        color: theme.colorScheme.primary,
-                      ),
-                      tooltip: 'Drukuj',
-                      onPressed: () {
-                        Navigator.pop(context);
-                        _printMedicines();
-                      },
-                    ),
-                  ],
-                ),
+                trailing: const Icon(LucideIcons.chevronRight),
+                onTap: () {
+                  Navigator.pop(context);
+                  _previewPdfExport();
+                },
               ),
 
               const SizedBox(height: 24),
@@ -769,8 +746,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Eksportuje przefiltrowane leki do PDF
-  Future<void> _exportToPdf() async {
+  /// Generuje PDF i otwiera ekran podglądu
+  Future<void> _previewPdfExport() async {
     final medicines = _filteredMedicines;
     if (medicines.isEmpty) {
       if (mounted) {
@@ -785,53 +762,33 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     try {
+      // Pokaż loader podczas generowania
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => const Center(child: CircularProgressIndicator()),
+      );
+
       final service = PdfExportService();
-      await service.sharePdf(medicines);
+      final file = await service.generateAndSavePdf(medicines);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Wygenerowano PDF z ${medicines.length} lekami'),
-            behavior: SnackBarBehavior.floating,
+        Navigator.pop(context); // Zamknij loader
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                PdfPreviewScreen(pdfFile: file, title: 'Podgląd PDF'),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        Navigator.pop(context); // Zamknij loader w razie błędu
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Błąd eksportu: $e'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.expired,
-          ),
-        );
-      }
-    }
-  }
-
-  /// Drukuje przefiltrowane leki
-  Future<void> _printMedicines() async {
-    final medicines = _filteredMedicines;
-    if (medicines.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Brak leków do wydruku'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-      return;
-    }
-
-    try {
-      final service = PdfExportService();
-      await service.printPdf(medicines);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Błąd drukowania: $e'),
+            content: Text('Błąd generowania PDF: $e'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.expired,
           ),

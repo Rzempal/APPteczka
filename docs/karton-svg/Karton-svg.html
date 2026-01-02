@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karton System - Full Review</title>
+    <style>
+        /* =========================================
+           Zmienne (Branding)
+           ========================================= */
+        :root {
+            --color-mint: #10b981;
+            --color-mint-light: #34d399;
+            --color-mint-dark: #059669;
+            --bg-primary: #0f172a;
+            --text-primary: #f1f5f9;
+            --border-glass: rgba(148, 163, 184, 0.2);
+
+            /* Paleta Kartonu */
+            --box-face-top: #E6C590;
+            --box-face-right: #D4B070;
+            --box-face-left: #C29B55;
+            --box-inner: #654321;
+            --box-flap: #B08D55;
+
+            /* Akcenty Leków */
+            --item-bottle: #f59e0b;     
+            --item-bottle-dark: #d97706;
+            --item-cap: #f1f5f9;        
+            
+            --item-box: #ffffff;        
+            --item-box-side: #cbd5e1;
+            
+            --item-blister: #94a3b8;    
+            --item-blister-pill: var(--color-mint);
+            
+            --item-tube: var(--color-mint-light); 
+            --item-tube-dark: var(--color-mint-dark);
+
+            /* Akcenty Zamkniętego Kartonu */
+            --tape-light: var(--color-mint);
+            --tape-dark: var(--color-mint-dark);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f0fdf4;
+            --text-primary: #1e293b;
+            --border-glass: rgba(148, 163, 184, 0.3);
+            
+            --box-face-top: #FFE5B4;
+            --box-face-right: #FFD180;
+            --box-face-left: #FFB74D;
+            --box-inner: #8D5E2A;
+            --box-flap: #E0C090; 
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: -apple-system, sans-serif;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            transition: background 0.3s;
+        }
+
+        h1 { margin-bottom: 10px; }
+        p.subtitle { opacity: 0.6; margin-bottom: 50px; font-family: monospace; }
+
+        /* Tabela Prezentacji */
+        .review-grid {
+            display: grid;
+            grid-template-columns: 100px repeat(6, auto); /* Label + 6 sizes */
+            gap: 20px;
+            align-items: end;
+            background: rgba(255,255,255,0.02);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid var(--border-glass);
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .row-label {
+            font-weight: bold;
+            text-align: right;
+            padding-right: 20px;
+            padding-bottom: 20px;
+            color: var(--color-mint);
+        }
+
+        .size-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            min-width: 80px;
+        }
+
+        .size-label {
+            font-size: 0.75rem;
+            opacity: 0.5;
+            font-family: monospace;
+        }
+
+        /* SVG Styles */
+        svg { overflow: visible; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15)); }
+        
+        /* Classes for SVG usage */
+        .fill-top { fill: var(--box-face-top); }
+        .fill-left { fill: var(--box-face-left); }
+        .fill-right { fill: var(--box-face-right); }
+        .fill-inner { fill: var(--box-inner); }
+        .fill-flap { fill: var(--box-flap); }
+        
+        .fill-bottle { fill: var(--item-bottle); }
+        .fill-bottle-dark { fill: var(--item-bottle-dark); }
+        .fill-box { fill: var(--item-box); }
+        .fill-box-side { fill: var(--item-box-side); }
+        .fill-blister { fill: var(--item-blister); }
+        .fill-tube { fill: var(--item-tube); }
+        .fill-tube-dark { fill: var(--item-tube-dark); }
+        
+        .fill-tape-light { fill: var(--tape-light); }
+        .fill-tape-dark { fill: var(--tape-dark); }
+
+
+        button {
+            margin-top: 50px;
+            padding: 12px 24px;
+            border-radius: 99px;
+            border: none;
+            background: var(--color-mint);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            transition: 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+    <svg width="0" height="0" style="position: absolute;">
+        <defs>
+            <!-- =============================================
+                 1. CLOSED MASTER
+                 (Z taśmą, krzyżem, skalowany do 90% dla safe zone)
+                 ============================================= -->
+            <symbol id="icon-closed" viewBox="0 0 200 200">
+                <g transform="translate(10, 10) scale(0.9)">
+                    <!-- Maski Negative Space -->
+                    <defs>
+                        <path id="mask-top" d="M100 24 L186 64 L100 104 L14 64 Z" />
+                        <path id="mask-left" d="M12 68 L98 108 L98 186 L12 146 Z" />
+                        <path id="mask-right" d="M188 68 L188 146 L102 186 L102 108 Z" />
+                    </defs>
+
+                    <!-- Góra -->
+                    <g>
+                        <use href="#mask-top" class="fill-top" />
+                        <g clip-path="url(#mask-top)">
+                            <path class="fill-tape-light" d="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z" />
+                        </g>
+                    </g>
+
+                    <!-- Lewy bok -->
+                    <g>
+                        <use href="#mask-left" class="fill-left" />
+                        <g clip-path="url(#mask-left)">
+                            <path class="fill-tape-dark" d="M 35 78.7 L 65 92.7 L 65 140 L 35 125 Z" />
+                        </g>
+                    </g>
+
+                    <!-- Prawy bok -->
+                    <g>
+                        <use href="#mask-right" class="fill-right" />
+                        <g clip-path="url(#mask-right)">
+                            <g transform="translate(145, 127) skewY(-25)">
+                                <rect x="-25" y="-8" width="50" height="16" class="fill-tape-light" rx="1" />
+                                <rect x="-8" y="-25" width="16" height="50" class="fill-tape-light" rx="1" />
+                            </g>
+                        </g>
+                    </g>
+
+                    <!-- Łącznik taśmy -->
+                    <path class="fill-tape-dark" d="M 35 73.8 L 65 87.7 L 65 92.7 L 35 78.7 Z" />
+                </g>
+            </symbol>
+
+            <!-- =============================================
+                 2. OPEN MASTER (Full Items Drop)
+                 (4 przedmioty, butelka center, safe zone 90%)
+                 ============================================= -->
+            <symbol id="icon-open" viewBox="0 0 200 200">
+                <g transform="translate(10, 15) scale(0.9)">
+                    
+                    <!-- Tylne Klapy -->
+                    <path class="fill-flap" d="M14 64 L100 34 L85 5 L5 30 Z" opacity="0.9" />
+                    <path class="fill-flap" d="M186 64 L100 34 L115 5 L195 30 Z" opacity="0.9" />
+
+                    <!-- Wnętrze -->
+                    <path class="fill-inner" d="M100 108 L186 64 L100 34 L14 64 Z" />
+
+                    <!-- Butelka (Center) -->
+                    <g transform="translate(100, 45) rotate(5)">
+                        <rect x="-12" y="0" width="24" height="42" rx="4" class="fill-bottle" />
+                        <rect x="-12" y="0" width="8" height="42" rx="4" class="fill-bottle-dark" />
+                        <rect x="-14" y="-8" width="28" height="8" fill="var(--item-cap)" rx="2" />
+                        <rect x="-8" y="10" width="16" height="20" fill="rgba(255,255,255,0.9)" rx="2" />
+                    </g>
+
+                    <!-- Przednie Ściany -->
+                    <path d="M12 68 L98 108 L98 186 L12 146 Z" class="fill-left" />
+                    <path d="M188 68 L188 146 L102 186 L102 108 Z" class="fill-right" />
+
+                    <!-- Tubka -->
+                    <g transform="translate(45, 55) rotate(45)">
+                        <rect x="-8" y="25" width="16" height="8" fill="var(--item-cap)" rx="1" />
+                        <path class="fill-tube" d="M-10 25 L10 25 L8 -15 L-8 -15 Z" />
+                        <path class="fill-tube-dark" d="M-10 25 L0 25 L0 -15 L-8 -15 Z" />
+                        <path class="fill-tube" d="M-8 -15 L8 -15 L10 -20 L-10 -20 Z" />
+                        <rect x="-9" y="5" width="18" height="5" fill="white" opacity="0.3" />
+                    </g>
+
+                    <!-- Pudełko -->
+                    <g transform="translate(155, 65) rotate(-25)">
+                        <path class="fill-box-side" d="M-12 -18 L-20 -24 L-20 12 L-12 18 Z" />
+                        <path class="fill-box" d="M-12 -18 L12 -18 L12 18 L-12 18 Z" />
+                        <path fill="#ffffff" d="M-12 -18 L12 -18 L4 -24 L-20 -24 Z" />
+                        <rect x="-6" y="-6" width="12" height="12" fill="var(--color-mint)" rx="1" opacity="0.9" />
+                    </g>
+
+                    <!-- Blister -->
+                    <g transform="translate(75, 15) rotate(-20)">
+                        <rect x="-18" y="-24" width="36" height="48" rx="4" class="fill-blister" />
+                        <rect x="-16" y="-22" width="32" height="44" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" rx="3" />
+                        <g fill="var(--item-blister-pill)">
+                            <circle cx="-9" cy="-12" r="5" />
+                            <circle cx="-9" cy="0" r="5" />
+                            <circle cx="-9" cy="12" r="5" />
+                            <circle cx="9" cy="-12" r="5" />
+                            <circle cx="9" cy="0" r="5" />
+                            <circle cx="9" cy="12" r="5" />
+                        </g>
+                    </g>
+
+                     <!-- Krzyż -->
+                     <g clip-path="url(#mask-r)"> 
+                        <g transform="translate(145, 127) skewY(-25)">
+                            <rect x="-20" y="-6" width="40" height="12" fill="var(--color-mint)" rx="1" />
+                            <rect x="-6" y="-20" width="12" height="40" fill="var(--color-mint)" rx="1" />
+                        </g>
+                    </g>
+                </g>
+            </symbol>
+        </defs>
+    </svg>
+
+    <h1>Design System: Master Review</h1>
+    <p class="subtitle">Closed vs. Open States across all breakpoints</p>
+
+    <div class="review-grid">
+        <!-- CLOSED ROW -->
+        <div class="row-label">Closed Master</div>
+        
+        <div class="size-col">
+            <svg width="16" height="16"><use href="#icon-closed"/></svg>
+            <span class="size-label">16px</span>
+        </div>
+        
+        <div class="size-col">
+            <svg width="24" height="24"><use href="#icon-closed"/></svg>
+            <span class="size-label">24px</span>
+        </div>
+
+        <div class="size-col">
+            <svg width="32" height="32"><use href="#icon-closed"/></svg>
+            <span class="size-label">32px</span>
+        </div>
+
+        <div class="size-col">
+            <svg width="48" height="48"><use href="#icon-closed"/></svg>
+            <span class="size-label">48px</span>
+        </div>
+
+        <div class="size-col">
+            <svg width="64" height="64"><use href="#icon-closed"/></svg>
+            <span class="size-label">64px</span>
+        </div>
+
+        <div class="size-col">
+            <svg width="128" height="128"><use href="#icon-closed"/></svg>
+            <span class="size-label">128px</span>
+        </div>
+
+        <!-- SEPARATOR / SPACE -->
+        <div style="grid-column: 1 / -1; height: 30px;"></div>
+
+        <!-- OPEN ROW -->
+        <div class="row-label">Open Master</div>
+
+        <div class="size-col">
+            <svg width="16" height="16"><use href="#icon-open"/></svg>
+            <span class="size-label">16px</span>
+        </div>
+        
+        <div class="size-col">
+            <svg width="24" height="24"><use href="#icon-open"/></svg>
+            <span class="size-label">24px</span>
+        </div>
+
+        <div class="size-col">
+            <svg width="32" height="32"><use href="#icon-open"/></svg>
+            <span class="size-label">32px</span>
+        </div>
+
+        <div class="size-col">
+            <svg width="48" height="48"><use href="#icon-open"/></svg>
+            <span class="size-label">48px</span>
+        </div>
+
+        <div class="size-col">
+            <svg width="64" height="64"><use href="#icon-open"/></svg>
+            <span class="size-label">64px</span>
+        </div>
+
+        <div class="size-col">
+            <svg width="128" height="128"><use href="#icon-open"/></svg>
+            <span class="size-label">128px</span>
+        </div>
+    </div>
+
+    <button onclick="toggleTheme()">Przełącz Motyw (Light/Dark)</button>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+        }
+    </script>
+
+</body>
+</html>
+
