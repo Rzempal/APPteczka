@@ -5,9 +5,10 @@ import '../theme/app_theme.dart';
 /// Model dla elementu nawigacji
 class NavItem {
   final IconData icon;
+  final Widget Function(Color color, double size)? iconBuilder;
   final String label;
 
-  const NavItem({required this.icon, required this.label});
+  const NavItem({required this.icon, required this.label, this.iconBuilder});
 }
 
 /// Floating Navigation Bar z efektem neumorficznym
@@ -178,11 +179,16 @@ class _NavBarItem extends StatelessWidget {
                     : null,
               ),
               child: Center(
-                child: Icon(
-                  item.icon,
-                  color: isSelected ? activeColor : inactiveColor,
-                  size: isSelected ? 26 : 22,
-                ),
+                child: item.iconBuilder != null
+                    ? item.iconBuilder!(
+                        isSelected ? activeColor : inactiveColor,
+                        isSelected ? 32 : 28,
+                      )
+                    : Icon(
+                        item.icon,
+                        color: isSelected ? activeColor : inactiveColor,
+                        size: isSelected ? 32 : 28,
+                      ),
               ),
             ),
             // Etykieta tekstowa - tylko dla NIEAKTYWNYCH

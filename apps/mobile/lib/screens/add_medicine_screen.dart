@@ -10,6 +10,7 @@ import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/gemini_service.dart';
 import '../widgets/gemini_scanner.dart';
+import '../widgets/karton_icons.dart';
 
 /// Ekran dodawania leków - wszystkie metody importu
 class AddMedicineScreen extends StatefulWidget {
@@ -60,7 +61,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.clipboardPlus, color: theme.colorScheme.primary),
+            Icon(LucideIcons.plus, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
             const Text('Dodaj leki'),
           ],
@@ -84,10 +85,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                         color: theme.colorScheme.primary,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
-                        LucideIcons.clipboardPlus,
-                        color: Colors.white,
-                        size: 24,
+                      child: KartonOpenIcon(
+                        size: 32,
+                        isDark: theme.brightness == Brightness.dark,
                       ),
                     ),
                     const SizedBox(width: 16),

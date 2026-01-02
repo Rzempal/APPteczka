@@ -308,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     'Zarządzaj',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.primary,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -551,10 +551,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Header
               Row(
                 children: [
-                  Icon(
-                    LucideIcons.briefcaseMedical,
-                    color: theme.colorScheme.primary,
-                  ),
+                  Icon(LucideIcons.boxes, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Text(
                     'Zarządzaj Apteczką',

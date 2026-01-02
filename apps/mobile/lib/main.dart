@@ -8,6 +8,7 @@ import 'screens/add_medicine_screen.dart';
 import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
 import 'widgets/floating_nav_bar.dart';
+import 'widgets/karton_icons.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -132,10 +133,15 @@ class _MainNavigationState extends State<MainNavigation> {
             _homeKey.currentState?.refresh();
           }
         },
-        items: const [
-          NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
-          NavItem(icon: LucideIcons.briefcaseMedical, label: 'Apteczka'),
-          NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+        items: [
+          const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
+          NavItem(
+            icon: LucideIcons.briefcaseMedical, // fallback
+            iconBuilder: (color, size) =>
+                KartonMonoClosedIcon(size: size, color: color),
+            label: 'Apteczka',
+          ),
+          const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
         ],
       ),
     );

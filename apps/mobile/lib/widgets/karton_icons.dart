@@ -156,6 +156,129 @@ class _KartonClosedPainter extends CustomPainter {
   }
 }
 
+/// Ikona zamkniętego kartonu - wersja monochromatyczna (dla nav bar)
+/// Kolor dziedziczony z kontekstu (currentColor pattern)
+/// Opacity warstw zgodne z HTML: top 0.15, left 0.5, right 0.3, tape/cross 1.0
+class KartonMonoClosedIcon extends StatelessWidget {
+  final double size;
+  final Color? color;
+
+  const KartonMonoClosedIcon({super.key, this.size = 24, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final effectiveColor =
+        color ?? Theme.of(context).iconTheme.color ?? Colors.white;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _KartonMonoClosedPainter(color: effectiveColor),
+      ),
+    );
+  }
+}
+
+class _KartonMonoClosedPainter extends CustomPainter {
+  final Color color;
+
+  _KartonMonoClosedPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 200;
+    canvas.save();
+    canvas.translate(10 * scale, 10 * scale);
+    canvas.scale(0.9 * scale);
+
+    // Góra kartonu (opacity 0.15)
+    final topPath = Path()
+      ..moveTo(100, 24)
+      ..lineTo(186, 64)
+      ..lineTo(100, 104)
+      ..lineTo(14, 64)
+      ..close();
+    canvas.drawPath(topPath, Paint()..color = color.withValues(alpha: 0.15));
+
+    // Taśma na górze (opacity 1.0)
+    final tapeTopPath = Path()
+      ..moveTo(35, 73.8)
+      ..lineTo(65, 87.7)
+      ..lineTo(151, 47.7)
+      ..lineTo(121, 33.8)
+      ..close();
+    canvas.drawPath(tapeTopPath, Paint()..color = color);
+
+    // Lewy bok kartonu (opacity 0.5)
+    final leftPath = Path()
+      ..moveTo(12, 68)
+      ..lineTo(98, 108)
+      ..lineTo(98, 186)
+      ..lineTo(12, 146)
+      ..close();
+    canvas.drawPath(leftPath, Paint()..color = color.withValues(alpha: 0.5));
+
+    // Taśma na lewym boku (opacity 1.0)
+    final tapeLeftPath = Path()
+      ..moveTo(35, 78.7)
+      ..lineTo(65, 92.7)
+      ..lineTo(65, 140)
+      ..lineTo(35, 125)
+      ..close();
+    canvas.drawPath(tapeLeftPath, Paint()..color = color);
+
+    // Prawy bok kartonu (opacity 0.3)
+    final rightPath = Path()
+      ..moveTo(188, 68)
+      ..lineTo(188, 146)
+      ..lineTo(102, 186)
+      ..lineTo(102, 108)
+      ..close();
+    canvas.drawPath(rightPath, Paint()..color = color.withValues(alpha: 0.3));
+
+    // Krzyż medyczny na prawym boku (opacity 1.0)
+    canvas.save();
+    canvas.translate(145, 127);
+    final skewMatrix = Matrix4.identity()..setEntry(1, 0, -0.466); // tan(-25°)
+    canvas.transform(skewMatrix.storage);
+
+    final crossPaint = Paint()..color = color;
+    // Pozioma belka krzyża
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(-25, -8, 50, 16),
+        const Radius.circular(1),
+      ),
+      crossPaint,
+    );
+    // Pionowa belka krzyża
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        const Rect.fromLTWH(-8, -25, 16, 50),
+        const Radius.circular(1),
+      ),
+      crossPaint,
+    );
+    canvas.restore();
+
+    // Łącznik taśmy (opacity 1.0)
+    final tapeConnectorPath = Path()
+      ..moveTo(35, 73.8)
+      ..lineTo(65, 87.7)
+      ..lineTo(65, 92.7)
+      ..lineTo(35, 78.7)
+      ..close();
+    canvas.drawPath(tapeConnectorPath, Paint()..color = color);
+
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _KartonMonoClosedPainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
+}
+
 /// Ikona otwartego kartonu z lekami (bałagan)
 class KartonOpenIcon extends StatelessWidget {
   final double size;

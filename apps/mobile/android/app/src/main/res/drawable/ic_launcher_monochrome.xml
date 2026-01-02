@@ -1,25 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Monochrome layer for Android 13+ Themed Icons -->
-<!-- Simple medical box/carton silhouette -->
+<!-- Isometric 3D karton (box) with tape and medical cross -->
+<!-- Based on apk_icons_strategy.html: icon-closed-mono symbol -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     
-    <!-- Main box body -->
+    <!-- Safe zone transform: translate(12,12) scale(0.42) applied to 200x200 viewBox -->
+    <!-- Effective: M100,24 becomes M54,22 etc after transform -->
+    
+    <!-- Top face (opacity 0.15 simulated with #E6E6E6 on white bg, or just lighter fill) -->
+    <!-- Since monochrome uses single color tinting, we use full black with structural shapes -->
+    
+    <!-- Box outline (stroke-based for clarity at small sizes) -->
     <path
         android:fillColor="#000000"
-        android:pathData="M27,36 L81,36 L81,82 L27,82 Z"/>
+        android:strokeWidth="3"
+        android:strokeColor="#000000"
+        android:pathData="
+            M54,22 
+            L90,39 
+            L90,73 
+            L54,90 
+            L18,73 
+            L18,39 
+            Z"/>
     
-    <!-- Box lid/flap top -->
+    <!-- Internal edges -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeWidth="2"
+        android:strokeColor="#000000"
+        android:pathData="
+            M18,39 L54,56 L90,39
+            M54,56 L54,90"/>
+    
+    <!-- Tape on top (diagonal stripe) -->
     <path
         android:fillColor="#000000"
-        android:pathData="M22,30 L54,20 L86,30 L86,40 L54,32 L22,40 Z"/>
+        android:pathData="
+            M27,43 
+            L39,49 
+            L75,32 
+            L63,26 
+            Z"/>
     
-    <!-- Medical cross (cutout - using white to create negative space) -->
+    <!-- Tape on left side (vertical stripe) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M50,48 L58,48 L58,55 L65,55 L65,63 L58,63 L58,70 L50,70 L50,63 L43,63 L43,55 L50,55 Z"/>
+        android:fillColor="#000000"
+        android:pathData="
+            M27,44 
+            L39,50 
+            L39,70 
+            L27,64 
+            Z"/>
+    
+    <!-- Medical cross on right side (skewed) -->
+    <group
+        android:pivotX="73"
+        android:pivotY="65">
+        <!-- Horizontal bar -->
+        <path
+            android:fillColor="#000000"
+            android:pathData="M63,62 L83,62 L83,68 L63,68 Z"/>
+        <!-- Vertical bar -->
+        <path
+            android:fillColor="#000000"
+            android:pathData="M70,55 L76,55 L76,75 L70,75 Z"/>
+    </group>
     
 </vector>
