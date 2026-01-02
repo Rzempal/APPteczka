@@ -186,7 +186,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isLocalFile = widget.file != null;
 
     return Scaffold(
       backgroundColor: isDark
@@ -199,38 +198,36 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
           overflow: TextOverflow.ellipsis,
         ),
         leading: IconButton(
-          icon: isLocalFile
-              ? const Icon(LucideIcons.arrowLeft)
-              : const Icon(LucideIcons.x),
+          icon: const Icon(LucideIcons.arrowLeft),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: isLocalFile
-            ? [
-                // Tryb Eksportu: Zapisz, Drukuj, Udostępnij
-                IconButton(
-                  icon: const Icon(LucideIcons.download),
-                  tooltip: 'Zapisz',
-                  onPressed: _isLoading ? null : _savePdf,
-                ),
-                IconButton(
-                  icon: const Icon(LucideIcons.printer),
-                  tooltip: 'Drukuj',
-                  onPressed: _isLoading ? null : _printPdf,
-                ),
-                IconButton(
-                  icon: const Icon(LucideIcons.share2),
-                  tooltip: 'Udostępnij',
-                  onPressed: _isLoading ? null : _sharePdf,
-                ),
-              ]
-            : [
-                // Tryb Ulotki: Otwórz w przeglądarce
-                IconButton(
-                  icon: const Icon(LucideIcons.externalLink),
-                  tooltip: 'Otwórz w Rejestrze MZ',
-                  onPressed: _openInBrowser,
-                ),
-              ],
+        actions: [
+          // Zapisz
+          IconButton(
+            icon: const Icon(LucideIcons.download),
+            tooltip: 'Zapisz',
+            onPressed: _isLoading ? null : _savePdf,
+          ),
+          // Drukuj
+          IconButton(
+            icon: const Icon(LucideIcons.printer),
+            tooltip: 'Drukuj',
+            onPressed: _isLoading ? null : _printPdf,
+          ),
+          // Udostępnij
+          IconButton(
+            icon: const Icon(LucideIcons.share2),
+            tooltip: 'Udostępnij',
+            onPressed: _isLoading ? null : _sharePdf,
+          ),
+          // Otwórz w przeglądarce (tylko dla URL)
+          if (widget.url != null)
+            IconButton(
+              icon: const Icon(LucideIcons.externalLink),
+              tooltip: 'Rejestr MZ',
+              onPressed: _openInBrowser,
+            ),
+        ],
       ),
       body: _buildBody(context),
     );

@@ -64,5 +64,11 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:mimeType="application/vnd.android.package-archive"/>
         </intent>
+        <!-- Required for launching external URLs (e.g. PDF leaflets) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
     </queries>
 </manifest>
