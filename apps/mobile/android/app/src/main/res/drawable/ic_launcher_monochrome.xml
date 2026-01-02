@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome layer for Android 13+ Themed Icons -->
+<!-- Simple medical box/carton silhouette -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Main box body -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M27,36 L81,36 L81,82 L27,82 Z"/>
+    
+    <!-- Box lid/flap top -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M22,30 L54,20 L86,30 L86,40 L54,32 L22,40 Z"/>
+    
+    <!-- Medical cross (cutout - using white to create negative space) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,48 L58,48 L58,55 L65,55 L65,63 L58,63 L58,70 L50,70 L50,63 L43,63 L43,55 L50,55 Z"/>
+    
+</vector>

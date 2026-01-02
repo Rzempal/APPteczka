@@ -107,6 +107,11 @@ class _MainNavigationState extends State<MainNavigation> {
                 _currentIndex = 2; // Navigate to Ustawienia tab
               });
             },
+            onNavigateToAdd: () {
+              setState(() {
+                _currentIndex = 0; // Navigate to Dodaj tab
+              });
+            },
           ),
           // 2: Ustawienia
           SettingsScreen(
@@ -143,6 +148,7 @@ class _HomeScreenWrapper extends StatefulWidget {
   final ThemeProvider themeProvider;
   final UpdateService updateService;
   final VoidCallback onNavigateToSettings;
+  final VoidCallback onNavigateToAdd;
 
   const _HomeScreenWrapper({
     super.key,
@@ -150,6 +156,7 @@ class _HomeScreenWrapper extends StatefulWidget {
     required this.themeProvider,
     required this.updateService,
     required this.onNavigateToSettings,
+    required this.onNavigateToAdd,
   });
 
   @override
@@ -173,6 +180,7 @@ class _HomeScreenWrapperState extends State<_HomeScreenWrapper> {
       themeProvider: widget.themeProvider,
       updateService: widget.updateService,
       onNavigateToSettings: widget.onNavigateToSettings,
+      onNavigateToAdd: widget.onNavigateToAdd,
     );
   }
 }

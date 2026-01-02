@@ -9,6 +9,7 @@ import '../services/update_service.dart';
 import '../services/pdf_export_service.dart';
 import '../widgets/medicine_card.dart';
 import '../widgets/filters_sheet.dart';
+import '../widgets/karton_icons.dart';
 import '../theme/app_theme.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import 'edit_medicine_screen.dart';
@@ -38,6 +39,7 @@ class HomeScreen extends StatefulWidget {
   final ThemeProvider themeProvider;
   final UpdateService updateService;
   final VoidCallback? onNavigateToSettings;
+  final VoidCallback? onNavigateToAdd;
 
   const HomeScreen({
     super.key,
@@ -45,6 +47,7 @@ class HomeScreen extends StatefulWidget {
     required this.themeProvider,
     required this.updateService,
     this.onNavigateToSettings,
+    this.onNavigateToAdd,
   });
 
   @override
@@ -169,7 +172,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : _filteredMedicines.isEmpty
                   ? _EmptyState(
-                      onAddPressed: _addDemoMedicines,
+                      onDemoPressed: _addDemoMedicines,
+                      onAddPressed: widget.onNavigateToAdd,
                       hasFilters: _filterState.hasActiveFilters,
                     )
                   : ListView.builder(
@@ -980,56 +984,117 @@ class _HomeScreenState extends State<HomeScreen> {
 
 /// Stan pusty - brak leków
 class _EmptyState extends StatelessWidget {
-  final VoidCallback onAddPressed;
+  final VoidCallback? onAddPressed;
+  final VoidCallback onDemoPressed;
   final bool hasFilters;
 
-  const _EmptyState({required this.onAddPressed, this.hasFilters = false});
+  const _EmptyState({
+    required this.onDemoPressed,
+    this.onAddPressed,
+    this.hasFilters = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
+    // Widok z filtrami - prosty komunikat
+    if (hasFilters) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                LucideIcons.filterX,
+                size: 80,
+                color: AppColors.primary.withAlpha(128),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Brak wyników',
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Zmień filtry aby zobaczyć leki.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Widok pustej apteczki - nowy design
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              'assets/karton.png',
-              width: 120,
-              height: 120,
-              errorBuilder: (_, __, ___) => Icon(
-                hasFilters ? LucideIcons.filterX : LucideIcons.pill,
-                size: 80,
-                color: AppColors.primary.withAlpha(128),
-              ),
-            ),
-            const SizedBox(height: 24),
+            // Slogan (main title)
             Text(
-              hasFilters ? 'Brak wyników' : 'Twoja apteczka jest pusta',
+              'Nie kop w pudle.\nSprawdź w telefonie.',
               style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.bold,
+                height: 1.3,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 32),
+
+            // Ilustracja transformacji (bałagan → porządek)
+            TransformationIllustration(iconSize: 72, isDark: isDark),
+            const SizedBox(height: 32),
+
+            // Podtytuł
             Text(
-              hasFilters
-                  ? 'Zmień filtry aby zobaczyć leki.'
-                  : 'Dodaj leki aby śledzić terminy ważności i szybko znajdować potrzebne preparaty.',
+              'Wrzuć leki do kartonu i zapanuj nad domową apteczką.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
-            if (!hasFilters)
-              FilledButton.icon(
-                onPressed: onAddPressed,
-                icon: const Icon(LucideIcons.plus),
-                label: const Text('Dodaj przykładowe leki'),
-              ),
+
+            // Dwa przyciski CTA
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Przycisk "Dodaj leki"
+                NeuButton(
+                  label: 'Dodaj leki',
+                  icon: LucideIcons.plus,
+                  onPressed: onAddPressed,
+                  borderRadius: 16,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Przycisk "Przetestuj demo"
+                NeuButton.primary(
+                  label: 'Przetestuj',
+                  icon: LucideIcons.sparkles,
+                  onPressed: onDemoPressed,
+                  borderRadius: 16,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
