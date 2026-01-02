@@ -198,8 +198,6 @@ class _MedicineCardState extends State<MedicineCard>
                             blendMode: BlendMode.dstIn,
                             child: Text(
                               widget.medicine.opis,
-                              maxLines: 1,
-                              overflow: TextOverflow.clip,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),
