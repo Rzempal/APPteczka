@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wrapper to scale raster icon for Adaptive Icon Foreground -->
+<!-- Target size: 48dp (approx 44% of 108dp canvas) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item 
+        android:width="48dp" 
+        android:height="48dp" 
+        android:gravity="center">
+        <bitmap android:src="@drawable/img_karton_foreground" />
+    </item>
+</layer-list>
