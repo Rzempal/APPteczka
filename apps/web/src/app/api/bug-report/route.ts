@@ -20,6 +20,7 @@ const RESEND_FROM = process.env.RESEND_FROM || 'Karton Bug Reporter <onboarding@
 interface BugReportRequest {
     log?: string;
     text?: string;
+    topic?: string;
     screenshot?: string; // base64
     appVersion?: string;
     deviceInfo?: string;
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body: BugReportRequest = await request.json();
-        const { log, text, screenshot, appVersion, deviceInfo, errorMessage, category, channel, replyEmail } = body;
+        const { log, text, topic, screenshot, appVersion, deviceInfo, errorMessage, category, channel, replyEmail } = body;
 
         // Walidacja - musi być coś do wysłania
         if (!log && !text && !screenshot) {
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
 </head>
 <body>
     <div class="header">
-        <h1>🐛 Bug Report - Karton</h1>
+        <h1>Bug Report - Karton na leki</h1>
         <p>Otrzymano: ${timestamp}</p>
     </div>
 
@@ -76,6 +77,13 @@ export async function POST(request: NextRequest) {
     <div class="section">
         <div class="label">Błąd:</div>
         <p class="error">${escapeHtml(errorMessage)}</p>
+    </div>
+    ` : ''}
+
+    ${topic ? `
+    <div class="section">
+        <div class="label">Temat:</div>
+        <p><strong>${escapeHtml(topic)}</strong></p>
     </div>
     ` : ''}
 
@@ -134,7 +142,7 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({
                 from: RESEND_FROM,
                 to: [BUG_REPORT_EMAIL],
-                subject: `🐛 Bug Report: ${errorMessage ? errorMessage.substring(0, 50) : 'Raport użytkownika'}`,
+                subject: [${ category || 'bug'}]${ topic || (errorMessage ? errorMessage.substring(0, 50) : 'Raport użytkownika')}`,
                 html: htmlContent,
                 attachments: attachments.length > 0 ? attachments : undefined,
             }),
@@ -148,7 +156,7 @@ export async function POST(request: NextRequest) {
 
             const errorMessage = errorData?.message || errorData?.error || 'Nieznany błąd Resend';
             return NextResponse.json(
-                { error: `Błąd wysyłki: ${errorMessage}`, code: 'SEND_ERROR', details: errorData },
+                { error: `Błąd wysyłki: ${ errorMessage }`, code: 'SEND_ERROR', details: errorData },
                 { status: 500 }
             );
         }

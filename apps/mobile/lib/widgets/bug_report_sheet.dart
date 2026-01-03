@@ -44,6 +44,7 @@ class BugReportSheet extends StatefulWidget {
 class _BugReportSheetState extends State<BugReportSheet> {
   final _textController = TextEditingController();
   final _emailController = TextEditingController();
+  final _topicController = TextEditingController();
   ReportCategory _selectedCategory = ReportCategory.bug;
   bool _includeLogs = true;
   bool _includeScreenshot = true;
@@ -62,6 +63,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
   void dispose() {
     _textController.dispose();
     _emailController.dispose();
+    _topicController.dispose();
     super.dispose();
   }
 
@@ -81,6 +83,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
 
     final result = await BugReportService.instance.sendReport(
       text: _textController.text.trim(),
+      topic: _topicController.text.trim(),
       errorMessage: widget.errorMessage,
       category: _selectedCategory,
       replyEmail: _selectedCategory == ReportCategory.question
@@ -185,7 +188,9 @@ class _BugReportSheetState extends State<BugReportSheet> {
 
               const SizedBox(height: 20),
 
-              // Quick Actions - category selection
+              // === KATEGORIA ===
+              const Divider(height: 1),
+              const SizedBox(height: 16),
               Text(
                 'Wybierz kategorię:',
                 style: theme.textTheme.labelMedium?.copyWith(
@@ -213,10 +218,25 @@ class _BugReportSheetState extends State<BugReportSheet> {
                 }).toList(),
               ),
 
+              // === TEMAT ===
               const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _topicController,
+                decoration: InputDecoration(
+                  labelText: 'Temat',
+                  hintText: 'np. Dodawanie leku, Skanowanie, Etykiety...',
+                  prefixIcon: const Icon(LucideIcons.tag),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
 
               // Error message preview
               if (widget.errorMessage != null) ...[
+                const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -247,10 +267,12 @@ class _BugReportSheetState extends State<BugReportSheet> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
               ],
 
-              // Description field
+              // === OPIS ===
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
               TextField(
                 controller: _textController,
                 maxLines: 3,

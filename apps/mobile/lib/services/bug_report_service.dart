@@ -13,13 +13,18 @@ import 'package:device_info_plus/device_info_plus.dart';
 enum ReportCategory {
   bug(LucideIcons.bug, 'Bug', 'Coś nie działa'),
   suggestion(LucideIcons.lightbulb, 'Sugestia', 'Mam pomysł'),
-  question(LucideIcons.messageCircleQuestionMark, 'Pytanie', 'Potrzebuję pomocy');
+  question(
+    LucideIcons.messageCircleQuestionMark,
+    'Pytanie',
+    'Potrzebuję pomocy',
+  );
 
   final IconData icon;
   final String label;
   final String description;
   const ReportCategory(this.icon, this.label, this.description);
 }
+
 /// Serwis do zbierania i wysyłania raportów błędów
 class BugReportService {
   // Singleton
@@ -99,6 +104,7 @@ class BugReportService {
   /// Wysyła raport błędu
   Future<BugReportResult> sendReport({
     String? text,
+    String? topic,
     String? errorMessage,
     ReportCategory category = ReportCategory.bug,
     String? replyEmail,
@@ -115,7 +121,10 @@ class BugReportService {
         'appVersion': appVersion,
         'deviceInfo': deviceInfo,
         'category': category.name,
-        'channel': const String.fromEnvironment('CHANNEL', defaultValue: 'production'),
+        'channel': const String.fromEnvironment(
+          'CHANNEL',
+          defaultValue: 'production',
+        ),
       };
 
       if (replyEmail != null && replyEmail.isNotEmpty) {
@@ -124,6 +133,10 @@ class BugReportService {
 
       if (text != null && text.isNotEmpty) {
         body['text'] = text;
+      }
+
+      if (topic != null && topic.isNotEmpty) {
+        body['topic'] = topic;
       }
 
       if (errorMessage != null && errorMessage.isNotEmpty) {
