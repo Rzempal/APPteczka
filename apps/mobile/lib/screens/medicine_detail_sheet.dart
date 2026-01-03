@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
 import '../services/storage_service.dart';
 import '../services/pdf_cache_service.dart';
+import '../services/date_ocr_service.dart';
 import '../widgets/label_selector.dart';
 import '../widgets/leaflet_search_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
@@ -213,45 +216,74 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                     _buildSection(
                       context,
                       title: 'Termin ważności',
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.calendar_today,
-                            size: 18,
-                            color: statusColor,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _medicine.terminWaznosci != null
-                                ? _formatDate(_medicine.terminWaznosci!)
-                                : 'Nie ustawiono',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: statusColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          if (_medicine.terminWaznosci != null) ...[
-                            const SizedBox(width: 12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                size: 18,
+                                color: statusColor,
                               ),
-                              decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                _getStatusLabel(status),
+                              const SizedBox(width: 8),
+                              Text(
+                                _medicine.terminWaznosci != null
+                                    ? _formatDate(_medicine.terminWaznosci!)
+                                    : 'Nie ustawiono',
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 16,
                                   color: statusColor,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
+                              if (_medicine.terminWaznosci != null) ...[
+                                const SizedBox(width: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    _getStatusLabel(status),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: statusColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // Przycisk OCR daty
+                          NeuButton(
+                            onPressed: () => _takeDatePhoto(context),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  LucideIcons.camera,
+                                  size: 16,
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Zrób zdjęcie daty',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ],
                       ),
                     ),
@@ -638,6 +670,101 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
       return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
     } catch (_) {
       return isoDate;
+    }
+  }
+
+  /// Otwiera aparat do zrobienia zdjęcia daty i rozpoznaje ją przez OCR
+  Future<void> _takeDatePhoto(BuildContext context) async {
+    final imagePicker = ImagePicker();
+    final dateOcrService = DateOcrService();
+
+    try {
+      final pickedFile = await imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      // Pokaż dialog ładowania
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Rozpoznaję datę...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final result = await dateOcrService.recognizeDate(File(pickedFile.path));
+
+      // Zamknij dialog ładowania
+      if (mounted) Navigator.of(context).pop();
+
+      if (result.terminWaznosci == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Nie udało się rozpoznać daty. Spróbuj ponownie.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Aktualizuj lek z nową datą
+      final updatedMedicine = _medicine.copyWith(
+        terminWaznosci: result.terminWaznosci,
+      );
+      await widget.storageService.saveMedicine(updatedMedicine);
+      
+      setState(() {
+        _medicine = updatedMedicine;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Data ważności ustawiona: ${_formatDate(result.terminWaznosci!)}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } on DateOcrException catch (e) {
+      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 }

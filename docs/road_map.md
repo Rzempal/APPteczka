@@ -186,4 +186,33 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-02
+## 💡 IDEAS BACKLOG (Pomysły na przyszłość)
+
+> [!NOTE]
+> Pomysły zebrane podczas rozwoju, do rozważenia w przyszłości.
+
+### EAN Lookup - Automatyczne uzupełnianie dat ważności
+
+**Idea:** Skanowanie kodu EAN opakowania i pobieranie informacji o leku z zewnętrznego API.
+
+**Potencjalne źródła:**
+
+- [Open Food Facts](https://openfoodfacts.org/) - otwarty, ale głównie żywność
+- [Rejestr Leków MZ](https://rejestrymedyczne.cez.gov.pl/) - oficjalny, ale bez API dla dat ważności
+- Własna baza danych budowana przez użytkowników
+
+**Korzyści:**
+
+- Automatyczne uzupełnianie nazwy i opisu leku
+- Możliwość sugerowania typowego okresu ważności
+- Weryfikacja autentyczności opakowania
+
+**Wymagania:**
+
+- Integracja z zewnętrznym API
+- Fallback gdy produkt nie znaleziony
+- Możliwość zgłaszania nowych produktów
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-03

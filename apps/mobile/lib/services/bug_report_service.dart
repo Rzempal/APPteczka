@@ -5,19 +5,20 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 /// Kategoria zgłoszenia
 enum ReportCategory {
-  bug('🐛', 'Bug', 'Coś nie działa'),
-  suggestion('💡', 'Sugestia', 'Mam pomysł'),
-  question('❓', 'Pytanie', 'Potrzebuję pomocy');
+  bug(LucideIcons.bug, 'Bug', 'Coś nie działa'),
+  suggestion(LucideIcons.lightbulb, 'Sugestia', 'Mam pomysł'),
+  question(LucideIcons.messageCircleQuestionMark, 'Pytanie', 'Potrzebuję pomocy');
 
-  final String emoji;
+  final IconData icon;
   final String label;
   final String description;
-  const ReportCategory(this.emoji, this.label, this.description);
+  const ReportCategory(this.icon, this.label, this.description);
 }
 /// Serwis do zbierania i wysyłania raportów błędów
 class BugReportService {

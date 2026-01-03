@@ -161,7 +161,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      LucideIcons.bug,
+                      LucideIcons.messageCircleWarning,
                       color: AppColors.expired,
                     ),
                   ),
@@ -406,9 +406,12 @@ class _CategoryChip extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(
-              category.emoji,
-              style: const TextStyle(fontSize: 24),
+            Icon(
+              category.icon,
+              size: 24,
+              color: isSelected
+                  ? AppColors.primary
+                  : theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 4),
             Text(

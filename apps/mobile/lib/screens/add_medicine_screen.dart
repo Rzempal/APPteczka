@@ -10,6 +10,7 @@ import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/gemini_service.dart';
 import '../widgets/gemini_scanner.dart';
+import '../widgets/two_photo_scanner.dart';
 import '../widgets/karton_icons.dart';
 import '../widgets/batch_date_input_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
@@ -41,6 +42,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
   // Expanded sections - nowa kolejność
   bool _geminiExpanded = true;   // 1. Zrób zdjęcie
+  bool _twoPhotoExpanded = false; // 1.5 Tryb 2 zdjęcia
   bool _manualExpanded = false;  // 2. Dodaj ręcznie
   bool _fileExpanded = false;    // 3. Import kopii
   bool _isAdvancedOpen = false;  // 4. Zaawansowane (zagnieżdżone)
@@ -133,6 +135,30 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Leki zostały zaimportowane!'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              ),
+              isDark: isDark,
+            ),
+
+            const SizedBox(height: 12),
+
+            // 1.5 Tryb 2 zdjęcia (front + data)
+            _buildExpandableSection(
+              icon: LucideIcons.images,
+              title: 'Tryb 2 zdjęcia (front + data)',
+              subtitle: 'Zdjęcie frontu → rozpoznanie nazwy\nZdjęcie daty → rozpoznanie terminu ważności',
+              isExpanded: _twoPhotoExpanded,
+              onToggle: () =>
+                  setState(() => _twoPhotoExpanded = !_twoPhotoExpanded),
+              child: TwoPhotoScanner(
+                onResult: _handleTwoPhotoResult,
+                onComplete: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Lek został zaimportowany!'),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -627,6 +653,20 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       storageService: widget.storageService,
       onComplete: () {},
     );
+  }
+
+  /// Handler dla trybu 2-zdjęciowego (pojedynczy lek)
+  void _handleTwoPhotoResult(ScannedMedicine lek) async {
+    final medicine = Medicine(
+      id: const Uuid().v4(),
+      nazwa: lek.nazwa,
+      opis: lek.opis,
+      wskazania: lek.wskazania,
+      tagi: lek.tagi,
+      terminWaznosci: lek.terminWaznosci,
+      dataDodania: DateTime.now().toIso8601String(),
+    );
+    await widget.storageService.saveMedicine(medicine);
   }
 
   Future<void> _pasteFromClipboard() async {

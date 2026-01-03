@@ -412,12 +412,23 @@ class _HomeScreenState extends State<HomeScreen> {
             isSmall: true,
             borderRadius: 12,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text(
-              '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.pillBottle,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 8),
@@ -459,7 +470,7 @@ class _HomeScreenState extends State<HomeScreen> {
             count: _filterState.activeFilterCount,
             showBadge: _filterState.hasActiveFilters,
             button: NeuIconButton(
-              icon: LucideIcons.listFilter,
+              icon: LucideIcons.funnel,
               onPressed: _showFilters,
               isActive: _isFiltersSheetOpen,
             ),
@@ -467,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 8),
           // Wyczyść filtry
           NeuIconButton(
-            icon: LucideIcons.listX,
+            icon: LucideIcons.funnelX,
             onPressed: _filterState.hasActiveFilters ? _clearFilters : null,
             tooltip: 'Wyczyść filtry',
             mode: _filterState.hasActiveFilters
