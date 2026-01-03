@@ -47,7 +47,22 @@ class DateOcrService {
         body: jsonEncode({'image': base64Image, 'mimeType': mimeType}),
       );
 
-      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      // Logowanie dla diagnostyki
+      print('[DateOCR] Status: ${response.statusCode}');
+      print('[DateOCR] Response body (first 500 chars): ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}');
+
+      // Próba parsowania JSON
+      Map<String, dynamic> responseData;
+      try {
+        responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      } on FormatException catch (e) {
+        print('[DateOCR] JSON parse error: $e');
+        print('[DateOCR] Full response body: ${response.body}');
+        throw DateOcrException(
+          'Błąd parsowania odpowiedzi serwera. Status: ${response.statusCode}',
+          'PARSE_ERROR',
+        );
+      }
 
       if (response.statusCode == 200) {
         return DateOcrResult.fromJson(responseData);
@@ -61,11 +76,6 @@ class DateOcrService {
       throw DateOcrException(
         'Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.',
         'NETWORK_ERROR',
-      );
-    } on FormatException {
-      throw DateOcrException(
-        'Błąd parsowania odpowiedzi serwera.',
-        'PARSE_ERROR',
       );
     } catch (e) {
       if (e is DateOcrException) rethrow;

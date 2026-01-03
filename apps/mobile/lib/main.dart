@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'config/app_config.dart';
+import 'services/bug_report_service.dart';
 import 'services/storage_service.dart';
 import 'services/theme_provider.dart';
 import 'services/update_service.dart';
@@ -90,10 +91,20 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 1; // Domyślnie Apteczka (środkowy tab)
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
+  final GlobalKey _screenshotKey = GlobalKey();
+
+  /// Przechwytuje screenshot i otwiera sheet zgłoszenia
+  Future<void> _openBugReportWithScreenshot() async {
+    final screenshot = await BugReportService.instance.captureScreenshot(_screenshotKey);
+    if (!mounted) return;
+    BugReportSheet.show(context, screenshot: screenshot);
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return RepaintBoundary(
+      key: _screenshotKey,
+      child: Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -149,12 +160,13 @@ class _MainNavigationState extends State<MainNavigation> {
       // FAB for bug reporting - visible if enabled in settings OR in DEV builds
       floatingActionButton: (widget.storageService.showBugReportFab || AppConfig.isInternal)
           ? FloatingActionButton(
-              onPressed: () => BugReportSheet.show(context),
+              onPressed: _openBugReportWithScreenshot,
               backgroundColor: AppColors.expired,
               child: const Icon(LucideIcons.bug, color: Colors.white),
             )
           : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      ),
     );
   }
 }

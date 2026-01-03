@@ -10,7 +10,7 @@ export interface DateError {
     code: 'API_KEY_MISSING' | 'RATE_LIMIT' | 'INVALID_IMAGE' | 'PARSE_ERROR' | 'API_ERROR';
 }
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
 
 const DATE_OCR_PROMPT = `# Rozpoznawanie daty ważności leku
 
