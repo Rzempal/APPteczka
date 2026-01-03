@@ -255,7 +255,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                LucideIcons.fileWarning,
+                LucideIcons.fileX,
                 size: 64,
                 color: AppColors.expiringSoon,
               ),

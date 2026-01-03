@@ -472,7 +472,7 @@ class _MedicineCardState extends State<MedicineCard>
       case ExpiryStatus.valid:
         return LucideIcons.circleCheck;
       case ExpiryStatus.unknown:
-        return LucideIcons.circleHelp;
+        return LucideIcons.circleOff;
     }
   }
 

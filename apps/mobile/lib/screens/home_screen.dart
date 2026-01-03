@@ -459,7 +459,7 @@ class _HomeScreenState extends State<HomeScreen> {
             count: _filterState.activeFilterCount,
             showBadge: _filterState.hasActiveFilters,
             button: NeuIconButton(
-              icon: LucideIcons.filter,
+              icon: LucideIcons.listFilter,
               onPressed: _showFilters,
               isActive: _isFiltersSheetOpen,
             ),
@@ -467,7 +467,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 8),
           // Wyczyść filtry
           NeuIconButton(
-            icon: LucideIcons.filterX,
+            icon: LucideIcons.listX,
             onPressed: _filterState.hasActiveFilters ? _clearFilters : null,
             tooltip: 'Wyczyść filtry',
             mode: _filterState.hasActiveFilters
@@ -1018,7 +1018,7 @@ class _EmptyStateState extends State<_EmptyState> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                LucideIcons.filterX,
+                LucideIcons.listX,
                 size: 80,
                 color: AppColors.primary.withAlpha(128),
               ),
