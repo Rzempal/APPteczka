@@ -315,7 +315,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
                   // Neumorphic button to attach screenshot
                   NeuButton(
                     icon: LucideIcons.crop,
-                    label: 'Załącz zrzut aplikacji',
+                    label: 'Zrób screenshot aplikacji',
                     isExpanded: true,
                     onPressed: () => setState(() => _screenshotAttached = true),
                   ),

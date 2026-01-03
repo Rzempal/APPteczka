@@ -125,9 +125,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             // 1. Gemini AI Scanner
             _buildExpandableSection(
               icon: LucideIcons.imagePlus,
-              title: 'Zrób zdjęcie i dodaj leki',
+              title: '1 zdjęcie = wiele leków',
               subtitle:
-                  'Gemini AI Vision\nWykorzystaj wsparcie AI i automatycznie dodaj informacje o leku',
+                  'Wykorzystaj wsparcie AI i automatycznie dodaj informacje o leku',
               isExpanded: _geminiExpanded,
               onToggle: () =>
                   setState(() => _geminiExpanded = !_geminiExpanded),
@@ -151,9 +151,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             // 1.5 Tryb 2 zdjęcia (front + data)
             _buildExpandableSection(
               icon: LucideIcons.images,
-              title: 'Tryb 2 zdjęcia (front + data)',
-              subtitle:
-                  'Zdjęcie frontu → rozpoznanie nazwy\nZdjęcie daty → rozpoznanie terminu ważności',
+              title: '2 zdjęcia = lek + termin ważności',
+              subtitle: 'Rozpoznanie leku oraz jego terminu ważności',
               isExpanded: _twoPhotoExpanded,
               onToggle: () =>
                   setState(() => _twoPhotoExpanded = !_twoPhotoExpanded),
