@@ -5,17 +5,18 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/gemini_service.dart';
 import '../services/date_ocr_service.dart';
 import '../theme/app_theme.dart';
-import 'bug_report_sheet.dart';
 
 /// Widget do skanowania leku w trybie 2-zdjęciowym (front + data)
 class TwoPhotoScanner extends StatefulWidget {
   final Function(ScannedMedicine) onResult;
   final VoidCallback? onComplete;
+  final Function(String?)? onError;
 
   const TwoPhotoScanner({
     super.key,
     required this.onResult,
     this.onComplete,
+    this.onError,
   });
 
   @override
@@ -31,12 +32,12 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
   File? _frontImage;
   bool _isScanningFront = false;
   ScannedMedicine? _recognizedMedicine;
-  
+
   // Krok 2: Zdjęcie daty
   File? _dateImage;
   bool _isScanningDate = false;
   String? _recognizedDate;
-  
+
   String? _error;
   int _currentStep = 1; // 1 = front, 2 = data, 3 = ready
 
@@ -95,7 +96,7 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
             const SizedBox(height: 16),
 
             // Błąd
-            if (_error != null) ...[ 
+            if (_error != null) ...[
               _buildErrorCard(theme),
               const SizedBox(height: 12),
             ],
@@ -121,18 +122,14 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
         Expanded(
           child: Container(
             height: 2,
-            color: _currentStep > 1 
-                ? AppColors.primary 
-                : theme.dividerColor,
+            color: _currentStep > 1 ? AppColors.primary : theme.dividerColor,
           ),
         ),
         _buildStepCircle(2, 'Data', theme),
         Expanded(
           child: Container(
             height: 2,
-            color: _currentStep > 2 
-                ? AppColors.primary 
-                : theme.dividerColor,
+            color: _currentStep > 2 ? AppColors.primary : theme.dividerColor,
           ),
         ),
         _buildStepCircle(3, 'Gotowe', theme),
@@ -162,7 +159,9 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
                 : Text(
                     '$step',
                     style: TextStyle(
-                      color: isActive ? Colors.white : theme.colorScheme.onSurface,
+                      color: isActive
+                          ? Colors.white
+                          : theme.colorScheme.onSurface,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -172,8 +171,8 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
         Text(
           label,
           style: theme.textTheme.labelSmall?.copyWith(
-            color: isActive 
-                ? theme.colorScheme.onSurface 
+            color: isActive
+                ? theme.colorScheme.onSurface
                 : theme.colorScheme.onSurfaceVariant,
           ),
         ),
@@ -201,7 +200,11 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
         const SizedBox(height: 16),
 
         if (_frontImage != null) ...[
-          _buildImagePreview(_frontImage!, _isScanningFront, 'Rozpoznaję nazwę...'),
+          _buildImagePreview(
+            _frontImage!,
+            _isScanningFront,
+            'Rozpoznaję nazwę...',
+          ),
           const SizedBox(height: 12),
         ],
 
@@ -288,12 +291,20 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
         const SizedBox(height: 16),
 
         if (_dateImage != null) ...[
-          _buildImagePreview(_dateImage!, _isScanningDate, 'Rozpoznaję datę...'),
+          _buildImagePreview(
+            _dateImage!,
+            _isScanningDate,
+            'Rozpoznaję datę...',
+          ),
           const SizedBox(height: 12),
         ],
 
         if (_recognizedDate != null) ...[
-          _buildSuccessCard(theme, _formatDate(_recognizedDate!), 'Data rozpoznana'),
+          _buildSuccessCard(
+            theme,
+            _formatDate(_recognizedDate!),
+            'Data rozpoznana',
+          ),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: () => setState(() => _currentStep = 3),
@@ -355,7 +366,9 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
                 theme,
                 LucideIcons.calendar,
                 'Data ważności',
-                _recognizedDate != null ? _formatDate(_recognizedDate!) : 'Nie ustawiono',
+                _recognizedDate != null
+                    ? _formatDate(_recognizedDate!)
+                    : 'Nie ustawiono',
               ),
               if (_recognizedMedicine?.opis.isNotEmpty == true) ...[
                 const SizedBox(height: 12),
@@ -378,15 +391,17 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
           label: const Text('Importuj lek'),
         ),
         const SizedBox(height: 8),
-        OutlinedButton(
-          onPressed: _clearAll,
-          child: const Text('Anuluj'),
-        ),
+        OutlinedButton(onPressed: _clearAll, child: const Text('Anuluj')),
       ],
     );
   }
 
-  Widget _buildSummaryRow(ThemeData theme, IconData icon, String label, String value) {
+  Widget _buildSummaryRow(
+    ThemeData theme,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -516,36 +531,14 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
         color: theme.colorScheme.errorContainer,
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.error_outline,
-                color: theme.colorScheme.onErrorContainer,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  _error!,
-                  style: TextStyle(
-                    color: theme.colorScheme.onErrorContainer,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton.icon(
-              onPressed: () => BugReportSheet.show(context, error: _error),
-              icon: const Icon(Icons.bug_report, size: 18),
-              label: const Text('Zgłoś problem'),
-              style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.onErrorContainer,
-              ),
+          Icon(Icons.error_outline, color: theme.colorScheme.onErrorContainer),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _error!,
+              style: TextStyle(color: theme.colorScheme.onErrorContainer),
             ),
           ),
         ],
@@ -573,6 +566,7 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
       }
     } catch (e) {
       setState(() => _error = 'Nie udało się wybrać zdjęcia: $e');
+      widget.onError?.call(_error);
     }
   }
 
@@ -612,16 +606,20 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
         setState(() {
           _error = 'Nie rozpoznano leku. Spróbuj z lepszym zdjęciem.';
         });
+        widget.onError?.call(_error);
       } else {
         // Bierzemy pierwszy rozpoznany lek
         setState(() {
           _recognizedMedicine = result.leki.first;
         });
+        widget.onError?.call(null); // Clear error on success
       }
     } on GeminiException catch (e) {
       setState(() => _error = e.message);
+      widget.onError?.call(_error);
     } catch (e) {
       setState(() => _error = 'Błąd skanowania: $e');
+      widget.onError?.call(_error);
     } finally {
       setState(() => _isScanningFront = false);
     }
@@ -642,15 +640,19 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
         setState(() {
           _error = 'Nie rozpoznano daty. Spróbuj z lepszym zdjęciem.';
         });
+        widget.onError?.call(_error);
       } else {
         setState(() {
           _recognizedDate = result.terminWaznosci;
         });
+        widget.onError?.call(null); // Clear error on success
       }
     } on DateOcrException catch (e) {
       setState(() => _error = e.message);
+      widget.onError?.call(_error);
     } catch (e) {
       setState(() => _error = 'Błąd skanowania: $e');
+      widget.onError?.call(_error);
     } finally {
       setState(() => _isScanningDate = false);
     }
@@ -682,6 +684,7 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
       _error = null;
       _currentStep = 1;
     });
+    widget.onError?.call(null);
   }
 
   String _formatDate(String isoDate) {

@@ -19,8 +19,13 @@ import '../theme/app_theme.dart';
 /// Ekran dodawania leków - wszystkie metody importu
 class AddMedicineScreen extends StatefulWidget {
   final StorageService storageService;
+  final Function(String?)? onError;
 
-  const AddMedicineScreen({super.key, required this.storageService});
+  const AddMedicineScreen({
+    super.key,
+    required this.storageService,
+    this.onError,
+  });
 
   @override
   State<AddMedicineScreen> createState() => _AddMedicineScreenState();
@@ -41,11 +46,11 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   bool _isImporting = false;
 
   // Expanded sections - nowa kolejność
-  bool _geminiExpanded = true;   // 1. Zrób zdjęcie
+  bool _geminiExpanded = true; // 1. Zrób zdjęcie
   bool _twoPhotoExpanded = false; // 1.5 Tryb 2 zdjęcia
-  bool _manualExpanded = false;  // 2. Dodaj ręcznie
-  bool _fileExpanded = false;    // 3. Import kopii
-  bool _isAdvancedOpen = false;  // 4. Zaawansowane (zagnieżdżone)
+  bool _manualExpanded = false; // 2. Dodaj ręcznie
+  bool _fileExpanded = false; // 3. Import kopii
+  bool _isAdvancedOpen = false; // 4. Zaawansowane (zagnieżdżone)
 
   @override
   void dispose() {
@@ -88,10 +93,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     NeuInsetContainer(
                       borderRadius: 12,
                       padding: const EdgeInsets.all(12),
-                      child: KartonOpenIcon(
-                        size: 32,
-                        isDark: isDark,
-                      ),
+                      child: KartonOpenIcon(size: 32, isDark: isDark),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -131,6 +133,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   setState(() => _geminiExpanded = !_geminiExpanded),
               child: GeminiScanner(
                 onResult: _handleGeminiResult,
+                onError: widget.onError,
                 onImportComplete: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -149,12 +152,14 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             _buildExpandableSection(
               icon: LucideIcons.images,
               title: 'Tryb 2 zdjęcia (front + data)',
-              subtitle: 'Zdjęcie frontu → rozpoznanie nazwy\nZdjęcie daty → rozpoznanie terminu ważności',
+              subtitle:
+                  'Zdjęcie frontu → rozpoznanie nazwy\nZdjęcie daty → rozpoznanie terminu ważności',
               isExpanded: _twoPhotoExpanded,
               onToggle: () =>
                   setState(() => _twoPhotoExpanded = !_twoPhotoExpanded),
               child: TwoPhotoScanner(
                 onResult: _handleTwoPhotoResult,
+                onError: widget.onError,
                 onComplete: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -381,7 +386,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             maxLines: 5,
             decoration: InputDecoration(
               hintText: '{"leki": [...]}',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
             ),
           ),
@@ -622,7 +629,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
   void _handleGeminiResult(GeminiScanResult result) async {
     final importedMedicines = <Medicine>[];
-    
+
     for (final lek in result.leki) {
       final medicine = Medicine(
         id: const Uuid().v4(),
@@ -641,7 +648,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Zaimportowano ${importedMedicines.length} leków z Gemini AI'),
+        content: Text(
+          'Zaimportowano ${importedMedicines.length} leków z Gemini AI',
+        ),
         behavior: SnackBarBehavior.floating,
       ),
     );

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/bug_report_service.dart';
 import '../theme/app_theme.dart';
+import 'neumorphic/neu_button.dart';
 
 /// Bottom sheet do zgłaszania błędów z quick actions
 class BugReportSheet extends StatefulWidget {
@@ -43,15 +44,18 @@ class BugReportSheet extends StatefulWidget {
 class _BugReportSheetState extends State<BugReportSheet> {
   final _textController = TextEditingController();
   final _emailController = TextEditingController();
-  ReportCategory? _selectedCategory;
+  ReportCategory _selectedCategory = ReportCategory.bug;
   bool _includeLogs = true;
   bool _includeScreenshot = true;
+  bool _screenshotAttached = false;
   bool _isSending = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedCategory = widget.initialCategory;
+    _selectedCategory = widget.initialCategory ?? ReportCategory.bug;
+    // If screenshot is passed, don't auto-attach - user needs to click button
+    _screenshotAttached = false;
   }
 
   @override
@@ -69,33 +73,23 @@ class _BugReportSheetState extends State<BugReportSheet> {
         return 'Opisz swój pomysł...';
       case ReportCategory.question:
         return 'Czego nie rozumiesz?';
-      case null:
-        return 'Opisz problem (opcjonalnie)';
     }
   }
 
   Future<void> _sendReport() async {
-    if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Wybierz kategorię zgłoszenia'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
     setState(() => _isSending = true);
 
     final result = await BugReportService.instance.sendReport(
       text: _textController.text.trim(),
       errorMessage: widget.errorMessage,
-      category: _selectedCategory!,
+      category: _selectedCategory,
       replyEmail: _selectedCategory == ReportCategory.question
           ? _emailController.text.trim()
           : null,
       includeLogs: _includeLogs,
-      screenshot: _includeScreenshot ? widget.screenshot : null,
+      screenshot: (_screenshotAttached && _includeScreenshot)
+          ? widget.screenshot
+          : null,
     );
 
     if (!mounted) return;
@@ -111,8 +105,9 @@ class _BugReportSheetState extends State<BugReportSheet> {
               ? 'Raport wysłany. Dziękujemy!'
               : 'Błąd: ${result.error}',
         ),
-        backgroundColor:
-            result.success ? Colors.green.shade700 : Colors.red.shade700,
+        backgroundColor: result.success
+            ? Colors.green.shade700
+            : Colors.red.shade700,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -210,7 +205,8 @@ class _BugReportSheetState extends State<BugReportSheet> {
                         category: category,
                         isSelected: isSelected,
                         isDark: isDark,
-                        onTap: () => setState(() => _selectedCategory = category),
+                        onTap: () =>
+                            setState(() => _selectedCategory = category),
                       ),
                     ),
                   );
@@ -287,32 +283,43 @@ class _BugReportSheetState extends State<BugReportSheet> {
 
               const SizedBox(height: 12),
 
-              // Screenshot preview (if available)
+              // Screenshot attachment section
               if (widget.screenshot != null) ...[
-                Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.memory(
-                        widget.screenshot!,
-                        width: 60,
-                        height: 60,
-                        fit: BoxFit.cover,
+                if (!_screenshotAttached) ...[
+                  // Neumorphic button to attach screenshot
+                  NeuButton(
+                    icon: LucideIcons.imagePlus,
+                    label: 'Załącz zrzut aplikacji',
+                    isExpanded: true,
+                    onPressed: () => setState(() => _screenshotAttached = true),
+                  ),
+                ] else ...[
+                  // Screenshot preview with checkbox (shown after attachment)
+                  Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.memory(
+                          widget.screenshot!,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: CheckboxListTile(
-                        value: _includeScreenshot,
-                        onChanged: (v) =>
-                            setState(() => _includeScreenshot = v ?? true),
-                        title: const Text('Dołącz screenshot'),
-                        contentPadding: EdgeInsets.zero,
-                        controlAffinity: ListTileControlAffinity.leading,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: CheckboxListTile(
+                          value: _includeScreenshot,
+                          onChanged: (v) =>
+                              setState(() => _includeScreenshot = v ?? true),
+                          title: const Text('Dołącz screenshot'),
+                          contentPadding: EdgeInsets.zero,
+                          controlAffinity: ListTileControlAffinity.leading,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 8),
               ],
 
@@ -384,7 +391,7 @@ class _CategoryChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -394,8 +401,8 @@ class _CategoryChip extends StatelessWidget {
           color: isSelected
               ? AppColors.primary.withOpacity(0.15)
               : isDark
-                  ? Colors.white.withOpacity(0.05)
-                  : Colors.black.withOpacity(0.03),
+              ? Colors.white.withOpacity(0.05)
+              : Colors.black.withOpacity(0.03),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected

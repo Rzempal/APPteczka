@@ -2,17 +2,18 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/gemini_service.dart';
-import 'bug_report_sheet.dart';
 
 /// Widget do skanowania leków przez Gemini Vision
 class GeminiScanner extends StatefulWidget {
   final Function(GeminiScanResult) onResult;
   final VoidCallback? onImportComplete;
+  final Function(String?)? onError;
 
   const GeminiScanner({
     super.key,
     required this.onResult,
     this.onImportComplete,
+    this.onError,
   });
 
   @override
@@ -134,38 +135,18 @@ class _GeminiScannerState extends State<GeminiScanner> {
                   color: theme.colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          color: theme.colorScheme.onErrorContainer,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _error!,
-                            style: TextStyle(
-                              color: theme.colorScheme.onErrorContainer,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Icon(
+                      Icons.error_outline,
+                      color: theme.colorScheme.onErrorContainer,
                     ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton.icon(
-                        onPressed: () => BugReportSheet.show(
-                          context,
-                          error: _error,
-                        ),
-                        icon: const Icon(Icons.bug_report, size: 18),
-                        label: const Text('Zgłoś problem'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: theme.colorScheme.onErrorContainer,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _error!,
+                        style: TextStyle(
+                          color: theme.colorScheme.onErrorContainer,
                         ),
                       ),
                     ),
@@ -299,6 +280,7 @@ class _GeminiScannerState extends State<GeminiScanner> {
       setState(() {
         _error = 'Nie udało się wybrać zdjęcia: $e';
       });
+      widget.onError?.call(_error);
     }
   }
 
@@ -317,19 +299,23 @@ class _GeminiScannerState extends State<GeminiScanner> {
         setState(() {
           _error = 'Nie rozpoznano żadnych leków. Spróbuj z lepszym zdjęciem.';
         });
+        widget.onError?.call(_error);
       } else {
         setState(() {
           _result = result;
         });
+        widget.onError?.call(null); // Clear error on success
       }
     } on GeminiException catch (e) {
       setState(() {
         _error = e.message;
       });
+      widget.onError?.call(_error);
     } catch (e) {
       setState(() {
         _error = 'Błąd skanowania: $e';
       });
+      widget.onError?.call(_error);
     } finally {
       setState(() {
         _isScanning = false;
@@ -343,6 +329,7 @@ class _GeminiScannerState extends State<GeminiScanner> {
       _result = null;
       _error = null;
     });
+    widget.onError?.call(null);
   }
 
   void _clearAll() {
@@ -351,5 +338,6 @@ class _GeminiScannerState extends State<GeminiScanner> {
       _result = null;
       _error = null;
     });
+    widget.onError?.call(null);
   }
 }

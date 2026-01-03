@@ -93,11 +93,34 @@ class _MainNavigationState extends State<MainNavigation> {
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
   final GlobalKey _screenshotKey = GlobalKey();
 
+  // Error state from scanners - used to show FAB
+  bool _hasScannerError = false;
+  String? _lastErrorMessage;
+
+  /// Handles scanner errors to show FAB
+  void _handleScannerError(String? error) {
+    setState(() {
+      _hasScannerError = error != null;
+      _lastErrorMessage = error;
+    });
+  }
+
   /// Przechwytuje screenshot i otwiera sheet zgłoszenia
   Future<void> _openBugReportWithScreenshot() async {
-    final screenshot = await BugReportService.instance.captureScreenshot(_screenshotKey);
+    final screenshot = await BugReportService.instance.captureScreenshot(
+      _screenshotKey,
+    );
     if (!mounted) return;
-    BugReportSheet.show(context, screenshot: screenshot);
+    BugReportSheet.show(
+      context,
+      screenshot: screenshot,
+      error: _lastErrorMessage,
+    );
+    // Reset error state after opening report
+    setState(() {
+      _hasScannerError = false;
+      _lastErrorMessage = null;
+    });
   }
 
   @override
@@ -105,67 +128,73 @@ class _MainNavigationState extends State<MainNavigation> {
     return RepaintBoundary(
       key: _screenshotKey,
       child: Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          // 0: Dodaj
-          AddMedicineScreen(storageService: widget.storageService),
-          // 1: Apteczka (domyślny, środkowy)
-          _HomeScreenWrapper(
-            key: _homeKey,
-            storageService: widget.storageService,
-            themeProvider: widget.themeProvider,
-            updateService: widget.updateService,
-            onNavigateToSettings: () {
-              setState(() {
-                _currentIndex = 2; // Navigate to Ustawienia tab
-              });
-            },
-            onNavigateToAdd: () {
-              setState(() {
-                _currentIndex = 0; // Navigate to Dodaj tab
-              });
-            },
-          ),
-          // 2: Ustawienia
-          SettingsScreen(
-            storageService: widget.storageService,
-            themeProvider: widget.themeProvider,
-            updateService: widget.updateService,
-          ),
-        ],
-      ),
-      bottomNavigationBar: FloatingNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          // Odśwież widok po przełączeniu na Apteczkę
-          if (index == 1) {
-            _homeKey.currentState?.refresh();
-          }
-        },
-        items: [
-          const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
-          NavItem(
-            icon: LucideIcons.briefcaseMedical, // fallback
-            iconBuilder: (color, size) =>
-                KartonMonoClosedIcon(size: size, color: color),
-            label: 'Apteczka',
-          ),
-          const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
-        ],
-      ),
-      // FAB for bug reporting - visible if enabled in settings OR in DEV builds
-      floatingActionButton: (widget.storageService.showBugReportFab || AppConfig.isInternal)
-          ? FloatingActionButton(
-              onPressed: _openBugReportWithScreenshot,
-              backgroundColor: AppColors.expired,
-              child: const Icon(LucideIcons.bug, color: Colors.white),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: [
+            // 0: Dodaj
+            AddMedicineScreen(
+              storageService: widget.storageService,
+              onError: _handleScannerError,
+            ),
+            // 1: Apteczka (domyślny, środkowy)
+            _HomeScreenWrapper(
+              key: _homeKey,
+              storageService: widget.storageService,
+              themeProvider: widget.themeProvider,
+              updateService: widget.updateService,
+              onNavigateToSettings: () {
+                setState(() {
+                  _currentIndex = 2; // Navigate to Ustawienia tab
+                });
+              },
+              onNavigateToAdd: () {
+                setState(() {
+                  _currentIndex = 0; // Navigate to Dodaj tab
+                });
+              },
+            ),
+            // 2: Ustawienia
+            SettingsScreen(
+              storageService: widget.storageService,
+              themeProvider: widget.themeProvider,
+              updateService: widget.updateService,
+            ),
+          ],
+        ),
+        bottomNavigationBar: FloatingNavBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+            // Odśwież widok po przełączeniu na Apteczkę
+            if (index == 1) {
+              _homeKey.currentState?.refresh();
+            }
+          },
+          items: [
+            const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
+            NavItem(
+              icon: LucideIcons.briefcaseMedical, // fallback
+              iconBuilder: (color, size) =>
+                  KartonMonoClosedIcon(size: size, color: color),
+              label: 'Apteczka',
+            ),
+            const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+          ],
+        ),
+        // FAB for bug reporting - visible if enabled in settings, DEV builds, OR scanner error
+        floatingActionButton:
+            (widget.storageService.showBugReportFab ||
+                AppConfig.isInternal ||
+                _hasScannerError)
+            ? FloatingActionButton(
+                onPressed: _openBugReportWithScreenshot,
+                backgroundColor: AppColors.expired,
+                child: const Icon(LucideIcons.bug, color: Colors.white),
+              )
+            : null,
+        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
     );
   }
