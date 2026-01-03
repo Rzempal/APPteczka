@@ -7,16 +7,25 @@ import '../models/label.dart';
 class StorageService {
   static const String _medicinesBoxName = 'medicines';
   static const String _labelsBoxName = 'labels';
+  static const String _settingsBoxName = 'settings';
 
   late Box<String> _medicinesBox;
   late Box<String> _labelsBox;
+  late Box<dynamic> _settingsBox;
 
   /// Inicjalizacja Hive
   Future<void> init() async {
     await Hive.initFlutter();
     _medicinesBox = await Hive.openBox<String>(_medicinesBoxName);
     _labelsBox = await Hive.openBox<String>(_labelsBoxName);
+    _settingsBox = await Hive.openBox<dynamic>(_settingsBoxName);
   }
+
+  // ==================== SETTINGS ====================
+
+  /// Czy pokazywać FAB do zgłaszania błędów
+  bool get showBugReportFab => _settingsBox.get('showBugReportFab', defaultValue: false) as bool;
+  set showBugReportFab(bool value) => _settingsBox.put('showBugReportFab', value);
 
   // ==================== MEDICINES ====================
 

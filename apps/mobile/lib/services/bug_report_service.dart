@@ -100,6 +100,7 @@ class BugReportService {
     String? text,
     String? errorMessage,
     ReportCategory category = ReportCategory.bug,
+    String? replyEmail,
     bool includeLogs = true,
     Uint8List? screenshot,
   }) async {
@@ -115,6 +116,10 @@ class BugReportService {
         'category': category.name,
         'channel': const String.fromEnvironment('CHANNEL', defaultValue: 'production'),
       };
+
+      if (replyEmail != null && replyEmail.isNotEmpty) {
+        body['replyEmail'] = replyEmail;
+      }
 
       if (text != null && text.isNotEmpty) {
         body['text'] = text;

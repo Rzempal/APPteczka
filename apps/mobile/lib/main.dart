@@ -146,8 +146,8 @@ class _MainNavigationState extends State<MainNavigation> {
           const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
         ],
       ),
-      // FAB for bug reporting - only visible in DEV builds
-      floatingActionButton: AppConfig.isInternal
+      // FAB for bug reporting - visible if enabled in settings OR in DEV builds
+      floatingActionButton: (widget.storageService.showBugReportFab || AppConfig.isInternal)
           ? FloatingActionButton(
               onPressed: () => BugReportSheet.show(context),
               backgroundColor: AppColors.expired,

@@ -1002,55 +1002,81 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _buildAdvancedBugReport(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
-          width: 1,
-        ),
-        borderRadius: BorderRadius.circular(10),
-        color: isDark
-            ? Colors.white.withOpacity(0.03)
-            : Colors.black.withOpacity(0.02),
-      ),
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: theme.colorScheme.outline.withOpacity(0.3),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(10),
+            color: isDark
+                ? Colors.white.withOpacity(0.03)
+                : Colors.black.withOpacity(0.02),
+          ),
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                LucideIcons.bug,
-                color: AppColors.expired,
-                size: 18,
+              Row(
+                children: [
+                  Icon(
+                    LucideIcons.bug,
+                    color: AppColors.expired,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Zgłoś problem',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
+              const SizedBox(height: 8),
               Text(
-                'Zgłoś problem',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+                'Masz problem z aplikacją lub pomysł na ulepszenie? Daj nam znać!',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // FAB toggle
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Pokaż przycisk zgłaszania',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+                  ),
+                  Switch(
+                    value: widget.storageService.showBugReportFab,
+                    onChanged: (value) {
+                      setLocalState(() {
+                        widget.storageService.showBugReportFab = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => BugReportSheet.show(context),
+                  icon: const Icon(LucideIcons.send, size: 16),
+                  label: const Text('Wyślij zgłoszenie'),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Masz problem z aplikacją lub pomysł na ulepszenie? Daj nam znać!',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => BugReportSheet.show(context),
-              icon: const Icon(LucideIcons.send, size: 16),
-              label: const Text('Wyślij zgłoszenie'),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

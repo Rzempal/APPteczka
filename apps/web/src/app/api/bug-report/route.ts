@@ -24,6 +24,9 @@ interface BugReportRequest {
     appVersion?: string;
     deviceInfo?: string;
     errorMessage?: string;
+    category?: string;
+    channel?: string;
+    replyEmail?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,7 +41,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body: BugReportRequest = await request.json();
-        const { log, text, screenshot, appVersion, deviceInfo, errorMessage } = body;
+        const { log, text, screenshot, appVersion, deviceInfo, errorMessage, category, channel, replyEmail } = body;
 
         // Walidacja - musi być coś do wysłania
         if (!log && !text && !screenshot) {
@@ -87,6 +90,9 @@ export async function POST(request: NextRequest) {
         <div class="label">Informacje o urządzeniu:</div>
         <p><strong>Wersja aplikacji:</strong> ${appVersion || 'Nieznana'}</p>
         <p><strong>Urządzenie:</strong> ${deviceInfo || 'Nieznane'}</p>
+        <p><strong>Kategoria:</strong> ${category || 'Nieznana'}</p>
+        <p><strong>Kanał:</strong> ${channel || 'production'}</p>
+        ${replyEmail ? `<p><strong>Odpowiedz do:</strong> <a href="mailto:${escapeHtml(replyEmail)}">${escapeHtml(replyEmail)}</a></p>` : ''}
     </div>
 
     ${log ? `

@@ -11,6 +11,7 @@ import '../services/storage_service.dart';
 import '../services/gemini_service.dart';
 import '../widgets/gemini_scanner.dart';
 import '../widgets/karton_icons.dart';
+import '../widgets/batch_date_input_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
 
@@ -594,7 +595,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   // ==================== HANDLERS ====================
 
   void _handleGeminiResult(GeminiScanResult result) async {
-    int imported = 0;
+    final importedMedicines = <Medicine>[];
+    
     for (final lek in result.leki) {
       final medicine = Medicine(
         id: const Uuid().v4(),
@@ -602,20 +604,29 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         opis: lek.opis,
         wskazania: lek.wskazania,
         tagi: lek.tagi,
+        terminWaznosci: lek.terminWaznosci,
         dataDodania: DateTime.now().toIso8601String(),
       );
       await widget.storageService.saveMedicine(medicine);
-      imported++;
+      importedMedicines.add(medicine);
     }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Zaimportowano $imported leków z Gemini AI'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Zaimportowano ${importedMedicines.length} leków z Gemini AI'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    // Pokaż sheet do uzupełniania dat dla leków bez daty
+    BatchDateInputSheet.showIfNeeded(
+      context: context,
+      medicines: importedMedicines,
+      storageService: widget.storageService,
+      onComplete: () {},
+    );
   }
 
   Future<void> _pasteFromClipboard() async {

@@ -42,6 +42,7 @@ class BugReportSheet extends StatefulWidget {
 
 class _BugReportSheetState extends State<BugReportSheet> {
   final _textController = TextEditingController();
+  final _emailController = TextEditingController();
   ReportCategory? _selectedCategory;
   bool _includeLogs = true;
   bool _includeScreenshot = true;
@@ -56,6 +57,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
   @override
   void dispose() {
     _textController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -89,6 +91,9 @@ class _BugReportSheetState extends State<BugReportSheet> {
       text: _textController.text.trim(),
       errorMessage: widget.errorMessage,
       category: _selectedCategory!,
+      replyEmail: _selectedCategory == ReportCategory.question
+          ? _emailController.text.trim()
+          : null,
       includeLogs: _includeLogs,
       screenshot: _includeScreenshot ? widget.screenshot : null,
     );
@@ -262,6 +267,23 @@ class _BugReportSheetState extends State<BugReportSheet> {
                   alignLabelWithHint: true,
                 ),
               ),
+
+              // Email field (visible only for 'Pytanie' category)
+              if (_selectedCategory == ReportCategory.question) ...[
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: InputDecoration(
+                    labelText: 'Twój email (opcjonalnie)',
+                    hintText: 'Żebyśmy mogli odpowiedzieć',
+                    prefixIcon: const Icon(LucideIcons.mail),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 12),
 
