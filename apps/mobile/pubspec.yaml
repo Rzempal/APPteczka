@@ -37,26 +37,26 @@ dependencies:
 
   # Utilities
   uuid: ^4.5.1
-  intl: ^0.19.0
+  intl: ^0.20.2
   url_launcher: ^6.2.1
 
   # Gemini Vision + Import
   http: ^1.2.0
   image_picker: ^1.0.7
-  file_picker: ^8.0.0+1
+  file_picker: ^10.3.8
 
   # The following adds the Cupertino Icons font to your application.
   cupertino_icons: ^1.0.8
   
   # Lucide Icons - SVG icons like in web version (newer package with full icon set)
-  lucide_icons_flutter: ^1.1.5
+  lucide_icons_flutter: ^3.1.9
   
   # Theme persistence
   shared_preferences: ^2.2.2
 
   # Auto-update OTA
-  package_info_plus: ^8.0.0
-  device_info_plus: ^11.0.0
+  package_info_plus: ^9.0.0
+  device_info_plus: ^12.3.0
   ota_update: ^7.0.1
 
   # PDF Viewer dla ulotek lekowych
@@ -77,7 +77,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
-  flutter_launcher_icons: "^0.13.1"
+  flutter_launcher_icons: ^0.14.4
 
 # DISABLED: Using manual XML adaptive icons in res/drawable/ and mipmap-anydpi-v26/
 # flutter_icons:

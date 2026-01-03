@@ -12,7 +12,7 @@ Najprostszy sposób na użycie stylu. Widgety te automatycznie obsługują motyw
 | Widget | Opis | Zastosowanie | Gdzie użyte w aplikacji (przykłady) |
 |--------|------|--------------|--------------------------------------|
 | **`NeuContainer`** | Podstawowy kontener | Karty, sekcje, tła | `BackupScreen` (sekcje), `ManageScreen` (kafelki) |
-| **`NeuBasinContainer`** | Kontener wklęsły (Inset) | Pola formularzy, Search Bar | `HomeScreen` (wyszukiwarka), `ImportForm` (pola tekstowe) |
+| **`NeuInsetContainer`** | Kontener z **prawdziwymi inner shadows** | Pola formularzy, sekcje wewnątrz flat parents | `SettingsScreen` (sekcje), `AddMedicineScreen` (sekcje) |
 | **`NeuButton`** | Przycisk z tekstem | Główne akcje | `BackupScreen` (przyciski importu/eksportu) |
 | **`NeuIconButton`** | Przycisk z ikoną | Toolbar, akcje, filtry. Tryby: `visible` (standard), `iconOnly` (bez tła) | `HomeScreen` (toolbar, filtry), Nawigacja |
 | **`NeuSortMenu`** | Menu rozwijane | Sortowanie, wybory | `HomeScreen` (menu sortowania) |
@@ -30,13 +30,13 @@ Metody statyczne klasy `NeuDecoration`, używane w `Container(decoration: ...)` 
 | **`.flatSmall()`** | Wypukły, mniejszy cień, radius 12px | Mniejsze elementy: tagi, chipy | Tagi w `MedicineDetailSheet`, małe przyciski |
 | **`.pressed()`** | Wklęsły (debossed) - odwrócone cienie | Stan aktywny przycisku, włączone toggle | Wciśnięte przyciski menu |
 | **`.pressedSmall()`** | Wklęsły, subtelniejszy (debossed) | Stan aktywny małych elementów, **aktywny NeuIconButton** | Wybrane filtry, aktywne tagi, toolbar buttons |
-| **`.basin()`** | **Głęboko wklęsły (inset)** - odwrócone cienie | Wnętrze pól tekstowych, inputy, zagnieżdżone kontenery | `TextField` decoration, Settings sections |
+| **`.basin()`** | Płaskie tło (deprecated) | Use `NeuInsetContainer` for true inner shadows | - |
 | **`.searchBar()`** | **Floating pill** z mocnymi cieniami "lewitacji" | Główny pasek wyszukiwania | `HomeScreen` (wyszukiwarka) |
 | **`.searchBarFocused()`** | Wciśnięty pasek wyszukiwania | Fokus na polu wyszukiwania | `HomeScreen` (aktywna wyszukiwarka) |
 | **`.convex()`** | Wypukły z gradientem | Elementy interaktywne "3D" | (Opcjonalne) Przyciski specjalne |
 | **`.statusCard()`** | Wypukły + kolor statusu | Karty zależne od stanu | `MedicineCard` (status: OK, expiring, expired) |
 
-> **Technika debossed/inset**: Elementy wklęsłe używają `BoxShadow` z odwróconymi offsetami - ciemny cień `(-4, -4)` góra-lewo, jasny highlight `(4, 4)` dół-prawo.
+> **Inner shadows**: Flutter `BoxShadow` nie obsługuje `inset`. Widget `NeuInsetContainer` używa **CustomPainter z gradient overlays** na wewnętrznych krawędziach.
 
 ---
 
