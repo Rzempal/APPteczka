@@ -285,6 +285,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
 
               // Screenshot attachment section
               if (widget.screenshot != null) ...[
+                const Divider(height: 24),
                 if (!_screenshotAttached) ...[
                   // Neumorphic button to attach screenshot
                   NeuButton(
@@ -301,46 +302,51 @@ class _BugReportSheetState extends State<BugReportSheet> {
                         borderRadius: BorderRadius.circular(8),
                         child: Image.memory(
                           widget.screenshot!,
-                          width: 60,
-                          height: 60,
+                          width: 48,
+                          height: 48,
                           fit: BoxFit.cover,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: CheckboxListTile(
-                          value: _includeScreenshot,
-                          onChanged: (v) =>
-                              setState(() => _includeScreenshot = v ?? true),
-                          title: const Text('Dołącz screenshot'),
-                          contentPadding: EdgeInsets.zero,
-                          controlAffinity: ListTileControlAffinity.leading,
-                        ),
+                      Checkbox(
+                        value: _includeScreenshot,
+                        onChanged: (v) =>
+                            setState(() => _includeScreenshot = v ?? true),
                       ),
+                      const SizedBox(width: 4),
+                      const Text('Dołącz screenshot'),
                     ],
                   ),
                 ],
-                const SizedBox(height: 8),
               ],
 
-              // Logs checkbox with icon for alignment
+              // Logs section
+              const Divider(height: 24),
               Row(
                 children: [
                   Icon(
                     LucideIcons.fileCode,
-                    size: 24,
-                    color: theme.colorScheme.onSurfaceVariant,
+                    size: 48,
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
                   ),
                   const SizedBox(width: 12),
+                  Checkbox(
+                    value: _includeLogs,
+                    onChanged: (v) => setState(() => _includeLogs = v ?? true),
+                  ),
+                  const SizedBox(width: 4),
                   Expanded(
-                    child: CheckboxListTile(
-                      value: _includeLogs,
-                      onChanged: (v) =>
-                          setState(() => _includeLogs = v ?? true),
-                      title: const Text('Dołącz logi aplikacji'),
-                      subtitle: const Text('Informacje techniczne'),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: EdgeInsets.zero,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Dołącz logi aplikacji'),
+                        Text(
+                          'Informacje techniczne',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
