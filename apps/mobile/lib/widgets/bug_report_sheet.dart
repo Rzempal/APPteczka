@@ -279,6 +279,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
                 decoration: InputDecoration(
                   labelText: 'Opis (opcjonalnie)',
                   hintText: _hintText,
+                  prefixIcon: const Icon(LucideIcons.notebookPen),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -288,7 +289,9 @@ class _BugReportSheetState extends State<BugReportSheet> {
 
               // Email field (visible only for 'Pytanie' category)
               if (_selectedCategory == ReportCategory.question) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
+                const Divider(height: 1),
+                const SizedBox(height: 16),
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -311,7 +314,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
                 if (!_screenshotAttached) ...[
                   // Neumorphic button to attach screenshot
                   NeuButton(
-                    icon: LucideIcons.imagePlus,
+                    icon: LucideIcons.crop,
                     label: 'Załącz zrzut aplikacji',
                     isExpanded: true,
                     onPressed: () => setState(() => _screenshotAttached = true),
