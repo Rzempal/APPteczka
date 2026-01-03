@@ -104,7 +104,8 @@ export async function recognizeDateFromImage(
             };
         }
 
-        console.log('Date OCR response:', text);
+        console.log('Date OCR raw response:', text);
+        console.log('Date OCR raw response length:', text.length);
 
         // Wyciągnij JSON z odpowiedzi
         let jsonString = text.trim();
@@ -112,27 +113,36 @@ export async function recognizeDateFromImage(
         const jsonCodeBlockMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
         if (jsonCodeBlockMatch && jsonCodeBlockMatch[1]) {
             jsonString = jsonCodeBlockMatch[1].trim();
+            console.log('Date OCR: extracted from ```json block');
         } else {
             const codeBlockMatch = jsonString.match(/```\s*([\s\S]*?)\s*```/);
             if (codeBlockMatch && codeBlockMatch[1]) {
                 jsonString = codeBlockMatch[1].trim();
+                console.log('Date OCR: extracted from ``` block');
             } else {
                 const jsonObjectMatch = jsonString.match(/\{[\s\S]*\}/);
                 if (jsonObjectMatch) {
                     jsonString = jsonObjectMatch[0].trim();
+                    console.log('Date OCR: extracted raw JSON object');
+                } else {
+                    console.log('Date OCR: no JSON pattern found, using raw text');
                 }
             }
         }
 
+        console.log('Date OCR extracted JSON:', jsonString);
+
         try {
             const parsed = JSON.parse(jsonString);
+            console.log('Date OCR parsed successfully:', parsed);
             return {
                 terminWaznosci: parsed.terminWaznosci || null
             };
         } catch (parseErr) {
             console.error('Date OCR parse error:', parseErr);
+            console.error('Date OCR failed JSON string:', jsonString);
             return {
-                error: 'Nie udało się sparsować odpowiedzi Gemini.',
+                error: `Nie udało się sparsować odpowiedzi Gemini. Raw: ${text.substring(0, 200)}`,
                 code: 'PARSE_ERROR'
             };
         }
