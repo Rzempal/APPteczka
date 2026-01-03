@@ -1,63 +1,62 @@
-<!-- karton.html v1.0.0 - Landing page Karton z lekami -->
+<!-- karton.html v1.7.0 - Deprecated web badge, improved Android button -->
 <!DOCTYPE html>
 <html lang="pl" data-theme="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Karton z lekami</title>
+    <title>Karton z lekami - Nie kop w pudle. Sprawdź w telefonie.</title>
     <meta name="description" content="Nie kop w pudle. Sprawdź w telefonie. Kataloguj leki, śledź terminy ważności.">
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="assets/karton/favicon.png">
 
+    <!-- Common Design System CSS -->
+    <link rel="stylesheet" href="css/common-glass.css">
+    <link rel="stylesheet" href="css/common-navbar.css">
+    <link rel="stylesheet" href="css/common-footer.css">
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 
+    <!-- Common Components -->
+    <script src="js/common-navbar.js" defer></script>
+    <script src="js/common-footer.js" defer></script>
+
     <style>
         /* ========================================
-           CSS Variables - Light/Dark Mode
+           Page-Specific Variables (Mint Theme)
            ======================================== */
         :root {
             --color-mint: #10b981;
             --color-mint-light: #34d399;
             --color-mint-dark: #059669;
-            --color-cyan: #06b6d4;
-            --color-purple: #8b5cf6;
-            --color-pink: #ec4899;
-            --color-emerald: #10b981;
-            --color-amber: #f59e0b;
-            --color-blue: #3b82f6;
+            --color-accent: #10b981;
             --gradient-accent: linear-gradient(135deg, var(--color-mint), var(--color-mint-light));
             --gradient-text: linear-gradient(to right, var(--color-mint), var(--color-mint-light), var(--color-cyan));
         }
 
+        /* Page-specific background gradients */
         [data-theme="dark"] {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-glass: rgba(30, 41, 59, 0.7);
-            --bg-glass-hover: rgba(30, 41, 59, 0.9);
-            --border-glass: rgba(148, 163, 184, 0.2);
-            --border-glass-hover: rgba(148, 163, 184, 0.4);
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --shadow-color: rgba(0, 0, 0, 0.3);
-            --blob-opacity: 0.4;
+            --bg-primary: linear-gradient(135deg, #022c22 0%, #064e3b 30%, #065f46 60%, #047857 100%);
+            --bg-glass: rgba(0, 0, 0, 0.3);
+            --bg-glass-hover: rgba(0, 0, 0, 0.4);
+            --border-glass: rgba(255, 255, 255, 0.15);
+            --border-glass-hover: rgba(255, 255, 255, 0.25);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.85);
+            --text-muted: rgba(255, 255, 255, 0.7);
+            /* Footer accent - use cyan for contrast on green */
+            --color-accent: #22d3ee;
         }
 
         [data-theme="light"] {
-            --bg-primary: #f0fdf4;
-            --bg-secondary: #dcfce7;
-            --bg-glass: rgba(255, 255, 255, 0.7);
-            --bg-glass-hover: rgba(255, 255, 255, 0.9);
-            --border-glass: rgba(148, 163, 184, 0.3);
-            --border-glass-hover: rgba(148, 163, 184, 0.5);
-            --text-primary: #1e293b;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --shadow-color: rgba(0, 0, 0, 0.1);
-            --blob-opacity: 0.25;
+            --bg-primary: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 25%, #a7f3d0 50%, #6ee7b7 75%, #34d399 100%);
+            --bg-glass: rgba(255, 255, 255, 0.6);
+            --bg-glass-hover: rgba(255, 255, 255, 0.8);
+            --border-glass: rgba(16, 185, 129, 0.3);
+            --border-glass-hover: rgba(16, 185, 129, 0.5);
+            --color-accent: #059669;
         }
 
         /* ========================================
@@ -70,90 +69,25 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
             transition: background 0.4s ease, color 0.4s ease;
-            line-height: 1.6;
         }
 
         /* ========================================
-           Animated Background
+           Page-Specific Orb Colors (Mint/Cyan)
            ======================================== */
-        .animated-bg {
-            position: fixed;
-            inset: 0;
-            overflow: hidden;
-            pointer-events: none;
-            z-index: 0;
+        .orb-1 {
+            background: linear-gradient(135deg, #10b981, #34d399);
         }
 
-        .blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: var(--blob-opacity);
-            animation: float 20s ease-in-out infinite;
-            transition: opacity 0.4s ease;
+        .orb-2 {
+            background: linear-gradient(135deg, #06b6d4, #22d3ee);
         }
 
-        .blob-1 {
-            width: 400px;
-            height: 400px;
-            background: var(--color-mint);
-            top: -100px;
-            right: -100px;
-        }
-
-        .blob-2 {
-            width: 500px;
-            height: 500px;
-            background: var(--color-mint-light);
-            bottom: -150px;
-            left: -150px;
-            animation-delay: -7s;
-        }
-
-        .blob-3 {
-            width: 350px;
-            height: 350px;
-            background: var(--color-cyan);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation-delay: -14s;
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translate(0, 0) scale(1);
-            }
-
-            25% {
-                transform: translate(30px, -50px) scale(1.1);
-            }
-
-            50% {
-                transform: translate(-20px, 20px) scale(0.95);
-            }
-
-            75% {
-                transform: translate(40px, 40px) scale(1.05);
-            }
-        }
-
-        /* ========================================
-           Glass Effect
-           ======================================== */
-        .glass {
-            background: var(--bg-glass);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-glass);
-            transition: all 0.3s ease;
+        .orb-3 {
+            background: linear-gradient(135deg, #059669, #10b981);
         }
 
         /* ========================================
@@ -167,104 +101,7 @@
             z-index: 10;
         }
 
-        /* ========================================
-           Navbar
-           ======================================== */
-        .navbar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            background: var(--bg-glass);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border-glass);
-            transition: transform 0.3s ease, background 0.4s ease;
-        }
-
-        .navbar-inner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 56px;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 1rem;
-        }
-
-        .nav-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            color: var(--text-primary);
-            font-weight: 600;
-            transition: color 0.2s ease;
-        }
-
-        .logo:hover {
-            color: var(--color-mint);
-        }
-
-        .logo i {
-            width: 24px;
-            height: 24px;
-        }
-
-        .nav-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        /* Add padding for fixed navbar */
-        body {
-            padding-top: 72px;
-        }
-
-        /* ========================================
-           Theme Toggle
-           ======================================== */
-        .theme-toggle {
-            position: relative;
-            width: 64px;
-            height: 32px;
-            background: var(--bg-secondary);
-            border-radius: 999px;
-            cursor: pointer;
-            border: 1px solid var(--border-glass);
-        }
-
-        .theme-toggle-thumb {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 24px;
-            height: 24px;
-            background: var(--gradient-accent);
-            border-radius: 50%;
-            transition: transform 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        [data-theme="light"] .theme-toggle-thumb {
-            transform: translateX(32px);
-        }
-
-        .theme-toggle-icon {
-            width: 14px;
-            height: 14px;
-            color: white;
-        }
+        /* Navbar styles loaded from common-navbar.css */
 
         /* ========================================
            Hero Section
@@ -289,43 +126,134 @@
             align-items: center;
             justify-content: center;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
-        .app-icon video {
+        /* ========================================
+           Karton Design System - Hero Animation
+           ======================================== */
+        /* Paleta Kartonu */
+        :root {
+            --box-face-top: #E6C590;
+            --box-face-right: #D4B070;
+            --box-face-left: #C29B55;
+            --box-inner: #654321;
+            --box-flap: #B08D55;
+            --item-bottle: #f59e0b;
+            --item-bottle-dark: #d97706;
+            --item-cap: #f1f5f9;
+            --item-box: #ffffff;
+            --item-box-side: #cbd5e1;
+            --item-blister: #94a3b8;
+            --item-blister-pill: var(--color-mint);
+            --item-tube: var(--color-mint-light);
+            --item-tube-dark: var(--color-mint-dark);
+            --tape-light: var(--color-mint);
+            --tape-dark: var(--color-mint-dark);
+        }
+
+        [data-theme="light"] {
+            --box-face-top: #FFE5B4;
+            --box-face-right: #FFD180;
+            --box-face-left: #FFB74D;
+            --box-inner: #8D5E2A;
+            --box-flap: #E0C090;
+        }
+
+        .hero-stage {
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            border-radius: 2rem;
         }
 
-        .app-icon .logo-img {
+        .hero-stage svg {
             width: 100%;
             height: 100%;
-            object-fit: contain;
-            border-radius: 2rem;
-            display: none;
+            overflow: visible;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.15));
         }
 
-        .app-icon.animation-ended video {
-            display: none;
+        /* SVG fill classes */
+        .fill-top { fill: var(--box-face-top); }
+        .fill-left { fill: var(--box-face-left); }
+        .fill-right { fill: var(--box-face-right); }
+        .fill-inner { fill: var(--box-inner); }
+        .fill-flap { fill: var(--box-flap); }
+        .fill-bottle { fill: var(--item-bottle); }
+        .fill-bottle-dark { fill: var(--item-bottle-dark); }
+        .fill-box { fill: var(--item-box); }
+        .fill-box-side { fill: var(--item-box-side); }
+        .fill-blister { fill: var(--item-blister); }
+        .fill-tube { fill: var(--item-tube); }
+        .fill-tube-dark { fill: var(--item-tube-dark); }
+        .fill-tape-light { fill: var(--tape-light); }
+        .fill-tape-dark { fill: var(--tape-dark); }
+
+        /* Animation: Items dropping deep */
+        .anim-items {
+            animation: dropDeep 4.5s cubic-bezier(0.5, 0, 1, 1) infinite;
+            transform-origin: center bottom;
+        }
+        #anim-blister { animation-delay: 0.1s; }
+        #anim-box     { animation-delay: 0.05s; }
+        #anim-tube    { animation-delay: 0.15s; }
+        #anim-bottle  { animation-delay: 0s; }
+
+        @keyframes dropDeep {
+            0% { transform: translateY(-80px) scale(1); opacity: 1; }
+            15% { transform: translateY(0px) scale(1); opacity: 1; }
+            25% { transform: translateY(50px) scale(0.9); opacity: 0; }
+            26% { opacity: 0; }
+            85% { transform: translateY(-80px) scale(1); opacity: 0; }
+            90% { transform: translateY(-80px) scale(1); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1); opacity: 1; }
         }
 
-        .app-icon.animation-ended .logo-img {
-            display: block;
-            animation: logoAppear 0.3s ease-out;
+        /* Animation: Flaps disappearing */
+        .anim-flaps {
+            animation: toggleFlaps 4.5s linear infinite;
+        }
+        @keyframes toggleFlaps {
+            0%, 28% { opacity: 1; transform: scaleY(1); }
+            30% { opacity: 0; transform: scaleY(0); }
+            90% { opacity: 0; transform: scaleY(0); }
+            95% { opacity: 1; transform: scaleY(1); }
         }
 
-        @keyframes logoAppear {
-            from {
-                transform: scale(0.8);
-                opacity: 0;
+        /* Animation: Lid slam */
+        .anim-lid {
+            animation: lidSlam 4.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) infinite;
+            transform-origin: center 70px;
+            opacity: 0;
+        }
+        @keyframes lidSlam {
+            0%, 28% { opacity: 0; transform: scale(0.8) translateY(-30px); }
+            30% { opacity: 1; transform: scale(1) translateY(0); }
+            35% { transform: scale(1); }
+            90% { opacity: 1; transform: scale(1) translateY(0); }
+            95% { opacity: 0; transform: scale(0.9) translateY(-10px); }
+        }
+
+        /* Animation: Box impact shake */
+        .anim-box-shake {
+            animation: boxImpact 4.5s ease infinite;
+            transform-origin: center bottom;
+        }
+        @keyframes boxImpact {
+            0%, 29% { transform: scale(1); }
+            30% { transform: scale(1.05, 0.95) translateY(2px); }
+            33% { transform: scale(0.98, 1.02) translateY(-1px); }
+            36% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            .anim-items, .anim-flaps, .anim-lid, .anim-box-shake {
+                animation: none;
             }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            .anim-items { opacity: 1; transform: translateY(0); }
+            .anim-flaps { opacity: 1; transform: scaleY(1); }
+            .anim-lid { opacity: 0; }
         }
 
         .hero-title {
@@ -390,7 +318,7 @@
         }
 
         /* ========================================
-           Coming Soon Badge
+           Badges
            ======================================== */
         .coming-soon-badge {
             display: inline-flex;
@@ -403,6 +331,40 @@
             font-size: 0.875rem;
             font-weight: 600;
             color: var(--color-amber);
+        }
+
+        .deprecated-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 0.5rem;
+            font-size: 0.625rem;
+            font-weight: 700;
+            color: #fca5a5;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+
+        /* Secondary button style */
+        .btn-secondary {
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-glass);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--border-glass-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Android icon fill */
+        .btn .android-icon {
+            fill: currentColor;
         }
 
         /* ========================================
@@ -436,9 +398,18 @@
             align-items: center;
             gap: 0.75rem;
             padding: 0.75rem;
-            border-radius: 0.75rem;
-            background: var(--bg-secondary);
+            border-radius: 1rem;
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid var(--border-glass);
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: var(--bg-glass-hover);
+            border-color: var(--border-glass-hover);
+            transform: translateX(4px);
         }
 
         .feature-icon {
@@ -483,29 +454,7 @@
             line-height: 1.5;
         }
 
-        /* ========================================
-           Footer
-           ======================================== */
-        .footer {
-            padding: 2rem 0;
-            border-top: 1px solid var(--border-glass);
-            text-align: center;
-        }
-
-        .footer-text {
-            font-size: 0.875rem;
-            color: var(--text-muted);
-        }
-
-        .footer-link {
-            color: var(--color-mint);
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-        .footer-link:hover {
-            color: var(--color-mint-light);
-        }
+        /* Footer styles loaded from css/common-footer.css */
 
         /* ========================================
            Icons
@@ -557,47 +506,90 @@
 </head>
 
 <body>
-    <!-- Animated Background -->
-    <div class="animated-bg">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
+    <!-- Animated Background Orbs -->
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
     </div>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="navbar-inner">
-            <div class="nav-left">
-                <a href="index.html" class="logo">
-                    <i data-lucide="home"></i>
-                    <span class="hidden sm:inline">michalrapala.app</span>
-                </a>
-            </div>
-
-            <div class="nav-right">
-                <div class="theme-toggle" onclick="toggleTheme()" role="button" aria-label="Przełącz motyw">
-                    <div class="theme-toggle-thumb">
-                        <svg class="theme-toggle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2">
-                            <circle cx="12" cy="12" r="5" />
-                            <path
-                                d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Common Navbar Web Component -->
+    <app-navbar current-page="karton"></app-navbar>
 
     <!-- Hero Section -->
     <section class="hero">
         <div class="container">
             <div class="hero-card glass">
                 <div class="app-icon" id="appIcon">
-                    <video id="introVideo" autoplay muted playsinline>
-                        <source src="assets/karton/zamknij_w_kartonie.webm" type="video/webm">
-                    </video>
-                    <img src="assets/karton/favicon.png" alt="Karton z lekami" class="logo-img">
+                    <!-- Hero Animation: Items drop deep, box closes -->
+                    <div class="hero-stage">
+                        <svg viewBox="0 0 200 200">
+                            <!-- Box shake group -->
+                            <g class="anim-box-shake" transform="translate(10, 15) scale(0.9)">
+
+                                <!-- Back layer: Flaps (disappearing) and Inner -->
+                                <g class="anim-flaps">
+                                    <path class="fill-flap" d="M14 64 L100 34 L85 5 L5 30 Z" opacity="0.9" />
+                                    <path class="fill-flap" d="M186 64 L100 34 L115 5 L195 30 Z" opacity="0.9" />
+                                    <path class="fill-inner" d="M100 108 L186 64 L100 34 L14 64 Z" />
+                                </g>
+
+                                <!-- Middle layer: Items dropping -->
+                                <g class="anim-items" id="anim-bottle">
+                                    <g transform="translate(100, 45) rotate(5)">
+                                        <rect x="-12" y="0" width="24" height="42" rx="4" class="fill-bottle" />
+                                        <rect x="-12" y="0" width="8" height="42" rx="4" class="fill-bottle-dark" />
+                                        <rect x="-14" y="-8" width="28" height="8" fill="var(--item-cap)" rx="2" />
+                                        <rect x="-8" y="10" width="16" height="20" fill="rgba(255,255,255,0.9)" rx="2" />
+                                    </g>
+                                </g>
+                                <g class="anim-items" id="anim-tube">
+                                    <g transform="translate(45, 55) rotate(45)">
+                                        <rect x="-8" y="25" width="16" height="8" fill="var(--item-cap)" rx="1" />
+                                        <path class="fill-tube" d="M-10 25 L10 25 L8 -15 L-8 -15 Z" />
+                                        <path class="fill-tube-dark" d="M-10 25 L0 25 L0 -15 L-8 -15 Z" />
+                                        <path class="fill-tube" d="M-8 -15 L8 -15 L10 -20 L-10 -20 Z" />
+                                        <rect x="-9" y="5" width="18" height="5" fill="white" opacity="0.3" />
+                                    </g>
+                                </g>
+                                <g class="anim-items" id="anim-box">
+                                    <g transform="translate(155, 65) rotate(-25)">
+                                        <path class="fill-box-side" d="M-12 -18 L-20 -24 L-20 12 L-12 18 Z" />
+                                        <path class="fill-box" d="M-12 -18 L12 -18 L12 18 L-12 18 Z" />
+                                        <path fill="#ffffff" d="M-12 -18 L12 -18 L4 -24 L-20 -24 Z" />
+                                        <rect x="-6" y="-6" width="12" height="12" fill="var(--color-mint)" rx="1" opacity="0.9" />
+                                    </g>
+                                </g>
+                                <g class="anim-items" id="anim-blister">
+                                    <g transform="translate(75, 15) rotate(-20)">
+                                        <rect x="-18" y="-24" width="36" height="48" rx="4" class="fill-blister" />
+                                        <rect x="-16" y="-22" width="32" height="44" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1" rx="3" />
+                                        <g fill="var(--item-blister-pill)">
+                                            <circle cx="-9" cy="-12" r="5" /><circle cx="-9" cy="0" r="5" /><circle cx="-9" cy="12" r="5" />
+                                            <circle cx="9" cy="-12" r="5" /><circle cx="9" cy="0" r="5" /><circle cx="9" cy="12" r="5" />
+                                        </g>
+                                    </g>
+                                </g>
+
+                                <!-- Front layer: Box walls -->
+                                <path d="M12 68 L98 108 L98 186 L12 146 Z" class="fill-left" />
+                                <path d="M188 68 L188 146 L102 186 L102 108 Z" class="fill-right" />
+
+                                <!-- Top layer: Closed lid (appears at end) -->
+                                <g class="anim-lid">
+                                    <path d="M100 24 L186 64 L100 104 L14 64 Z" class="fill-top" />
+                                    <path class="fill-tape-light" d="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z" />
+                                    <path class="fill-tape-dark" d="M 35 73.8 L 65 87.7 L 65 92.7 L 35 78.7 Z" />
+                                    <path class="fill-tape-dark" d="M 35 78.7 L 65 92.7 L 65 140 L 35 125 Z" />
+                                    <g transform="translate(145, 127) skewY(-25)">
+                                        <rect x="-25" y="-8" width="50" height="16" class="fill-tape-light" rx="1" />
+                                        <rect x="-8" y="-25" width="16" height="50" class="fill-tape-light" rx="1" />
+                                    </g>
+                                </g>
+
+                            </g>
+                        </svg>
+                    </div>
                 </div>
 
                 <h1 class="hero-title">Karton z lekami</h1>
@@ -606,7 +598,17 @@
                 </p>
 
                 <div class="buttons-container">
-                    <a href="https://pudelkonaleki.michalrapala.app" class="btn btn-primary" target="_blank"
+                    <!-- Primary: Android APK download -->
+                    <a href="#" id="apkDownloadBtn" class="btn btn-primary" target="_blank" rel="noopener"
+                        onclick="return this.href !== '#'">
+                        <svg class="icon android-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18.4395 5.5586c-.675 1.1664-1.352 2.3318-2.0274 3.498-.0366-.0155-.0742-.0286-.1113-.043-1.8249-.6957-3.484-.8-4.42-.787-1.8551.0185-3.3544.4643-4.2597.8203-.084-.1494-1.7526-3.021-2.0215-3.4864a1.1451 1.1451 0 0 0-.1406-.1914c-.3312-.364-.9054-.4859-1.379-.203-.475.282-.7136.9361-.3886 1.5019 1.9466 3.3696-.0966-.2158 1.9473 3.3593.0172.031-.4946.2642-1.3926 1.0177C2.8987 12.176.452 14.772 0 18.9902h24c-.119-1.1108-.3686-2.099-.7461-3.0683-.7438-1.9118-1.8435-3.2928-2.7402-4.1836a12.1048 12.1048 0 0 0-2.1309-1.6875c.6594-1.122 1.312-2.2559 1.9649-3.3848.2077-.3615.1886-.7956-.0079-1.1191a1.1001 1.1001 0 0 0-.8515-.5332c-.5225-.0536-.9392.3128-1.0488.5449zm-.0391 8.461c.3944.5926.324 1.3306-.1563 1.6503-.4799.3197-1.188.0985-1.582-.4941-.3944-.5927-.324-1.3307.1563-1.6504.4727-.315 1.1812-.1086 1.582.4941zM7.207 13.5273c.4803.3197.5506 1.0577.1563 1.6504-.394.5926-1.1038.8138-1.584.4941-.48-.3197-.5503-1.0577-.1563-1.6504.4008-.6021 1.1087-.8106 1.584-.4941z"/>
+                        </svg>
+                        <span id="apkBtnText">Zainstaluj na telefonie</span>
+                    </a>
+
+                    <!-- Secondary: Web version (deprecated) -->
+                    <a href="https://pudelkonaleki.michalrapala.app" class="btn btn-secondary" target="_blank"
                         rel="noopener">
                         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="12" cy="12" r="10" />
@@ -614,16 +616,8 @@
                             <path
                                 d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                         </svg>
-                        Otwórz wersję webową
-                    </a>
-
-                    <a href="#" id="apkDownloadBtn" class="btn btn-primary" target="_blank" rel="noopener"
-                        onclick="return this.href !== '#'">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-                            <line x1="12" y1="18" x2="12.01" y2="18" />
-                        </svg>
-                        <span id="apkBtnText">Pobierz APK na Android</span>
+                        Wersja przeglądarkowa
+                        <span class="deprecated-badge">Wsparcie zakończone. Przejdź na aplikację mobilną.</span>
                     </a>
                 </div>
             </div>
@@ -725,86 +719,25 @@
         </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <p class="footer-text">
-                <a href="index.html" class="footer-link">michalrapala.app</a> ·
-                <a href="https://github.com/Rzempal/APPteczka" class="footer-link" target="_blank"
-                    rel="noopener">GitHub</a> ·
-                © <span id="currentYear"></span> Michał Rąpała
-            </p>
-        </div>
-    </footer>
+    <!-- Common Footer Web Component -->
+    <app-footer></app-footer>
 
     <script>
         // ========================================
-        // Theme Toggle
-        // ========================================
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateToggleIcon(newTheme);
-        }
-
-        function updateToggleIcon(theme) {
-            const icon = document.querySelector('.theme-toggle-icon');
-            if (theme === 'light') {
-                icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
-            } else {
-                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
-            }
-        }
-
-        // ========================================
-        // Video Animation Handler
-        // ========================================
-        function initVideoAnimation() {
-            const video = document.getElementById('introVideo');
-            const appIcon = document.getElementById('appIcon');
-
-            if (video && appIcon) {
-                video.addEventListener('ended', function () {
-                    appIcon.classList.add('animation-ended');
-                });
-
-                // Fallback: jeśli video nie załaduje się, pokaż logo
-                video.addEventListener('error', function () {
-                    appIcon.classList.add('animation-ended');
-                });
-
-                // Mobile fallback: jeśli autoplay zablokowany, pokaż logo od razu
-                const playPromise = video.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(function () {
-                        appIcon.classList.add('animation-ended');
-                    });
-                }
-            }
-        }
+        // Theme Toggle - handled by common-navbar.js Web Component
 
         // ========================================
         // Initialize
         // ========================================
         (function () {
-            // Initialize Lucide icons
+            // Initialize Lucide icons (for page content, navbar has its own)
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
 
-            // Load saved theme
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            updateToggleIcon(savedTheme);
-
-            // Set current year
-            document.getElementById('currentYear').textContent = new Date().getFullYear();
-
-            // Initialize video animation
-            initVideoAnimation();
+            // Theme is now handled by common-navbar.js Web Component
+            // Footer is now handled by common-footer.js Web Component
+            // SVG animation is CSS-based, no JS needed
 
             // Fetch latest APK version from version.json
             fetchLatestApkVersion();
@@ -819,7 +752,7 @@
             const versionUrl = 'https://michalrapala.app/releases/version.json';
 
             // Loading state
-            btnText.textContent = 'Ladowanie...';
+            btnText.textContent = 'Ładuję...';
 
             try {
                 const response = await fetch(versionUrl + '?t=' + Date.now()); // Cache-bust
@@ -831,16 +764,20 @@
                     btn.href = data.apkUrl.replace('http://', 'https://');
                 }
                 if (data.version) {
-                    btnText.textContent = 'Pobierz APK (v' + data.version + ')';
+                    // User-friendly text with version name
+                    btnText.textContent = 'Zainstaluj na telefonie (.apk v' + data.version + ')';
+                } else {
+                    btnText.textContent = 'Zainstaluj na telefonie';
                 }
             } catch (error) {
                 console.warn('Nie udalo sie pobrac wersji APK:', error);
                 // Fallback: link to releases folder
                 btn.href = 'https://michalrapala.app/releases/';
-                btnText.textContent = 'Pobierz APK (zobacz folder)';
+                btnText.textContent = 'Zainstaluj na telefonie';
             }
         }
     </script>
 </body>
+
 
 </html>

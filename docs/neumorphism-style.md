@@ -28,13 +28,15 @@ Metody statyczne klasy `NeuDecoration`, używane w `Container(decoration: ...)` 
 |--------|--------|---------------|-------------------------|
 | **`.flat()`** | Wypukły, miękki cień, radius 16px | Standardowe kontenery, karty | Karty ustawień, Ekrany zarządzania |
 | **`.flatSmall()`** | Wypukły, mniejszy cień, radius 12px | Mniejsze elementy: tagi, chipy | Tagi w `MedicineDetailSheet`, małe przyciski |
-| **`.pressed()`** | Wklęsły (wciśnięty) | Stan aktywny przycisku, włączone toggle | Wciśnięte przyciski menu |
-| **`.pressedSmall()`** | Wklęsły, subtelniejszy | Stan aktywny małych elementów, **aktywny NeuIconButton** | Wybrane filtry, aktywne tagi, toolbar buttons (pressed/active) |
-| **`.basin()`** | **Mocno wklęsły (Inset)** | Wnętrze pól tekstowych, inputy | `TextField` decoration |
+| **`.pressed()`** | Wklęsły (debossed) - odwrócone cienie | Stan aktywny przycisku, włączone toggle | Wciśnięte przyciski menu |
+| **`.pressedSmall()`** | Wklęsły, subtelniejszy (debossed) | Stan aktywny małych elementów, **aktywny NeuIconButton** | Wybrane filtry, aktywne tagi, toolbar buttons |
+| **`.basin()`** | **Głęboko wklęsły (inset)** - odwrócone cienie | Wnętrze pól tekstowych, inputy, zagnieżdżone kontenery | `TextField` decoration, Settings sections |
 | **`.searchBar()`** | **Floating pill** z mocnymi cieniami "lewitacji" | Główny pasek wyszukiwania | `HomeScreen` (wyszukiwarka) |
 | **`.searchBarFocused()`** | Wciśnięty pasek wyszukiwania | Fokus na polu wyszukiwania | `HomeScreen` (aktywna wyszukiwarka) |
 | **`.convex()`** | Wypukły z gradientem | Elementy interaktywne "3D" | (Opcjonalne) Przyciski specjalne |
 | **`.statusCard()`** | Wypukły + kolor statusu | Karty zależne od stanu | `MedicineCard` (status: OK, expiring, expired) |
+
+> **Technika debossed/inset**: Elementy wklęsłe używają `BoxShadow` z odwróconymi offsetami - ciemny cień `(-4, -4)` góra-lewo, jasny highlight `(4, 4)` dół-prawo.
 
 ---
 

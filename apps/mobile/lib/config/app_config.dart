@@ -14,7 +14,7 @@ class AppConfig {
 
   /// URL for version.json based on channel.
   static String get versionJsonUrl => isInternal
-      ? '$_baseReleasesUrl/internal/version.json'
+      ? '$_baseReleasesUrl/internal/version-internal.json'
       : '$_baseReleasesUrl/version.json';
 
   /// Remote directory path for uploads.

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
+import '../config/app_config.dart';
 import '../services/storage_service.dart';
 import '../services/theme_provider.dart';
 import '../services/update_service.dart';
@@ -128,16 +129,19 @@ class _SettingsScreenState extends State<SettingsScreen>
             Row(
               children: [
                 // Icon
-                Container(
+                NeuInsetContainer(
+                  borderRadius: 10,
                   padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.basin(isDark: isDark, radius: 10),
                   child: Icon(
                     LucideIcons.download,
-                    color: updateAvailable
-                        ? AppColors.primary
-                        : isUpToDate
-                        ? AppColors.valid
-                        : theme.colorScheme.onSurfaceVariant,
+                    // Red icon for DEV builds, otherwise normal color logic
+                    color: AppConfig.isInternal
+                        ? AppColors.expired
+                        : updateAvailable
+                            ? AppColors.primary
+                            : isUpToDate
+                                ? AppColors.valid
+                                : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -380,9 +384,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Container(
+            NeuInsetContainer(
+              borderRadius: 10,
               padding: const EdgeInsets.all(10),
-              decoration: NeuDecoration.basin(isDark: isDark, radius: 10),
               child: Icon(
                 LucideIcons.cloudCog,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -471,8 +475,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   Widget _buildThemeToggle(BuildContext context, ThemeData theme, bool isDark) {
     final currentMode = widget.themeProvider.themeMode;
 
-    return Container(
-      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+    return NeuInsetContainer(
+      borderRadius: 12,
       padding: const EdgeInsets.all(4),
       child: Row(
         children: [
@@ -651,8 +655,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _buildBackupExportFile(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+    return NeuInsetContainer(
+      borderRadius: 12,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -705,8 +709,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _buildBackupRestore(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+    return NeuInsetContainer(
+      borderRadius: 12,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -848,8 +852,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _buildAdvancedExportClipboard(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: NeuDecoration.basin(isDark: isDark, radius: 10),
+    return NeuInsetContainer(
+      borderRadius: 10,
       padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -902,8 +906,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   ]
 }''';
 
-    return Container(
-      decoration: NeuDecoration.basin(isDark: isDark, radius: 10),
+    return NeuInsetContainer(
+      borderRadius: 10,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

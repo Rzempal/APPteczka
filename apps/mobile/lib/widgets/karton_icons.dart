@@ -30,23 +30,32 @@ class KartonColors {
 class KartonClosedIcon extends StatelessWidget {
   final double size;
   final bool isDark;
+  final Color? accentColor; // Optional override for tape/cross color (e.g., red for DEV)
 
-  const KartonClosedIcon({super.key, this.size = 80, this.isDark = true});
+  const KartonClosedIcon({
+    super.key,
+    this.size = 80,
+    this.isDark = true,
+    this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(painter: _KartonClosedPainter(isDark: isDark)),
+      child: CustomPaint(
+        painter: _KartonClosedPainter(isDark: isDark, accentColor: accentColor),
+      ),
     );
   }
 }
 
 class _KartonClosedPainter extends CustomPainter {
   final bool isDark;
+  final Color? accentColor;
 
-  _KartonClosedPainter({required this.isDark});
+  _KartonClosedPainter({required this.isDark, this.accentColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -64,8 +73,11 @@ class _KartonClosedPainter extends CustomPainter {
     final rightColor = isDark
         ? KartonColors.boxFaceRight
         : KartonColors.boxFaceRightLight;
-    final tapeLight = AppColors.primary;
-    final tapeDark = AppColors.primaryDark;
+    // Use accentColor if provided, otherwise default to AppColors.primary
+    final tapeLight = accentColor ?? AppColors.primary;
+    final tapeDark = accentColor != null 
+        ? HSLColor.fromColor(accentColor!).withLightness(0.35).toColor()
+        : AppColors.primaryDark;
 
     // Góra kartonu
     final topPath = Path()
@@ -152,7 +164,7 @@ class _KartonClosedPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _KartonClosedPainter oldDelegate) {
-    return oldDelegate.isDark != isDark;
+    return oldDelegate.isDark != isDark || oldDelegate.accentColor != accentColor;
   }
 }
 

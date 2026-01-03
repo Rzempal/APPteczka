@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../config/app_config.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../services/storage_service.dart';
@@ -226,14 +227,19 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: [
           // Logo (Vector Icon - no decoration, blends with background)
-          KartonClosedIcon(size: 48, isDark: isDark),
+          // Red accent for DEV builds
+          KartonClosedIcon(
+            size: 48,
+            isDark: isDark,
+            accentColor: AppConfig.isInternal ? AppColors.expired : null,
+          ),
           const SizedBox(width: 12),
           // Tytuł
           Text(
-            'Karton z lekami',
+            AppConfig.isInternal ? 'Karton DEV' : 'Karton z lekami',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              color: AppConfig.isInternal ? AppColors.expired : AppColors.primary,
             ),
           ),
           // Update badge

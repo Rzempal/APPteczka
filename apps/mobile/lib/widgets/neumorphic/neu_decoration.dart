@@ -104,94 +104,50 @@ class NeuDecoration {
 
   // ============================================
   // PRESSED - Sunken element (active state)
-  // Simulates inset shadow with gradient
+  // Simple flat background - use NeuInsetContainer for true inner shadows
   // ============================================
   static BoxDecoration pressed({
     required bool isDark,
     double radius = 16,
     Color? backgroundColor,
   }) {
-    // Gradient colors for inset effect
-    final darkShade = isDark
-        ? AppColors.darkBackground
-        : AppColors.lightSurfaceDark;
-    final lightShade = isDark
-        ? AppColors.darkSurfaceLight.withOpacity(0.5)
-        : AppColors.lightSurface;
+    final bgColor = backgroundColor ??
+        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
 
     return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [darkShade, lightShade],
-      ),
+      color: bgColor,
       borderRadius: BorderRadius.circular(radius),
     );
   }
 
   // ============================================
   // PRESSED SMALL - For small elements
+  // Simple flat background - use NeuInsetContainerSmall for true inner shadows
   // ============================================
   static BoxDecoration pressedSmall({
     required bool isDark,
     double radius = 12,
   }) {
-    final darkShade = isDark
-        ? AppColors.darkBackground
-        : AppColors.lightSurfaceDark;
-    final lightShade = isDark
-        ? AppColors.darkSurfaceLight.withOpacity(0.5)
-        : AppColors.lightSurface;
+    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
 
     return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [darkShade, lightShade],
-      ),
+      color: bgColor,
       borderRadius: BorderRadius.circular(radius),
     );
   }
 
   // ============================================
   // BASIN - Deeply concave (inset effect)
-  // Edge-focused gradient for depth on wide elements
+  // Simple flat background - use NeuInsetContainer for true inner shadows
   // Used for: input fields, nested containers inside flat parents
   // ============================================
   static BoxDecoration basin({required bool isDark, double radius = 12}) {
-    if (isDark) {
-      // DARK MODE - edge-focused depth
-      return BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF0a0d0c), // ciemny cień (góra-lewo)
-            Color(0xFF151918), // środek 1
-            Color(0xFF151918), // środek 2 (plateau)
-            Color(0xFF1e2422), // jasny highlight (dół-prawo)
-          ],
-          stops: [0.0, 0.12, 0.88, 1.0], // głębia tylko przy krawędziach
-        ),
-        borderRadius: BorderRadius.circular(radius),
-      );
-    } else {
-      // LIGHT MODE - edge-focused depth
-      return BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFb8beb6), // ciemny cień (góra-lewo)
-            Color(0xFFd5dbd1), // środek 1
-            Color(0xFFd5dbd1), // środek 2 (plateau)
-            Color(0xFFe8eee4), // jasny highlight (dół-prawo)
-          ],
-          stops: [0.0, 0.12, 0.88, 1.0], // głębia tylko przy krawędziach
-        ),
-        borderRadius: BorderRadius.circular(radius),
-      );
-    }
+    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
+
+    return BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(radius),
+    );
   }
 
   // ============================================

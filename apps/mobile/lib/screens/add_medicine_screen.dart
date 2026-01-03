@@ -82,9 +82,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    Container(
+                    NeuInsetContainer(
+                      borderRadius: 12,
                       padding: const EdgeInsets.all(12),
-                      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
                       child: KartonOpenIcon(
                         size: 32,
                         isDark: isDark,
@@ -319,8 +319,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   }
 
   Widget _buildJsonImportSection(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+    return NeuInsetContainer(
+      borderRadius: 12,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -390,8 +390,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   }
 
   Widget _buildHintSection(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+    return NeuInsetContainer(
+      borderRadius: 12,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -530,8 +530,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           const SizedBox(height: 16),
 
           // Termin ważności
-          Container(
-            decoration: NeuDecoration.basin(isDark: isDark, radius: 12),
+          NeuInsetContainer(
+            borderRadius: 12,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
