@@ -95,4 +95,31 @@ Aplikacja wyświetla disclaimer w kluczowych miejscach:
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-22
+## Zgłaszanie Błędów (Bug Report)
+
+### Zbierane dane (opcjonalnie)
+
+| Dane | Kontrola użytkownika |
+|------|---------------------|
+| **Screenshot** | ✅ Checkbox – można wyłączyć |
+| **Logi aplikacji** | ✅ Checkbox – można wyłączyć |
+| **Opis problemu** | ✅ Opcjonalny tekst |
+| **Email zwrotny** | ✅ Opcjonalny (tylko dla kategorii "Pytanie") |
+| **Wersja aplikacji** | Automatyczne |
+| **Info o urządzeniu** | Model + wersja systemu |
+
+### Przetwarzanie danych
+
+| Aspekt | Opis |
+|--------|------|
+| **Transmisja** | HTTPS do API na Vercel |
+| **Email** | Wysyłka przez Resend.com |
+| **Przechowywanie** | Tylko w skrzynce odbiorczej developera |
+| **Brak danych leków** | Lista leków NIE jest wysyłana w raporcie |
+
+> [!NOTE]
+> Screenshot przechwytuje aktualny widok ekranu. Użytkownik widzi podgląd i może go wyłączyć przed wysłaniem.
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-03
