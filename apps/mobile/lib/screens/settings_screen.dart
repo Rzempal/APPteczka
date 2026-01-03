@@ -7,6 +7,7 @@ import '../config/app_config.dart';
 import '../services/storage_service.dart';
 import '../services/theme_provider.dart';
 import '../services/update_service.dart';
+import '../widgets/bug_report_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
 
@@ -838,6 +839,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                       // Format pliku
                       _buildAdvancedFormatInfo(theme, isDark),
                       const SizedBox(height: 12),
+                      // Zgłoś problem
+                      _buildAdvancedBugReport(theme, isDark),
+                      const SizedBox(height: 12),
                       // Strefa niebezpieczna
                       _buildAdvancedDangerZone(theme, isDark),
                     ],
@@ -990,6 +994,59 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ' zostaną wygenerowane automatycznie przy imporcie, jeśli ich brakuje.',
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAdvancedBugReport(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.3),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        color: isDark
+            ? Colors.white.withOpacity(0.03)
+            : Colors.black.withOpacity(0.02),
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.bug,
+                color: AppColors.expired,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Zgłoś problem',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Masz problem z aplikacją lub pomysł na ulepszenie? Daj nam znać!',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => BugReportSheet.show(context),
+              icon: const Icon(LucideIcons.send, size: 16),
+              label: const Text('Wyślij zgłoszenie'),
             ),
           ),
         ],

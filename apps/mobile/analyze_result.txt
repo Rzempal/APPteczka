@@ -1,41 +1,35 @@
 Analyzing mobile...                                             
 
-warning - Unused import: '../theme/app_theme.dart' - lib\screens\backup_screen.dart:8:8 - unused_import
-   info - Unnecessary use of multiple underscores - lib\screens\home_screen.dart:198:33 - unnecessary_underscores
-   info - Unnecessary use of multiple underscores - lib\screens\home_screen.dart:198:37 - unnecessary_underscores
-   info - Unnecessary use of multiple underscores - lib\screens\home_screen.dart:677:33 - unnecessary_underscores
-   info - Unnecessary use of multiple underscores - lib\screens\home_screen.dart:677:37 - unnecessary_underscores
-   info - Unnecessary use of multiple underscores - lib\screens\manage_screen.dart:127:35 - unnecessary_underscores
-   info - Unnecessary use of multiple underscores - lib\screens\manage_screen.dart:127:39 - unnecessary_underscores
-warning - Unused import: '../theme/app_theme.dart' - lib\screens\settings_screen.dart:4:8 - unused_import
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_button.dart:154:46 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_button.dart:164:48 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:55:29 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:62:30 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:94:29 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:100:30 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:123:38 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:147:38 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:166:38 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:169:34 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:181:28 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:182:28 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:214:29 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:219:30 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:249:45 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:253:33 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:266:45 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:270:31 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:275:32 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:308:36 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:341:36 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_icon_button.dart:94:28 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_icon_button.dart:96:47 - deprecated_member_use
-   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_icon_button.dart:115:43 - deprecated_member_use
+warning - Unused import: '../theme/app_theme.dart' - lib\screens\add_medicine_screen.dart:15:8 - unused_import
+warning - The declaration '_getVersionText' isn't referenced - lib\screens\settings_screen.dart:372:10 - unused_element
+warning - The declaration '_compareVersions' isn't referenced - lib\services\update_service.dart:95:7 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\bug_report_sheet.dart:104:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\bug_report_sheet.dart:156:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\bug_report_sheet.dart:159:54 - deprecated_member_use
+warning - The value of the local variable 'topColor' isn't used - lib\widgets\karton_icons.dart:323:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\karton_icons.dart:344:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\karton_icons.dart:352:63 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\karton_icons.dart:398:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\karton_icons.dart:480:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\karton_icons.dart:503:32 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\widgets\leaflet_search_sheet.dart:191:29 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\medicine_card.dart:194:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_button.dart:161:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_button.dart:173:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:179:29 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:184:30 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\widgets\neumorphic\neu_decoration.dart:233:19 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\widgets\neumorphic\neu_decoration.dart:238:24 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\widgets\neumorphic\neu_decoration.dart:244:24 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:293:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_decoration.dart:326:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_icon_button.dart:124:43 - deprecated_member_use
+warning - The value of the local variable 'gradientStop' isn't used - lib\widgets\neumorphic\neu_inset_container.dart:50:18 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_sort_menu.dart:200:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_sort_menu.dart:254:39 - deprecated_member_use
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_text_field.dart:115:43 - deprecated_member_use
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_text_field.dart:137:59 - deprecated_member_use
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_text_field.dart:180:51 - deprecated_member_use
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\neumorphic\neu_text_field.dart:186:59 - deprecated_member_use
-   info - Library names are not necessary - lib\widgets\neumorphic\neumorphic.dart:16:9 - unnecessary_library_name
 
-37 issues found. (ran in 1.9s)
+31 issues found. (ran in 3.9s)

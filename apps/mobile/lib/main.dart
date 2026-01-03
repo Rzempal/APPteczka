@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'config/app_config.dart';
 import 'services/storage_service.dart';
 import 'services/theme_provider.dart';
 import 'services/update_service.dart';
@@ -7,6 +8,7 @@ import 'screens/home_screen.dart';
 import 'screens/add_medicine_screen.dart';
 import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
+import 'widgets/bug_report_sheet.dart';
 import 'widgets/floating_nav_bar.dart';
 import 'widgets/karton_icons.dart';
 
@@ -144,6 +146,15 @@ class _MainNavigationState extends State<MainNavigation> {
           const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
         ],
       ),
+      // FAB for bug reporting - only visible in DEV builds
+      floatingActionButton: AppConfig.isInternal
+          ? FloatingActionButton(
+              onPressed: () => BugReportSheet.show(context),
+              backgroundColor: AppColors.expired,
+              child: const Icon(LucideIcons.bug, color: Colors.white),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

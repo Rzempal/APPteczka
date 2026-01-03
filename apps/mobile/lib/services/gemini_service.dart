@@ -24,12 +24,14 @@ class ScannedMedicine {
   final String opis;
   final List<String> wskazania;
   final List<String> tagi;
+  final String? terminWaznosci;
 
   ScannedMedicine({
     this.nazwa,
     required this.opis,
     required this.wskazania,
     required this.tagi,
+    this.terminWaznosci,
   });
 
   factory ScannedMedicine.fromJson(Map<String, dynamic> json) {
@@ -38,6 +40,7 @@ class ScannedMedicine {
       opis: json['opis'] as String? ?? '',
       wskazania: List<String>.from(json['wskazania'] ?? []),
       tagi: List<String>.from(json['tagi'] ?? []),
+      terminWaznosci: json['terminWaznosci'] as String?,
     );
   }
 }

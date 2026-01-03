@@ -2,16 +2,19 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/bug_report_service.dart';
+import '../theme/app_theme.dart';
 
-/// Bottom sheet do zgłaszania błędów
+/// Bottom sheet do zgłaszania błędów z quick actions
 class BugReportSheet extends StatefulWidget {
   final String? errorMessage;
   final Uint8List? screenshot;
+  final ReportCategory? initialCategory;
 
   const BugReportSheet({
     super.key,
     this.errorMessage,
     this.screenshot,
+    this.initialCategory,
   });
 
   /// Pokazuje sheet do zgłaszania błędu
@@ -19,6 +22,7 @@ class BugReportSheet extends StatefulWidget {
     BuildContext context, {
     String? error,
     Uint8List? screenshot,
+    ReportCategory? category,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -27,6 +31,7 @@ class BugReportSheet extends StatefulWidget {
       builder: (context) => BugReportSheet(
         errorMessage: error,
         screenshot: screenshot,
+        initialCategory: category,
       ),
     );
   }
@@ -37,9 +42,16 @@ class BugReportSheet extends StatefulWidget {
 
 class _BugReportSheetState extends State<BugReportSheet> {
   final _textController = TextEditingController();
+  ReportCategory? _selectedCategory;
   bool _includeLogs = true;
   bool _includeScreenshot = true;
   bool _isSending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory = widget.initialCategory;
+  }
 
   @override
   void dispose() {
@@ -47,12 +59,36 @@ class _BugReportSheetState extends State<BugReportSheet> {
     super.dispose();
   }
 
+  String get _hintText {
+    switch (_selectedCategory) {
+      case ReportCategory.bug:
+        return 'Co robiłeś gdy wystąpił błąd?';
+      case ReportCategory.suggestion:
+        return 'Opisz swój pomysł...';
+      case ReportCategory.question:
+        return 'Czego nie rozumiesz?';
+      case null:
+        return 'Opisz problem (opcjonalnie)';
+    }
+  }
+
   Future<void> _sendReport() async {
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Wybierz kategorię zgłoszenia'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSending = true);
 
     final result = await BugReportService.instance.sendReport(
       text: _textController.text.trim(),
       errorMessage: widget.errorMessage,
+      category: _selectedCategory!,
       includeLogs: _includeLogs,
       screenshot: _includeScreenshot ? widget.screenshot : null,
     );
@@ -81,6 +117,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       margin: EdgeInsets.only(bottom: bottomPadding),
@@ -115,12 +152,12 @@ class _BugReportSheetState extends State<BugReportSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.errorContainer,
+                      color: AppColors.expired.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       LucideIcons.bug,
-                      color: theme.colorScheme.onErrorContainer,
+                      color: AppColors.expired,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -147,6 +184,35 @@ class _BugReportSheetState extends State<BugReportSheet> {
               ),
 
               const SizedBox(height: 20),
+
+              // Quick Actions - category selection
+              Text(
+                'Wybierz kategorię:',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: ReportCategory.values.map((category) {
+                  final isSelected = _selectedCategory == category;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: category != ReportCategory.values.last ? 8 : 0,
+                      ),
+                      child: _CategoryChip(
+                        category: category,
+                        isSelected: isSelected,
+                        isDark: isDark,
+                        onTap: () => setState(() => _selectedCategory = category),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+
+              const SizedBox(height: 16),
 
               // Error message preview
               if (widget.errorMessage != null) ...[
@@ -188,8 +254,8 @@ class _BugReportSheetState extends State<BugReportSheet> {
                 controller: _textController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  labelText: 'Opisz problem (opcjonalnie)',
-                  hintText: 'Co robiłeś gdy wystąpił błąd?',
+                  labelText: 'Opis (opcjonalnie)',
+                  hintText: _hintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -197,30 +263,48 @@ class _BugReportSheetState extends State<BugReportSheet> {
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
-              // Checkboxes
+              // Screenshot preview (if available)
+              if (widget.screenshot != null) ...[
+                Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.memory(
+                        widget.screenshot!,
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: CheckboxListTile(
+                        value: _includeScreenshot,
+                        onChanged: (v) =>
+                            setState(() => _includeScreenshot = v ?? true),
+                        title: const Text('Dołącz screenshot'),
+                        contentPadding: EdgeInsets.zero,
+                        controlAffinity: ListTileControlAffinity.leading,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+
+              // Logs checkbox
               CheckboxListTile(
                 value: _includeLogs,
                 onChanged: (v) => setState(() => _includeLogs = v ?? true),
                 title: const Text('Dołącz logi aplikacji'),
-                subtitle: const Text('Informacje techniczne o błędzie'),
+                subtitle: const Text('Informacje techniczne'),
                 controlAffinity: ListTileControlAffinity.leading,
                 contentPadding: EdgeInsets.zero,
               ),
 
-              if (widget.screenshot != null)
-                CheckboxListTile(
-                  value: _includeScreenshot,
-                  onChanged: (v) =>
-                      setState(() => _includeScreenshot = v ?? true),
-                  title: const Text('Dołącz screenshot'),
-                  subtitle: const Text('Zrzut ekranu z momentu błędu'),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.zero,
-                ),
-
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
               // Send button
               FilledButton.icon(
@@ -245,7 +329,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
 
               // Privacy note
               Text(
-                'Raport zostanie wysłany anonimowo do zespołu deweloperskiego.',
+                'Raport zostanie wysłany anonimowo.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -255,6 +339,66 @@ class _BugReportSheetState extends State<BugReportSheet> {
               const SizedBox(height: 8),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Chip do wyboru kategorii
+class _CategoryChip extends StatelessWidget {
+  final ReportCategory category;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _CategoryChip({
+    required this.category,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.15)
+              : isDark
+                  ? Colors.white.withOpacity(0.05)
+                  : Colors.black.withOpacity(0.03),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : theme.colorScheme.outline.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Text(
+              category.emoji,
+              style: const TextStyle(fontSize: 24),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              category.label,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected
+                    ? AppColors.primary
+                    : theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
       ),
     );

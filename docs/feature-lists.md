@@ -64,6 +64,7 @@
 | **Responsywność** | Mobile/Tablet/Desktop | ✅ Tak | ✅ Tak | Flutter skaluje się natywnie |
 | **Feedback** | Toasty/Snackbary | ✅ Tak | ✅ Tak | Potwierdzenia akcji |
 | **Animacje** | Mikro-interakcje | ✅ Tak | ✅ Tak | Tap feedback, scale, haptic |
+| **Bug Reporter** | Zgłaszanie problemów | ❌ Nie | ✅ Tak | Quick actions, auto-screenshot, Resend API |
 
 ### 5. Planowane (Roadmap)
 

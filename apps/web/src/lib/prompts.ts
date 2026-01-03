@@ -53,11 +53,18 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
       "nazwa": "string | null",
       "opis": "string",
       "wskazania": ["string", "string"],
-      "tagi": ["tag1", "tag2"]
+      "tagi": ["tag1", "tag2"],
+      "terminWaznosci": "string | null"
     }
   ]
 }
 \`\`\`
+
+### Pole terminWaznosci
+
+- Jeśli na opakowaniu widoczna jest data ważności (np. "EXP 03/2026", "Ważny do: 2026-03", "03.2026"), zwróć ją w formacie **YYYY-MM-DD** (ostatni dzień miesiąca, np. "2026-03-31").
+- Jeśli data jest nieczytelna lub niewidoczna, zwróć **null**.
+- Typowe formaty dat na opakowaniach: MM/YYYY, MM.YYYY, YYYY-MM, EXP MM/YY.
 
 ## Zasady treści
 

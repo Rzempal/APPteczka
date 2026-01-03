@@ -8,6 +8,17 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
+/// Kategoria zgłoszenia
+enum ReportCategory {
+  bug('🐛', 'Bug', 'Coś nie działa'),
+  suggestion('💡', 'Sugestia', 'Mam pomysł'),
+  question('❓', 'Pytanie', 'Potrzebuję pomocy');
+
+  final String emoji;
+  final String label;
+  final String description;
+  const ReportCategory(this.emoji, this.label, this.description);
+}
 /// Serwis do zbierania i wysyłania raportów błędów
 class BugReportService {
   // Singleton
@@ -88,6 +99,7 @@ class BugReportService {
   Future<BugReportResult> sendReport({
     String? text,
     String? errorMessage,
+    ReportCategory category = ReportCategory.bug,
     bool includeLogs = true,
     Uint8List? screenshot,
   }) async {
@@ -100,6 +112,8 @@ class BugReportService {
       final body = <String, dynamic>{
         'appVersion': appVersion,
         'deviceInfo': deviceInfo,
+        'category': category.name,
+        'channel': const String.fromEnvironment('CHANNEL', defaultValue: 'production'),
       };
 
       if (text != null && text.isNotEmpty) {

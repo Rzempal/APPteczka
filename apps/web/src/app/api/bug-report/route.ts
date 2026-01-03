@@ -3,11 +3,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// Konfiguracja
-const BUG_REPORT_EMAIL = process.env.BUG_REPORT_EMAIL || 'michal.rapala@resztatokod.pl';
+// =============================================================================
+// KONFIGURACJA EMAIL - RESEND
+// =============================================================================
+// PODCZAS PENDING: Resend wymaga "to" = email konta, "from" = onboarding@resend.dev
+// PO WERYFIKACJI:  Zmień na docelowe wartości poniżej
+// =============================================================================
+const BUG_REPORT_EMAIL = process.env.BUG_REPORT_EMAIL || 'rzempal@gmail.com';
+// TODO (po weryfikacji): 'michal.rapala@resztatokod.pl'
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-// Używamy testowej domeny Resend - działa bez weryfikacji własnej domeny
+
 const RESEND_FROM = process.env.RESEND_FROM || 'Karton Bug Reporter <onboarding@resend.dev>';
+// TODO (po weryfikacji): 'Karton Bug Reporter <karton@resztatokod.pl>'
 
 interface BugReportRequest {
     log?: string;

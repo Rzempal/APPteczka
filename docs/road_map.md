@@ -113,6 +113,7 @@
 |---------|---------|
 | Gemini OCR API | `apps/web/src/app/api/gemini-ocr/` |
 | PDF Proxy API | `apps/web/src/app/api/pdf-proxy/` |
+| Bug Report API | `apps/web/src/app/api/bug-report/` |
 | Lib (prompts, gemini) | `apps/web/src/lib/` |
 
 ### Do stworzenia

@@ -9,6 +9,7 @@ export interface GeminiOCRResult {
         opis: string;
         wskazania: string[];
         tagi: string[];
+        terminWaznosci: string | null;
     }>;
 }
 
