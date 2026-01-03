@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import '../config/app_config.dart';
 
 /// Wynik rozpoznania leku z 2 zdjęć (front + data)
 class GeminiDualResult {
@@ -49,7 +48,9 @@ class GeminiDualException implements Exception {
 
 /// Serwis do rozpoznawania leku + daty z 2 zdjęć przez Gemini API
 class GeminiDualService {
-  final String _baseUrl = AppConfig.apiBaseUrl;
+  // URL produkcyjny aplikacji webowej
+  static const String _apiUrl =
+      'https://pudelkonaleki.michalrapala.app/api/gemini-ocr-dual';
 
   /// Rozpoznaje lek i datę ważności z 2 zdjęć w jednym wywołaniu
   Future<GeminiDualResult> scanMedicineWithDate(
@@ -68,7 +69,7 @@ class GeminiDualService {
 
       // Wyślij request do API
       final response = await http.post(
-        Uri.parse('$_baseUrl/api/gemini-ocr-dual'),
+        Uri.parse(_apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'frontImage': frontBase64,
