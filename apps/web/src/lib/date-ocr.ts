@@ -74,7 +74,7 @@ export async function recognizeDateFromImage(
                 ],
                 generationConfig: {
                     temperature: 0.1,
-                    maxOutputTokens: 256,
+                    maxOutputTokens: 1024,
                 }
             })
         });
