@@ -323,14 +323,27 @@ class _BugReportSheetState extends State<BugReportSheet> {
                 const SizedBox(height: 8),
               ],
 
-              // Logs checkbox
-              CheckboxListTile(
-                value: _includeLogs,
-                onChanged: (v) => setState(() => _includeLogs = v ?? true),
-                title: const Text('Dołącz logi aplikacji'),
-                subtitle: const Text('Informacje techniczne'),
-                controlAffinity: ListTileControlAffinity.leading,
-                contentPadding: EdgeInsets.zero,
+              // Logs checkbox with icon for alignment
+              Row(
+                children: [
+                  Icon(
+                    LucideIcons.fileCode,
+                    size: 24,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: CheckboxListTile(
+                      value: _includeLogs,
+                      onChanged: (v) =>
+                          setState(() => _includeLogs = v ?? true),
+                      title: const Text('Dołącz logi aplikacji'),
+                      subtitle: const Text('Informacje techniczne'),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 16),
