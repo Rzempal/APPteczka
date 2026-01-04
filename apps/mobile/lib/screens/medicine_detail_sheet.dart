@@ -88,7 +88,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
+                          child: SelectableText(
                             _medicine.nazwa ?? 'Nieznany lek',
                             style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(fontWeight: FontWeight.bold),
@@ -109,7 +109,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                       context,
                       title: 'Opis',
                       onEdit: () => _showEditDescriptionDialog(context),
-                      child: Text(
+                      child: SelectableText(
                         _medicine.opis,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
@@ -158,7 +158,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                                             ),
                                           ),
                                           Expanded(
-                                            child: Text(
+                                            child: SelectableText(
                                               w,
                                               style: TextStyle(
                                                 color: Theme.of(
@@ -348,7 +348,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                     _buildSection(
                       context,
                       title: 'Dodano',
-                      child: Text(
+                      child: SelectableText(
                         _formatDate(_medicine.dataDodania),
                         style: const TextStyle(color: Color(0xFF6b7280)),
                       ),
@@ -464,7 +464,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         child: Row(
           children: [
             Expanded(
-              child: Text(
+              child: SelectableText(
                 hasNote ? _medicine.notatka! : 'Kliknij, aby dodać notatkę',
                 style: TextStyle(
                   color: hasNote

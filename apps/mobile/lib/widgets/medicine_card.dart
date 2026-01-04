@@ -236,10 +236,9 @@ class _MedicineCardState extends State<MedicineCard>
                     const SizedBox(height: 8),
 
                     // Opis
-                    Text(
+                    SelectableText(
                       widget.medicine.opis,
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
@@ -277,10 +276,9 @@ class _MedicineCardState extends State<MedicineCard>
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
+                              child: SelectableText(
                                 widget.medicine.notatka!,
                                 maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontStyle: FontStyle.italic,
