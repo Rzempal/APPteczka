@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/bug_report_service.dart';
 import '../theme/app_theme.dart';
@@ -50,6 +51,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
   bool _includeScreenshot = true;
   bool _screenshotAttached = false;
   bool _isSending = false;
+  Uint8List? _galleryScreenshot; // Obraz wybrany z galerii
 
   @override
   void initState() {
@@ -78,6 +80,28 @@ class _BugReportSheetState extends State<BugReportSheet> {
     }
   }
 
+  /// Wybór obrazu z galerii urządzenia
+  Future<void> _pickFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1080,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _galleryScreenshot = bytes;
+          _screenshotAttached = true;
+        });
+      }
+    } catch (e) {
+      BugReportService.instance.log('Gallery pick error: $e');
+    }
+  }
+
   Future<void> _sendReport() async {
     setState(() => _isSending = true);
 
@@ -91,7 +115,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
           : null,
       includeLogs: _includeLogs,
       screenshot: (_screenshotAttached && _includeScreenshot)
-          ? widget.screenshot
+          ? (_galleryScreenshot ?? widget.screenshot)
           : null,
     );
 
@@ -309,40 +333,70 @@ class _BugReportSheetState extends State<BugReportSheet> {
               const SizedBox(height: 12),
 
               // Screenshot attachment section
-              if (widget.screenshot != null) ...[
-                const Divider(height: 24),
-                if (!_screenshotAttached) ...[
-                  // Neumorphic button to attach screenshot
-                  NeuButton(
-                    icon: LucideIcons.crop,
-                    label: 'Zrób screenshot aplikacji',
-                    isExpanded: true,
-                    onPressed: () => setState(() => _screenshotAttached = true),
-                  ),
-                ] else ...[
-                  // Screenshot preview with checkbox (shown after attachment)
-                  Row(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.memory(
-                          widget.screenshot!,
-                          width: 48,
-                          height: 48,
-                          fit: BoxFit.cover,
+              const Divider(height: 24),
+              if (!_screenshotAttached) ...[
+                // Two CTA buttons: app screenshot and gallery
+                Row(
+                  children: [
+                    if (widget.screenshot != null)
+                      Expanded(
+                        child: NeuButton(
+                          icon: LucideIcons.crop,
+                          label: 'Zrób screenshot',
+                          onPressed: () => setState(() {
+                            _screenshotAttached = true;
+                            _galleryScreenshot = null; // Clear gallery image
+                          }),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Checkbox(
-                        value: _includeScreenshot,
-                        onChanged: (v) =>
-                            setState(() => _includeScreenshot = v ?? true),
+                    if (widget.screenshot != null) const SizedBox(width: 8),
+                    Expanded(
+                      child: NeuButton(
+                        icon: LucideIcons.image,
+                        label: 'Z galerii',
+                        onPressed: _pickFromGallery,
                       ),
-                      const SizedBox(width: 4),
-                      const Text('Dołącz screenshot'),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
+              ] else ...[
+                // Screenshot preview with checkbox (shown after attachment)
+                Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.memory(
+                        _galleryScreenshot ?? widget.screenshot!,
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Checkbox(
+                      value: _includeScreenshot,
+                      onChanged: (v) =>
+                          setState(() => _includeScreenshot = v ?? true),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        _galleryScreenshot != null
+                            ? 'Dołącz obraz'
+                            : 'Dołącz screenshot',
+                      ),
+                    ),
+                    // Change button to pick different image
+                    IconButton(
+                      icon: const Icon(LucideIcons.refreshCw, size: 18),
+                      onPressed: () => setState(() {
+                        _screenshotAttached = false;
+                        _galleryScreenshot = null;
+                      }),
+                      tooltip: 'Zmień',
+                    ),
+                  ],
+                ),
               ],
 
               // Logs section
