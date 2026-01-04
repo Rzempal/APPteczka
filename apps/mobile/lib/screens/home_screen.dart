@@ -60,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
   FilterState _filterState = const FilterState();
   SortOption _sortOption = SortOption.nameAsc;
   ViewMode _viewMode = ViewMode.full;
+  String? _expandedMedicineId; // ID karty rozwiniętej jako akordeon
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
   bool _isFiltersSheetOpen = false;
@@ -275,7 +276,23 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: MedicineCard(
                                 medicine: medicine,
                                 labels: _allLabels,
-                                isCompact: _viewMode == ViewMode.list,
+                                // Karta jest compact chyba że jest rozwinięta lub globalny widok to full
+                                isCompact:
+                                    _viewMode == ViewMode.list &&
+                                    _expandedMedicineId != medicine.id,
+                                onExpand: _viewMode == ViewMode.list
+                                    ? () {
+                                        setState(() {
+                                          // Toggle - kliknięcie na rozwiniętą kartę zwija ją
+                                          if (_expandedMedicineId ==
+                                              medicine.id) {
+                                            _expandedMedicineId = null;
+                                          } else {
+                                            _expandedMedicineId = medicine.id;
+                                          }
+                                        });
+                                      }
+                                    : null,
                                 onTap: () => _showMedicineDetails(medicine),
                               ),
                             );

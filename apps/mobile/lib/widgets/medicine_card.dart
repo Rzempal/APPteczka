@@ -12,6 +12,7 @@ class MedicineCard extends StatefulWidget {
   final Medicine medicine;
   final List<UserLabel> labels;
   final VoidCallback? onTap;
+  final VoidCallback? onExpand;
   final bool isCompact;
 
   const MedicineCard({
@@ -19,6 +20,7 @@ class MedicineCard extends StatefulWidget {
     required this.medicine,
     this.labels = const [],
     this.onTap,
+    this.onExpand,
     this.isCompact = false,
   });
 
@@ -143,12 +145,32 @@ class _MedicineCardState extends State<MedicineCard>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Prawa strona: Status badge (align right)
-                      if (statusLabel != null)
+                      // Prawa strona: Status badge (tylko w trybie full) lub Chevron (w compact)
+                      if (widget.isCompact)
+                        // Strzałka rozwijania akordeonu
+                        GestureDetector(
+                          onTap: widget.onExpand,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: NeuDecoration.flatSmall(
+                              isDark: isDark,
+                              radius: 12,
+                            ),
+                            child: Icon(
+                              LucideIcons.chevronDown,
+                              size: 16,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        )
+                      else if (statusLabel != null)
                         Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: widget.isCompact ? 8 : 10,
-                            vertical: widget.isCompact ? 3 : 4,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
                           decoration: BoxDecoration(
                             color: statusColor,
@@ -156,14 +178,14 @@ class _MedicineCardState extends State<MedicineCard>
                           ),
                           child: Icon(
                             statusIcon,
-                            size: widget.isCompact ? 12 : 14,
+                            size: 14,
                             color: Colors.white,
                           ),
                         ),
                     ],
                   ),
 
-                  // Compact: opis (left) + data (right) z fade-out
+                  // Compact: opis (left) + status icon (right) - bez daty
                   if (widget.isCompact) ...[
                     const SizedBox(height: 8),
                     Row(
@@ -175,7 +197,7 @@ class _MedicineCardState extends State<MedicineCard>
                               colors: [
                                 Colors.white,
                                 Colors.white,
-                                Colors.white.withOpacity(0),
+                                Colors.white.withValues(alpha: 0),
                               ],
                               stops: const [0.0, 0.85, 1.0],
                             ).createShader(bounds),
@@ -188,15 +210,22 @@ class _MedicineCardState extends State<MedicineCard>
                             ),
                           ),
                         ),
-                        // Data ważności (right)
-                        if (widget.medicine.terminWaznosci != null) ...[
+                        // Status icon (zamiast daty)
+                        if (statusLabel != null) ...[
                           const SizedBox(width: 8),
-                          Text(
-                            _formatDate(widget.medicine.terminWaznosci!),
-                            style: TextStyle(
-                              fontSize: 12,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
                               color: statusColor,
-                              fontWeight: FontWeight.w500,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              statusIcon,
+                              size: 12,
+                              color: Colors.white,
                             ),
                           ),
                         ],
