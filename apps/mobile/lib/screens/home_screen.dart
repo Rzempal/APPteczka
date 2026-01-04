@@ -185,31 +185,63 @@ class _HomeScreenState extends State<HomeScreen> {
                             isWideScreen && _viewMode == ViewMode.full;
 
                         if (useGrid) {
-                          // Grid 2-kolumnowy dla szerokich ekranów
-                          return GridView.builder(
-                            padding: const EdgeInsets.only(
-                              bottom: 16,
-                              left: 8,
-                              right: 8,
+                          // Layout dwukolumnowy z dynamiczną wysokością kart
+                          // Używamy Row z dwoma Expanded kolumnami
+                          final leftItems = <Medicine>[];
+                          final rightItems = <Medicine>[];
+                          for (int i = 0; i < _filteredMedicines.length; i++) {
+                            if (i.isEven) {
+                              leftItems.add(_filteredMedicines[i]);
+                            } else {
+                              rightItems.add(_filteredMedicines[i]);
+                            }
+                          }
+
+                          return SingleChildScrollView(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Lewa kolumna
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: leftItems
+                                          .map(
+                                            (medicine) => MedicineCard(
+                                              medicine: medicine,
+                                              labels: _allLabels,
+                                              isCompact: false,
+                                              onTap: () => _showMedicineDetails(
+                                                medicine,
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                    ),
+                                  ),
+                                  // Prawa kolumna
+                                  Expanded(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: rightItems
+                                          .map(
+                                            (medicine) => MedicineCard(
+                                              medicine: medicine,
+                                              labels: _allLabels,
+                                              isCompact: false,
+                                              onTap: () => _showMedicineDetails(
+                                                medicine,
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  // Aspect ratio dostosowany do zawartości karty
-                                  childAspectRatio: 0.85,
-                                  crossAxisSpacing: 0,
-                                  mainAxisSpacing: 0,
-                                ),
-                            itemCount: _filteredMedicines.length,
-                            itemBuilder: (context, index) {
-                              final medicine = _filteredMedicines[index];
-                              return MedicineCard(
-                                medicine: medicine,
-                                labels: _allLabels,
-                                isCompact: false,
-                                onTap: () => _showMedicineDetails(medicine),
-                              );
-                            },
                           );
                         }
 

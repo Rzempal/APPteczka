@@ -89,10 +89,6 @@ class _SettingsScreenState extends State<SettingsScreen>
           _buildDisclaimerSection(theme, isDark),
           const SizedBox(height: 24),
 
-          // Aktualizacje
-          _buildUpdateSection(context, theme, isDark),
-          const SizedBox(height: 24),
-
           // Synchronizacja (coming soon)
           _buildSyncSection(context, theme, isDark),
           const SizedBox(height: 24),
@@ -101,8 +97,20 @@ class _SettingsScreenState extends State<SettingsScreen>
           _buildThemeSection(context, theme, isDark),
           const SizedBox(height: 24),
 
-          // Kopia zapasowa
+          // Gesty (coming soon)
+          _buildGesturesSection(context, theme, isDark),
+          const SizedBox(height: 24),
+
+          // Aktualizacje
+          _buildUpdateSection(context, theme, isDark),
+          const SizedBox(height: 24),
+
+          // Kopia zapasowa (akordeon)
           _buildBackupSection(theme, isDark),
+          const SizedBox(height: 24),
+
+          // Zaawansowane (osobny akordeon)
+          _buildAdvancedSection(theme, isDark),
           const SizedBox(height: 32),
         ],
       ),
@@ -573,6 +581,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   int _medicineCount = 0;
   bool _isExporting = false;
+  bool _isBackupOpen = false;
   bool _isAdvancedOpen = false;
 
   Widget _buildDisclaimerSection(ThemeData theme, bool isDark) {
@@ -618,51 +627,147 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildBackupSection(ThemeData theme, bool isDark) {
-    _medicineCount = widget.storageService.getMedicines().length;
-
+  Widget _buildGesturesSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Container(
       decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Header
-            Row(
-              children: [
-                Icon(LucideIcons.archive, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Text(
-                  'Kopia zapasowa',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '$_medicineCount ${_getPolishPlural(_medicineCount)} w apteczce',
-              style: theme.textTheme.bodySmall?.copyWith(
+            NeuInsetContainer(
+              borderRadius: 10,
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                LucideIcons.hand,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(height: 16),
-
-            // Zapisz do pliku
-            _buildBackupExportFile(theme, isDark),
-            const SizedBox(height: 12),
-
-            // Przywracanie
-            _buildBackupRestore(theme, isDark),
-            const SizedBox(height: 12),
-
-            // Sekcja Zaawansowane
-            _buildBackupAdvancedSection(theme, isDark),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Gesty przeciągania',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.secondaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Wkrótce',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: theme.colorScheme.onSecondaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    'Sterowanie gestami przeciągania',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildBackupSection(ThemeData theme, bool isDark) {
+    _medicineCount = widget.storageService.getMedicines().length;
+
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        return Container(
+          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () =>
+                    setLocalState(() => _isBackupOpen = !_isBackupOpen),
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.archive,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Kopia zapasowa',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              '$_medicineCount ${_getPolishPlural(_medicineCount)} w apteczce',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _isBackupOpen
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        size: 20,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Zawartość zwijana
+              if (_isBackupOpen) ...[
+                const Divider(height: 1),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Zapisz do pliku
+                      _buildBackupExportFile(theme, isDark),
+                      const SizedBox(height: 12),
+                      // Przywracanie
+                      _buildBackupRestore(theme, isDark),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -795,7 +900,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildBackupAdvancedSection(ThemeData theme, bool isDark) {
+  Widget _buildAdvancedSection(ThemeData theme, bool isDark) {
     return StatefulBuilder(
       builder: (context, setLocalState) {
         return Container(
