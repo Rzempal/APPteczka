@@ -233,136 +233,114 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                       child: _buildNoteSection(context),
                     ),
 
-                    // Termin ważności
+                    // Termin ważności - reorganizacja layoutu
                     const SizedBox(height: 20),
-                    _buildSection(
-                      context,
-                      title: 'Termin ważności',
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                size: 18,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Linia 1: Tytuł ←→ Ołówek (edycja ręczna)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Termin ważności',
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF6b7280),
+                                  ),
+                            ),
+                            GestureDetector(
+                              onTap: () => _showMonthYearPicker(context),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: NeuDecoration.flatSmall(
+                                  isDark:
+                                      Theme.of(context).brightness ==
+                                      Brightness.dark,
+                                  radius: 8,
+                                ),
+                                child: Icon(
+                                  LucideIcons.pencil,
+                                  size: 14,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Linia 2: Data (badge) + Aparat (OCR)
+                        Row(
+                          children: [
+                            // Badge z datą i statusem
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
                                 color: statusColor,
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                _medicine.terminWaznosci != null
-                                    ? _formatDate(_medicine.terminWaznosci!)
-                                    : 'Nie ustawiono',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: statusColor,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _getStatusIcon(status),
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _medicine.terminWaznosci != null
+                                        ? _formatDate(_medicine.terminWaznosci!)
+                                        : 'Nie ustawiono',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              if (_medicine.terminWaznosci != null) ...[
-                                const SizedBox(width: 12),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
+                            ),
+                            const SizedBox(width: 12),
+                            // Przycisk OCR daty
+                            NeuButton(
+                              onPressed: () => _takeDatePhoto(context),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    LucideIcons.camera,
+                                    size: 16,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: statusColor,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        _getStatusIcon(status),
-                                        size: 14,
-                                        color: Colors.white,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        _getStatusLabel(status),
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          // Przyciski: OCR daty i ręczny picker MM/YYYY
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              // Przycisk OCR daty
-                              NeuButton(
-                                onPressed: () => _takeDatePhoto(context),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      LucideIcons.camera,
-                                      size: 16,
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Zrób zdjęcie',
+                                    style: TextStyle(
                                       color: Theme.of(
                                         context,
                                       ).colorScheme.onSurface,
+                                      fontSize: 13,
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Zrób zdjęcie',
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurface,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              // Przycisk ręcznego picker'a MM/YYYY
-                              NeuButton(
-                                onPressed: () => _showMonthYearPicker(context),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 10,
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      LucideIcons.pencil,
-                                      size: 16,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Wpisz ręcznie',
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurface,
-                                        fontSize: 13,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
 
                     // Data dodania
@@ -429,25 +407,17 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             ),
             GestureDetector(
               onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _isLabelsOpen ? Icons.expand_less : Icons.edit_outlined,
-                    size: 16,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _isLabelsOpen
-                        ? 'Zamknij'
-                        : (selectedLabels.isEmpty ? 'Dodaj' : 'Edytuj'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: NeuDecoration.flatSmall(
+                  isDark: Theme.of(context).brightness == Brightness.dark,
+                  radius: 8,
+                ),
+                child: Icon(
+                  _isLabelsOpen ? LucideIcons.chevronUp : LucideIcons.pencil,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
               ),
             ),
           ],

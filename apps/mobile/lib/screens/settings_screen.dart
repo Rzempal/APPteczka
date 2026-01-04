@@ -749,7 +749,6 @@ class _SettingsScreenState extends State<SettingsScreen>
               ),
               // Zawartość zwijana
               if (_isBackupOpen) ...[
-                const Divider(height: 1),
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -943,7 +942,6 @@ class _SettingsScreenState extends State<SettingsScreen>
               ),
               // Zawartość zwijana
               if (_isAdvancedOpen) ...[
-                const Divider(height: 1),
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(

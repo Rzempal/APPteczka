@@ -327,7 +327,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               ),
               // Zawartość zwijana
               if (_isAdvancedOpen) ...[
-                const Divider(height: 1),
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(

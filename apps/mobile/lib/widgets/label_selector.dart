@@ -68,22 +68,38 @@ class _LabelSelectorState extends State<LabelSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Wyświetl przypisane etykiety (klikalne do filtrowania, bez X)
+        // Wyświetl przypisane etykiety - styl jak _buildBadge w MedicineCard
         if (selectedLabels.isNotEmpty) ...[
           Wrap(
-            spacing: 4,
-            runSpacing: 4,
+            spacing: 8,
+            runSpacing: 8,
             children: selectedLabels.map((label) {
               final colorInfo = labelColors[label.color]!;
+              final bgColor = Color(colorInfo.hexValue);
+              // Contrast color based on luminance
+              final textColor = bgColor.computeLuminance() > 0.5
+                  ? const Color(0xFF1e293b)
+                  : Colors.white;
               return GestureDetector(
                 onTap: () => widget.onLabelTap?.call(label.id),
-                child: Chip(
-                  label: Text(label.name, style: const TextStyle(fontSize: 12)),
-                  backgroundColor: Color(
-                    colorInfo.hexValue,
-                  ).withValues(alpha: 0.2),
-                  visualDensity: VisualDensity.compact,
-                  padding: EdgeInsets.zero,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    label.name.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: textColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ),
               );
             }).toList(),

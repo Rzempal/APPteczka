@@ -264,26 +264,29 @@ class _MedicineCardState extends State<MedicineCard>
                       ),
                     ],
 
-                    // Data ważności
+                    // Data ważności - z paddingiem dla wyrównania z tagami
                     if (widget.medicine.terminWaznosci != null) ...[
                       const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(
-                            LucideIcons.calendar,
-                            size: 14,
-                            color: statusColor,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Ważny do: ${_formatDate(widget.medicine.terminWaznosci!)}',
-                            style: TextStyle(
-                              fontSize: 12,
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              LucideIcons.calendar,
+                              size: 14,
                               color: statusColor,
-                              fontWeight: FontWeight.w500,
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Text(
+                              'Ważny do: ${_formatDate(widget.medicine.terminWaznosci!)}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: statusColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ],
@@ -366,26 +369,38 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  /// Tag - prosty Badge (bez cieni, z border)
+  /// Tag - prosty Badge (transparent bg, gray outline, # inny kolor)
   Widget _buildTag(String tag, bool isDark, ThemeData theme) {
+    final borderColor = isDark ? Colors.grey.shade600 : Colors.grey.shade400;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.primary.withAlpha(30)
-            : theme.colorScheme.surfaceContainerHighest,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: isDark ? AppColors.primary.withAlpha(80) : theme.dividerColor,
-        ),
+        border: Border.all(color: borderColor),
       ),
-      child: Text(
-        '#$tag',
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          fontFamily: 'monospace',
-          color: isDark ? AppColors.primary : theme.colorScheme.onSurface,
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '#',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'monospace',
+                color: borderColor,
+              ),
+            ),
+            TextSpan(
+              text: tag,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'monospace',
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
       ),
     );
