@@ -154,26 +154,10 @@ class _MedicineCardState extends State<MedicineCard>
                             color: statusColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                statusIcon,
-                                size: widget.isCompact ? 12 : 14,
-                                color: Colors.white,
-                              ),
-                              if (!widget.isCompact) ...[
-                                const SizedBox(width: 4),
-                                Text(
-                                  statusLabel,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ],
+                          child: Icon(
+                            statusIcon,
+                            size: widget.isCompact ? 12 : 14,
+                            color: Colors.white,
                           ),
                         ),
                     ],
@@ -382,17 +366,26 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  /// Tag - styl neumorficzny (cienie zamiast border)
+  /// Tag - prosty Badge (bez cieni, z border)
   Widget _buildTag(String tag, bool isDark, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.primary.withAlpha(30)
+            : theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark ? AppColors.primary.withAlpha(80) : theme.dividerColor,
+        ),
+      ),
       child: Text(
-        tag,
+        '#$tag',
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: theme.colorScheme.onSurfaceVariant,
+          fontFamily: 'monospace',
+          color: isDark ? AppColors.primary : theme.colorScheme.onSurface,
         ),
       ),
     );

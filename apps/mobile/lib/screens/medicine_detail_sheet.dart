@@ -267,16 +267,27 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: statusColor.withValues(alpha: 0.1),
+                                    color: statusColor,
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: Text(
-                                    _getStatusLabel(status),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: statusColor,
-                                      fontWeight: FontWeight.w500,
-                                    ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _getStatusIcon(status),
+                                        size: 14,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _getStatusLabel(status),
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -1014,6 +1025,19 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         return 'Ważny';
       case ExpiryStatus.unknown:
         return 'Brak daty';
+    }
+  }
+
+  IconData _getStatusIcon(ExpiryStatus status) {
+    switch (status) {
+      case ExpiryStatus.expired:
+        return LucideIcons.circleX;
+      case ExpiryStatus.expiringSoon:
+        return LucideIcons.triangleAlert;
+      case ExpiryStatus.valid:
+        return LucideIcons.circleCheck;
+      case ExpiryStatus.unknown:
+        return LucideIcons.circleOff;
     }
   }
 

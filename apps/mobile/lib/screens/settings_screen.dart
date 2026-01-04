@@ -89,6 +89,10 @@ class _SettingsScreenState extends State<SettingsScreen>
           _buildDisclaimerSection(theme, isDark),
           const SizedBox(height: 24),
 
+          // Aktualizacje (druga pozycja)
+          _buildUpdateSection(context, theme, isDark),
+          const SizedBox(height: 24),
+
           // Synchronizacja (coming soon)
           _buildSyncSection(context, theme, isDark),
           const SizedBox(height: 24),
@@ -99,10 +103,6 @@ class _SettingsScreenState extends State<SettingsScreen>
 
           // Gesty (coming soon)
           _buildGesturesSection(context, theme, isDark),
-          const SizedBox(height: 24),
-
-          // Aktualizacje
-          _buildUpdateSection(context, theme, isDark),
           const SizedBox(height: 24),
 
           // Kopia zapasowa (akordeon)
