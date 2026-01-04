@@ -167,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // Line 3: Counter | View | Sort | Filter
             _buildToolbar(theme, isDark),
 
-            // Lista leków
+            // Lista leków - responsywny grid dla szerokich ekranów
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -177,38 +177,77 @@ class _HomeScreenState extends State<HomeScreen> {
                       onAddPressed: widget.onNavigateToAdd,
                       hasFilters: _filterState.hasActiveFilters,
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      itemCount: _filteredMedicines.length,
-                      itemBuilder: (context, index) {
-                        final medicine = _filteredMedicines[index];
-                        return Dismissible(
-                          key: Key(medicine.id),
-                          direction: DismissDirection.endToStart,
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 24),
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 6,
+                  : LayoutBuilder(
+                      builder: (context, constraints) {
+                        // Dla szerokich ekranów (tablet, foldable) i trybu full - 2 kolumny
+                        final isWideScreen = constraints.maxWidth >= 600;
+                        final useGrid =
+                            isWideScreen && _viewMode == ViewMode.full;
+
+                        if (useGrid) {
+                          // Grid 2-kolumnowy dla szerokich ekranów
+                          return GridView.builder(
+                            padding: const EdgeInsets.only(
+                              bottom: 16,
+                              left: 8,
+                              right: 8,
                             ),
-                            decoration: BoxDecoration(
-                              color: AppColors.expired,
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            child: const Icon(
-                              LucideIcons.trash,
-                              color: Colors.white,
-                            ),
-                          ),
-                          confirmDismiss: (_) => _confirmDelete(medicine),
-                          onDismissed: (_) => _deleteMedicine(medicine),
-                          child: MedicineCard(
-                            medicine: medicine,
-                            labels: _allLabels,
-                            isCompact: _viewMode == ViewMode.list,
-                            onTap: () => _showMedicineDetails(medicine),
-                          ),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  // Aspect ratio dostosowany do zawartości karty
+                                  childAspectRatio: 0.85,
+                                  crossAxisSpacing: 0,
+                                  mainAxisSpacing: 0,
+                                ),
+                            itemCount: _filteredMedicines.length,
+                            itemBuilder: (context, index) {
+                              final medicine = _filteredMedicines[index];
+                              return MedicineCard(
+                                medicine: medicine,
+                                labels: _allLabels,
+                                isCompact: false,
+                                onTap: () => _showMedicineDetails(medicine),
+                              );
+                            },
+                          );
+                        }
+
+                        // Lista dla wąskich ekranów lub trybu list
+                        return ListView.builder(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          itemCount: _filteredMedicines.length,
+                          itemBuilder: (context, index) {
+                            final medicine = _filteredMedicines[index];
+                            return Dismissible(
+                              key: Key(medicine.id),
+                              direction: DismissDirection.endToStart,
+                              background: Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(right: 24),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.expired,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: const Icon(
+                                  LucideIcons.trash,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              confirmDismiss: (_) => _confirmDelete(medicine),
+                              onDismissed: (_) => _deleteMedicine(medicine),
+                              child: MedicineCard(
+                                medicine: medicine,
+                                labels: _allLabels,
+                                isCompact: _viewMode == ViewMode.list,
+                                onTap: () => _showMedicineDetails(medicine),
+                              ),
+                            );
+                          },
                         );
                       },
                     ),
@@ -239,7 +278,9 @@ class _HomeScreenState extends State<HomeScreen> {
             AppConfig.isInternal ? 'Karton DEV' : 'Karton z lekami',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              color: AppConfig.isInternal ? AppColors.expired : AppColors.primary,
+              color: AppConfig.isInternal
+                  ? AppColors.expired
+                  : AppColors.primary,
             ),
           ),
           // Update badge

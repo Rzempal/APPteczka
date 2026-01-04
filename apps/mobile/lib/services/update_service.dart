@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -8,7 +9,6 @@ import '../config/app_config.dart';
 /// Service for checking and installing OTA updates.
 /// Version format: YYYYMMDD_HHMM (e.g., 20251230_2248)
 class UpdateService extends ChangeNotifier {
-
   String? _currentVersion;
   String? _currentVersionName; // Full version like 0.1.253651505
   String? _latestVersion;
@@ -19,6 +19,8 @@ class UpdateService extends ChangeNotifier {
   String? _errorMessage;
   DateTime? _lastCheckTime;
   bool _isUpToDate = false;
+  bool _showInstallerHint = false;
+  Timer? _installerHintTimer;
 
   // Getters
   String? get currentVersion => _currentVersion;
@@ -30,6 +32,7 @@ class UpdateService extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   DateTime? get lastCheckTime => _lastCheckTime;
   bool get isUpToDate => _isUpToDate;
+  bool get showInstallerHint => _showInstallerHint;
 
   /// Initialize and load current app version, then check for updates
   Future<void> init() async {
@@ -108,6 +111,8 @@ class UpdateService extends ChangeNotifier {
 
     _status = UpdateStatus.downloading;
     _downloadProgress = 0.0;
+    _showInstallerHint = false;
+    _installerHintTimer?.cancel();
     notifyListeners();
 
     try {
@@ -122,7 +127,13 @@ class UpdateService extends ChangeNotifier {
                   notifyListeners();
                   break;
                 case OtaStatus.INSTALLING:
-                  _status = UpdateStatus.installing;
+                  _status = UpdateStatus.launchingInstaller;
+                  _showInstallerHint = false;
+                  _installerHintTimer?.cancel();
+                  _installerHintTimer = Timer(const Duration(seconds: 5), () {
+                    _showInstallerHint = true;
+                    notifyListeners();
+                  });
                   notifyListeners();
                   break;
                 case OtaStatus.INSTALLATION_DONE:
@@ -185,8 +196,10 @@ class UpdateService extends ChangeNotifier {
     _downloadProgress = 0.0;
     _status = UpdateStatus.idle;
     _errorMessage = null;
+    _showInstallerHint = false;
+    _installerHintTimer?.cancel();
     notifyListeners();
   }
 }
 
-enum UpdateStatus { idle, checking, downloading, installing, error }
+enum UpdateStatus { idle, checking, downloading, launchingInstaller, error }

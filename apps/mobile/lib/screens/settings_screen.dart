@@ -139,10 +139,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                     color: AppConfig.isInternal
                         ? AppColors.expired
                         : updateAvailable
-                            ? AppColors.primary
-                            : isUpToDate
-                                ? AppColors.valid
-                                : theme.colorScheme.onSurfaceVariant,
+                        ? AppColors.primary
+                        : isUpToDate
+                        ? AppColors.valid
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -285,16 +285,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ),
                   // Aktualizuj button
                   NeuButton.primary(
-                    onPressed:
-                        status == UpdateStatus.downloading ||
-                            status == UpdateStatus.installing
+                    onPressed: status == UpdateStatus.downloading
                         ? null
                         : () => updateService.startUpdate(),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (status == UpdateStatus.downloading ||
-                            status == UpdateStatus.installing)
+                            status == UpdateStatus.launchingInstaller)
                           SizedBox(
                             width: 16,
                             height: 16,
@@ -307,8 +305,8 @@ class _SettingsScreenState extends State<SettingsScreen>
                           Icon(LucideIcons.download, size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          status == UpdateStatus.installing
-                              ? 'Instaluję...'
+                          status == UpdateStatus.launchingInstaller
+                              ? 'Uruchamiam instalator...'
                               : 'Aktualizuj',
                         ),
                       ],
@@ -316,6 +314,19 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ),
                 ],
               ),
+              // Hint when installer doesn't show up
+              if (status == UpdateStatus.launchingInstaller &&
+                  updateService.showInstallerHint)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Nic się nie dzieje? Kliknij ponownie aby uruchomić instalator.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
             ],
           ],
         ),
@@ -1021,11 +1032,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             children: [
               Row(
                 children: [
-                  Icon(
-                    LucideIcons.bug,
-                    color: AppColors.expired,
-                    size: 18,
-                  ),
+                  Icon(LucideIcons.bug, color: AppColors.expired, size: 18),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1252,4 +1259,3 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 }
-
