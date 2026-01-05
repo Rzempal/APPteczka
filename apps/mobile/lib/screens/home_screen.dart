@@ -21,10 +21,10 @@ import 'pdf_viewer_screen.dart';
 enum SortOption {
   nameAsc('Nazwa A-Z', LucideIcons.arrowUpAZ),
   nameDesc('Nazwa Z-A', LucideIcons.arrowDownAZ),
-  expiryAsc('Termin ważności rosnąco', LucideIcons.clockArrowUp),
-  expiryDesc('Termin ważności malejąco', LucideIcons.clockArrowDown),
-  dateAddedAsc('Data dodania rosnąco', LucideIcons.calendarArrowUp),
-  dateAddedDesc('Data dodania malejąco', LucideIcons.calendarArrowDown);
+  expiryAsc('Termin ważności od najkrótszego', LucideIcons.clockArrowUp),
+  expiryDesc('Termin ważności od najdłuższego', LucideIcons.clockArrowDown),
+  dateAddedAsc('Data dodania od najstarszego', LucideIcons.calendarArrowUp),
+  dateAddedDesc('Data dodania od najnowszego', LucideIcons.calendarArrowDown);
 
   final String label;
   final IconData icon;
