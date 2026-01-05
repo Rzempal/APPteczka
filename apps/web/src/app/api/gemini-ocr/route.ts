@@ -4,6 +4,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { recognizeMedicinesFromImage, isGeminiError } from '@/lib/gemini';
 
+// CORS headers dla cross-origin requests (mobile app)
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Handler dla preflight OPTIONS request
+export async function OPTIONS() {
+    return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 // Maksymalny rozmiar obrazu: 4MB
 const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
 
@@ -24,7 +36,7 @@ export async function POST(request: NextRequest) {
         if (!image || typeof image !== 'string') {
             return NextResponse.json(
                 { error: 'Brak obrazu w żądaniu', code: 'INVALID_IMAGE' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -32,7 +44,7 @@ export async function POST(request: NextRequest) {
         if (!mimeType || !ALLOWED_MIME_TYPES.includes(mimeType)) {
             return NextResponse.json(
                 { error: 'Nieprawidłowy format obrazu. Dozwolone: JPEG, PNG, WebP, GIF', code: 'INVALID_IMAGE' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -41,7 +53,7 @@ export async function POST(request: NextRequest) {
         if (estimatedSize > MAX_IMAGE_SIZE) {
             return NextResponse.json(
                 { error: 'Obraz jest za duży. Maksymalny rozmiar: 4MB', code: 'INVALID_IMAGE' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -53,16 +65,16 @@ export async function POST(request: NextRequest) {
                 : result.code === 'RATE_LIMIT' ? 429
                     : 400;
 
-            return NextResponse.json(result, { status: statusCode });
+            return NextResponse.json(result, { status: statusCode, headers: corsHeaders });
         }
 
-        return NextResponse.json(result);
+        return NextResponse.json(result, { headers: corsHeaders });
 
     } catch (error) {
         console.error('Gemini OCR API error:', error);
         return NextResponse.json(
             { error: 'Wewnętrzny błąd serwera', code: 'API_ERROR' },
-            { status: 500 }
+            { status: 500, headers: corsHeaders }
         );
     }
 }

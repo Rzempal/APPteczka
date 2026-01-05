@@ -4,6 +4,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { recognizeMedicineWithDateFromImages, isDualOCRError } from '@/lib/dual-ocr';
 
+// CORS headers dla cross-origin requests (mobile app)
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Handler dla preflight OPTIONS request
+export async function OPTIONS() {
+    return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 // Maksymalny rozmiar obrazu: 4MB
 const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
 
@@ -39,7 +51,7 @@ export async function POST(request: NextRequest) {
         if (frontError) {
             return NextResponse.json(
                 { error: frontError, code: 'INVALID_IMAGE' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -48,7 +60,7 @@ export async function POST(request: NextRequest) {
         if (dateError) {
             return NextResponse.json(
                 { error: dateError, code: 'INVALID_IMAGE' },
-                { status: 400 }
+                { status: 400, headers: corsHeaders }
             );
         }
 
@@ -65,16 +77,16 @@ export async function POST(request: NextRequest) {
                 : result.code === 'RATE_LIMIT' ? 429
                     : 400;
 
-            return NextResponse.json(result, { status: statusCode });
+            return NextResponse.json(result, { status: statusCode, headers: corsHeaders });
         }
 
-        return NextResponse.json(result);
+        return NextResponse.json(result, { headers: corsHeaders });
 
     } catch (error) {
         console.error('Dual OCR API error:', error);
         return NextResponse.json(
             { error: 'Wewnętrzny błąd serwera', code: 'API_ERROR' },
-            { status: 500 }
+            { status: 500, headers: corsHeaders }
         );
     }
 }

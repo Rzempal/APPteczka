@@ -80,6 +80,7 @@ class GeminiDualService {
       );
 
       // Wyślij request do API
+      _log.fine('POST $_apiUrl');
       final response = await http.post(
         Uri.parse(_apiUrl),
         headers: {'Content-Type': 'application/json'},
