@@ -331,7 +331,7 @@ class _MedicineCardState extends State<MedicineCard>
                             ),
                           ],
 
-                          // Data ważności (bez zdublowanego Badge statusu)
+                          // Data ważności + Badge statusu (align right)
                           if (widget.medicine.terminWaznosci != null) ...[
                             const SizedBox(height: 8),
                             Padding(
@@ -352,6 +352,24 @@ class _MedicineCardState extends State<MedicineCard>
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
+                                  const Spacer(),
+                                  // Badge statusu
+                                  if (statusLabel != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: statusColor,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        statusIcon,
+                                        size: 12,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
