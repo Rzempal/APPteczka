@@ -45,9 +45,10 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   /// Ustaw konkretny tryb
+  /// UWAGA: notifyListeners() na końcu - po zapisie do storage
+  /// eliminuje lag przy przełączaniu motywu
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
-    notifyListeners();
 
     String? value;
     switch (mode) {
@@ -62,10 +63,14 @@ class ThemeProvider extends ChangeNotifier {
         break;
     }
 
+    // Najpierw zapisz do storage (I/O)
     if (value != null) {
       await _prefs?.setString(_themeKey, value);
     } else {
       await _prefs?.remove(_themeKey);
     }
+
+    // Potem powiadom UI (rebuild po zakończeniu I/O)
+    notifyListeners();
   }
 }

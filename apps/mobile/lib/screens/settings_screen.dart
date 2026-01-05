@@ -490,35 +490,86 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
+  /// Zwraca tekst opisujący aktualny motyw
+  String _getThemeModeLabel(ThemeMode mode) {
+    switch (mode) {
+      case ThemeMode.system:
+        return 'Systemowy';
+      case ThemeMode.light:
+        return 'Jasny';
+      case ThemeMode.dark:
+        return 'Ciemny';
+    }
+  }
+
   Widget _buildThemeSection(
     BuildContext context,
     ThemeData theme,
     bool isDark,
   ) {
-    return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(LucideIcons.palette, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Text(
-                  'Motyw aplikacji',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        final currentModeLabel = _getThemeModeLabel(
+          widget.themeProvider.themeMode,
+        );
+
+        return Container(
+          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () => setLocalState(() => _isThemeOpen = !_isThemeOpen),
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.palette,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Motyw aplikacji',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              currentModeLabel,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _isThemeOpen
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        size: 20,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildThemeToggle(context, theme, isDark),
-          ],
-        ),
-      ),
+              ),
+              // Zawartość zwijana
+              if (_isThemeOpen)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: _buildThemeToggle(context, theme, isDark),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -613,6 +664,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _isExporting = false;
   bool _isBackupOpen = false;
   bool _isAdvancedOpen = false;
+  bool _isThemeOpen = false;
 
   Widget _buildDisclaimerSection(ThemeData theme, bool isDark) {
     return Container(
