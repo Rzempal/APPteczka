@@ -57,6 +57,7 @@ class PudelkoNaLekiApp extends StatefulWidget {
 
 class _PudelkoNaLekiAppState extends State<PudelkoNaLekiApp> {
   final GlobalKey _screenshotKey = GlobalKey();
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   /// Przechwytuje screenshot i otwiera sheet zgłoszenia
   Future<void> _openBugReportWithScreenshot() async {
@@ -68,7 +69,15 @@ class _PudelkoNaLekiAppState extends State<PudelkoNaLekiApp> {
     // Pobierz aktualny błąd skanera jeśli istnieje
     final scannerError = FabService.instance.scannerError;
 
-    BugReportSheet.show(context, screenshot: screenshot, error: scannerError);
+    // Użyj kontekstu z Navigatora
+    final navContext = _navigatorKey.currentContext;
+    if (navContext == null) return;
+
+    BugReportSheet.show(
+      navContext,
+      screenshot: screenshot,
+      error: scannerError,
+    );
 
     // Wyczyść błąd po otwarciu zgłoszenia
     if (scannerError != null) {
@@ -84,6 +93,7 @@ class _PudelkoNaLekiAppState extends State<PudelkoNaLekiApp> {
         return MaterialApp(
           title: 'Karton z lekami',
           debugShowCheckedModeBanner: false,
+          navigatorKey: _navigatorKey,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: widget.themeProvider.themeMode,
