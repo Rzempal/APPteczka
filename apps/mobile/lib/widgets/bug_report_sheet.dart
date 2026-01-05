@@ -52,6 +52,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
   bool _screenshotAttached = false;
   bool _isSending = false;
   Uint8List? _galleryScreenshot; // Obraz wybrany z galerii
+  String _appVersion = ''; // Wersja aplikacji
 
   @override
   void initState() {
@@ -59,6 +60,13 @@ class _BugReportSheetState extends State<BugReportSheet> {
     _selectedCategory = widget.initialCategory ?? ReportCategory.bug;
     // If screenshot is passed, don't auto-attach - user needs to click button
     _screenshotAttached = false;
+    // Pobierz wersję aplikacji
+    _loadAppVersion();
+  }
+
+  Future<void> _loadAppVersion() async {
+    final version = await BugReportService.instance.getAppVersion();
+    if (mounted) setState(() => _appVersion = version);
   }
 
   @override
@@ -204,6 +212,16 @@ class _BugReportSheetState extends State<BugReportSheet> {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
+                        if (_appVersion.isNotEmpty)
+                          Text(
+                            'Wersja: $_appVersion',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withOpacity(0.6),
+                              fontFamily: 'monospace',
+                              fontSize: 11,
+                            ),
+                          ),
                       ],
                     ),
                   ),
