@@ -51,7 +51,7 @@ class FloatingNavBar extends StatelessWidget {
 
     return Container(
       // Marginesy - efekt "floating"
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      margin: const EdgeInsets.all(16),
       height: 72,
       decoration: BoxDecoration(
         color: backgroundColor,

@@ -106,22 +106,33 @@ Custom bottom navigation bar z efektem "lewitowania".
 
 | Właściwość | Wartość |
 |------------|---------|
+| **Layout** | `bottomNavigationBar` w `Scaffold` |
 | **Efekt** | Floating (marginesy 16px, uniesiony nad krawędź) |
 | **BorderRadius** | 24px |
 | **Cienie** | Neumorficzne (ciemny dół + jasna góra) |
 | **Animacje** | `AnimatedContainer` (250ms), `AnimatedScale` (200ms) |
-| **Aktywny element** | Tło miętowe (15% opacity), ikona powiększona, tekst widoczny |
+| **Aktywny element** | Gradient convex, ikona powiększona do 32px, brak etykiety |
+| **Fade-out** | Gradient 40px na dole listy (w `HomeScreen`) - elementy zanikają płynnie |
 
-### Użycie
+### Fade-out w ekranach
+
+Aby elementy scrollujące się do dołu zanikały płynnie, lista jest owinięta w `Stack` z gradientem:
 
 ```dart
-FloatingNavBar(
-  currentIndex: _currentIndex,
-  onTap: (index) => setState(() => _currentIndex = index),
-  items: const [
-    NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
-    NavItem(icon: LucideIcons.briefcaseMedical, label: 'Apteczka'),
-    NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+Stack(
+  children: [
+    ListView.builder(...), // lista
+    Positioned(
+      bottom: 0,
+      height: 40,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [backgroundColor.withAlpha(0), backgroundColor],
+          ),
+        ),
+      ),
+    ),
   ],
 )
 ```

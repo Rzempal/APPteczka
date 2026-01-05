@@ -178,127 +178,167 @@ class _HomeScreenState extends State<HomeScreen> {
                       onAddPressed: widget.onNavigateToAdd,
                       hasFilters: _filterState.hasActiveFilters,
                     )
-                  : LayoutBuilder(
-                      builder: (context, constraints) {
-                        // Dla szerokich ekranów (tablet, foldable) i trybu full - 2 kolumny
-                        final isWideScreen = constraints.maxWidth >= 600;
-                        final useGrid =
-                            isWideScreen && _viewMode == ViewMode.full;
+                  : Stack(
+                      children: [
+                        // Główna lista
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Dla szerokich ekranów (tablet, foldable) i trybu full - 2 kolumny
+                            final isWideScreen = constraints.maxWidth >= 600;
+                            final useGrid =
+                                isWideScreen && _viewMode == ViewMode.full;
 
-                        if (useGrid) {
-                          // Layout dwukolumnowy z dynamiczną wysokością kart
-                          // Używamy Row z dwoma Expanded kolumnami
-                          final leftItems = <Medicine>[];
-                          final rightItems = <Medicine>[];
-                          for (int i = 0; i < _filteredMedicines.length; i++) {
-                            if (i.isEven) {
-                              leftItems.add(_filteredMedicines[i]);
-                            } else {
-                              rightItems.add(_filteredMedicines[i]);
+                            if (useGrid) {
+                              // Layout dwukolumnowy z dynamiczną wysokością kart
+                              // Używamy Row z dwoma Expanded kolumnami
+                              final leftItems = <Medicine>[];
+                              final rightItems = <Medicine>[];
+                              for (
+                                int i = 0;
+                                i < _filteredMedicines.length;
+                                i++
+                              ) {
+                                if (i.isEven) {
+                                  leftItems.add(_filteredMedicines[i]);
+                                } else {
+                                  rightItems.add(_filteredMedicines[i]);
+                                }
+                              }
+
+                              return SingleChildScrollView(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: IntrinsicHeight(
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      // Lewa kolumna
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: leftItems
+                                              .map(
+                                                (medicine) => MedicineCard(
+                                                  medicine: medicine,
+                                                  labels: _allLabels,
+                                                  isCompact: false,
+                                                  onTap: () =>
+                                                      _showMedicineDetails(
+                                                        medicine,
+                                                      ),
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                      ),
+                                      // Prawa kolumna
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: rightItems
+                                              .map(
+                                                (medicine) => MedicineCard(
+                                                  medicine: medicine,
+                                                  labels: _allLabels,
+                                                  isCompact: false,
+                                                  onTap: () =>
+                                                      _showMedicineDetails(
+                                                        medicine,
+                                                      ),
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
                             }
-                          }
 
-                          return SingleChildScrollView(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Lewa kolumna
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: leftItems
-                                          .map(
-                                            (medicine) => MedicineCard(
-                                              medicine: medicine,
-                                              labels: _allLabels,
-                                              isCompact: false,
-                                              onTap: () => _showMedicineDetails(
-                                                medicine,
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
+                            // Lista dla wąskich ekranów lub trybu list
+                            return ListView.builder(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              itemCount: _filteredMedicines.length,
+                              itemBuilder: (context, index) {
+                                final medicine = _filteredMedicines[index];
+                                return Dismissible(
+                                  key: Key(medicine.id),
+                                  direction: DismissDirection.endToStart,
+                                  background: Container(
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.only(right: 24),
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.expired,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: const Icon(
+                                      LucideIcons.trash,
+                                      color: Colors.white,
                                     ),
                                   ),
-                                  // Prawa kolumna
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: rightItems
-                                          .map(
-                                            (medicine) => MedicineCard(
-                                              medicine: medicine,
-                                              labels: _allLabels,
-                                              isCompact: false,
-                                              onTap: () => _showMedicineDetails(
-                                                medicine,
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-
-                        // Lista dla wąskich ekranów lub trybu list
-                        return ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          itemCount: _filteredMedicines.length,
-                          itemBuilder: (context, index) {
-                            final medicine = _filteredMedicines[index];
-                            return Dismissible(
-                              key: Key(medicine.id),
-                              direction: DismissDirection.endToStart,
-                              background: Container(
-                                alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.only(right: 24),
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.expired,
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: const Icon(
-                                  LucideIcons.trash,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              confirmDismiss: (_) => _confirmDelete(medicine),
-                              onDismissed: (_) => _deleteMedicine(medicine),
-                              child: MedicineCard(
-                                medicine: medicine,
-                                labels: _allLabels,
-                                // Karta jest compact chyba że jest rozwinięta lub globalny widok to full
-                                isCompact:
-                                    _viewMode == ViewMode.list &&
-                                    _expandedMedicineId != medicine.id,
-                                onExpand: _viewMode == ViewMode.list
-                                    ? () {
-                                        setState(() {
-                                          // Toggle - kliknięcie na rozwiniętą kartę zwija ją
-                                          if (_expandedMedicineId ==
-                                              medicine.id) {
-                                            _expandedMedicineId = null;
-                                          } else {
-                                            _expandedMedicineId = medicine.id;
+                                  confirmDismiss: (_) =>
+                                      _confirmDelete(medicine),
+                                  onDismissed: (_) => _deleteMedicine(medicine),
+                                  child: MedicineCard(
+                                    medicine: medicine,
+                                    labels: _allLabels,
+                                    // Karta jest compact chyba że jest rozwinięta lub globalny widok to full
+                                    isCompact:
+                                        _viewMode == ViewMode.list &&
+                                        _expandedMedicineId != medicine.id,
+                                    onExpand: _viewMode == ViewMode.list
+                                        ? () {
+                                            setState(() {
+                                              // Toggle - kliknięcie na rozwiniętą kartę zwija ją
+                                              if (_expandedMedicineId ==
+                                                  medicine.id) {
+                                                _expandedMedicineId = null;
+                                              } else {
+                                                _expandedMedicineId =
+                                                    medicine.id;
+                                              }
+                                            });
                                           }
-                                        });
-                                      }
-                                    : null,
-                                onTap: () => _showMedicineDetails(medicine),
-                              ),
+                                        : null,
+                                    onTap: () => _showMedicineDetails(medicine),
+                                  ),
+                                );
+                              },
                             );
                           },
-                        );
-                      },
+                        ),
+                        // Gradient fade-out na dole
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: 40,
+                          child: IgnorePointer(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    (isDark
+                                            ? AppColors.darkBackground
+                                            : AppColors.lightBackground)
+                                        .withAlpha(0),
+                                    isDark
+                                        ? AppColors.darkBackground
+                                        : AppColors.lightBackground,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
             ),
           ],
