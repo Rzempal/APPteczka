@@ -79,7 +79,24 @@ class GeminiDualService {
         }),
       );
 
-      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      // Diagnostyka
+      print('[GeminiDual] Status: ${response.statusCode}');
+      print(
+        '[GeminiDual] Response body (first 500 chars): ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}',
+      );
+
+      // Próba parsowania JSON z obsługą błędów
+      Map<String, dynamic> responseData;
+      try {
+        responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      } on FormatException catch (e) {
+        print('[GeminiDual] JSON parse error: $e');
+        print('[GeminiDual] Full response body: ${response.body}');
+        throw GeminiDualException(
+          'Błąd parsowania odpowiedzi serwera. Status: ${response.statusCode}',
+          'PARSE_ERROR',
+        );
+      }
 
       if (response.statusCode == 200) {
         return GeminiDualResult.fromJson(responseData);
