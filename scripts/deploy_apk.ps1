@@ -116,22 +116,26 @@ else {
     $VERSION_JSON_NAME = "version.json"
 }
 
-# Get last commit message
-$LAST_COMMIT = ""
+# Get last 3 commit messages
+$LAST_COMMITS = @()
 try {
     Push-Location $PROJECT_ROOT
-    $LAST_COMMIT = git log -1 --pretty=format:"%s" 2>$null
+    $LAST_COMMITS = git log -3 --pretty=format:"%h %s" 2>$null
     Pop-Location
 }
 catch {
-    $LAST_COMMIT = "(nie udalo sie pobrac)"
+    $LAST_COMMITS = @("(nie udalo sie pobrac)")
 }
 
 Print-Info "Kanal: $Channel"
 Print-Info "Wersja: v$VERSION_NAME"
 Print-Info "versionCode: $VERSION_CODE (yyDDDHHmm)"
 Print-Info "APK: $APK_NAME"
-Print-Info "Commit: `"$LAST_COMMIT`""
+Print-Info "Ostatnie zmiany:"
+if ($LAST_COMMITS -is [string]) { $LAST_COMMITS = @($LAST_COMMITS) }
+foreach ($commit in $LAST_COMMITS) {
+    Print-Info "  $commit"
+}
 Write-Host ""
 
 # 1. Budowanie
