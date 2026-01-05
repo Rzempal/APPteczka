@@ -103,6 +103,7 @@ class GeminiDualService {
         responseData = jsonDecode(response.body) as Map<String, dynamic>;
       } on FormatException catch (e) {
         _log.severe('JSON parse error', e);
+        _log.warning('Response headers: ${response.headers}');
         _log.warning('Full response body: ${response.body}');
         throw GeminiDualException(
           'Błąd parsowania odpowiedzi serwera. Status: ${response.statusCode}',

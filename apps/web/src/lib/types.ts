@@ -68,36 +68,44 @@ export interface BackupImport {
 
 /**
  * Kontrolowane tagi dla filtrowania
- * UWAGA: Kategorie połączone zgodnie z planem z 2026-01-05
+ * UWAGA: Kategorie i podkategorie zgodnie z Master listą z 2026-01-05
  */
-export const ALLOWED_TAGS = {
-    // === OBJAWY I DZIAŁANIE (połączone) ===
-    objawIDzialanie: [
-        // Ból
+
+// === OBJAWY I DZIAŁANIE (z podkategoriami) ===
+export const TAGS_OBJAWY_DZIALANIE = {
+    'Ból': [
         'ból', 'ból głowy', 'ból gardła', 'ból mięśni', 'ból menstruacyjny', 'ból ucha',
-        'przeciwbólowy',
-        // Układ pokarmowy
+        'przeciwbólowy'
+    ],
+    'Układ pokarmowy': [
         'nudności', 'wymioty', 'biegunka', 'zaparcia', 'wzdęcia', 'zgaga', 'kolka',
-        'przeciwwymiotny', 'przeciwbiegunkowy', 'przeczyszczający',
-        // Układ oddechowy
+        'przeciwwymiotny', 'przeciwbiegunkowy', 'przeczyszczający'
+    ],
+    'Układ oddechowy': [
         'gorączka', 'kaszel', 'katar', 'duszność',
-        'przeciwgorączkowy', 'przeciwkaszlowy', 'wykrztuśny',
-        // Skóra/alergia
+        'przeciwgorączkowy', 'przeciwkaszlowy', 'wykrztuśny'
+    ],
+    'Skóra i alergia': [
         'świąd', 'wysypka', 'oparzenie', 'ukąszenie', 'rana', 'sucha skóra', 'suche oczy',
-        'alergia', 'przeciwhistaminowy', 'przeciwświądowy', 'nawilżający',
-        // Inne
+        'alergia', 'przeciwhistaminowy', 'przeciwświądowy', 'nawilżający'
+    ],
+    'Inne': [
         'bezsenność', 'stres', 'choroba lokomocyjna', 'afty', 'ząbkowanie',
         'przeciwzapalny', 'odkażający', 'uspokajający', 'rozkurczowy',
         'probiotyk', 'antybiotyk', 'steryd'
-    ],
+    ]
+} as const;
 
-    // === INFEKCJE ===
+// === POZOSTAŁE KATEGORIE (bez podkategorii) ===
+export const ALLOWED_TAGS = {
+    // Flat array wszystkich tagów z Objawy i działanie
+    objawIDzialanie: Object.values(TAGS_OBJAWY_DZIALANIE).flat(),
+
     typInfekcji: [
         'infekcja wirusowa', 'infekcja bakteryjna', 'infekcja grzybicza',
         'przeziębienie', 'grypa'
     ],
 
-    // === RODZAJ LEKU (zaktualizowane nazwy) ===
     rodzaj: [
         'bez recepty',      // dawniej: lek OTC
         'na receptę',       // dawniej: lek Rx
@@ -105,7 +113,6 @@ export const ALLOWED_TAGS = {
         'wyrób medyczny'
     ],
 
-    // === GRUPA DOCELOWA ===
     grupa: [
         'dla dorosłych', 'dla dzieci', 'dla niemowląt',
         'dla kobiet w ciąży'
@@ -125,10 +132,14 @@ export const ALL_ALLOWED_TAGS = [
 export type AllowedTag = typeof ALL_ALLOWED_TAGS[number];
 
 /**
- * Kategorie tagów dla UI
+ * Kategorie tagów dla UI (z podkategoriami dla Objawy i działanie)
  */
 export const TAG_CATEGORIES = [
-    { key: 'objawIDzialanie', label: 'Objawy i działanie', tags: ALLOWED_TAGS.objawIDzialanie },
+    {
+        key: 'objawIDzialanie',
+        label: 'Objawy i działanie',
+        subcategories: TAGS_OBJAWY_DZIALANIE
+    },
     { key: 'typInfekcji', label: 'Typ infekcji', tags: ALLOWED_TAGS.typInfekcji },
     { key: 'rodzaj', label: 'Rodzaj leku', tags: ALLOWED_TAGS.rodzaj },
     { key: 'grupa', label: 'Grupa docelowa', tags: ALLOWED_TAGS.grupa }
