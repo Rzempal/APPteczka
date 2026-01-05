@@ -75,31 +75,22 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
 
 ## Dozwolone tagi (kontrolowana lista)
 
-### Objawy
-ból, ból głowy, ból gardła, ból mięśni, ból menstruacyjny, ból ucha,
-nudności, wymioty, biegunka, zaparcia, wzdęcia, zgaga, kolka,
-gorączka, kaszel, katar, duszność,
-świąd, wysypka, oparzenie, ukąszenie, rana, sucha skóra,
-suche oczy, alergia, bezsenność, stres, choroba lokomocyjna, afty, ząbkowanie
+### Objawy i działanie
+ból, ból głowy, ból gardła, ból mięśni, ból menstruacyjny, ból ucha, przeciwbólowy,
+nudności, wymioty, biegunka, zaparcia, wzdęcia, zgaga, kolka, przeciwwymiotny, przeciwbiegunkowy, przeczyszczający,
+gorączka, kaszel, katar, duszność, przeciwgorączkowy, przeciwkaszlowy, wykrztuśny,
+świąd, wysypka, oparzenie, ukąszenie, rana, sucha skóra, suche oczy, alergia, przeciwhistaminowy, przeciwświądowy, nawilżający,
+bezsenność, stres, choroba lokomocyjna, afty, ząbkowanie, przeciwzapalny, odkażający, uspokajający, rozkurczowy,
+probiotyk, antybiotyk, steryd
 
 ### Typ infekcji
 infekcja wirusowa, infekcja bakteryjna, infekcja grzybicza, przeziębienie, grypa
 
-### Działanie leku
-przeciwbólowy, przeciwgorączkowy, przeciwzapalny, przeciwhistaminowy,
-przeciwkaszlowy, wykrztuśny, przeciwwymiotny, przeciwbiegunkowy,
-przeczyszczający, probiotyk, nawilżający, odkażający, uspokajający,
-rozkurczowy, przeciwświądowy
-
-### Obszar ciała
-układ pokarmowy, układ oddechowy, układ krążenia, oczy, uszy, skóra,
-jama ustna, nos, mięśnie i stawy, układ nerwowy, układ moczowy
-
-### Rodzaj produktu
-lek OTC, lek Rx, suplement, probiotyk, wyrób medyczny, test diagnostyczny, kosmetyk leczniczy
+### Rodzaj leku
+bez recepty, na receptę, suplement, wyrób medyczny
 
 ### Grupa docelowa
-dla dorosłych, dla dzieci, dla niemowląt, dla kobiet w ciąży, dla seniorów
+dla dorosłych, dla dzieci, dla niemowląt, dla kobiet w ciąży
 
 ## Ograniczenia
 

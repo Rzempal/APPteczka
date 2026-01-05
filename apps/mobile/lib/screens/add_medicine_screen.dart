@@ -15,6 +15,7 @@ import '../widgets/karton_icons.dart';
 import '../widgets/batch_date_input_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
+import '../utils/tag_normalization.dart';
 
 /// Ekran dodawania leków - wszystkie metody importu
 class AddMedicineScreen extends StatefulWidget {
@@ -665,7 +666,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         nazwa: lek.nazwa,
         opis: lek.opis,
         wskazania: lek.wskazania,
-        tagi: lek.tagi,
+        tagi: processTagsForImport(lek.tagi),
         terminWaznosci: lek.terminWaznosci,
         dataDodania: DateTime.now().toIso8601String(),
       );
@@ -700,7 +701,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       nazwa: lek.nazwa,
       opis: lek.opis,
       wskazania: lek.wskazania,
-      tagi: lek.tagi,
+      tagi: processTagsForImport(lek.tagi),
       terminWaznosci: lek.terminWaznosci,
       dataDodania: DateTime.now().toIso8601String(),
     );
@@ -895,11 +896,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             .map((s) => s.trim())
             .where((s) => s.isNotEmpty)
             .toList(),
-        tagi: _tagiController.text
-            .split(',')
-            .map((s) => s.trim().toLowerCase())
-            .where((s) => s.isNotEmpty)
-            .toList(),
+        tagi: processTagsForImport(
+          _tagiController.text
+              .split(',')
+              .map((s) => s.trim().toLowerCase())
+              .where((s) => s.isNotEmpty)
+              .toList(),
+        ),
         terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
         dataDodania: DateTime.now().toIso8601String(),
       );
@@ -940,7 +943,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   ]
 }
 
-Dozwolone tagi: ból, ból głowy, gorączka, kaszel, katar, alergia, nudności, biegunka, przeciwbólowy, przeciwgorączkowy, przeciwzapalny, lek OTC, lek Rx, suplement, dla dorosłych, dla dzieci.''';
+Dozwolone tagi: ból, ból głowy, gorączka, kaszel, katar, alergia, nudności, biegunka, przeciwbólowy, przeciwgorączkowy, przeciwzapalny, antybiotyk, steryd, probiotyk, bez recepty, na receptę, suplement, wyrób medyczny, dla dorosłych, dla dzieci, dla kobiet w ciąży.''';
 
     Clipboard.setData(const ClipboardData(text: prompt));
 

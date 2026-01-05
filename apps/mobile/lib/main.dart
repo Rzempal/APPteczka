@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'config/app_config.dart';
+import 'services/app_logger.dart';
 import 'services/bug_report_service.dart';
 import 'services/fab_service.dart';
 import 'services/storage_service.dart';
@@ -17,6 +18,9 @@ import 'widgets/karton_icons.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicjalizacja loggera JAKO PIERWSZY
+  AppLogger.init();
 
   // Inicjalizacja storage
   final storageService = StorageService();

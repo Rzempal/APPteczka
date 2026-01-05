@@ -1,6 +1,10 @@
+// gemini_dual_service.dart v0.002 Replaced print() with AppLogger
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
+import 'app_logger.dart';
 
 /// Wynik rozpoznania leku z 2 zdjęć (front + data)
 class GeminiDualResult {
@@ -48,6 +52,8 @@ class GeminiDualException implements Exception {
 
 /// Serwis do rozpoznawania leku + daty z 2 zdjęć przez Gemini API
 class GeminiDualService {
+  static final Logger _log = AppLogger.getLogger('GeminiDualService');
+
   // URL produkcyjny aplikacji webowej
   static const String _apiUrl =
       'https://pudelkonaleki.michalrapala.app/api/gemini-ocr-dual';
@@ -57,6 +63,8 @@ class GeminiDualService {
     File frontImage,
     File dateImage,
   ) async {
+    _log.info('Starting dual scan');
+
     try {
       // Enkoduj oba zdjęcia do Base64
       final frontBytes = await frontImage.readAsBytes();
@@ -66,6 +74,10 @@ class GeminiDualService {
       final dateBytes = await dateImage.readAsBytes();
       final dateBase64 = base64Encode(dateBytes);
       final dateMimeType = _getMimeType(dateImage.path);
+
+      _log.fine(
+        'Images encoded: front=${frontBytes.length}B, date=${dateBytes.length}B',
+      );
 
       // Wyślij request do API
       final response = await http.post(
@@ -79,10 +91,9 @@ class GeminiDualService {
         }),
       );
 
-      // Diagnostyka
-      print('[GeminiDual] Status: ${response.statusCode}');
-      print(
-        '[GeminiDual] Response body (first 500 chars): ${response.body.length > 500 ? response.body.substring(0, 500) : response.body}',
+      _log.fine('Response status: ${response.statusCode}');
+      _log.fine(
+        'Response body (first 200 chars): ${response.body.length > 200 ? response.body.substring(0, 200) : response.body}',
       );
 
       // Próba parsowania JSON z obsługą błędów
@@ -90,8 +101,8 @@ class GeminiDualService {
       try {
         responseData = jsonDecode(response.body) as Map<String, dynamic>;
       } on FormatException catch (e) {
-        print('[GeminiDual] JSON parse error: $e');
-        print('[GeminiDual] Full response body: ${response.body}');
+        _log.severe('JSON parse error', e);
+        _log.warning('Full response body: ${response.body}');
         throw GeminiDualException(
           'Błąd parsowania odpowiedzi serwera. Status: ${response.statusCode}',
           'PARSE_ERROR',
@@ -99,16 +110,22 @@ class GeminiDualService {
       }
 
       if (response.statusCode == 200) {
-        return GeminiDualResult.fromJson(responseData);
+        final result = GeminiDualResult.fromJson(responseData);
+        _log.info(
+          'Scan success: ${result.nazwa ?? "no name"}, exp=${result.terminWaznosci}',
+        );
+        return result;
       } else {
         final errorMessage =
             responseData['error'] as String? ?? 'Nieznany błąd';
         final errorCode = responseData['code'] as String? ?? 'API_ERROR';
+        _log.warning('API error: $errorCode - $errorMessage');
         throw GeminiDualException(errorMessage, errorCode);
       }
     } on GeminiDualException {
       rethrow;
-    } catch (e) {
+    } catch (e, stackTrace) {
+      _log.severe('Connection error', e, stackTrace);
       throw GeminiDualException('Błąd połączenia: $e', 'NETWORK_ERROR');
     }
   }

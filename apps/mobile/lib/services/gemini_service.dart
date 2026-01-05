@@ -1,6 +1,10 @@
+// gemini_service.dart v0.002 Added AppLogger integration
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
+import 'app_logger.dart';
 
 /// Wynik skanowania Gemini
 class GeminiScanResult {
@@ -58,17 +62,23 @@ class GeminiException implements Exception {
 
 /// Serwis do komunikacji z Gemini API przez Vercel
 class GeminiService {
+  static final Logger _log = AppLogger.getLogger('GeminiService');
+
   // URL produkcyjny aplikacji webowej
   static const String _apiUrl =
       'https://pudelkonaleki.michalrapala.app/api/gemini-ocr';
 
   /// Skanuje zdjęcie i rozpoznaje leki
   Future<GeminiScanResult> scanImage(File imageFile) async {
+    _log.info('Starting single image scan');
+
     try {
       // Odczytaj plik i zakoduj w base64
       final bytes = await imageFile.readAsBytes();
       final base64Image = base64Encode(bytes);
       final mimeType = _getMimeType(imageFile.path);
+
+      _log.fine('Image encoded: ${bytes.length}B, mimeType=$mimeType');
 
       // Wyślij do API
       final response = await http.post(
@@ -77,28 +87,41 @@ class GeminiService {
         body: jsonEncode({'image': base64Image, 'mimeType': mimeType}),
       );
 
-      final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      _log.fine('Response status: ${response.statusCode}');
+
+      // Próba parsowania JSON z obsługą błędów
+      Map<String, dynamic> responseData;
+      try {
+        responseData = jsonDecode(response.body) as Map<String, dynamic>;
+      } on FormatException catch (e) {
+        _log.severe('JSON parse error', e);
+        _log.warning('Response body: ${response.body}');
+        throw GeminiException(
+          'Błąd parsowania odpowiedzi serwera. Status: ${response.statusCode}',
+          'PARSE_ERROR',
+        );
+      }
 
       if (response.statusCode == 200) {
-        return GeminiScanResult.fromJson(responseData);
+        final result = GeminiScanResult.fromJson(responseData);
+        _log.info('Scan success: found ${result.leki.length} medicines');
+        return result;
       } else {
         final errorMessage =
             responseData['error'] as String? ?? 'Nieznany błąd';
         final errorCode = responseData['code'] as String? ?? 'API_ERROR';
+        _log.warning('API error: $errorCode - $errorMessage');
         throw GeminiException(errorMessage, errorCode);
       }
-    } on SocketException {
+    } on SocketException catch (e) {
+      _log.severe('Network error (SocketException)', e);
       throw GeminiException(
         'Brak połączenia z internetem. Sprawdź połączenie i spróbuj ponownie.',
         'NETWORK_ERROR',
       );
-    } on FormatException {
-      throw GeminiException(
-        'Błąd parsowania odpowiedzi serwera.',
-        'PARSE_ERROR',
-      );
-    } catch (e) {
+    } catch (e, stackTrace) {
       if (e is GeminiException) rethrow;
+      _log.severe('Unexpected error', e, stackTrace);
       throw GeminiException('Błąd połączenia: $e', 'API_ERROR');
     }
   }

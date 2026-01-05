@@ -59,15 +59,19 @@ enum ExpiryFilter {
   const ExpiryFilter(this.label);
 }
 
-/// Kategorie tagów - jak w wersji Web
+/// Kategorie tagów - zsynchronizowane z Web (2026-01-05)
 const Map<String, List<String>> tagCategories = {
-  'Objawy': [
+  // === OBJAWY I DZIAŁANIE (połączone) ===
+  'Objawy i działanie': [
+    // Ból
     'ból',
     'ból głowy',
     'ból gardła',
     'ból mięśni',
     'ból menstruacyjny',
     'ból ucha',
+    'przeciwbólowy',
+    // Układ pokarmowy
     'nudności',
     'wymioty',
     'biegunka',
@@ -75,10 +79,18 @@ const Map<String, List<String>> tagCategories = {
     'wzdęcia',
     'zgaga',
     'kolka',
+    'przeciwwymiotny',
+    'przeciwbiegunkowy',
+    'przeczyszczający',
+    // Układ oddechowy
     'gorączka',
     'kaszel',
     'katar',
     'duszność',
+    'przeciwgorączkowy',
+    'przeciwkaszlowy',
+    'wykrztuśny',
+    // Skóra/alergia
     'świąd',
     'wysypka',
     'oparzenie',
@@ -87,12 +99,24 @@ const Map<String, List<String>> tagCategories = {
     'sucha skóra',
     'suche oczy',
     'alergia',
+    'przeciwhistaminowy',
+    'przeciwświądowy',
+    'nawilżający',
+    // Inne
     'bezsenność',
     'stres',
     'choroba lokomocyjna',
     'afty',
     'ząbkowanie',
+    'przeciwzapalny',
+    'odkażający',
+    'uspokajający',
+    'rozkurczowy',
+    'probiotyk',
+    'antybiotyk',
+    'steryd',
   ],
+  // === TYP INFEKCJI ===
   'Typ infekcji': [
     'infekcja wirusowa',
     'infekcja bakteryjna',
@@ -100,20 +124,20 @@ const Map<String, List<String>> tagCategories = {
     'przeziębienie',
     'grypa',
   ],
-  'Działanie leku': [
-    'przeciwbólowy',
-    'przeciwgorączkowy',
-    'przeciwzapalny',
-    'przeciwhistaminowy',
-    'przeciwkaszlowy',
-    'wykrztuśny',
-    'przeciwwymiotny',
-    'przeciwbiegunkowy',
-    'przeczyszczający',
-    'probiotyk',
-    'nawilżający',
+  // === RODZAJ LEKU (nowa kategoria) ===
+  'Rodzaj leku': [
+    'bez recepty', // dawniej: lek OTC
+    'na receptę', // dawniej: lek Rx
+    'suplement',
+    'wyrób medyczny',
   ],
-  'Grupa użytkowników': ['dla dorosłych', 'dla dzieci', 'dla niemowląt'],
+  // === GRUPA DOCELOWA ===
+  'Grupa docelowa': [
+    'dla dorosłych',
+    'dla dzieci',
+    'dla niemowląt',
+    'dla kobiet w ciąży',
+  ],
 };
 
 /// Filtr Sheet - styl zbliżony do wersji Web
@@ -194,9 +218,8 @@ class _FiltersSheetState extends State<FiltersSheet> {
                       const SizedBox(width: 8),
                       Text(
                         'Filtry',
-                        style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),

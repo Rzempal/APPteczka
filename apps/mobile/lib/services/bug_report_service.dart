@@ -1,3 +1,5 @@
+// bug_report_service.dart v0.002 Integrated with AppLogger
+
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -5,9 +7,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'app_logger.dart';
 
 /// Kategoria zgłoszenia
 enum ReportCategory {
@@ -29,33 +33,32 @@ enum ReportCategory {
 class BugReportService {
   // Singleton
   static final BugReportService instance = BugReportService._();
+  static final Logger _log = AppLogger.getLogger('BugReportService');
+
   BugReportService._();
 
   // URL endpointu
   static const String _apiUrl =
       'https://pudelkonaleki.michalrapala.app/api/bug-report';
 
-  // Circular buffer logów (max 100 wpisów)
-  static const int _maxLogs = 100;
-  final List<String> _logs = [];
+  // UWAGA: Logi są teraz przechowywane w AppLogger.
+  // Metody log(), getLogs(), clearLogs() zachowane dla kompatybilności wstecznej,
+  // ale delegują do AppLoggera.
 
-  /// Dodaje wpis do logu
+  /// Dodaje wpis do logu (deleguje do AppLogger)
+  @Deprecated('Use AppLogger.getLogger() instead')
   void log(String message) {
-    final timestamp = DateTime.now().toIso8601String();
-    _logs.add('[$timestamp] $message');
-    if (_logs.length > _maxLogs) {
-      _logs.removeAt(0);
-    }
+    _log.info(message);
   }
 
-  /// Pobiera wszystkie logi jako string
+  /// Pobiera wszystkie logi jako string (z AppLogger)
   String getLogs() {
-    return _logs.join('\n');
+    return AppLogger.getLogBuffer();
   }
 
   /// Czyści logi
   void clearLogs() {
-    _logs.clear();
+    AppLogger.clearBuffer();
   }
 
   /// Przechwytuje screenshot widgetu
@@ -69,7 +72,7 @@ class BugReportService {
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       return byteData?.buffer.asUint8List();
     } catch (e) {
-      log('Screenshot capture error: $e');
+      _log.warning('Screenshot capture error: $e');
       return null;
     }
   }
@@ -112,7 +115,7 @@ class BugReportService {
     Uint8List? screenshot,
   }) async {
     try {
-      log('Sending bug report...');
+      _log.info('Sending bug report (category=${category.name})');
 
       final appVersion = await getAppVersion();
       final deviceInfo = await getDeviceInfo();
@@ -143,12 +146,18 @@ class BugReportService {
         body['errorMessage'] = errorMessage;
       }
 
-      if (includeLogs && _logs.isNotEmpty) {
-        body['log'] = getLogs();
+      // Pobierz logi z AppLoggera
+      if (includeLogs) {
+        final logs = AppLogger.getLogBuffer();
+        if (logs.isNotEmpty) {
+          body['log'] = logs;
+          _log.fine('Including ${AppLogger.bufferSize} log entries');
+        }
       }
 
       if (screenshot != null) {
         body['screenshot'] = base64Encode(screenshot);
+        _log.fine('Including screenshot (${screenshot.length}B)');
       }
 
       final response = await http.post(
@@ -157,10 +166,10 @@ class BugReportService {
         body: jsonEncode(body),
       );
 
-      log('Bug report response: ${response.statusCode}');
+      _log.fine('Response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
-        log('Bug report sent successfully');
+        _log.info('Bug report sent successfully');
         return BugReportResult.success();
       } else {
         // Bezpieczne parsowanie odpowiedzi
@@ -173,14 +182,14 @@ class BugReportService {
             // Ignoruj błędy parsowania
           }
         }
-        log('Bug report failed: $errorMsg');
+        _log.warning('Bug report failed: $errorMsg');
         return BugReportResult.failure(errorMsg);
       }
     } on SocketException catch (e) {
-      log('Bug report network error: $e');
+      _log.severe('Network error', e);
       return BugReportResult.failure('Brak połączenia z internetem');
-    } catch (e) {
-      log('Bug report error: $e');
+    } catch (e, stackTrace) {
+      _log.severe('Unexpected error', e, stackTrace);
       return BugReportResult.failure('Błąd wysyłania: $e');
     }
   }

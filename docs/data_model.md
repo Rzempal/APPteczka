@@ -97,23 +97,25 @@ type LabelColor = 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'purple' | 'p
 
 ## Kontrolowane Tagi
 
-> Źródło: [Kontrolowana lista tagów](example_input/Kontrolowana%20lista%20tagów.md)
+> Zaktualizowano: 2026-01-05
 
-### Objawy
+### Objawy i działanie (połączone)
 
-`ból` | `gorączka` | `kaszel` | `katar` | `ból gardła` | `ból głowy` | `ból mięśni` | `biegunka` | `nudności` | `wymioty` | `alergia` | `zgaga`
+`ból` | `ból głowy` | `ból gardła` | `ból mięśni` | `ból menstruacyjny` | `ból ucha` | `przeciwbólowy` | `nudności` | `wymioty` | `biegunka` | `zaparcia` | `wzdęcia` | `zgaga` | `kolka` | `przeciwwymiotny` | `przeciwbiegunkowy` | `przeczyszczający` | `gorączka` | `kaszel` | `katar` | `duszność` | `przeciwgorączkowy` | `przeciwkaszlowy` | `wykrztuśny` | `świąd` | `wysypka` | `oparzenie` | `ukąszenie` | `rana` | `sucha skóra` | `suche oczy` | `alergia` | `przeciwhistaminowy` | `przeciwświądowy` | `nawilżający` | `bezsenność` | `stres` | `choroba lokomocyjna` | `afty` | `ząbkowanie` | `przeciwzapalny` | `odkażający` | `uspokajający` | `rozkurczowy` | `probiotyk` | `antybiotyk` | `steryd`
 
 ### Typ infekcji
 
-`infekcja wirusowa` | `infekcja bakteryjna` | `przeziębienie` | `grypa`
+`infekcja wirusowa` | `infekcja bakteryjna` | `infekcja grzybicza` | `przeziębienie` | `grypa`
 
-### Działanie leku
+### Rodzaj leku
 
-`przeciwbólowy` | `przeciwgorączkowy` | `przeciwzapalny` | `przeciwhistaminowy` | `przeciwkaszlowy` | `wykrztuśny` | `przeciwwymiotny` | `przeciwbiegunkowy`
+`bez recepty` | `na receptę` | `suplement` | `wyrób medyczny`
 
-### Grupa użytkowników
+> **Uwaga:** Stare tagi `lek OTC` i `lek Rx` są automatycznie zamieniane na `bez recepty` i `na receptę`.
 
-`dla dorosłych` | `dla dzieci`
+### Grupa docelowa
+
+`dla dorosłych` | `dla dzieci` | `dla niemowląt` | `dla kobiet w ciąży`
 
 ---
 
