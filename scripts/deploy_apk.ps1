@@ -116,10 +116,22 @@ else {
     $VERSION_JSON_NAME = "version.json"
 }
 
+# Get last commit message
+$LAST_COMMIT = ""
+try {
+    Push-Location $PROJECT_ROOT
+    $LAST_COMMIT = git log -1 --pretty=format:"%s" 2>$null
+    Pop-Location
+}
+catch {
+    $LAST_COMMIT = "(nie udalo sie pobrac)"
+}
+
 Print-Info "Kanal: $Channel"
 Print-Info "Wersja: v$VERSION_NAME"
 Print-Info "versionCode: $VERSION_CODE (yyDDDHHmm)"
 Print-Info "APK: $APK_NAME"
+Print-Info "Commit: `"$LAST_COMMIT`""
 Write-Host ""
 
 # 1. Budowanie
