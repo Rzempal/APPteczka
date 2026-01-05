@@ -1093,6 +1093,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Pokazuje bottom sheet z selectorem etykiet (swipe w lewo)
   void _showLabelsSheet(Medicine medicine) {
+    // Lokalna kopia etykiet do reaktywnego UI
+    List<String> currentLabels = List<String>.from(medicine.labels);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1100,62 +1103,75 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        final theme = Theme.of(context);
-        return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.3,
-          maxChildSize: 0.8,
-          expand: false,
-          builder: (context, scrollController) => SingleChildScrollView(
-            controller: scrollController,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Handle
-                Center(
-                  child: Container(
-                    width: 40,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-                // Header
-                Row(
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final theme = Theme.of(context);
+            return DraggableScrollableSheet(
+              initialChildSize: 0.5,
+              minChildSize: 0.3,
+              maxChildSize: 0.8,
+              expand: false,
+              builder: (context, scrollController) => SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(LucideIcons.tags, color: theme.colorScheme.primary),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Etykiety: ${medicine.nazwa ?? "Lek"}',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    // Handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
                       ),
+                    ),
+                    // Header
+                    Row(
+                      children: [
+                        Icon(
+                          LucideIcons.tags,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Etykiety: ${medicine.nazwa ?? "Lek"}',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // LabelSelector z reaktywnym stanem
+                    LabelSelector(
+                      storageService: widget.storageService,
+                      selectedLabelIds: currentLabels,
+                      isOpen: true,
+                      onToggle: () {},
+                      onLabelTap: (_) {},
+                      onChanged: (newLabelIds) async {
+                        // Aktualizuj lokalny stan (reaktywny UI)
+                        setSheetState(() {
+                          currentLabels = newLabelIds;
+                        });
+                        // Zapisz do storage
+                        await widget.storageService.updateMedicineLabels(
+                          medicine.id,
+                          newLabelIds,
+                        );
+                      },
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                // LabelSelector
-                LabelSelector(
-                  storageService: widget.storageService,
-                  selectedLabelIds: medicine.labels,
-                  isOpen: true,
-                  onToggle: () {},
-                  onLabelTap: (_) {},
-                  onChanged: (newLabelIds) async {
-                    await widget.storageService.updateMedicineLabels(
-                      medicine.id,
-                      newLabelIds,
-                    );
-                    _loadMedicines();
-                  },
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     ).then((_) => _loadMedicines());
