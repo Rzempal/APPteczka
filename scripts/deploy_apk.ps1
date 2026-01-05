@@ -53,6 +53,77 @@ function Get-WinSCP {
     return $null
 }
 
+function Update-DeployLog {
+    param(
+        [string]$Channel,
+        [string]$VersionName,
+        [int64]$VersionCode,
+        [string]$ApkName,
+        [array]$Commits,
+        [string]$Status
+    )
+    
+    $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\1_Prywatne Projekty\Apteczka\log.md"
+    $MAX_ENTRIES = 10
+    $SEPARATOR = "`n---`n"
+    
+    # Build new entry
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm"
+    $statusIcon = switch ($Status) {
+        "ok" { "[OK] Upload OK" }
+        "skipped" { "[SKIP] Upload pominiety" }
+        default { "[ERR] Blad" }
+    }
+    
+    $commitLines = ""
+    foreach ($c in $Commits) {
+        $commitLines += "- ``$c```n"
+    }
+    
+    $newEntry = @"
+## $timestamp | $Channel | v$VersionName
+- **APK:** ``$ApkName``
+- **versionCode:** $VersionCode
+- **Status:** $statusIcon
+
+**Ostatnie zmiany:**
+$commitLines
+"@
+
+    # Read existing entries
+    $existingEntries = @()
+    if (Test-Path $LOG_PATH) {
+        $content = Get-Content $LOG_PATH -Raw -ErrorAction SilentlyContinue
+        if ($content) {
+            # Remove header if exists
+            $content = $content -replace "^# .*Deploy Log.*\r?\n\r?\n", ""
+            # Split by separator and filter empty
+            $existingEntries = $content -split "---" | Where-Object { $_.Trim() -ne "" }
+        }
+    }
+    
+    # Keep only last (MAX_ENTRIES - 1) entries + new one = MAX_ENTRIES
+    if ($existingEntries.Count -ge $MAX_ENTRIES) {
+        $existingEntries = $existingEntries[0..($MAX_ENTRIES - 2)]
+    }
+    
+    # Combine: new entry first, then existing
+    $allEntries = @($newEntry) + $existingEntries
+    
+    # Write file
+    $header = "# Deploy Log`n`n"
+    $finalContent = $header + ($allEntries -join $SEPARATOR)
+    
+    # Ensure directory exists
+    $logDir = Split-Path $LOG_PATH -Parent
+    if (-not (Test-Path $logDir)) {
+        New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+    }
+    
+    Set-Content -Path $LOG_PATH -Value $finalContent -Encoding UTF8
+    Print-Success "Log zapisany: $LOG_PATH"
+}
+
 # === Start Skryptu ===
 
 Print-Info "=== Deploy APK Script v11 (ASCII) ==="
@@ -271,9 +342,12 @@ if (-not $SkipUpload) {
         & $winScp /script="$tempScript" /log="$RELEASES_DIR\winscp_log.xml" /loglevel=0
         if ($LASTEXITCODE -eq 0) {
             Print-Success "[4/4] Upload zakonczony sukcesem!"
+            $DEPLOY_STATUS = "ok"
         }
         else {
             Print-Error "[4/4] Blad uploadu (ExitCode: $LASTEXITCODE). Sprawdz logi w releases/winscp_log.xml"
+            $DEPLOY_STATUS = "error"
+            Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS
             Write-Host "Nacisnij Enter aby zamknac..."
             $null = Read-Host
             exit $LASTEXITCODE
@@ -286,11 +360,13 @@ if (-not $SkipUpload) {
 }
 else {
     Print-Warn "[4/4] Pominieto upload (--SkipUpload)"
+    $DEPLOY_STATUS = "skipped"
 }
 
-Print-Success "=== Deployment Zakonczony (Wersja $VERSION) ==="
+Print-Success "=== Deployment Zakonczony (Wersja $VERSION_NAME) ==="
+
+# Update deploy log
+Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS
 
 Write-Host ""
-Write-Host "Nacisnij Enter aby zamknac..."
-$null = Read-Host
 exit 0
