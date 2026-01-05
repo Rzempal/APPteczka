@@ -87,13 +87,19 @@ class _MedicineCardState extends State<MedicineCard>
         .where((l) => widget.medicine.labels.contains(l.id))
         .toList();
 
+    // Dla isCompact=false z onExpand, nagłówek rozwija/zwija akordeon,
+    // reszta karty otwiera szczegóły
+    final bool useSplitTouchAreas =
+        !widget.isCompact && widget.onExpand != null;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: GestureDetector(
-        onTapDown: _handleTapDown,
-        onTapUp: _handleTapUp,
-        onTapCancel: _handleTapCancel,
-        onTap: widget.onTap,
+        // Główny GestureDetector obsługuje całą kartę gdy nie ma split touch
+        onTapDown: useSplitTouchAreas ? null : _handleTapDown,
+        onTapUp: useSplitTouchAreas ? null : _handleTapUp,
+        onTapCancel: useSplitTouchAreas ? null : _handleTapCancel,
+        onTap: useSplitTouchAreas ? null : widget.onTap,
         child: AnimatedBuilder(
           animation: _scaleAnimation,
           builder: (context, child) =>
@@ -113,44 +119,68 @@ class _MedicineCardState extends State<MedicineCard>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Nagłówek: [Nazwa + Etykiety] align left | [Badge] align right
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Lewa strona: Nazwa + Etykiety (wrap to 2 lines if needed)
-                      Expanded(
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            // Nazwa leku
-                            Text(
-                              widget.medicine.nazwa ?? 'Nieznany lek',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface,
-                                fontSize: widget.isCompact ? 15 : null,
+                  // W trybie split touch - cały nagłówek reaguje na onExpand
+                  GestureDetector(
+                    behavior: useSplitTouchAreas
+                        ? HitTestBehavior.opaque
+                        : HitTestBehavior.deferToChild,
+                    onTap: useSplitTouchAreas ? widget.onExpand : null,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Lewa strona: Nazwa + Etykiety (wrap to 2 lines if needed)
+                        Expanded(
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              // Nazwa leku
+                              Text(
+                                widget.medicine.nazwa ?? 'Nieznany lek',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface,
+                                  fontSize: widget.isCompact ? 15 : null,
+                                ),
+                              ),
+                              // Etykiety
+                              ...medicineLabels
+                                  .take(3)
+                                  .map((label) => _buildBadge(label, isDark)),
+                              if (medicineLabels.length > 3)
+                                _buildBadgeCount(
+                                  medicineLabels.length - 3,
+                                  isDark,
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Prawa strona: Status badge (tylko w trybie full) lub Chevron (w compact)
+                        if (widget.isCompact)
+                          // Strzałka rozwijania akordeonu
+                          GestureDetector(
+                            onTap: widget.onExpand,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: NeuDecoration.flatSmall(
+                                isDark: isDark,
+                                radius: 12,
+                              ),
+                              child: Icon(
+                                LucideIcons.chevronDown,
+                                size: 16,
+                                color: theme.colorScheme.primary,
                               ),
                             ),
-                            // Etykiety
-                            ...medicineLabels
-                                .take(3)
-                                .map((label) => _buildBadge(label, isDark)),
-                            if (medicineLabels.length > 3)
-                              _buildBadgeCount(
-                                medicineLabels.length - 3,
-                                isDark,
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Prawa strona: Status badge (tylko w trybie full) lub Chevron (w compact)
-                      if (widget.isCompact)
-                        // Strzałka rozwijania akordeonu
-                        GestureDetector(
-                          onTap: widget.onExpand,
-                          child: Container(
+                          )
+                        else if (widget.onExpand != null)
+                          // Strzałka zwijania akordeonu (gdy karta rozwinięta)
+                          Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 4,
@@ -160,29 +190,30 @@ class _MedicineCardState extends State<MedicineCard>
                               radius: 12,
                             ),
                             child: Icon(
-                              LucideIcons.chevronDown,
+                              LucideIcons.chevronUp,
                               size: 16,
                               color: theme.colorScheme.primary,
                             ),
+                          )
+                        else if (statusLabel != null)
+                          // Badge statusu tylko gdy brak onExpand (tryb full globalny)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              statusIcon,
+                              size: 14,
+                              color: Colors.white,
+                            ),
                           ),
-                        )
-                      else if (statusLabel != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: statusColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            statusIcon,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
 
                   // Compact: opis (left) + status icon (right) - bez daty
@@ -232,90 +263,102 @@ class _MedicineCardState extends State<MedicineCard>
                       ],
                     ),
                   ] else ...[
-                    // Full view
-                    const SizedBox(height: 8),
+                    // Full view - reszta karty reaguje na onTap (detail sheet)
+                    GestureDetector(
+                      behavior: useSplitTouchAreas
+                          ? HitTestBehavior.opaque
+                          : HitTestBehavior.deferToChild,
+                      onTap: useSplitTouchAreas ? widget.onTap : null,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 8),
 
-                    // Opis
-                    SelectableText(
-                      widget.medicine.opis,
-                      maxLines: 2,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // #tags - styl neumorficzny
-                    if (widget.medicine.tagi.isNotEmpty)
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: widget.medicine.tagi.take(4).map((tag) {
-                          return _buildTag(tag, isDark, theme);
-                        }).toList(),
-                      ),
-
-                    // Notatka jeśli istnieje - styl neumorficzny basin
-                    if (widget.medicine.notatka != null &&
-                        widget.medicine.notatka!.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: NeuDecoration.basin(
-                          isDark: isDark,
-                          radius: 12,
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Icon(
-                              LucideIcons.stickyNote,
-                              size: 14,
+                          // Opis
+                          SelectableText(
+                            widget.medicine.opis,
+                            maxLines: 2,
+                            style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: SelectableText(
-                                widget.medicine.notatka!,
-                                maxLines: 2,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontStyle: FontStyle.italic,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                          ),
 
-                    // Data ważności - z paddingiem dla wyrównania z tagami
-                    if (widget.medicine.terminWaznosci != null) ...[
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8),
-                        child: Row(
-                          children: [
-                            Icon(
-                              LucideIcons.calendar,
-                              size: 14,
-                              color: statusColor,
+                          const SizedBox(height: 12),
+
+                          // #tags - styl neumorficzny
+                          if (widget.medicine.tagi.isNotEmpty)
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: widget.medicine.tagi.take(4).map((tag) {
+                                return _buildTag(tag, isDark, theme);
+                              }).toList(),
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Ważny do: ${_formatDate(widget.medicine.terminWaznosci!)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: statusColor,
-                                fontWeight: FontWeight.w500,
+
+                          // Notatka jeśli istnieje - styl neumorficzny basin
+                          if (widget.medicine.notatka != null &&
+                              widget.medicine.notatka!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: NeuDecoration.basin(
+                                isDark: isDark,
+                                radius: 12,
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    LucideIcons.stickyNote,
+                                    size: 14,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: SelectableText(
+                                      widget.medicine.notatka!,
+                                      maxLines: 2,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        ),
+
+                          // Data ważności (bez zdublowanego Badge statusu)
+                          if (widget.medicine.terminWaznosci != null) ...[
+                            const SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    LucideIcons.calendar,
+                                    size: 14,
+                                    color: statusColor,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Ważny do: ${_formatDate(widget.medicine.terminWaznosci!)}',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: statusColor,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                    ],
+                    ),
                   ],
                 ],
               ),
