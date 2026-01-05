@@ -28,7 +28,7 @@
 | **Dodawanie** | Formularz ręczny | ✅ Tak | ✅ Tak | |
 | | Walidacja pól | ✅ Tak | ✅ Tak | Nazwa i opis wymagane |
 | **Edycja** | Pełna edycja danych | ✅ Tak | ✅ Tak | |
-| **Usuwanie** | Pojedyncze | ✅ Tak | ✅ Tak | Mobile: Swipe-to-delete |
+| **Usuwanie** | Pojedyncze | ✅ Tak | ✅ Tak | |
 | | Masowe (Wyczyść wszystko) | ✅ Tak | ✅ Tak | Wymaga potwierdzenia |
 | **Status ważności**| Kolorowe oznaczenia | ✅ Tak | ✅ Tak | 🟢 Ważne, 🟠 < 30 dni, 🔴 Przeterminowane |
 | **Licznik leków** | Suma leków w apteczce | ✅ Tak | ✅ Tak | |
@@ -64,6 +64,7 @@
 | **Responsywność** | Mobile/Tablet/Desktop | ✅ Tak | ✅ Tak | Flutter skaluje się natywnie |
 | **Feedback** | Toasty/Snackbary | ✅ Tak | ✅ Tak | Potwierdzenia akcji |
 | **Animacje** | Mikro-interakcje | ✅ Tak | ✅ Tak | Tap feedback, scale, haptic |
+| **Gesty przeciągania** | Swipe na kartach leków | ❌ Nie | ✅ Tak | Lewo = Etykiety, Prawo = Notatka, Toggle ON/OFF |
 | **Bug Reporter** | Zgłaszanie problemów | ❌ Nie | ✅ Tak | Quick actions, auto-screenshot, Resend API |
 
 ### 5. Planowane (Roadmap)
@@ -76,4 +77,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-01
+> 📅 **Ostatnia aktualizacja:** 2026-01-05

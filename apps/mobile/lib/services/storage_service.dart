@@ -17,6 +17,9 @@ class StorageService {
   /// Notyfikator zmian widoczności FABa
   final ValueNotifier<bool> showBugReportFabNotifier = ValueNotifier(false);
 
+  /// Notyfikator zmian gestów przeciągania
+  final ValueNotifier<bool> swipeGesturesEnabledNotifier = ValueNotifier(true);
+
   /// Inicjalizacja Hive
   Future<void> init() async {
     await Hive.initFlutter();
@@ -24,8 +27,9 @@ class StorageService {
     _labelsBox = await Hive.openBox<String>(_labelsBoxName);
     _settingsBox = await Hive.openBox<dynamic>(_settingsBoxName);
 
-    // Inicjalizacja notyfikatora wartością z bazy
+    // Inicjalizacja notyfikatorów wartościami z bazy
     showBugReportFabNotifier.value = showBugReportFab;
+    swipeGesturesEnabledNotifier.value = swipeGesturesEnabled;
   }
 
   // ==================== SETTINGS ====================
@@ -37,6 +41,15 @@ class StorageService {
   set showBugReportFab(bool value) {
     _settingsBox.put('showBugReportFab', value);
     showBugReportFabNotifier.value = value;
+  }
+
+  /// Czy gesty przeciągania są włączone (domyślnie true)
+  bool get swipeGesturesEnabled =>
+      _settingsBox.get('swipeGesturesEnabled', defaultValue: true) as bool;
+
+  set swipeGesturesEnabled(bool value) {
+    _settingsBox.put('swipeGesturesEnabled', value);
+    swipeGesturesEnabledNotifier.value = value;
   }
 
   // ==================== MEDICINES ====================

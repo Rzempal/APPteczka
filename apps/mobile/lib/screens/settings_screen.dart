@@ -657,70 +657,168 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
+  bool _isGesturesOpen = false;
+
   Widget _buildGesturesSection(
     BuildContext context,
     ThemeData theme,
     bool isDark,
   ) {
-    return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            NeuInsetContainer(
-              borderRadius: 10,
-              padding: const EdgeInsets.all(10),
-              child: Icon(
-                LucideIcons.hand,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        return Container(
+          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () =>
+                    setLocalState(() => _isGesturesOpen = !_isGesturesOpen),
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
                     children: [
-                      Text(
-                        'Gesty przeciągania',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                      Icon(LucideIcons.hand, color: theme.colorScheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Gesty przeciągania',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              widget.storageService.swipeGesturesEnabled
+                                  ? 'Włączone'
+                                  : 'Wyłączone',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
+                      Icon(
+                        _isGesturesOpen
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        size: 20,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Zawartość zwijana
+              if (_isGesturesOpen) ...[
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Toggle switch
+                      NeuInsetContainer(
+                        borderRadius: 12,
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Włącz gesty',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Przeciągnij kartę leku w lewo aby edytować etykiety, w prawo aby edytować notatkę',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Switch(
+                              value: widget.storageService.swipeGesturesEnabled,
+                              onChanged: (value) {
+                                widget.storageService.swipeGesturesEnabled =
+                                    value;
+                                setLocalState(() {});
+                                setState(() {});
+                              },
+                            ),
+                          ],
                         ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Wkrótce',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: theme.colorScheme.onSecondaryContainer,
-                          ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Opis gestów
+                      NeuInsetContainer(
+                        borderRadius: 12,
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.arrowLeft,
+                                  size: 16,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  LucideIcons.tags,
+                                  size: 16,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Przeciągnij w lewo → Etykiety',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.arrowRight,
+                                  size: 16,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  LucideIcons.clipboardPenLine,
+                                  size: 16,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Przeciągnij w prawo → Notatka',
+                                  style: theme.textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  Text(
-                    'Sterowanie gestami przeciągania',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 
