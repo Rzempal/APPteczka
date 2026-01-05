@@ -525,10 +525,20 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Icon(
-                        LucideIcons.palette,
-                        color: theme.colorScheme.primary,
-                      ),
+                      // Spinner podczas przełączania lub ikona palety
+                      _isThemeSwitching
+                          ? SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.colorScheme.primary,
+                              ),
+                            )
+                          : Icon(
+                              LucideIcons.palette,
+                              color: theme.colorScheme.primary,
+                            ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -587,8 +597,8 @@ class _SettingsScreenState extends State<SettingsScreen>
             isDark,
             icon: LucideIcons.sunMoon,
             label: 'System',
+            mode: ThemeMode.system,
             isSelected: currentMode == ThemeMode.system,
-            onTap: () => widget.themeProvider.setThemeMode(ThemeMode.system),
           ),
           _buildThemeOption(
             context,
@@ -596,8 +606,8 @@ class _SettingsScreenState extends State<SettingsScreen>
             isDark,
             icon: LucideIcons.sun,
             label: 'Jasny',
+            mode: ThemeMode.light,
             isSelected: currentMode == ThemeMode.light,
-            onTap: () => widget.themeProvider.setThemeMode(ThemeMode.light),
           ),
           _buildThemeOption(
             context,
@@ -605,8 +615,8 @@ class _SettingsScreenState extends State<SettingsScreen>
             isDark,
             icon: LucideIcons.moon,
             label: 'Ciemny',
+            mode: ThemeMode.dark,
             isSelected: currentMode == ThemeMode.dark,
-            onTap: () => widget.themeProvider.setThemeMode(ThemeMode.dark),
           ),
         ],
       ),
@@ -619,41 +629,30 @@ class _SettingsScreenState extends State<SettingsScreen>
     bool isDark, {
     required IconData icon,
     required String label,
+    required ThemeMode mode,
     required bool isSelected,
-    required VoidCallback onTap,
   }) {
     return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: isSelected
-              ? NeuDecoration.convex(isDark: isDark, radius: 10)
-              : null,
-          child: Column(
-            children: [
-              Icon(
-                icon,
-                color: isSelected
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
-                size: 22,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
+      child: _ThemeOptionButton(
+        icon: icon,
+        label: label,
+        isSelected: isSelected,
+        isDark: isDark,
+        onTap: () async {
+          // Haptic feedback
+          HapticFeedback.lightImpact();
+
+          // Pokaż spinner
+          setState(() => _isThemeSwitching = true);
+
+          // Zmień motyw
+          await widget.themeProvider.setThemeMode(mode);
+
+          // Schowaj spinner
+          if (mounted) {
+            setState(() => _isThemeSwitching = false);
+          }
+        },
       ),
     );
   }
@@ -665,6 +664,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _isBackupOpen = false;
   bool _isAdvancedOpen = false;
   bool _isThemeOpen = false;
+  bool _isThemeSwitching = false;
 
   Widget _buildDisclaimerSection(ThemeData theme, bool isDark) {
     return Container(
@@ -1540,5 +1540,79 @@ class _SettingsScreenState extends State<SettingsScreen>
         );
       }
     }
+  }
+}
+
+/// Przycisk opcji motywu z pressed state (efekt wciśnięcia)
+class _ThemeOptionButton extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _ThemeOptionButton({
+    required this.icon,
+    required this.label,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  State<_ThemeOptionButton> createState() => _ThemeOptionButtonState();
+}
+
+class _ThemeOptionButtonState extends State<_ThemeOptionButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        widget.onTap();
+        // Krótki delay przed zresetowaniem pressed state
+        Future.delayed(const Duration(milliseconds: 150), () {
+          if (mounted) setState(() => _isPressed = false);
+        });
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 100),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: _isPressed
+            ? NeuDecoration.pressed(isDark: widget.isDark, radius: 10)
+            : widget.isSelected
+            ? NeuDecoration.convex(isDark: widget.isDark, radius: 10)
+            : null,
+        child: Column(
+          children: [
+            Icon(
+              widget.icon,
+              color: widget.isSelected || _isPressed
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+              size: 22,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: widget.isSelected
+                    ? FontWeight.w600
+                    : FontWeight.normal,
+                color: widget.isSelected || _isPressed
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
