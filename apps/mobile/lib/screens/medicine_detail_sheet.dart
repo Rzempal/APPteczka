@@ -742,7 +742,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               // Miesiąc
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: selectedMonth,
+                  initialValue: selectedMonth,
                   decoration: const InputDecoration(
                     labelText: 'Miesiąc',
                     border: OutlineInputBorder(),
@@ -762,7 +762,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               // Rok
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: selectedYear,
+                  initialValue: selectedYear,
                   decoration: const InputDecoration(
                     labelText: 'Rok',
                     border: OutlineInputBorder(),
