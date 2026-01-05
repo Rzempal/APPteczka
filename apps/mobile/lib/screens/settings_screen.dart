@@ -509,9 +509,9 @@ class _SettingsScreenState extends State<SettingsScreen>
   ) {
     return StatefulBuilder(
       builder: (context, setLocalState) {
-        final currentModeLabel = _getThemeModeLabel(
-          widget.themeProvider.themeMode,
-        );
+        // Użyj optimistic mode jeśli ustawiony
+        final displayMode = _optimisticMode ?? widget.themeProvider.themeMode;
+        final currentModeLabel = _getThemeModeLabel(displayMode);
 
         return Container(
           decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
@@ -525,20 +525,10 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      // Spinner podczas przełączania lub ikona palety
-                      _isThemeSwitching
-                          ? SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: theme.colorScheme.primary,
-                              ),
-                            )
-                          : Icon(
-                              LucideIcons.palette,
-                              color: theme.colorScheme.primary,
-                            ),
+                      Icon(
+                        LucideIcons.palette,
+                        color: theme.colorScheme.primary,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -584,7 +574,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   Widget _buildThemeToggle(BuildContext context, ThemeData theme, bool isDark) {
-    final currentMode = widget.themeProvider.themeMode;
+    // Użyj optimistic mode jeśli ustawiony, inaczej aktualny
+    final displayMode = _optimisticMode ?? widget.themeProvider.themeMode;
 
     return NeuInsetContainer(
       borderRadius: 12,
@@ -598,7 +589,8 @@ class _SettingsScreenState extends State<SettingsScreen>
             icon: LucideIcons.sunMoon,
             label: 'System',
             mode: ThemeMode.system,
-            isSelected: currentMode == ThemeMode.system,
+            isSelected: displayMode == ThemeMode.system,
+            isLoading: _switchingMode == ThemeMode.system,
           ),
           _buildThemeOption(
             context,
@@ -607,7 +599,8 @@ class _SettingsScreenState extends State<SettingsScreen>
             icon: LucideIcons.sun,
             label: 'Jasny',
             mode: ThemeMode.light,
-            isSelected: currentMode == ThemeMode.light,
+            isSelected: displayMode == ThemeMode.light,
+            isLoading: _switchingMode == ThemeMode.light,
           ),
           _buildThemeOption(
             context,
@@ -616,7 +609,8 @@ class _SettingsScreenState extends State<SettingsScreen>
             icon: LucideIcons.moon,
             label: 'Ciemny',
             mode: ThemeMode.dark,
-            isSelected: currentMode == ThemeMode.dark,
+            isSelected: displayMode == ThemeMode.dark,
+            isLoading: _switchingMode == ThemeMode.dark,
           ),
         ],
       ),
@@ -631,28 +625,88 @@ class _SettingsScreenState extends State<SettingsScreen>
     required String label,
     required ThemeMode mode,
     required bool isSelected,
+    required bool isLoading,
   }) {
     return Expanded(
-      child: _ThemeOptionButton(
-        icon: icon,
-        label: label,
-        isSelected: isSelected,
-        isDark: isDark,
-        onTap: () async {
-          // Haptic feedback
-          HapticFeedback.lightImpact();
+      child: GestureDetector(
+        onTap: isLoading
+            ? null
+            : () async {
+                // Haptic feedback
+                HapticFeedback.lightImpact();
 
-          // Pokaż spinner
-          setState(() => _isThemeSwitching = true);
+                final previousMode =
+                    _optimisticMode ?? widget.themeProvider.themeMode;
 
-          // Zmień motyw
-          await widget.themeProvider.setThemeMode(mode);
+                // Optimistic UI - natychmiast przesuń wskaźnik
+                setState(() {
+                  _optimisticMode = mode;
+                  _switchingMode = mode;
+                });
 
-          // Schowaj spinner
-          if (mounted) {
-            setState(() => _isThemeSwitching = false);
-          }
-        },
+                // Zmień motyw
+                await widget.themeProvider.setThemeMode(mode);
+
+                // Sprawdź czy się powiodło i ew. rollback
+                if (mounted) {
+                  final actualMode = widget.themeProvider.themeMode;
+                  if (actualMode != mode) {
+                    // Rollback - zmiana się nie powiodła
+                    setState(() {
+                      _optimisticMode = previousMode;
+                      _switchingMode = null;
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Nie udało się zmienić motywu'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  } else {
+                    // Sukces - wyczyść spinner
+                    setState(() => _switchingMode = null);
+                  }
+                }
+              },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: isSelected
+              ? NeuDecoration.convex(isDark: isDark, radius: 10)
+              : null,
+          child: Column(
+            children: [
+              // Spinner lub ikona
+              isLoading
+                  ? SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: theme.colorScheme.primary,
+                      ),
+                    )
+                  : Icon(
+                      icon,
+                      color: isSelected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                      size: 22,
+                    ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -664,7 +718,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _isBackupOpen = false;
   bool _isAdvancedOpen = false;
   bool _isThemeOpen = false;
-  bool _isThemeSwitching = false;
+  ThemeMode? _optimisticMode; // Optimistic UI - lokalna kopia wybranego motywu
+  ThemeMode? _switchingMode; // Który przycisk pokazuje spinner
 
   Widget _buildDisclaimerSection(ThemeData theme, bool isDark) {
     return Container(
@@ -1540,79 +1595,5 @@ class _SettingsScreenState extends State<SettingsScreen>
         );
       }
     }
-  }
-}
-
-/// Przycisk opcji motywu z pressed state (efekt wciśnięcia)
-class _ThemeOptionButton extends StatefulWidget {
-  final IconData icon;
-  final String label;
-  final bool isSelected;
-  final bool isDark;
-  final VoidCallback onTap;
-
-  const _ThemeOptionButton({
-    required this.icon,
-    required this.label,
-    required this.isSelected,
-    required this.isDark,
-    required this.onTap,
-  });
-
-  @override
-  State<_ThemeOptionButton> createState() => _ThemeOptionButtonState();
-}
-
-class _ThemeOptionButtonState extends State<_ThemeOptionButton> {
-  bool _isPressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        widget.onTap();
-        // Krótki delay przed zresetowaniem pressed state
-        Future.delayed(const Duration(milliseconds: 150), () {
-          if (mounted) setState(() => _isPressed = false);
-        });
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: _isPressed
-            ? NeuDecoration.pressed(isDark: widget.isDark, radius: 10)
-            : widget.isSelected
-            ? NeuDecoration.convex(isDark: widget.isDark, radius: 10)
-            : null,
-        child: Column(
-          children: [
-            Icon(
-              widget.icon,
-              color: widget.isSelected || _isPressed
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.onSurfaceVariant,
-              size: 22,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              widget.label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: widget.isSelected
-                    ? FontWeight.w600
-                    : FontWeight.normal,
-                color: widget.isSelected || _isPressed
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
