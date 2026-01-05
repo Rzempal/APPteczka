@@ -78,134 +78,165 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header info
-            Container(
-              decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    NeuInsetContainer(
-                      borderRadius: 12,
-                      padding: const EdgeInsets.all(12),
-                      child: KartonOpenIcon(size: 32, isDark: isDark),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Wybierz metodę dodawania',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header info
+                Container(
+                  decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        NeuInsetContainer(
+                          borderRadius: 12,
+                          padding: const EdgeInsets.all(12),
+                          child: KartonOpenIcon(size: 32, isDark: isDark),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Wybierz metodę dodawania',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Możesz skanować zdjęcia, importować JSON lub dodać ręcznie',
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            'Możesz skanować zdjęcia, importować JSON lub dodać ręcznie',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // 1. Gemini AI Scanner
+                _buildExpandableSection(
+                  icon: LucideIcons.imagePlus,
+                  title: '1 zdjęcie = wiele leków',
+                  subtitle:
+                      'Wykorzystaj wsparcie AI i automatycznie dodaj informacje o leku',
+                  isExpanded: _geminiExpanded,
+                  onToggle: () =>
+                      setState(() => _geminiExpanded = !_geminiExpanded),
+                  child: GeminiScanner(
+                    onResult: _handleGeminiResult,
+                    onError: widget.onError,
+                    onImportComplete: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Leki zostały zaimportowane!'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                  ),
+                  isDark: isDark,
+                ),
+
+                const SizedBox(height: 12),
+
+                // 1.5 Tryb 2 zdjęcia (front + data)
+                _buildExpandableSection(
+                  icon: LucideIcons.images,
+                  title: '2 zdjęcia = lek + termin ważności',
+                  subtitle: 'Rozpoznanie leku oraz jego terminu ważności',
+                  isExpanded: _twoPhotoExpanded,
+                  onToggle: () =>
+                      setState(() => _twoPhotoExpanded = !_twoPhotoExpanded),
+                  child: TwoPhotoScanner(
+                    onResult: _handleTwoPhotoResult,
+                    onError: widget.onError,
+                    onComplete: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Lek został zaimportowany!'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    },
+                  ),
+                  isDark: isDark,
+                ),
+
+                const SizedBox(height: 12),
+
+                // 2. Dodaj ręcznie (przesunięte)
+                _buildExpandableSection(
+                  icon: LucideIcons.pencil,
+                  title: 'Dodaj ręcznie',
+                  subtitle: 'Wprowadź dane leku samodzielnie',
+                  isExpanded: _manualExpanded,
+                  onToggle: () =>
+                      setState(() => _manualExpanded = !_manualExpanded),
+                  child: _buildManualForm(theme, isDark),
+                  isDark: isDark,
+                ),
+
+                const SizedBox(height: 12),
+
+                // 3. Import z pliku (przesunięte)
+                _buildExpandableSection(
+                  icon: LucideIcons.folderDown,
+                  title: 'Import kopii zapasowej',
+                  subtitle: 'Wczytaj plik JSON z urządzenia',
+                  isExpanded: _fileExpanded,
+                  onToggle: () =>
+                      setState(() => _fileExpanded = !_fileExpanded),
+                  child: _buildFileImportSection(theme, isDark),
+                  isDark: isDark,
+                ),
+
+                const SizedBox(height: 12),
+
+                // 4. Zaawansowane (nowa sekcja rozwijalna)
+                _buildAdvancedSection(theme, isDark),
+
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+          // Gradient fade-out na dole
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 40,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      (isDark
+                              ? AppColors.darkBackground
+                              : AppColors.lightBackground)
+                          .withAlpha(0),
+                      isDark
+                          ? AppColors.darkBackground
+                          : AppColors.lightBackground,
+                    ],
+                  ),
                 ),
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            // 1. Gemini AI Scanner
-            _buildExpandableSection(
-              icon: LucideIcons.imagePlus,
-              title: '1 zdjęcie = wiele leków',
-              subtitle:
-                  'Wykorzystaj wsparcie AI i automatycznie dodaj informacje o leku',
-              isExpanded: _geminiExpanded,
-              onToggle: () =>
-                  setState(() => _geminiExpanded = !_geminiExpanded),
-              child: GeminiScanner(
-                onResult: _handleGeminiResult,
-                onError: widget.onError,
-                onImportComplete: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Leki zostały zaimportowane!'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-              ),
-              isDark: isDark,
-            ),
-
-            const SizedBox(height: 12),
-
-            // 1.5 Tryb 2 zdjęcia (front + data)
-            _buildExpandableSection(
-              icon: LucideIcons.images,
-              title: '2 zdjęcia = lek + termin ważności',
-              subtitle: 'Rozpoznanie leku oraz jego terminu ważności',
-              isExpanded: _twoPhotoExpanded,
-              onToggle: () =>
-                  setState(() => _twoPhotoExpanded = !_twoPhotoExpanded),
-              child: TwoPhotoScanner(
-                onResult: _handleTwoPhotoResult,
-                onError: widget.onError,
-                onComplete: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Lek został zaimportowany!'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-              ),
-              isDark: isDark,
-            ),
-
-            const SizedBox(height: 12),
-
-            // 2. Dodaj ręcznie (przesunięte)
-            _buildExpandableSection(
-              icon: LucideIcons.pencil,
-              title: 'Dodaj ręcznie',
-              subtitle: 'Wprowadź dane leku samodzielnie',
-              isExpanded: _manualExpanded,
-              onToggle: () =>
-                  setState(() => _manualExpanded = !_manualExpanded),
-              child: _buildManualForm(theme, isDark),
-              isDark: isDark,
-            ),
-
-            const SizedBox(height: 12),
-
-            // 3. Import z pliku (przesunięte)
-            _buildExpandableSection(
-              icon: LucideIcons.folderDown,
-              title: 'Import kopii zapasowej',
-              subtitle: 'Wczytaj plik JSON z urządzenia',
-              isExpanded: _fileExpanded,
-              onToggle: () => setState(() => _fileExpanded = !_fileExpanded),
-              child: _buildFileImportSection(theme, isDark),
-              isDark: isDark,
-            ),
-
-            const SizedBox(height: 12),
-
-            // 4. Zaawansowane (nowa sekcja rozwijalna)
-            _buildAdvancedSection(theme, isDark),
-
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

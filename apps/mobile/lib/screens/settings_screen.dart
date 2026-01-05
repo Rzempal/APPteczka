@@ -82,36 +82,66 @@ class _SettingsScreenState extends State<SettingsScreen>
           ],
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Stack(
         children: [
-          // Disclaimer na górze
-          _buildDisclaimerSection(theme, isDark),
-          const SizedBox(height: 24),
+          ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              // Disclaimer na górze
+              _buildDisclaimerSection(theme, isDark),
+              const SizedBox(height: 24),
 
-          // Aktualizacje (druga pozycja)
-          _buildUpdateSection(context, theme, isDark),
-          const SizedBox(height: 24),
+              // Aktualizacje (druga pozycja)
+              _buildUpdateSection(context, theme, isDark),
+              const SizedBox(height: 24),
 
-          // Synchronizacja (coming soon)
-          _buildSyncSection(context, theme, isDark),
-          const SizedBox(height: 24),
+              // Synchronizacja (coming soon)
+              _buildSyncSection(context, theme, isDark),
+              const SizedBox(height: 24),
 
-          // Motyw
-          _buildThemeSection(context, theme, isDark),
-          const SizedBox(height: 24),
+              // Motyw
+              _buildThemeSection(context, theme, isDark),
+              const SizedBox(height: 24),
 
-          // Gesty (coming soon)
-          _buildGesturesSection(context, theme, isDark),
-          const SizedBox(height: 24),
+              // Gesty (coming soon)
+              _buildGesturesSection(context, theme, isDark),
+              const SizedBox(height: 24),
 
-          // Kopia zapasowa (akordeon)
-          _buildBackupSection(theme, isDark),
-          const SizedBox(height: 24),
+              // Kopia zapasowa (akordeon)
+              _buildBackupSection(theme, isDark),
+              const SizedBox(height: 24),
 
-          // Zaawansowane (osobny akordeon)
-          _buildAdvancedSection(theme, isDark),
-          const SizedBox(height: 32),
+              // Zaawansowane (osobny akordeon)
+              _buildAdvancedSection(theme, isDark),
+              const SizedBox(height: 32),
+            ],
+          ),
+          // Gradient fade-out na dole
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 40,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      (isDark
+                              ? AppColors.darkBackground
+                              : AppColors.lightBackground)
+                          .withAlpha(0),
+                      isDark
+                          ? AppColors.darkBackground
+                          : AppColors.lightBackground,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -194,23 +194,6 @@ class _MedicineCardState extends State<MedicineCard>
                               size: 16,
                               color: theme.colorScheme.primary,
                             ),
-                          )
-                        else if (statusLabel != null)
-                          // Badge statusu tylko gdy brak onExpand (tryb full globalny)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              statusIcon,
-                              size: 14,
-                              color: Colors.white,
-                            ),
                           ),
                       ],
                     ),
