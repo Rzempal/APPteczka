@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'config/app_config.dart';
 import 'services/bug_report_service.dart';
+import 'services/fab_service.dart';
 import 'services/storage_service.dart';
 import 'services/theme_provider.dart';
 import 'services/update_service.dart';
@@ -37,7 +39,7 @@ void main() async {
   );
 }
 
-class PudelkoNaLekiApp extends StatelessWidget {
+class PudelkoNaLekiApp extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
   final UpdateService updateService;
@@ -50,20 +52,96 @@ class PudelkoNaLekiApp extends StatelessWidget {
   });
 
   @override
+  State<PudelkoNaLekiApp> createState() => _PudelkoNaLekiAppState();
+}
+
+class _PudelkoNaLekiAppState extends State<PudelkoNaLekiApp> {
+  final GlobalKey _screenshotKey = GlobalKey();
+
+  /// Przechwytuje screenshot i otwiera sheet zgłoszenia
+  Future<void> _openBugReportWithScreenshot() async {
+    final screenshot = await BugReportService.instance.captureScreenshot(
+      _screenshotKey,
+    );
+    if (!mounted) return;
+
+    // Pobierz aktualny błąd skanera jeśli istnieje
+    final scannerError = FabService.instance.scannerError;
+
+    BugReportSheet.show(context, screenshot: screenshot, error: scannerError);
+
+    // Wyczyść błąd po otwarciu zgłoszenia
+    if (scannerError != null) {
+      FabService.instance.clearError();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: themeProvider,
+      listenable: widget.themeProvider,
       builder: (context, child) {
         return MaterialApp(
           title: 'Karton z lekami',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
-          themeMode: themeProvider.themeMode,
+          themeMode: widget.themeProvider.themeMode,
+          // Lokalizacja
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('pl', 'PL')],
+          locale: const Locale('pl', 'PL'),
+          // Builder pozwala na wstawienie widgetów NAD nawigatorem (Overlay)
+          builder: (context, child) {
+            return Stack(
+              children: [
+                // 1. Aplikacja owinięta w RepaintBoundary (dla screenshota CAŁOŚCI)
+                RepaintBoundary(
+                  key: _screenshotKey,
+                  child: child ?? const SizedBox.shrink(),
+                ),
+
+                // 2. FAB Overlay
+                Positioned(
+                  bottom: 16,
+                  right: 16,
+                  child: ListenableBuilder(
+                    // Nasłuchuj zmian w FabService (błędy) oraz StorageService (ustawienia)
+                    listenable: Listenable.merge([
+                      FabService.instance,
+                      widget.storageService.showBugReportFabNotifier,
+                    ]),
+                    builder: (context, _) {
+                      final hasError = FabService.instance.scannerError != null;
+
+                      // Sprawdź warunki widoczności
+                      final showFab =
+                          widget.storageService.showBugReportFab ||
+                          AppConfig.isInternal ||
+                          hasError;
+
+                      if (!showFab) return const SizedBox.shrink();
+
+                      return FloatingActionButton(
+                        onPressed: _openBugReportWithScreenshot,
+                        backgroundColor: AppColors.expired,
+                        elevation: 6,
+                        child: const Icon(LucideIcons.bug, color: Colors.white),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
           home: MainNavigation(
-            storageService: storageService,
-            themeProvider: themeProvider,
-            updateService: updateService,
+            storageService: widget.storageService,
+            themeProvider: widget.themeProvider,
+            updateService: widget.updateService,
           ),
         );
       },
@@ -91,111 +169,72 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 1; // Domyślnie Apteczka (środkowy tab)
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
-  final GlobalKey _screenshotKey = GlobalKey();
-
-  // Error state from scanners - used to show FAB
-  bool _hasScannerError = false;
-  String? _lastErrorMessage;
-
-  /// Handles scanner errors to show FAB
-  void _handleScannerError(String? error) {
-    setState(() {
-      _hasScannerError = error != null;
-      _lastErrorMessage = error;
-    });
-  }
-
-  /// Przechwytuje screenshot i otwiera sheet zgłoszenia
-  Future<void> _openBugReportWithScreenshot() async {
-    final screenshot = await BugReportService.instance.captureScreenshot(
-      _screenshotKey,
-    );
-    if (!mounted) return;
-    BugReportSheet.show(
-      context,
-      screenshot: screenshot,
-      error: _lastErrorMessage,
-    );
-    // Reset error state after opening report
-    setState(() {
-      _hasScannerError = false;
-      _lastErrorMessage = null;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      key: _screenshotKey,
-      child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: [
-            // 0: Dodaj
-            AddMedicineScreen(
-              storageService: widget.storageService,
-              onError: _handleScannerError,
-            ),
-            // 1: Apteczka (domyślny, środkowy)
-            _HomeScreenWrapper(
-              key: _homeKey,
-              storageService: widget.storageService,
-              themeProvider: widget.themeProvider,
-              updateService: widget.updateService,
-              onNavigateToSettings: () {
-                setState(() {
-                  _currentIndex = 2; // Navigate to Ustawienia tab
-                });
-              },
-              onNavigateToAdd: () {
-                setState(() {
-                  _currentIndex = 0; // Navigate to Dodaj tab
-                });
-              },
-            ),
-            // 2: Ustawienia
-            SettingsScreen(
-              storageService: widget.storageService,
-              themeProvider: widget.themeProvider,
-              updateService: widget.updateService,
-            ),
-          ],
-        ),
-        bottomNavigationBar: FloatingNavBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-            // Odśwież widok po przełączeniu na Apteczkę
-            if (index == 1) {
-              _homeKey.currentState?.refresh();
-            }
-          },
-          items: [
-            const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
-            NavItem(
-              icon: LucideIcons.briefcaseMedical, // fallback
-              iconBuilder: (color, size) =>
-                  KartonMonoClosedIcon(size: size, color: color),
-              label: 'Apteczka',
-            ),
-            const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
-          ],
-        ),
-        // FAB for bug reporting - visible if enabled in settings, DEV builds, OR scanner error
-        floatingActionButton:
-            (widget.storageService.showBugReportFab ||
-                AppConfig.isInternal ||
-                _hasScannerError)
-            ? FloatingActionButton(
-                onPressed: _openBugReportWithScreenshot,
-                backgroundColor: AppColors.expired,
-                child: const Icon(LucideIcons.bug, color: Colors.white),
-              )
-            : null,
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          // 0: Dodaj
+          AddMedicineScreen(
+            storageService: widget.storageService,
+            onError: (error) {
+              if (error != null) {
+                FabService.instance.showError(error);
+              } else {
+                FabService.instance.clearError();
+              }
+            },
+          ),
+          // 1: Apteczka (domyślny, środkowy)
+          _HomeScreenWrapper(
+            key: _homeKey,
+            storageService: widget.storageService,
+            themeProvider: widget.themeProvider,
+            updateService: widget.updateService,
+            onNavigateToSettings: () {
+              setState(() {
+                _currentIndex = 2; // Navigate to Ustawienia tab
+              });
+            },
+            onNavigateToAdd: () {
+              setState(() {
+                _currentIndex = 0; // Navigate to Dodaj tab
+              });
+            },
+          ),
+          // 2: Ustawienia
+          SettingsScreen(
+            storageService: widget.storageService,
+            themeProvider: widget.themeProvider,
+            updateService: widget.updateService,
+          ),
+        ],
       ),
+      bottomNavigationBar: FloatingNavBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+          // Odśwież widok po przełączeniu na Apteczkę
+          if (index == 1) {
+            _homeKey.currentState?.refresh();
+          }
+        },
+        items: [
+          const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
+          NavItem(
+            icon: LucideIcons.briefcaseMedical, // fallback
+            iconBuilder: (color, size) =>
+                KartonMonoClosedIcon(size: size, color: color),
+            label: 'Apteczka',
+          ),
+          const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }
