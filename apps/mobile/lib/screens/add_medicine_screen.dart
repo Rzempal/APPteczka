@@ -14,6 +14,7 @@ import '../widgets/two_photo_scanner.dart';
 import '../widgets/karton_icons.dart';
 import '../widgets/batch_date_input_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
+import '../widgets/tag_selector_widget.dart';
 import '../theme/app_theme.dart';
 import '../utils/tag_normalization.dart';
 
@@ -38,7 +39,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final _nazwaController = TextEditingController();
   final _opisController = TextEditingController();
   final _wskazaniaController = TextEditingController();
-  final _tagiController = TextEditingController();
+  List<String> _selectedTags = []; // Zamiana z TextFormField na selektor
   DateTime? _terminWaznosci;
   bool _isSaving = false;
 
@@ -58,7 +59,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     _nazwaController.dispose();
     _opisController.dispose();
     _wskazaniaController.dispose();
-    _tagiController.dispose();
     _jsonController.dispose();
     super.dispose();
   }
@@ -580,15 +580,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
           const SizedBox(height: 16),
 
-          // Tagi
-          TextFormField(
-            controller: _tagiController,
-            decoration: InputDecoration(
-              labelText: 'Tagi (oddzielone przecinkami)',
-              hintText: 'przeciwbólowy, lek OTC',
-              prefixIcon: const Icon(LucideIcons.tags),
-              border: const OutlineInputBorder(),
-            ),
+          // Tagi - selektor z listą
+          TagSelectorWidget(
+            selectedTags: _selectedTags,
+            onChanged: (tags) => setState(() => _selectedTags = tags),
           ),
 
           const SizedBox(height: 16),
@@ -896,13 +891,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             .map((s) => s.trim())
             .where((s) => s.isNotEmpty)
             .toList(),
-        tagi: processTagsForImport(
-          _tagiController.text
-              .split(',')
-              .map((s) => s.trim().toLowerCase())
-              .where((s) => s.isNotEmpty)
-              .toList(),
-        ),
+        tagi: processTagsForImport(_selectedTags),
         terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
         dataDodania: DateTime.now().toIso8601String(),
       );
@@ -921,8 +910,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         _nazwaController.clear();
         _opisController.clear();
         _wskazaniaController.clear();
-        _tagiController.clear();
-        setState(() => _terminWaznosci = null);
+        setState(() {
+          _selectedTags = [];
+          _terminWaznosci = null;
+        });
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);

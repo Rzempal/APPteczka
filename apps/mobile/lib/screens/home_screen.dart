@@ -1786,7 +1786,13 @@ class _TagManagementSheet extends StatefulWidget {
 }
 
 class _TagManagementSheetState extends State<_TagManagementSheet> {
-  late Set<String> _allTags;
+  late Set<String> _customTags;
+
+  // Wszystkie tagi systemowe (z kategorii)
+  static final Set<String> _systemTags = {
+    ...tagCategories.values.expand((e) => e),
+    ...tagsObjawIDzialanie.values.expand((e) => e),
+  };
 
   @override
   void initState() {
@@ -1796,12 +1802,13 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
 
   void _loadTags() {
     final medicines = widget.storageService.getMedicines();
-    final tags = <String>{};
+    final customTags = <String>{};
     for (final m in medicines) {
-      tags.addAll(m.tagi);
+      // Filtruj tylko custom tagi (spoza kategorii systemowych)
+      customTags.addAll(m.tagi.where((t) => !_systemTags.contains(t)));
     }
     setState(() {
-      _allTags = tags;
+      _customTags = customTags;
     });
   }
 
@@ -1809,7 +1816,7 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final sortedTags = _allTags.toList()..sort();
+    final sortedTags = _customTags.toList()..sort();
 
     return DraggableScrollableSheet(
       initialChildSize: 0.6,
@@ -1826,7 +1833,7 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
                 Icon(LucideIcons.hash, color: theme.colorScheme.primary),
                 const SizedBox(width: 12),
                 Text(
-                  'Zarządzaj tagami',
+                  'Moje tagi',
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -1835,7 +1842,7 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Edytuj lub usuń tagi ze wszystkich leków.',
+              'Edytuj lub usuń własne tagi z apteczki.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1856,8 +1863,15 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Brak tagów',
+                            'Brak własnych tagów',
                             style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Tagi systemowe są zarządzane przez aplikację',
+                            style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
                           ),

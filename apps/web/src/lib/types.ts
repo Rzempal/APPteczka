@@ -102,8 +102,8 @@ export const ALLOWED_TAGS = {
     objawIDzialanie: Object.values(TAGS_OBJAWY_DZIALANIE).flat(),
 
     typInfekcji: [
-        'infekcja wirusowa', 'infekcja bakteryjna', 'infekcja grzybicza',
-        'przeziębienie', 'grypa'
+        'grypa', 'infekcja bakteryjna', 'infekcja grzybicza',
+        'infekcja wirusowa', 'przeziębienie'
     ],
 
     rodzaj: [
@@ -114,9 +114,17 @@ export const ALLOWED_TAGS = {
     ],
 
     grupa: [
-        'dla dorosłych', 'dla dzieci', 'dla niemowląt',
-        'dla kobiet w ciąży'
+        'dla dorosłych', 'dla dzieci', 'dla kobiet w ciąży', 'dla niemowląt'
     ]
+} as const;
+
+/**
+ * Podkategorie dla "Klasyfikacja" - Rodzaj leku, Grupa docelowa, Typ infekcji
+ */
+export const TAGS_KLASYFIKACJA = {
+    'Rodzaj leku': ALLOWED_TAGS.rodzaj,
+    'Grupa docelowa': ALLOWED_TAGS.grupa,
+    'Typ infekcji': ALLOWED_TAGS.typInfekcji
 } as const;
 
 /**
@@ -132,12 +140,14 @@ export const ALL_ALLOWED_TAGS = [
 export type AllowedTag = typeof ALL_ALLOWED_TAGS[number];
 
 /**
- * Kategorie tagów dla UI (kolejność: Rodzaj leku → Grupa → Typ infekcji → Objawy)
+ * Kategorie tagów dla UI (kolejność: Klasyfikacja → Objawy i działanie)
  */
 export const TAG_CATEGORIES = [
-    { key: 'rodzaj', label: 'Rodzaj leku', tags: ALLOWED_TAGS.rodzaj },
-    { key: 'grupa', label: 'Grupa docelowa', tags: ALLOWED_TAGS.grupa },
-    { key: 'typInfekcji', label: 'Typ infekcji', tags: ALLOWED_TAGS.typInfekcji },
+    {
+        key: 'klasyfikacja',
+        label: 'Klasyfikacja',
+        subcategories: TAGS_KLASYFIKACJA
+    },
     {
         key: 'objawIDzialanie',
         label: 'Objawy i działanie',

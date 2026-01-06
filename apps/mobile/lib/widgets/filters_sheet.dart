@@ -127,20 +127,15 @@ const Map<String, List<String>> tagsObjawIDzialanie = {
   ],
 };
 
-/// Kategorie tagów - zsynchronizowane z Web (2026-01-06)
-/// Kolejność: Rodzaj leku → Grupa docelowa → Typ infekcji
-/// Dla "Objawy i działanie" - używamy tagsObjawIDzialanie (podkategorie)
-const Map<String, List<String>> tagCategories = {
-  // === RODZAJ LEKU ===
+/// Podkategorie dla "Klasyfikacja" - Rodzaj leku, Grupa docelowa, Typ infekcji
+const Map<String, List<String>> tagsKlasyfikacja = {
   'Rodzaj leku': ['bez recepty', 'na receptę', 'suplement', 'wyrób medyczny'],
-  // === GRUPA DOCELOWA ===
   'Grupa docelowa': [
     'dla dorosłych',
     'dla dzieci',
-    'dla niemowląt',
     'dla kobiet w ciąży',
+    'dla niemowląt',
   ],
-  // === TYP INFEKCJI ===
   'Typ infekcji': [
     'grypa',
     'infekcja bakteryjna',
@@ -149,6 +144,9 @@ const Map<String, List<String>> tagCategories = {
     'przeziębienie',
   ],
 };
+
+/// Wszystkie tagi kategorii (dla wykluczeń w "Moje")
+const Map<String, List<String>> tagCategories = {...tagsKlasyfikacja};
 
 /// Filtr Sheet - styl zbliżony do wersji Web
 class FiltersSheet extends StatefulWidget {
@@ -385,29 +383,12 @@ class _FiltersSheetState extends State<FiltersSheet> {
                     if (_tagsExpanded) ...[
                       const SizedBox(height: 12),
 
-                      // === PŁASKIE KATEGORIE (w kolejności z tagCategories) ===
-                      ...tagCategories.entries.map((entry) {
-                        final categoryName = entry.key;
-                        final categoryTags = entry.value;
-                        final availableInCategory =
-                            categoryTags
-                                .where((t) => widget.availableTags.contains(t))
-                                .toList()
-                              ..sort(); // Sortowanie alfabetyczne
-
-                        if (availableInCategory.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-
-                        final isExpanded =
-                            _expandedCategories[categoryName] ?? false;
-
-                        return _buildCategorySection(
-                          categoryName,
-                          availableInCategory,
-                          isExpanded,
-                        );
-                      }),
+                      // === KLASYFIKACJA (z podkategoriami) ===
+                      _buildCategoryWithSubcategories(
+                        'Klasyfikacja',
+                        tagsKlasyfikacja,
+                        _expandedCategories['Klasyfikacja'] ?? false,
+                      ),
 
                       // === OBJAWY I DZIAŁANIE (z podkategoriami) ===
                       _buildCategoryWithSubcategories(
