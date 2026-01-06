@@ -170,10 +170,10 @@ class FiltersSheet extends StatefulWidget {
 class _FiltersSheetState extends State<FiltersSheet> {
   late FilterState _state;
   final Map<String, bool> _expandedCategories = {};
-  bool _labelsExpanded = true;
-  bool _expiryExpanded = true;
-  bool _tagsExpanded = true;
-  bool _otherTagsExpanded = true;
+  bool _labelsExpanded = false;
+  bool _expiryExpanded = false;
+  bool _tagsExpanded = false;
+  bool _otherTagsExpanded = false;
 
   @override
   void initState() {
@@ -186,100 +186,183 @@ class _FiltersSheetState extends State<FiltersSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.7,
-      minChildSize: 0.4,
-      maxChildSize: 0.95,
-      expand: false,
-      builder: (context, scrollController) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          children: [
-            // Handle
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          // Auto-save filters on close (swipe down or tap outside)
+          widget.onApply(_state);
+        }
+      },
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-            ),
 
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        LucideIcons.funnel,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Filtry',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  TextButton(
-                    onPressed: _clearFilters,
-                    child: const Text('Wyczyść'),
-                  ),
-                ],
-              ),
-            ),
-
-            const Divider(),
-
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                controller: scrollController,
+              // Header
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Icon(
+                          LucideIcons.funnel,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Filtry',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                    // Clear filters - red icon
+                    if (_state.hasActiveFilters)
+                      IconButton(
+                        onPressed: _clearFilters,
+                        icon: Icon(
+                          LucideIcons.funnelX,
+                          color: AppColors.expired,
+                        ),
+                        tooltip: 'Wyczyść filtry',
+                      ),
+                  ],
+                ),
+              ),
 
-                    // ========== MOJE ETYKIETY ==========
-                    if (widget.availableLabels.isNotEmpty) ...[
-                      _buildLabelsSectionHeader(),
-                      if (_labelsExpanded) ...[
+              const Divider(),
+
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+
+                      // ========== MOJE ETYKIETY ==========
+                      if (widget.availableLabels.isNotEmpty) ...[
+                        _buildLabelsSectionHeader(),
+                        if (_labelsExpanded) ...[
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: widget.availableLabels.map((label) {
+                              final isSelected = _state.selectedLabels.contains(
+                                label.id,
+                              );
+                              final colorInfo = labelColors[label.color]!;
+
+                              return FilterChip(
+                                selected: isSelected,
+                                label: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 10,
+                                      height: 10,
+                                      decoration: BoxDecoration(
+                                        color: Color(colorInfo.hexValue),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(label.name),
+                                  ],
+                                ),
+                                labelStyle: TextStyle(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white
+                                      : Colors.black,
+                                ),
+                                onSelected: (selected) {
+                                  setState(() {
+                                    final newLabels = Set<String>.from(
+                                      _state.selectedLabels,
+                                    );
+                                    if (selected) {
+                                      newLabels.add(label.id);
+                                    } else {
+                                      newLabels.remove(label.id);
+                                    }
+                                    _state = _state.copyWith(
+                                      selectedLabels: newLabels,
+                                    );
+                                  });
+                                },
+                                selectedColor: Color(
+                                  colorInfo.hexValue,
+                                ).withValues(alpha: 0.3),
+                                checkmarkColor: Color(colorInfo.hexValue),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        const SizedBox(height: 24),
+                      ],
+
+                      // ========== TERMIN WAŻNOŚCI ==========
+                      _buildMainSectionHeader(
+                        icon: LucideIcons.calendarHeart,
+                        title: 'Termin ważności',
+                        isExpanded: _expiryExpanded,
+                        onTap: () =>
+                            setState(() => _expiryExpanded = !_expiryExpanded),
+                        trailing: _state.expiryFilter != ExpiryFilter.all
+                            ? Icon(
+                                _getExpiryIcon(_state.expiryFilter),
+                                size: 16,
+                                color: _getExpiryColor(_state.expiryFilter),
+                              )
+                            : null,
+                      ),
+                      if (_expiryExpanded) ...[
                         const SizedBox(height: 12),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
-                          children: widget.availableLabels.map((label) {
-                            final isSelected = _state.selectedLabels.contains(
-                              label.id,
-                            );
-                            final colorInfo = labelColors[label.color]!;
-
+                          children: ExpiryFilter.values.map((filter) {
+                            final isSelected = _state.expiryFilter == filter;
                             return FilterChip(
                               selected: isSelected,
                               label: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Container(
-                                    width: 10,
-                                    height: 10,
-                                    decoration: BoxDecoration(
-                                      color: Color(colorInfo.hexValue),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(label.name),
+                                  if (isSelected) ...[
+                                    const Icon(Icons.check, size: 16),
+                                    const SizedBox(width: 4),
+                                  ],
+                                  Icon(_getExpiryIcon(filter), size: 16),
+                                  const SizedBox(width: 4),
+                                  Text(filter.label),
                                 ],
                               ),
                               labelStyle: TextStyle(
@@ -291,137 +374,113 @@ class _FiltersSheetState extends State<FiltersSheet> {
                               ),
                               onSelected: (selected) {
                                 setState(() {
-                                  final newLabels = Set<String>.from(
-                                    _state.selectedLabels,
-                                  );
-                                  if (selected) {
-                                    newLabels.add(label.id);
-                                  } else {
-                                    newLabels.remove(label.id);
-                                  }
                                   _state = _state.copyWith(
-                                    selectedLabels: newLabels,
+                                    expiryFilter: selected
+                                        ? filter
+                                        : ExpiryFilter.all,
                                   );
                                 });
                               },
-                              selectedColor: Color(
-                                colorInfo.hexValue,
-                              ).withValues(alpha: 0.3),
-                              checkmarkColor: Color(colorInfo.hexValue),
+                              selectedColor: AppColors.primary.withValues(
+                                alpha: 0.2,
+                              ),
+                              checkmarkColor: AppColors.primary,
+                              showCheckmark: false,
                             );
                           }).toList(),
                         ),
                       ],
+
+                      const SizedBox(height: 24),
+
+                      // ========== TAGI ==========
+                      _buildMainSectionHeader(
+                        icon: LucideIcons.hash,
+                        title: 'Tagi',
+                        isExpanded: _tagsExpanded,
+                        onTap: () =>
+                            setState(() => _tagsExpanded = !_tagsExpanded),
+                        trailing: _state.selectedTags.isNotEmpty
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  '${_state.selectedTags.length}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              )
+                            : null,
+                      ),
+                      if (_tagsExpanded) ...[
+                        const SizedBox(height: 12),
+
+                        // === KLASYFIKACJA (z podkategoriami) ===
+                        _buildCategoryWithSubcategories(
+                          'Klasyfikacja',
+                          tagsKlasyfikacja,
+                          _expandedCategories['Klasyfikacja'] ?? false,
+                        ),
+
+                        // === OBJAWY I DZIAŁANIE (z podkategoriami) ===
+                        _buildCategoryWithSubcategories(
+                          'Objawy i działanie',
+                          tagsObjawIDzialanie,
+                          _expandedCategories['Objawy i działanie'] ?? false,
+                        ),
+
+                        // Moje tagi (niestandardowe)
+                        _buildOtherTagsSection(),
+                      ], // Close if (_tagsExpanded)
+
                       const SizedBox(height: 24),
                     ],
+                  ),
+                ),
+              ),
 
-                    // ========== TERMIN WAŻNOŚCI ==========
-                    _buildMainSectionHeader(
-                      icon: LucideIcons.calendarHeart,
-                      title: 'Termin ważności',
-                      isExpanded: _expiryExpanded,
-                      onTap: () =>
-                          setState(() => _expiryExpanded = !_expiryExpanded),
+              // Action buttons
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Clear button
+                    if (_state.hasActiveFilters)
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _clearFilters,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.expired,
+                            side: BorderSide(color: AppColors.expired),
+                          ),
+                          child: const Text('Wyczyść'),
+                        ),
+                      ),
+                    if (_state.hasActiveFilters) const SizedBox(width: 12),
+                    // Apply button
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          widget.onApply(_state);
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Zastosuj filtry'),
+                      ),
                     ),
-                    if (_expiryExpanded) ...[
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: ExpiryFilter.values.map((filter) {
-                          final isSelected = _state.expiryFilter == filter;
-                          return FilterChip(
-                            selected: isSelected,
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (isSelected) ...[
-                                  const Icon(Icons.check, size: 16),
-                                  const SizedBox(width: 4),
-                                ],
-                                Icon(_getExpiryIcon(filter), size: 16),
-                                const SizedBox(width: 4),
-                                Text(filter.label),
-                              ],
-                            ),
-                            labelStyle: TextStyle(
-                              color:
-                                  Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                            onSelected: (selected) {
-                              setState(() {
-                                _state = _state.copyWith(
-                                  expiryFilter: selected
-                                      ? filter
-                                      : ExpiryFilter.all,
-                                );
-                              });
-                            },
-                            selectedColor: AppColors.primary.withValues(
-                              alpha: 0.2,
-                            ),
-                            checkmarkColor: AppColors.primary,
-                            showCheckmark: false,
-                          );
-                        }).toList(),
-                      ),
-                    ],
-
-                    const SizedBox(height: 24),
-
-                    // ========== TAGI ==========
-                    _buildMainSectionHeader(
-                      icon: LucideIcons.hash,
-                      title: 'Tagi',
-                      isExpanded: _tagsExpanded,
-                      onTap: () =>
-                          setState(() => _tagsExpanded = !_tagsExpanded),
-                    ),
-                    if (_tagsExpanded) ...[
-                      const SizedBox(height: 12),
-
-                      // === KLASYFIKACJA (z podkategoriami) ===
-                      _buildCategoryWithSubcategories(
-                        'Klasyfikacja',
-                        tagsKlasyfikacja,
-                        _expandedCategories['Klasyfikacja'] ?? false,
-                      ),
-
-                      // === OBJAWY I DZIAŁANIE (z podkategoriami) ===
-                      _buildCategoryWithSubcategories(
-                        'Objawy i działanie',
-                        tagsObjawIDzialanie,
-                        _expandedCategories['Objawy i działanie'] ?? false,
-                      ),
-
-                      // Moje tagi (niestandardowe)
-                      _buildOtherTagsSection(),
-                    ], // Close if (_tagsExpanded)
-
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),
-            ),
-
-            // Apply button
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () {
-                    widget.onApply(_state);
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Zastosuj filtry'),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -485,6 +544,7 @@ class _FiltersSheetState extends State<FiltersSheet> {
     required String title,
     required bool isExpanded,
     required VoidCallback onTap,
+    Widget? trailing,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
@@ -514,6 +574,7 @@ class _FiltersSheetState extends State<FiltersSheet> {
                 color: isDark ? Colors.white : Colors.black,
               ),
             ),
+            if (trailing != null) ...[const Spacer(), trailing],
           ],
         ),
       ),
@@ -846,6 +907,19 @@ class _FiltersSheetState extends State<FiltersSheet> {
         return Icons.warning_amber_outlined;
       case ExpiryFilter.valid:
         return Icons.check_circle_outline;
+    }
+  }
+
+  Color _getExpiryColor(ExpiryFilter filter) {
+    switch (filter) {
+      case ExpiryFilter.all:
+        return AppColors.primary;
+      case ExpiryFilter.expired:
+        return AppColors.expired;
+      case ExpiryFilter.expiringSoon:
+        return AppColors.expiringSoon;
+      case ExpiryFilter.valid:
+        return AppColors.valid;
     }
   }
 }
