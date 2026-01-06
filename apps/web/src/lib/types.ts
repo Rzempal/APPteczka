@@ -71,28 +71,28 @@ export interface BackupImport {
  * UWAGA: Kategorie i podkategorie zgodnie z Master listą z 2026-01-05
  */
 
-// === OBJAWY I DZIAŁANIE (z podkategoriami) ===
+// === OBJAWY I DZIAŁANIE (z podkategoriami, posortowane alfabetycznie) ===
 export const TAGS_OBJAWY_DZIALANIE = {
     'Ból': [
-        'ból', 'ból głowy', 'ból gardła', 'ból mięśni', 'ból menstruacyjny', 'ból ucha',
-        'przeciwbólowy'
+        'ból', 'ból gardła', 'ból głowy', 'ból menstruacyjny', 'ból mięśni', 'ból ucha',
+        'mięśnie i stawy', 'przeciwbólowy'
     ],
     'Układ pokarmowy': [
-        'nudności', 'wymioty', 'biegunka', 'zaparcia', 'wzdęcia', 'zgaga', 'kolka',
-        'przeciwwymiotny', 'przeciwbiegunkowy', 'przeczyszczający'
+        'biegunka', 'kolka', 'nudności', 'przeczyszczający', 'przeciwbiegunkowy',
+        'przeciwwymiotny', 'układ pokarmowy', 'wzdęcia', 'wymioty', 'zaparcia', 'zgaga'
     ],
     'Układ oddechowy': [
-        'gorączka', 'kaszel', 'katar', 'duszność',
-        'przeciwgorączkowy', 'przeciwkaszlowy', 'wykrztuśny'
+        'duszność', 'gorączka', 'kaszel', 'katar', 'nos',
+        'przeciwgorączkowy', 'przeciwkaszlowy', 'układ oddechowy', 'wykrztuśny'
     ],
     'Skóra i alergia': [
-        'świąd', 'wysypka', 'oparzenie', 'ukąszenie', 'rana', 'sucha skóra', 'suche oczy',
-        'alergia', 'przeciwhistaminowy', 'przeciwświądowy', 'nawilżający'
+        'alergia', 'nawilżający', 'oparzenie', 'przeciwhistaminowy', 'przeciwświądowy',
+        'rana', 'skóra', 'sucha skóra', 'suche oczy', 'świąd', 'ukąszenie', 'wysypka'
     ],
     'Inne': [
-        'bezsenność', 'stres', 'choroba lokomocyjna', 'afty', 'ząbkowanie',
-        'przeciwzapalny', 'odkażający', 'uspokajający', 'rozkurczowy',
-        'probiotyk', 'antybiotyk', 'steryd'
+        'afty', 'antybiotyk', 'bezsenność', 'choroba lokomocyjna', 'jama ustna', 'odkażający',
+        'probiotyk', 'przeciwzapalny', 'rozkurczowy', 'steryd', 'stres',
+        'układ nerwowy', 'uspokajający', 'ząbkowanie'
     ]
 } as const;
 
@@ -132,17 +132,17 @@ export const ALL_ALLOWED_TAGS = [
 export type AllowedTag = typeof ALL_ALLOWED_TAGS[number];
 
 /**
- * Kategorie tagów dla UI (z podkategoriami dla Objawy i działanie)
+ * Kategorie tagów dla UI (kolejność: Rodzaj leku → Grupa → Typ infekcji → Objawy)
  */
 export const TAG_CATEGORIES = [
+    { key: 'rodzaj', label: 'Rodzaj leku', tags: ALLOWED_TAGS.rodzaj },
+    { key: 'grupa', label: 'Grupa docelowa', tags: ALLOWED_TAGS.grupa },
+    { key: 'typInfekcji', label: 'Typ infekcji', tags: ALLOWED_TAGS.typInfekcji },
     {
         key: 'objawIDzialanie',
         label: 'Objawy i działanie',
         subcategories: TAGS_OBJAWY_DZIALANIE
-    },
-    { key: 'typInfekcji', label: 'Typ infekcji', tags: ALLOWED_TAGS.typInfekcji },
-    { key: 'rodzaj', label: 'Rodzaj leku', tags: ALLOWED_TAGS.rodzaj },
-    { key: 'grupa', label: 'Grupa docelowa', tags: ALLOWED_TAGS.grupa }
+    }
 ] as const;
 
 /**

@@ -17,6 +17,7 @@ import '../widgets/neumorphic/neumorphic.dart';
 import 'edit_medicine_screen.dart';
 import 'medicine_detail_sheet.dart';
 import 'pdf_viewer_screen.dart';
+import '../utils/tag_normalization.dart';
 
 /// Opcje sortowania
 enum SortOption {
@@ -142,7 +143,8 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> get _allTags {
     final tags = <String>{};
     for (final m in _medicines) {
-      tags.addAll(m.tagi);
+      // Normalizuj tagi przy zbieraniu (konwersja starych → nowe)
+      tags.addAll(normalizeTags(m.tagi));
     }
     return tags.toList()..sort();
   }

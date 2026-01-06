@@ -2,8 +2,9 @@
 // Normalizacja i rozszerzanie tagów leków
 
 /// Mapowanie synonimów tagów na formy kanoniczne
+/// Stare tagi → nowe tagi (migracja ze starych backupów)
 const Map<String, String> tagSynonyms = {
-  // Rodzaj leku - zamiana terminologii OTC/Rx
+  // === RODZAJ LEKU - zamiana terminologii OTC/Rx ===
   'lek OTC': 'bez recepty',
   'OTC': 'bez recepty',
   'otc': 'bez recepty',
@@ -11,6 +12,20 @@ const Map<String, String> tagSynonyms = {
   'Rx': 'na receptę',
   'rx': 'na receptę',
   'recepta': 'na receptę',
+
+  // === STARE RODZAJ PRODUKTU - normalizacja ===
+  'test diagnostyczny': 'wyrób medyczny',
+  'kosmetyk leczniczy': 'nawilżający',
+};
+
+/// Lista starych tagów które są ignorowane (nie mapowane, ale też nie pokazywane jako "nieznane")
+/// Te tagi po prostu usuwamy podczas normalizacji
+const Set<String> deprecatedTags = {
+  'oczy', // stary obszar ciała - zbyt ogólny
+  'uszy', // stary obszar ciała - zbyt ogólny
+  'dla seniorów', // usunięty z grup docelowych
+  'układ krążenia', // stary obszar ciała - brak odpowiednika
+  'układ moczowy', // stary obszar ciała - brak odpowiednika
 };
 
 /// Implikacje tagów - automatyczne dodawanie powiązanych tagów
@@ -36,14 +51,24 @@ const Map<String, List<String>> tagImplications = {
 };
 
 /// Normalizuje pojedynczy tag (zamienia synonimy na formę kanoniczną)
-String normalizeTag(String tag) {
+/// Zwraca null dla deprecated tagów
+String? normalizeTag(String tag) {
   final trimmed = tag.trim();
+
+  // Deprecated tagi - ignorujemy
+  if (deprecatedTags.contains(trimmed)) {
+    return null;
+  }
+
   return tagSynonyms[trimmed] ?? trimmed;
 }
 
-/// Normalizuje listę tagów (zamienia synonimy)
+/// Normalizuje listę tagów (zamienia synonimy, usuwa deprecated)
 List<String> normalizeTags(List<String> tags) {
-  return tags.map(normalizeTag).toList();
+  return tags
+      .map(normalizeTag)
+      .whereType<String>() // Usuwa null (deprecated tagi)
+      .toList();
 }
 
 /// Rozszerza tagi o implikowane (np. "ból głowy" → +ból +przeciwbólowy)

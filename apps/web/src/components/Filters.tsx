@@ -280,7 +280,12 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                     <div className="space-y-3 py-3 px-2">
                         {TAG_CATEGORIES.map(category => {
                             const isCollapsed = collapsedCategories[category.key] ?? true;
-                            const activeCount = category.tags.filter(tag => filters.tags.includes(tag)).length;
+                            // Handle subcategories vs flat tags
+                            const hasSubcategories = 'subcategories' in category;
+                            const allTags = hasSubcategories
+                                ? Object.values(category.subcategories).flat()
+                                : (category as { tags: readonly string[] }).tags;
+                            const activeCount = allTags.filter(tag => filters.tags.includes(tag)).length;
 
                             return (
                                 <div key={category.key} className="mb-2">
@@ -306,7 +311,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                                         </span>
                                         <div className="flex items-center gap-1.5">
                                             <span className="text-[10px]" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }}>
-                                                {category.tags.length}
+                                                {allTags.length}
                                             </span>
                                             {activeCount > 0 && (
                                                 <span
@@ -321,19 +326,44 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
 
                                     {/* Tagi - ukryte gdy kategoria zwinięta */}
                                     <div
-                                        className={`overflow-hidden transition-all duration-200 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100 mt-2'}`}
+                                        className={`overflow-hidden transition-all duration-200 ${isCollapsed ? 'max-h-0 opacity-0' : 'max-h-[800px] opacity-100 mt-2'}`}
                                     >
-                                        <div className="flex flex-wrap gap-1.5 pl-3 pr-1 py-1">
-                                            {category.tags.map(tag => (
-                                                <button
-                                                    key={tag}
-                                                    onClick={() => handleTagToggle(tag)}
-                                                    className={`neu-tag text-xs transition-all ${filters.tags.includes(tag) ? 'active' : ''}`}
-                                                >
-                                                    {tag}
-                                                </button>
-                                            ))}
-                                        </div>
+                                        {hasSubcategories ? (
+                                            // Render subcategories
+                                            <div className="space-y-2 pl-2">
+                                                {Object.entries(category.subcategories).map(([subName, subTags]) => (
+                                                    <div key={subName}>
+                                                        <span className="text-[10px] font-medium block mb-1 pl-2" style={{ color: 'var(--color-text-muted)' }}>
+                                                            {subName}
+                                                        </span>
+                                                        <div className="flex flex-wrap gap-1.5 pl-2 pr-1">
+                                                            {subTags.map(tag => (
+                                                                <button
+                                                                    key={tag}
+                                                                    onClick={() => handleTagToggle(tag)}
+                                                                    className={`neu-tag text-xs transition-all ${filters.tags.includes(tag) ? 'active' : ''}`}
+                                                                >
+                                                                    {tag}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            // Render flat tags
+                                            <div className="flex flex-wrap gap-1.5 pl-3 pr-1 py-1">
+                                                {(category as { tags: readonly string[] }).tags.map(tag => (
+                                                    <button
+                                                        key={tag}
+                                                        onClick={() => handleTagToggle(tag)}
+                                                        className={`neu-tag text-xs transition-all ${filters.tags.includes(tag) ? 'active' : ''}`}
+                                                    >
+                                                        {tag}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );

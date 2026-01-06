@@ -59,84 +59,94 @@ enum ExpiryFilter {
   const ExpiryFilter(this.label);
 }
 
-/// Kategorie tagów - zsynchronizowane z Web (2026-01-05)
-const Map<String, List<String>> tagCategories = {
-  // === OBJAWY I DZIAŁANIE (połączone) ===
-  'Objawy i działanie': [
-    // Ból
+/// Podkategorie dla "Objawy i działanie" - posortowane alfabetycznie
+const Map<String, List<String>> tagsObjawIDzialanie = {
+  'Ból': [
     'ból',
-    'ból głowy',
     'ból gardła',
-    'ból mięśni',
+    'ból głowy',
     'ból menstruacyjny',
+    'ból mięśni',
     'ból ucha',
+    'mięśnie i stawy',
     'przeciwbólowy',
-    // Układ pokarmowy
-    'nudności',
-    'wymioty',
+  ],
+  'Układ pokarmowy': [
     'biegunka',
-    'zaparcia',
-    'wzdęcia',
-    'zgaga',
     'kolka',
-    'przeciwwymiotny',
-    'przeciwbiegunkowy',
+    'nudności',
     'przeczyszczający',
-    // Układ oddechowy
+    'przeciwbiegunkowy',
+    'przeciwwymiotny',
+    'układ pokarmowy',
+    'wzdęcia',
+    'wymioty',
+    'zaparcia',
+    'zgaga',
+  ],
+  'Układ oddechowy': [
+    'duszność',
     'gorączka',
     'kaszel',
     'katar',
-    'duszność',
+    'nos',
     'przeciwgorączkowy',
     'przeciwkaszlowy',
+    'układ oddechowy',
     'wykrztuśny',
-    // Skóra/alergia
-    'świąd',
-    'wysypka',
-    'oparzenie',
-    'ukąszenie',
-    'rana',
-    'sucha skóra',
-    'suche oczy',
+  ],
+  'Skóra i alergia': [
     'alergia',
+    'nawilżający',
+    'oparzenie',
     'przeciwhistaminowy',
     'przeciwświądowy',
-    'nawilżający',
-    // Inne
-    'bezsenność',
-    'stres',
-    'choroba lokomocyjna',
+    'rana',
+    'skóra',
+    'sucha skóra',
+    'suche oczy',
+    'świąd',
+    'ukąszenie',
+    'wysypka',
+  ],
+  'Inne': [
     'afty',
-    'ząbkowanie',
-    'przeciwzapalny',
-    'odkażający',
-    'uspokajający',
-    'rozkurczowy',
-    'probiotyk',
     'antybiotyk',
+    'bezsenność',
+    'choroba lokomocyjna',
+    'jama ustna',
+    'odkażający',
+    'probiotyk',
+    'przeciwzapalny',
+    'rozkurczowy',
     'steryd',
+    'stres',
+    'układ nerwowy',
+    'uspokajający',
+    'ząbkowanie',
   ],
-  // === TYP INFEKCJI ===
-  'Typ infekcji': [
-    'infekcja wirusowa',
-    'infekcja bakteryjna',
-    'infekcja grzybicza',
-    'przeziębienie',
-    'grypa',
-  ],
-  // === RODZAJ LEKU (nowa kategoria) ===
-  'Rodzaj leku': [
-    'bez recepty', // dawniej: lek OTC
-    'na receptę', // dawniej: lek Rx
-    'suplement',
-    'wyrób medyczny',
-  ],
+};
+
+/// Kategorie tagów - zsynchronizowane z Web (2026-01-06)
+/// Kolejność: Rodzaj leku → Grupa docelowa → Typ infekcji
+/// Dla "Objawy i działanie" - używamy tagsObjawIDzialanie (podkategorie)
+const Map<String, List<String>> tagCategories = {
+  // === RODZAJ LEKU ===
+  'Rodzaj leku': ['bez recepty', 'na receptę', 'suplement', 'wyrób medyczny'],
   // === GRUPA DOCELOWA ===
   'Grupa docelowa': [
     'dla dorosłych',
     'dla dzieci',
     'dla niemowląt',
     'dla kobiet w ciąży',
+  ],
+  // === TYP INFEKCJI ===
+  'Typ infekcji': [
+    'grypa',
+    'infekcja bakteryjna',
+    'infekcja grzybicza',
+    'infekcja wirusowa',
+    'przeziębienie',
   ],
 };
 
@@ -375,13 +385,15 @@ class _FiltersSheetState extends State<FiltersSheet> {
                     if (_tagsExpanded) ...[
                       const SizedBox(height: 12),
 
-                      // Kategorie tagów
+                      // === PŁASKIE KATEGORIE (w kolejności z tagCategories) ===
                       ...tagCategories.entries.map((entry) {
                         final categoryName = entry.key;
                         final categoryTags = entry.value;
-                        final availableInCategory = categoryTags
-                            .where((t) => widget.availableTags.contains(t))
-                            .toList();
+                        final availableInCategory =
+                            categoryTags
+                                .where((t) => widget.availableTags.contains(t))
+                                .toList()
+                              ..sort(); // Sortowanie alfabetyczne
 
                         if (availableInCategory.isEmpty) {
                           return const SizedBox.shrink();
@@ -397,7 +409,14 @@ class _FiltersSheetState extends State<FiltersSheet> {
                         );
                       }),
 
-                      // Inne tagi
+                      // === OBJAWY I DZIAŁANIE (z podkategoriami) ===
+                      _buildCategoryWithSubcategories(
+                        'Objawy i działanie',
+                        tagsObjawIDzialanie,
+                        _expandedCategories['Objawy i działanie'] ?? false,
+                      ),
+
+                      // Moje tagi (niestandardowe)
                       _buildOtherTagsSection(),
                     ], // Close if (_tagsExpanded)
 
@@ -520,6 +539,144 @@ class _FiltersSheetState extends State<FiltersSheet> {
     );
   }
 
+  /// Kategoria z podkategoriami (dla "Objawy i działanie")
+  Widget _buildCategoryWithSubcategories(
+    String name,
+    Map<String, List<String>> subcategories,
+    bool isExpanded,
+  ) {
+    // Zlicz wszystkie dostępne tagi
+    final allTags = subcategories.values.expand((t) => t).toList();
+    final availableTags = allTags
+        .where((t) => widget.availableTags.contains(t))
+        .toList();
+
+    if (availableTags.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final selectedCount = availableTags
+        .where((t) => _state.selectedTags.contains(t))
+        .length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Główny nagłówek kategorii
+        InkWell(
+          onTap: () {
+            setState(() {
+              _expandedCategories[name] = !(_expandedCategories[name] ?? false);
+            });
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Row(
+              children: [
+                Transform.rotate(
+                  angle: isExpanded ? math.pi / 2 : 0,
+                  child: Icon(
+                    LucideIcons.chevronRight,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(150),
+                    size: 14,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  name,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${availableTags.length}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(100),
+                  ),
+                ),
+                if (selectedCount > 0) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$selectedCount',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        // Podkategorie
+        if (isExpanded)
+          Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: subcategories.entries.map((subEntry) {
+                final subName = subEntry.key;
+                final subTags =
+                    subEntry.value
+                        .where((t) => widget.availableTags.contains(t))
+                        .toList()
+                      ..sort(); // Sortowanie alfabetyczne
+
+                if (subTags.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 4),
+                      child: Text(
+                        subName,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withAlpha(150),
+                        ),
+                      ),
+                    ),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: subTags.map(_buildTagChip).toList(),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
   Widget _buildCategorySection(
     String name,
     List<String> tags,
@@ -589,10 +746,14 @@ class _FiltersSheetState extends State<FiltersSheet> {
   }
 
   Widget _buildOtherTagsSection() {
-    final categorizedTags = tagCategories.values.expand((e) => e).toSet();
-    final otherTags = widget.availableTags
-        .where((t) => !categorizedTags.contains(t))
-        .toList();
+    // Zbierz wszystkie tagi z kategorii ORAZ z podkategorii "Objawy i działanie"
+    final categorizedTags = <String>{
+      ...tagCategories.values.expand((e) => e),
+      ...tagsObjawIDzialanie.values.expand((e) => e),
+    };
+    final otherTags =
+        widget.availableTags.where((t) => !categorizedTags.contains(t)).toList()
+          ..sort();
 
     if (otherTags.isEmpty) {
       return const SizedBox.shrink();
@@ -601,7 +762,7 @@ class _FiltersSheetState extends State<FiltersSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Styled like other subcategory sections
+        // Styled like "Objawy i działanie" - bez zielonego akcentu
         InkWell(
           borderRadius: BorderRadius.circular(8),
           onTap: () {
@@ -609,12 +770,8 @@ class _FiltersSheetState extends State<FiltersSheet> {
               _otherTagsExpanded = !_otherTagsExpanded;
             });
           },
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
             child: Row(
               children: [
                 // Chevron arrow with rotation
@@ -622,24 +779,29 @@ class _FiltersSheetState extends State<FiltersSheet> {
                   angle: _otherTagsExpanded ? math.pi / 2 : 0,
                   child: Icon(
                     LucideIcons.chevronRight,
-                    color: AppColors.primary,
-                    size: 16,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(150),
+                    size: 14,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Inne',
+                  'Moje',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const Spacer(),
                 Text(
                   '${otherTags.length}',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.primary.withValues(alpha: 0.7),
+                    fontSize: 10,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(100),
                   ),
                 ),
               ],
