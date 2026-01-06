@@ -68,22 +68,33 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
 
 ## Dozwolone tagi (kontrolowana lista)
 
-### Objawy i działanie
-ból, ból głowy, ból gardła, ból mięśni, ból menstruacyjny, ból ucha, przeciwbólowy,
-nudności, wymioty, biegunka, zaparcia, wzdęcia, zgaga, kolka, przeciwwymiotny, przeciwbiegunkowy, przeczyszczający,
-gorączka, kaszel, katar, duszność, przeciwgorączkowy, przeciwkaszlowy, wykrztuśny,
-świąd, wysypka, oparzenie, ukąszenie, rana, sucha skóra, suche oczy, alergia, przeciwhistaminowy, przeciwświądowy, nawilżający,
-bezsenność, stres, choroba lokomocyjna, afty, ząbkowanie, przeciwzapalny, odkażający, uspokajający, rozkurczowy,
-probiotyk, antybiotyk, steryd
+### Klasyfikacja
 
-### Typ infekcji
-infekcja wirusowa, infekcja bakteryjna, infekcja grzybicza, przeziębienie, grypa
-
-### Rodzaj leku
+#### Rodzaj leku
 bez recepty, na receptę, suplement, wyrób medyczny
 
-### Grupa docelowa
-dla dorosłych, dla dzieci, dla niemowląt, dla kobiet w ciąży
+#### Grupa docelowa
+dla dorosłych, dla dzieci, dla kobiet w ciąży, dla niemowląt
+
+#### Typ infekcji
+grypa, infekcja bakteryjna, infekcja grzybicza, infekcja wirusowa, przeziębienie
+
+### Objawy i działanie
+
+#### Ból
+ból, ból gardła, ból głowy, ból menstruacyjny, ból mięśni, ból ucha, mięśnie i stawy, przeciwbólowy
+
+#### Układ pokarmowy
+biegunka, kolka, nudności, przeczyszczający, przeciwbiegunkowy, przeciwwymiotny, układ pokarmowy, wzdęcia, wymioty, zaparcia, zgaga
+
+#### Układ oddechowy
+duszność, gorączka, kaszel, katar, nos, przeciwgorączkowy, przeciwkaszlowy, układ oddechowy, wykrztuśny
+
+#### Skóra i alergia
+alergia, nawilżający, oparzenie, przeciwhistaminowy, przeciwświądowy, rana, skóra, sucha skóra, suche oczy, świąd, ukąszenie, wysypka
+
+#### Inne
+afty, antybiotyk, bezsenność, choroba lokomocyjna, jama ustna, odkażający, probiotyk, przeciwzapalny, rozkurczowy, steryd, stres, układ nerwowy, uspokajający, ząbkowanie
 
 ## Ograniczenia
 

@@ -146,7 +146,7 @@ const Map<String, List<String>> tagsKlasyfikacja = {
 };
 
 /// Wszystkie tagi kategorii (dla wykluczeń w "Moje")
-const Map<String, List<String>> tagCategories = {...tagsKlasyfikacja};
+final Map<String, List<String>> tagCategories = {...tagsKlasyfikacja};
 
 /// Filtr Sheet - styl zbliżony do wersji Web
 class FiltersSheet extends StatefulWidget {

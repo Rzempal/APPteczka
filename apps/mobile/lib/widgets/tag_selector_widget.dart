@@ -29,9 +29,7 @@ class _TagSelectorWidgetState extends State<TagSelectorWidget> {
   void initState() {
     super.initState();
     // Inicjalizuj kategorie jako zwinięte
-    for (final category in tagCategories.keys) {
-      _expandedCategories[category] = false;
-    }
+    _expandedCategories['Klasyfikacja'] = false;
     _expandedCategories['Objawy i działanie'] = false;
   }
 
@@ -149,10 +147,12 @@ class _TagSelectorWidgetState extends State<TagSelectorWidget> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Kategorie płaskie (Rodzaj leku, Grupa docelowa, Typ infekcji)
-                ...tagCategories.entries.map((entry) {
-                  return _buildCategorySection(entry.key, entry.value, isDark);
-                }),
+                // Klasyfikacja z podkategoriami
+                _buildCategoryWithSubcategories(
+                  'Klasyfikacja',
+                  tagsKlasyfikacja,
+                  isDark,
+                ),
 
                 // Objawy i działanie z podkategoriami
                 _buildCategoryWithSubcategories(

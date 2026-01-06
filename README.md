@@ -56,6 +56,7 @@ Pudełko-na-leki/
 │   ├── architecture.md   # Architektura systemu
 │   ├── road_map.md       # Plan rozwoju
 │   ├── data_model.md     # Model danych
+│   ├── tags.md           # System tagów
 │   ├── schema/           # Schematy JSON/YAML
 │   └── prompts/          # Prompty dla AI
 └── public/               # Statyczne zasoby
