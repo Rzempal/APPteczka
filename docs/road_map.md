@@ -83,6 +83,7 @@
 - Natywna aplikacja Android
 - Hive local storage
 - Design neumorficzny
+- Wykrywanie duplikatów leków (fuzzy matching)
 
 ### Faza 3: Gemini API
 

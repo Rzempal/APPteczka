@@ -18,6 +18,7 @@ import 'edit_medicine_screen.dart';
 import 'medicine_detail_sheet.dart';
 import 'pdf_viewer_screen.dart';
 import '../utils/tag_normalization.dart';
+import '../utils/duplicate_detection.dart';
 
 /// Opcje sortowania
 enum SortOption {
@@ -225,6 +226,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   medicine: medicine,
                                                   labels: _allLabels,
                                                   isCompact: false,
+                                                  isDuplicate: hasDuplicates(
+                                                    medicine,
+                                                    _medicines,
+                                                  ),
                                                   onTap: () =>
                                                       _showMedicineDetails(
                                                         medicine,
@@ -244,6 +249,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   medicine: medicine,
                                                   labels: _allLabels,
                                                   isCompact: false,
+                                                  isDuplicate: hasDuplicates(
+                                                    medicine,
+                                                    _medicines,
+                                                  ),
                                                   onTap: () =>
                                                       _showMedicineDetails(
                                                         medicine,
@@ -275,6 +284,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   isCompact:
                                       _viewMode == ViewMode.list &&
                                       _expandedMedicineId != medicine.id,
+                                  isDuplicate: hasDuplicates(
+                                    medicine,
+                                    _medicines,
+                                  ),
                                   onExpand: _viewMode == ViewMode.list
                                       ? () {
                                           setState(() {

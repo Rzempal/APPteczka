@@ -19,6 +19,7 @@ Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, ś
 - ✅ Kopiowanie listy leków do schowka
 - ✅ Eksport apteczki do JSON i PDF
 - ✅ Sortowanie leków (A-Z, termin ważności)
+- ✅ Wykrywanie duplikatów leków
 - ✅ 3-tabowa nawigacja (Apteczka, Dodaj leki, Kopia zapasowa)
 - ✅ Design neumorficzny z animacjami scroll
 - ✅ **Aktualizacje OTA** – automatyczne sprawdzanie i instalacja nowych wersji APK

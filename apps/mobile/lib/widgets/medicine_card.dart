@@ -14,6 +14,7 @@ class MedicineCard extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onExpand;
   final bool isCompact;
+  final bool isDuplicate; // Nowe: oznaczenie duplikatu
 
   const MedicineCard({
     super.key,
@@ -22,6 +23,7 @@ class MedicineCard extends StatefulWidget {
     this.onTap,
     this.onExpand,
     this.isCompact = false,
+    this.isDuplicate = false,
   });
 
   @override
@@ -121,7 +123,7 @@ class _MedicineCardState extends State<MedicineCard>
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Lewa strona: Nazwa + Etykiety (wrap to 2 lines if needed)
+                      // Lewa strona: Nazwa + Ikona duplikatu + Etykiety
                       Expanded(
                         child: Wrap(
                           spacing: 8,
@@ -137,6 +139,20 @@ class _MedicineCardState extends State<MedicineCard>
                                 fontSize: widget.isCompact ? 15 : null,
                               ),
                             ),
+                            // Ikona duplikatu
+                            if (widget.isDuplicate)
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withAlpha(30),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Icon(
+                                  LucideIcons.copy,
+                                  size: 14,
+                                  color: AppColors.primary,
+                                ),
+                              ),
                             // Etykiety
                             ...medicineLabels
                                 .take(3)

@@ -5,6 +5,7 @@ import '../models/medicine.dart';
 import '../models/label.dart';
 import '../theme/app_theme.dart';
 import 'neumorphic/neumorphic.dart';
+import '../utils/duplicate_detection.dart';
 
 /// Stan filtra - wersja Mobile kompatybilna z logiką Web
 class FilterState {
@@ -53,7 +54,8 @@ enum ExpiryFilter {
   all('Wszystkie'),
   expired('Przeterminowane'),
   expiringSoon('Kończą się'),
-  valid('Ważne');
+  valid('Ważne'),
+  duplicates('Potencjalne duplikaty');
 
   final String label;
   const ExpiryFilter(this.label);
@@ -907,6 +909,8 @@ class _FiltersSheetState extends State<FiltersSheet> {
         return Icons.warning_amber_outlined;
       case ExpiryFilter.valid:
         return Icons.check_circle_outline;
+      case ExpiryFilter.duplicates:
+        return LucideIcons.copy;
     }
   }
 
@@ -920,6 +924,8 @@ class _FiltersSheetState extends State<FiltersSheet> {
         return AppColors.expiringSoon;
       case ExpiryFilter.valid:
         return AppColors.valid;
+      case ExpiryFilter.duplicates:
+        return AppColors.primary;
     }
   }
 }
@@ -956,18 +962,24 @@ List<Medicine> applyFilters(List<Medicine> medicines, FilterState state) {
       }
     }
 
-    // Filtr terminu ważności
+    // Filtr terminu ważności LUB duplikatów
     if (state.expiryFilter != ExpiryFilter.all) {
-      final status = m.expiryStatus;
-      switch (state.expiryFilter) {
-        case ExpiryFilter.expired:
-          if (status != ExpiryStatus.expired) return false;
-        case ExpiryFilter.expiringSoon:
-          if (status != ExpiryStatus.expiringSoon) return false;
-        case ExpiryFilter.valid:
-          if (status != ExpiryStatus.valid) return false;
-        case ExpiryFilter.all:
-          break;
+      // Specjalna obsługa dla duplikatów - wymaga całej listy
+      if (state.expiryFilter == ExpiryFilter.duplicates) {
+        if (!hasDuplicates(m, medicines)) return false;
+      } else {
+        final status = m.expiryStatus;
+        switch (state.expiryFilter) {
+          case ExpiryFilter.expired:
+            if (status != ExpiryStatus.expired) return false;
+          case ExpiryFilter.expiringSoon:
+            if (status != ExpiryStatus.expiringSoon) return false;
+          case ExpiryFilter.valid:
+            if (status != ExpiryStatus.valid) return false;
+          case ExpiryFilter.all:
+          case ExpiryFilter.duplicates:
+            break;
+        }
       }
     }
 
