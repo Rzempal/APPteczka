@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
@@ -525,57 +526,105 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     final formattedDate =
         '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
 
-    return GestureDetector(
-      onTap: () => _showSetDailyIntakeDialog(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              LucideIcons.calendarOff,
-              size: 16,
-              color: daysRemaining <= 7 ? AppColors.expired : AppColors.primary,
-            ),
-            const SizedBox(width: 8),
-            Text.rich(
-              TextSpan(
-                children: [
-                  const TextSpan(
-                    text: 'Zabraknie od: ',
-                    style: TextStyle(fontSize: 13),
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Wiersz z datą i przyciskiem edycji
+        GestureDetector(
+          onTap: () => _showSetDailyIntakeDialog(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.calendarOff,
+                  size: 16,
+                  color: daysRemaining <= 7
+                      ? AppColors.expired
+                      : AppColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Text.rich(
                   TextSpan(
-                    text: formattedDate,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: daysRemaining <= 7
-                          ? AppColors.expired
-                          : Theme.of(context).colorScheme.onSurface,
-                    ),
+                    children: [
+                      const TextSpan(
+                        text: 'Zabraknie od: ',
+                        style: TextStyle(fontSize: 13),
+                      ),
+                      TextSpan(
+                        text: formattedDate,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: daysRemaining <= 7
+                              ? AppColors.expired
+                              : Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' (za $daysRemaining dni)',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
-                  TextSpan(
-                    text: ' (za $daysRemaining dni)',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  LucideIcons.squarePen,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Icon(
-              LucideIcons.squarePen,
-              size: 14,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(height: 8),
+        // Przycisk "Dodaj do kalendarza"
+        GestureDetector(
+          onTap: () => _addToCalendar(endDate),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.calendarPlus,
+                  size: 16,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Dodaj do kalendarza',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
+  }
+
+  /// Dodaje przypomnienie o końcu zapasu leku do kalendarza systemowego
+  void _addToCalendar(DateTime endDate) {
+    final medicineName = _medicine.nazwa ?? 'Lek';
+    final event = Event(
+      title: '$medicineName - koniec',
+      description: 'Przypomnienie: koniec zapasu leku "$medicineName".',
+      startDate: endDate,
+      endDate: endDate.add(const Duration(hours: 1)),
+      allDay: true,
+    );
+    Add2Calendar.addEvent2Cal(event);
   }
 
   /// Dialog ustawienia dziennego zużycia tabletek
