@@ -52,6 +52,14 @@ class StorageService {
     swipeGesturesEnabledNotifier.value = value;
   }
 
+  /// Czy tooltip pomocy był już pokazany (domyślnie false)
+  bool get helpTooltipShown =>
+      _settingsBox.get('helpTooltipShown', defaultValue: false) as bool;
+
+  set helpTooltipShown(bool value) {
+    _settingsBox.put('helpTooltipShown', value);
+  }
+
   // ==================== MEDICINES ====================
 
   /// Pobiera wszystkie leki

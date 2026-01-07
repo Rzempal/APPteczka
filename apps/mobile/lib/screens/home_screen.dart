@@ -80,6 +80,13 @@ class _HomeScreenState extends State<HomeScreen> {
     // Check for updates on init
     widget.updateService.addListener(_onUpdateChanged);
     widget.updateService.checkForUpdate();
+
+    // Pokaż tooltip pomocy przy pierwszym uruchomieniu
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!widget.storageService.helpTooltipShown && mounted) {
+        _showHelpTooltip(context);
+      }
+    });
   }
 
   void _onUpdateChanged() {
@@ -608,6 +615,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 8),
+          // Przycisk pomocy - żarówka
+          NeuIconButton(
+            icon: LucideIcons.lightbulb,
+            iconColor: Colors.amber,
+            onPressed: () => _showHelpTooltip(context),
+            tooltip: 'Podpowiedzi',
+          ),
           const Spacer(),
           // Widok toggle
           NeuIconButton(
@@ -700,6 +714,162 @@ class _HomeScreenState extends State<HomeScreen> {
       _filterState = const FilterState();
       _searchController.clear();
     });
+  }
+
+  /// Pokazuje tooltip z podpowiedziami gestów i ukrytych funkcji
+  void _showHelpTooltip(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Oznacz jako pokazany
+    widget.storageService.helpTooltipShown = true;
+
+    showDialog(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (ctx) => Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.darkBackground
+                : AppColors.lightBackground,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withAlpha(50),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header z ikoną żarówki
+              Row(
+                children: [
+                  Icon(LucideIcons.lightbulb, color: Colors.amber, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Podpowiedzi',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(ctx),
+                    child: Icon(
+                      LucideIcons.x,
+                      size: 20,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Sekcja: Gesty na karcie leku
+              _buildHelpSection(
+                context,
+                icon: LucideIcons.hand,
+                title: 'Gesty na karcie leku',
+                items: [
+                  'Dotknięcie → rozwija kartę leku',
+                  'Przytrzymanie → otwiera szczegóły i edycję',
+                  'Przeciągnięcie ← → Moje etykiety',
+                  'Przeciągnięcie → → edycja notatki',
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // Sekcja: Ciekawe funkcje
+              _buildHelpSection(
+                context,
+                icon: LucideIcons.sparkles,
+                title: 'Ciekawe funkcje',
+                items: [
+                  'Kalkulator zapasu: sprawdź do kiedy wystarczy lek',
+                  'Wykrywanie duplikatów: filtr "Potencjalne duplikaty"',
+                  'OCR daty ważności: aparat przy terminie ważności',
+                  'Szukaj w ulotce: sekcja "Ulotka" → wyszukiwarka',
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              // Przycisk zamknięcia
+              Center(
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(ctx),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 10,
+                    ),
+                    decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
+                    child: Text(
+                      'Rozumiem',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHelpSection(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required List<String> items,
+  }) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Row(
+          children: [
+            Icon(icon, size: 16, color: theme.colorScheme.primary),
+            const SizedBox(width: 6),
+            Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Items
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(left: 22, bottom: 4),
+            child: Text(
+              '• $item',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void _showFilterManagement() {
