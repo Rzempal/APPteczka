@@ -716,11 +716,11 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             GestureDetector(
               onTap: () => _takeDatePhotoForPackage(context, package),
               child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Icon(
                   LucideIcons.camera,
-                  size: 14,
+                  size: 20,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
@@ -730,11 +730,11 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             GestureDetector(
               onTap: () => _showEditPackageDateDialog(context, package),
               child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Icon(
                   LucideIcons.calendarCog,
-                  size: 14,
+                  size: 20,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
@@ -744,11 +744,11 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             GestureDetector(
               onTap: () => _showEditRemainingDialog(context, package),
               child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Icon(
                   LucideIcons.blocks,
-                  size: 14,
+                  size: 20,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
@@ -759,14 +759,14 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               GestureDetector(
                 onTap: () => _deletePackage(package),
                 child: Container(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(10),
                   decoration: NeuDecoration.flatSmall(
                     isDark: isDark,
-                    radius: 8,
+                    radius: 12,
                   ),
                   child: Icon(
                     LucideIcons.trash2,
-                    size: 14,
+                    size: 20,
                     color: AppColors.expired,
                   ),
                 ),
@@ -1701,33 +1701,31 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: NeuButton(
-            onPressed: () => _showPdfViewer(context),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(LucideIcons.fileText, size: 16, color: AppColors.valid),
-                const SizedBox(width: 8),
-                Text(
-                  'Pokaż ulotkę PDF',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 13,
-                  ),
+        NeuButton(
+          onPressed: () => _showPdfViewer(context),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.fileText, size: 16, color: AppColors.valid),
+              const SizedBox(width: 8),
+              Text(
+                'Pokaż ulotkę PDF',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 13,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 12),
+        const Spacer(),
         GestureDetector(
           onTap: () => _detachLeaflet(),
           child: Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(10),
             decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-            child: Icon(LucideIcons.pinOff, size: 24, color: AppColors.expired),
+            child: Icon(LucideIcons.pinOff, size: 20, color: AppColors.expired),
           ),
         ),
       ],
