@@ -1176,7 +1176,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                       const SizedBox(width: 12),
                       // Tekst promocyjny
-                      Expanded(
+                      Flexible(
                         child: Text(
                           'Aplikacja jest darmowa i bez reklam, jeśli Ci się podoba',
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -1185,7 +1185,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Obrazek BuyCoffee button
+                      // Obrazek BuyCoffee button (obok tekstu)
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.asset(
@@ -1194,7 +1194,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                           fit: BoxFit.contain,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const Spacer(),
                       Icon(
                         _isSupportOpen
                             ? LucideIcons.chevronUp
