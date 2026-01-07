@@ -39,11 +39,47 @@ class MedicineDetailSheet extends StatefulWidget {
 class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
   late Medicine _medicine;
   bool _isLabelsOpen = false;
+  bool _isEditingNote = false;
+  late TextEditingController _noteController;
+  late FocusNode _noteFocusNode;
 
   @override
   void initState() {
     super.initState();
     _medicine = widget.medicine;
+    _noteController = TextEditingController(text: _medicine.notatka ?? '');
+    _noteFocusNode = FocusNode();
+    _noteFocusNode.addListener(_onNoteFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    _noteFocusNode.removeListener(_onNoteFocusChange);
+    _noteFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _onNoteFocusChange() {
+    if (!_noteFocusNode.hasFocus && _isEditingNote) {
+      _saveNote();
+    }
+  }
+
+  Future<void> _saveNote() async {
+    final newNote = _noteController.text.trim();
+    if (newNote != (_medicine.notatka ?? '')) {
+      final updatedMedicine = _medicine.copyWith(
+        notatka: newNote.isEmpty ? null : newNote,
+      );
+      await widget.storageService.saveMedicine(updatedMedicine);
+      setState(() {
+        _medicine = updatedMedicine;
+      });
+    }
+    setState(() {
+      _isEditingNote = false;
+    });
   }
 
   @override
@@ -84,28 +120,17 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nagłówek z przyciskami akcji
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SelectableText(
-                            _medicine.nazwa ?? 'Nieznany lek',
-                            style: Theme.of(context).textTheme.headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline),
-                          color: AppColors.expired,
-                          onPressed: widget.onDelete,
-                        ),
-                      ],
+                    // Nagłówek z nazwą leku
+                    SelectableText(
+                      _medicine.nazwa ?? 'Nieznany lek',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
 
                     const SizedBox(height: 16),
 
-                    // Opis - editable
-                    _buildEditableSection(
+                    // Opis - editable (ikona przy treści)
+                    _buildSectionWithContentEdit(
                       context,
                       title: 'Opis',
                       onEdit: () => _showEditDescriptionDialog(context),
@@ -115,23 +140,15 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                       ),
                     ),
 
-                    // Ulotka PDF
+                    // Wskazania - editable (ikona przy treści)
                     const SizedBox(height: 20),
-                    _buildLeafletSection(context),
-
-                    // Etykiety - tytuł i ikona edycji w jednej linii
-                    const SizedBox(height: 20),
-                    _buildLabelSection(context),
-
-                    // Wskazania - editable (show even if empty to allow adding)
-                    const SizedBox(height: 20),
-                    _buildEditableSection(
+                    _buildSectionWithContentEdit(
                       context,
                       title: 'Wskazania',
                       onEdit: () => _showEditWskazaniaDialog(context),
                       child: _medicine.wskazania.isEmpty
                           ? Text(
-                              'Brak wskazań - kliknij ołówek aby dodać',
+                              'Brak wskazań - kliknij aby dodać',
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
@@ -175,15 +192,31 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                             ),
                     ),
 
-                    // Tagi - editable for custom tags only
+                    // Ulotka PDF
                     const SizedBox(height: 20),
-                    _buildEditableSection(
+                    _buildLeafletSection(context),
+
+                    // Notatka - inline editable
+                    const SizedBox(height: 20),
+                    _buildSection(
                       context,
-                      title: '#tags',
+                      title: 'Notatka',
+                      child: _buildNoteSection(context),
+                    ),
+
+                    // Etykiety - tytuł i ikona edycji przy treści
+                    const SizedBox(height: 20),
+                    _buildLabelSection(context),
+
+                    // Tagi - editable for custom tags only (ikona przy treści)
+                    const SizedBox(height: 20),
+                    _buildSectionWithContentEdit(
+                      context,
+                      title: '#Tags',
                       onEdit: () => _showEditCustomTagsDialog(context),
                       child: _medicine.tagi.isEmpty
                           ? Text(
-                              'Brak tagów - kliknij ołówek aby dodać',
+                              'Brak tagów - kliknij aby dodać',
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
@@ -225,14 +258,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                             ),
                     ),
 
-                    // Notatka - editable with dark mode support
-                    const SizedBox(height: 20),
-                    _buildSection(
-                      context,
-                      title: 'Notatka',
-                      child: _buildNoteSection(context),
-                    ),
-
                     // Termin ważności - sekcja wielu opakowań
                     const SizedBox(height: 20),
                     _buildPackagesSection(context, statusColor),
@@ -247,6 +272,10 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                         style: const TextStyle(color: Color(0xFF6b7280)),
                       ),
                     ),
+
+                    // Usuń lek - nowa sekcja na dole
+                    const SizedBox(height: 20),
+                    _buildDeleteSection(context),
 
                     const SizedBox(height: 32),
                   ],
@@ -322,7 +351,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                 ],
               ),
             ),
-            if (packageCount > 0)
+            if (packageCount > 0) ...[
               GestureDetector(
                 onTap: () => _showEditPackageCountDialog(context),
                 child: Container(
@@ -338,6 +367,23 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _showIconsHelpDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 12,
+                  ),
+                  child: Icon(
+                    LucideIcons.lightbulb,
+                    size: 24,
+                    color: AppColors.expiringSoon,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 12),
@@ -561,68 +607,83 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     return ExpiryStatus.valid;
   }
 
-  /// Sekcja etykiet z tytułem i ikoną edycji w jednej linii
+  /// Sekcja etykiet z tytułem i ikoną edycji przy treści
   Widget _buildLabelSection(BuildContext context) {
-    final selectedLabels = widget.storageService.getLabelsByIds(
-      _medicine.labels,
-    );
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Nagłówek bez ikony edycji
+        Text(
+          'Etykiety',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF6b7280),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Treść z ikoną edycji po prawej
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Etykiety',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF6b7280),
+            Expanded(
+              child: LabelSelector(
+                storageService: widget.storageService,
+                selectedLabelIds: _medicine.labels,
+                isOpen: _isLabelsOpen,
+                onToggle: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
+                onLabelTap: (labelId) => widget.onLabelTap(labelId),
+                onChanged: (newLabelIds) async {
+                  final updatedMedicine = _medicine.copyWith(
+                    labels: newLabelIds,
+                  );
+                  await widget.storageService.saveMedicine(updatedMedicine);
+                  setState(() {
+                    _medicine = updatedMedicine;
+                  });
+                },
               ),
             ),
+            const SizedBox(width: 12),
             GestureDetector(
               onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
               child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: NeuDecoration.flatSmall(
-                  isDark: Theme.of(context).brightness == Brightness.dark,
-                  radius: 8,
-                ),
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Icon(
-                  _isLabelsOpen ? LucideIcons.chevronUp : LucideIcons.pencil,
-                  size: 14,
+                  _isLabelsOpen ? LucideIcons.chevronUp : LucideIcons.squarePen,
+                  size: 24,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        LabelSelector(
-          storageService: widget.storageService,
-          selectedLabelIds: _medicine.labels,
-          isOpen: _isLabelsOpen,
-          onToggle: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
-          onLabelTap: (labelId) => widget.onLabelTap(labelId),
-          onChanged: (newLabelIds) async {
-            final updatedMedicine = _medicine.copyWith(labels: newLabelIds);
-            await widget.storageService.saveMedicine(updatedMedicine);
-            setState(() {
-              _medicine = updatedMedicine;
-            });
-          },
-        ),
       ],
     );
   }
 
+  /// Sekcja notatki - inline editing z zielonym outline
   Widget _buildNoteSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasNote = _medicine.notatka?.isNotEmpty == true;
 
     return GestureDetector(
-      onTap: () => _showEditNoteDialog(context),
-      child: Container(
+      onTap: () {
+        if (!_isEditingNote) {
+          setState(() {
+            _isEditingNote = true;
+            _noteController.text = _medicine.notatka ?? '';
+          });
+          // Schedule focus after build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _noteFocusNode.requestFocus();
+          });
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         width: double.infinity,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -631,15 +692,32 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               : Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isDark
+            color: _isEditingNote
+                ? AppColors.primary
+                : isDark
                 ? Theme.of(context).dividerColor.withAlpha(80)
                 : Theme.of(context).dividerColor,
+            width: _isEditingNote ? 2 : 1,
           ),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: SelectableText(
+        child: _isEditingNote
+            ? TextField(
+                controller: _noteController,
+                focusNode: _noteFocusNode,
+                maxLines: null,
+                minLines: 1,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  hintText: 'Wpisz notatkę...',
+                ),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                onSubmitted: (_) => _saveNote(),
+              )
+            : Text(
                 hasNote ? _medicine.notatka! : 'Kliknij, aby dodać notatkę',
                 style: TextStyle(
                   color: hasNote
@@ -648,56 +726,11 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                   fontStyle: hasNote ? FontStyle.normal : FontStyle.italic,
                 ),
               ),
-            ),
-            Icon(
-              Icons.edit_outlined,
-              size: 18,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ],
-        ),
       ),
     );
   }
 
-  Future<void> _showEditNoteDialog(BuildContext context) async {
-    final controller = TextEditingController(text: _medicine.notatka ?? '');
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edytuj notatkę'),
-        content: TextField(
-          controller: controller,
-          maxLines: 5,
-          decoration: const InputDecoration(
-            hintText: 'Wpisz notatkę...',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Zapisz'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null) {
-      final updatedMedicine = _medicine.copyWith(notatka: result);
-      await widget.storageService.saveMedicine(updatedMedicine);
-      setState(() {
-        _medicine = updatedMedicine;
-      });
-    }
-  }
-
-  /// Sekcja z tytułem i ikoną edycji flat (ołówek neumorficzny)
+  /// Sekcja z tytułem i ikoną edycji flat (ołówek neumorficzny) - stara wersja
   Widget _buildEditableSection(
     BuildContext context, {
     required String title,
@@ -728,7 +761,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                     radius: 8,
                   ),
                   child: Icon(
-                    LucideIcons.pencil,
+                    LucideIcons.squarePen,
                     size: 14,
                     color: Theme.of(context).colorScheme.onSurface,
                   ),
@@ -738,6 +771,55 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         ),
         const SizedBox(height: 8),
         child,
+      ],
+    );
+  }
+
+  /// Sekcja z nagłówkiem i ikoną edycji przy treści (squarePen 40px, wyrównana do prawej)
+  Widget _buildSectionWithContentEdit(
+    BuildContext context, {
+    required String title,
+    required Widget child,
+    VoidCallback? onEdit,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Nagłówek bez ikony edycji
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF6b7280),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Treść z ikoną edycji po prawej
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: child),
+            if (onEdit != null) ...[
+              const SizedBox(width: 12),
+              GestureDetector(
+                onTap: onEdit,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 12,
+                  ),
+                  child: Icon(
+                    LucideIcons.squarePen,
+                    size: 24,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
       ],
     );
   }
@@ -1372,7 +1454,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
 
     return _buildSection(
       context,
-      title: 'Ulotka PDF:',
+      title: 'Ulotka',
       child: hasLeaflet
           ? _buildLeafletActions(context)
           : _buildLeafletSearchButton(context),
@@ -1381,44 +1463,37 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
 
   /// Przyciski gdy ulotka jest przypisana
   Widget _buildLeafletActions(BuildContext context) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 8,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        NeuButton(
-          onPressed: () => _showPdfViewer(context),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(LucideIcons.fileText, size: 16, color: AppColors.valid),
-              const SizedBox(width: 8),
-              Text(
-                'Pokaż ulotkę PDF',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 13,
+        Expanded(
+          child: NeuButton(
+            onPressed: () => _showPdfViewer(context),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(LucideIcons.fileText, size: 16, color: AppColors.valid),
+                const SizedBox(width: 8),
+                Text(
+                  'Pokaż ulotkę PDF',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 13,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-        NeuButton(
-          onPressed: () => _detachLeaflet(),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(LucideIcons.pinOff, size: 16, color: AppColors.expired),
-              const SizedBox(width: 8),
-              Text(
-                'Odepnij',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 13,
-                ),
-              ),
-            ],
+        const SizedBox(width: 12),
+        GestureDetector(
+          onTap: () => _detachLeaflet(),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+            child: Icon(LucideIcons.pinOff, size: 24, color: AppColors.expired),
           ),
         ),
       ],
@@ -1525,6 +1600,166 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
           medicineId: _medicine.id,
         ),
       ),
+    );
+  }
+
+  /// Dialog z wyjaśnieniem ikon w sekcji Termin ważności
+  void _showIconsHelpDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(LucideIcons.lightbulb, color: AppColors.expiringSoon),
+            const SizedBox(width: 8),
+            const Text('Objaśnienie ikon'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildIconExplanation(
+              context,
+              LucideIcons.camera,
+              'Rozpoznaj datę ze zdjęcia (OCR)',
+            ),
+            const SizedBox(height: 12),
+            _buildIconExplanation(
+              context,
+              LucideIcons.calendarCog,
+              'Edytuj datę ważności ręcznie',
+            ),
+            const SizedBox(height: 12),
+            _buildIconExplanation(
+              context,
+              LucideIcons.trash2,
+              'Usuń opakowanie',
+              color: AppColors.expired,
+            ),
+            const SizedBox(height: 12),
+            _buildIconExplanation(
+              context,
+              LucideIcons.packagePlus,
+              'Zarządzaj opakowaniami',
+            ),
+            const SizedBox(height: 12),
+            _buildIconExplanation(
+              context,
+              LucideIcons.copyPlus,
+              'Dodaj nowe opakowanie',
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Rozumiem'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildIconExplanation(
+    BuildContext context,
+    IconData icon,
+    String description, {
+    Color? color,
+  }) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: color ?? Theme.of(context).colorScheme.onSurface,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            description,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Sekcja "Usuń lek" na dole karty
+  Widget _buildDeleteSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Nagłówek z ikoną trash
+        Row(
+          children: [
+            Icon(LucideIcons.trash2, size: 18, color: AppColors.expired),
+            const SizedBox(width: 8),
+            Text(
+              'Usuń lek',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.expired,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Podpowiedź lightbulb
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.expiringSoon.withAlpha(20)
+                : AppColors.expiringSoon.withAlpha(30),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.expiringSoon.withAlpha(50)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                LucideIcons.lightbulb,
+                size: 18,
+                color: AppColors.expiringSoon,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Jeśli chcesz usunąć tylko jedno opakowanie, przejdź do sekcji "Termin ważności"',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Przycisk usunięcia
+        NeuButton(
+          onPressed: widget.onDelete,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.trash2, size: 16, color: AppColors.expired),
+              const SizedBox(width: 8),
+              Text(
+                'Usuń cały lek z apteczki',
+                style: TextStyle(
+                  color: AppColors.expired,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
