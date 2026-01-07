@@ -4,12 +4,14 @@ import 'package:uuid/uuid.dart';
 class MedicinePackage {
   final String id;
   final String expiryDate; // ISO8601 ("2027-03-31")
-  final int? pieceCount; // Ilość sztuk (tabletki)
-  final int? percentRemaining; // % pozostały (syropy)
+  final bool isOpen; // true = otwarte, false = zamknięte (default)
+  final int? pieceCount; // Ilość sztuk w opakowaniu
+  final int? percentRemaining; // % pozostały (tylko dla otwartych)
 
   MedicinePackage({
     String? id,
     required this.expiryDate,
+    this.isOpen = false,
     this.pieceCount,
     this.percentRemaining,
   }) : id = id ?? const Uuid().v4();
@@ -17,6 +19,7 @@ class MedicinePackage {
   /// Tworzy z formatu MM/YYYY → ISO ostatni dzień miesiąca
   factory MedicinePackage.fromMMYYYY(
     String mmyyyy, {
+    bool isOpen = false,
     int? pieceCount,
     int? percentRemaining,
   }) {
@@ -30,6 +33,7 @@ class MedicinePackage {
     final lastDay = DateTime(year, month + 1, 0);
     return MedicinePackage(
       expiryDate: lastDay.toIso8601String().split('T')[0],
+      isOpen: isOpen,
       pieceCount: pieceCount,
       percentRemaining: percentRemaining,
     );
@@ -39,6 +43,7 @@ class MedicinePackage {
     return MedicinePackage(
       id: json['id'] as String?,
       expiryDate: json['expiryDate'] as String,
+      isOpen: json['isOpen'] as bool? ?? false,
       pieceCount: json['pieceCount'] as int?,
       percentRemaining: json['percentRemaining'] as int?,
     );
@@ -48,6 +53,7 @@ class MedicinePackage {
     return {
       'id': id,
       'expiryDate': expiryDate,
+      if (isOpen) 'isOpen': isOpen,
       if (pieceCount != null) 'pieceCount': pieceCount,
       if (percentRemaining != null) 'percentRemaining': percentRemaining,
     };
@@ -56,14 +62,20 @@ class MedicinePackage {
   MedicinePackage copyWith({
     String? id,
     String? expiryDate,
+    bool? isOpen,
     int? pieceCount,
     int? percentRemaining,
+    bool clearPieceCount = false,
+    bool clearPercentRemaining = false,
   }) {
     return MedicinePackage(
       id: id ?? this.id,
       expiryDate: expiryDate ?? this.expiryDate,
-      pieceCount: pieceCount ?? this.pieceCount,
-      percentRemaining: percentRemaining ?? this.percentRemaining,
+      isOpen: isOpen ?? this.isOpen,
+      pieceCount: clearPieceCount ? null : (pieceCount ?? this.pieceCount),
+      percentRemaining: clearPercentRemaining
+          ? null
+          : (percentRemaining ?? this.percentRemaining),
     );
   }
 
@@ -77,11 +89,18 @@ class MedicinePackage {
   /// Parsuje datę do DateTime
   DateTime? get dateTime => DateTime.tryParse(expiryDate);
 
-  /// Opis opcjonalnej wartości (sztuki lub %)
-  String? get remainingDescription {
-    if (pieceCount != null) return '$pieceCount szt.';
-    if (percentRemaining != null) return '$percentRemaining%';
-    return null;
+  /// Opis statusu opakowania
+  String get remainingDescription {
+    if (isOpen) {
+      // Opakowanie otwarte
+      if (pieceCount != null) return 'Pozostało: $pieceCount szt.';
+      if (percentRemaining != null) return 'Pozostało: $percentRemaining%';
+      return 'Opakowanie otwarte';
+    } else {
+      // Opakowanie zamknięte
+      if (pieceCount != null) return 'Zamknięte: $pieceCount szt.';
+      return 'Opakowanie zamknięte';
+    }
   }
 }
 

@@ -351,23 +351,8 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                 ],
               ),
             ),
-            if (packageCount > 0) ...[
-              GestureDetector(
-                onTap: () => _showEditPackageCountDialog(context),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 8,
-                  ),
-                  child: Icon(
-                    LucideIcons.packagePlus,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
+            // Ikona pomocy
+            if (packageCount > 0)
               GestureDetector(
                 onTap: () => _showIconsHelpDialog(context),
                 child: Container(
@@ -383,7 +368,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                   ),
                 ),
               ),
-            ],
           ],
         ),
         const SizedBox(height: 12),
@@ -415,7 +399,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  LucideIcons.copyPlus,
+                  LucideIcons.packagePlus,
                   size: 16,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
@@ -537,6 +521,20 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                 ),
               ),
             ),
+            const SizedBox(width: 8),
+            // Przycisk określenia ilości
+            GestureDetector(
+              onTap: () => _showEditRemainingDialog(context, package),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(
+                  LucideIcons.blocks,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
             const Spacer(),
             // Przycisk usunięcia (tylko jeśli więcej niż 1 opakowanie)
             if (_medicine.packages.length > 1)
@@ -557,40 +555,21 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               ),
           ],
         ),
-        // Pozostało (tylko dla pierwszego opakowania)
-        if (isFirst && (package.remainingDescription != null))
-          Padding(
-            padding: const EdgeInsets.only(left: 12, top: 4),
-            child: GestureDetector(
-              onTap: () => _showEditRemainingDialog(context, package),
-              child: Text(
-                '└─ ${package.remainingDescription}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                ),
+        // Status opakowania (dla wszystkich opakowań)
+        Padding(
+          padding: const EdgeInsets.only(left: 12, top: 4),
+          child: GestureDetector(
+            onTap: () => _showEditRemainingDialog(context, package),
+            child: Text(
+              '└─ ${package.remainingDescription}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
               ),
             ),
           ),
-        // Przycisk dodania "Pozostało" dla pierwszego opakowania bez wartości
-        if (isFirst && package.remainingDescription == null)
-          Padding(
-            padding: const EdgeInsets.only(left: 12, top: 4),
-            child: GestureDetector(
-              onTap: () => _showEditRemainingDialog(context, package),
-              child: Text(
-                '└─ + ustaw ilość pozostałą',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurfaceVariant.withAlpha(150),
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ),
+        ),
       ],
     );
   }
@@ -664,113 +643,92 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
   }
 
-  /// Sekcja notatki - inline editing z zielonym outline
+  /// Sekcja notatki - inline editing z zielonym outline i przyciskiem check
   Widget _buildNoteSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasNote = _medicine.notatka?.isNotEmpty == true;
 
-    return GestureDetector(
-      onTap: () {
-        if (!_isEditingNote) {
-          setState(() {
-            _isEditingNote = true;
-            _noteController.text = _medicine.notatka ?? '';
-          });
-          // Schedule focus after build
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _noteFocusNode.requestFocus();
-          });
-        }
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.transparent
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: _isEditingNote
-                ? AppColors.primary
-                : isDark
-                ? Theme.of(context).dividerColor.withAlpha(80)
-                : Theme.of(context).dividerColor,
-            width: _isEditingNote ? 2 : 1,
-          ),
-        ),
-        child: _isEditingNote
-            ? TextField(
-                controller: _noteController,
-                focusNode: _noteFocusNode,
-                maxLines: null,
-                minLines: 1,
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  hintText: 'Wpisz notatkę...',
-                ),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                onSubmitted: (_) => _saveNote(),
-              )
-            : Text(
-                hasNote ? _medicine.notatka! : 'Kliknij, aby dodać notatkę',
-                style: TextStyle(
-                  color: hasNote
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontStyle: hasNote ? FontStyle.normal : FontStyle.italic,
-                ),
-              ),
-      ),
-    );
-  }
-
-  /// Sekcja z tytułem i ikoną edycji flat (ołówek neumorficzny) - stara wersja
-  Widget _buildEditableSection(
-    BuildContext context, {
-    required String title,
-    required Widget child,
-    VoidCallback? onEdit,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF6b7280),
+        // Pole notatki
+        Expanded(
+          child: GestureDetector(
+            onTap: () {
+              if (!_isEditingNote) {
+                setState(() {
+                  _isEditingNote = true;
+                  _noteController.text = _medicine.notatka ?? '';
+                });
+                // Schedule focus after build
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _noteFocusNode.requestFocus();
+                });
+              }
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.transparent
+                    : Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+                border: _isEditingNote
+                    ? Border.all(color: AppColors.primary, width: 2)
+                    : null,
+              ),
+              child: _isEditingNote
+                  ? TextField(
+                      controller: _noteController,
+                      focusNode: _noteFocusNode,
+                      maxLines: null,
+                      minLines: 1,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        hintText: 'Wpisz notatkę...',
+                      ),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      onSubmitted: (_) => _saveNote(),
+                    )
+                  : Text(
+                      hasNote
+                          ? _medicine.notatka!
+                          : 'Kliknij, aby dodać notatkę',
+                      style: TextStyle(
+                        color: hasNote
+                            ? Theme.of(context).colorScheme.onSurface
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
+                        fontStyle: hasNote
+                            ? FontStyle.normal
+                            : FontStyle.italic,
+                      ),
+                    ),
+            ),
+          ),
+        ),
+        // Przycisk check (tylko gdy edytujemy)
+        if (_isEditingNote) ...[
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: _saveNote,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 20),
+              child: Icon(
+                LucideIcons.check,
+                size: 18,
+                color: AppColors.primary,
               ),
             ),
-            if (onEdit != null)
-              GestureDetector(
-                onTap: onEdit,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 8,
-                  ),
-                  child: Icon(
-                    LucideIcons.squarePen,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        child,
+          ),
+        ],
       ],
     );
   }
@@ -1175,13 +1133,15 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     }
   }
 
-  /// Dialog edycji ilości pozostałej (sztuki lub %)
+  /// Dialog określenia statusu i ilości w opakowaniu
   Future<void> _showEditRemainingDialog(
     BuildContext context,
     MedicinePackage package,
   ) async {
-    // Tryb: 0 = pusty, 1 = sztuki, 2 = procent
-    int mode = package.pieceCount != null
+    // Status: false = zamknięte, true = otwarte
+    bool isOpen = package.isOpen;
+    // Wartość: 0 = brak, 1 = sztuki, 2 = procent
+    int valueMode = package.pieceCount != null
         ? 1
         : package.percentRemaining != null
         ? 2
@@ -1193,54 +1153,93 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
       text: package.percentRemaining?.toString() ?? '',
     );
 
-    final result = await showDialog<Map<String, int?>>(
+    final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Ilość pozostała'),
+          title: const Text('Określ pozostałą ilość w opakowaniu'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Wybór trybu
+              // Status opakowania
+              Text(
+                'Status opakowania',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Zamknięte'),
+                    selected: !isOpen,
+                    onSelected: (_) => setDialogState(() {
+                      isOpen = false;
+                      // Reset procent przy zamknięciu
+                      if (valueMode == 2) valueMode = 0;
+                    }),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Otwarte'),
+                    selected: isOpen,
+                    onSelected: (_) => setDialogState(() => isOpen = true),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Ilość w opakowaniu
+              Text(
+                'Ilość w opakowaniu (opcjonalne)',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 children: [
                   ChoiceChip(
                     label: const Text('Brak'),
-                    selected: mode == 0,
-                    onSelected: (_) => setDialogState(() => mode = 0),
+                    selected: valueMode == 0,
+                    onSelected: (_) => setDialogState(() => valueMode = 0),
                   ),
                   ChoiceChip(
                     label: const Text('Sztuki'),
-                    selected: mode == 1,
-                    onSelected: (_) => setDialogState(() => mode = 1),
+                    selected: valueMode == 1,
+                    onSelected: (_) => setDialogState(() => valueMode = 1),
                   ),
-                  ChoiceChip(
-                    label: const Text('Procent'),
-                    selected: mode == 2,
-                    onSelected: (_) => setDialogState(() => mode = 2),
-                  ),
+                  // Procent tylko dla otwartych
+                  if (isOpen)
+                    ChoiceChip(
+                      label: const Text('Procent'),
+                      selected: valueMode == 2,
+                      onSelected: (_) => setDialogState(() => valueMode = 2),
+                    ),
                 ],
               ),
               const SizedBox(height: 16),
               // Input dla wybranego trybu
-              if (mode == 1)
+              if (valueMode == 1)
                 TextField(
                   controller: pieceController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Ilość sztuk',
-                    hintText: 'np. 15',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: isOpen
+                        ? 'Pozostało sztuk'
+                        : 'Ilość sztuk w opakowaniu',
+                    hintText: 'np. 30',
+                    border: const OutlineInputBorder(),
                   ),
                 ),
-              if (mode == 2)
+              if (valueMode == 2)
                 TextField(
                   controller: percentController,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(
-                    labelText: 'Procent pozostały',
+                    labelText: 'Pozostało procent',
                     hintText: 'np. 50',
                     suffixText: '%',
                     border: OutlineInputBorder(),
@@ -1256,10 +1255,11 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             FilledButton(
               onPressed: () {
                 Navigator.pop(context, {
-                  'pieceCount': mode == 1
+                  'isOpen': isOpen,
+                  'pieceCount': valueMode == 1
                       ? int.tryParse(pieceController.text)
                       : null,
-                  'percentRemaining': mode == 2
+                  'percentRemaining': valueMode == 2
                       ? int.tryParse(percentController.text)
                       : null,
                 });
@@ -1275,8 +1275,9 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
       final updatedPackage = MedicinePackage(
         id: package.id,
         expiryDate: package.expiryDate,
-        pieceCount: result['pieceCount'],
-        percentRemaining: result['percentRemaining'],
+        isOpen: result['isOpen'] as bool,
+        pieceCount: result['pieceCount'] as int?,
+        percentRemaining: result['percentRemaining'] as int?,
       );
       final updatedPackages = _medicine.packages
           .map((p) => p.id == package.id ? updatedPackage : p)
@@ -1287,27 +1288,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         _medicine = updatedMedicine;
       });
     }
-  }
-
-  /// Dialog edycji liczby opakowań (szybkie +/-)
-  Future<void> _showEditPackageCountDialog(BuildContext context) async {
-    // Pokaż prosty dialog z info
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Zarządzanie opakowaniami'),
-        content: const Text(
-          'Użyj przycisku "Dodaj opakowanie" aby dodać nowe opakowanie z datą ważności.\n\n'
-          'Użyj ikony kosza przy opakowaniu aby je usunąć.',
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 
   /// Usuwa opakowanie
@@ -1633,21 +1613,21 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             const SizedBox(height: 12),
             _buildIconExplanation(
               context,
-              LucideIcons.trash2,
-              'Usuń opakowanie',
-              color: AppColors.expired,
+              LucideIcons.blocks,
+              'Określ pozostałą ilość w opakowaniu',
             ),
             const SizedBox(height: 12),
             _buildIconExplanation(
               context,
               LucideIcons.packagePlus,
-              'Zarządzaj opakowaniami',
+              'Dodaj nowe opakowanie',
             ),
             const SizedBox(height: 12),
             _buildIconExplanation(
               context,
-              LucideIcons.copyPlus,
-              'Dodaj nowe opakowanie',
+              LucideIcons.trash2,
+              'Usuń opakowanie',
+              color: AppColors.expired,
             ),
           ],
         ),
@@ -1692,19 +1672,13 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Nagłówek z ikoną trash
-        Row(
-          children: [
-            Icon(LucideIcons.trash2, size: 18, color: AppColors.expired),
-            const SizedBox(width: 8),
-            Text(
-              'Usuń lek',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppColors.expired,
-              ),
-            ),
-          ],
+        // Nagłówek - tylko tekst
+        Text(
+          'Usuń lek',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF6b7280),
+          ),
         ),
         const SizedBox(height: 12),
         // Podpowiedź lightbulb
