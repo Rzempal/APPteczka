@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artisan Coffee Icons Showcase</title>
+    <style>
+        :root {
+            --brand-green: #4A8B5F;
+            --text-dark: #1a1a1a;
+            --bg-card: #ffffff;
+        }
+
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Inter', -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            gap: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 520px;
+        }
+
+        .coffee-box {
+            flex: 1;
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 24px 12px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--text-dark);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .coffee-box:hover {
+            transform: translateY(-6px);
+            border-color: var(--brand-green);
+            box-shadow: 0 15px 30px -10px rgba(74, 139, 95, 0.2);
+        }
+
+        .icon-wrap {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            color: var(--brand-green);
+        }
+
+        .price {
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 5 ZŁ - ESPRESSO (Premium Small) -->
+    <a href="#" class="coffee-box">
+        <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <!-- Para -->
+                <path d="M9 2c0 0 .5 1 0 2s-.5 1 0 2" stroke-width="1.2" opacity="0.6"/>
+                <path d="M12 1c0 0 .5 1 0 2s-.5 1 0 2" stroke-width="1.2" opacity="0.6"/>
+                <!-- Mała filiżanka -->
+                <path d="M6 9h9v3.5a4.5 4.5 0 0 1-9 0V9z" fill="currentColor" fill-opacity="0.05"/>
+                <path d="M15 10h1.5a2.5 2.5 0 0 1 0 5H15" />
+                <!-- Podstawka -->
+                <path d="M4 19h13" />
+            </svg>
+        </div>
+        <div class="price">5 zł</div>
+    </a>
+
+    <!-- 10 ZŁ - CAPPUCCINO (Premium Medium) -->
+    <a href="#" class="coffee-box">
+        <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <!-- Para -->
+                <path d="M8 2c0 0 .5 1 0 2s-.5 1 0 2" stroke-width="1.2" opacity="0.6"/>
+                <path d="M11 1c0 0 .5 1 0 2s-.5 1 0 2" stroke-width="1.2" opacity="0.6"/>
+                <path d="M14 2c0 0 .5 1 0 2s-.5 1 0 2" stroke-width="1.2" opacity="0.6"/>
+                <!-- Szeroka filiżanka -->
+                <path d="M3 8h14v4.5c0 3.59-2.91 6.5-6.5 6.5h-1C5.91 19 3 16.09 3 12.5V8z" fill="currentColor" fill-opacity="0.05"/>
+                <!-- Serce (Latté Art) -->
+                <path d="M8.5 12.5c0-.6.4-1.1 1-1.1.3 0 .5.1.7.3.2-.2.4-.3.7-.3.6 0 1 .5 1 1.1 0 .9-1.7 1.8-1.7 1.8s-1.7-.9-1.7-1.8z" fill="currentColor" fill-opacity="0.3" stroke="none"/>
+                <!-- Ucho -->
+                <path d="M17 9h2c1.66 0 3 1.34 3 3s-1.34 3-3 3h-2" />
+                <!-- Podstawka -->
+                <path d="M2 22h18" />
+            </svg>
+        </div>
+        <div class="price">10 zł</div>
+    </a>
+
+    <!-- 15 ZŁ - TAKEAWAY (The "Grand" One) -->
+    <a href="#" class="coffee-box">
+        <div class="icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <!-- Kubek -->
+                <path d="M6 7l1.5 13.5c.1.8.8 1.5 1.6 1.5h5.8c.8 0 1.5-.7 1.6-1.5L18 7H6z" fill="currentColor" fill-opacity="0.05"/>
+                <!-- Przykrywka -->
+                <path d="M5 7h14v-1c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v1z" />
+                <path d="M14 4V2.5c0-.3-.2-.5-.5-.5h-3c-.3 0-.5.2-.5.5V4" />
+                <!-- Opaska -->
+                <path d="M6.5 12h11" opacity="0.8"/>
+                <path d="M7.2 17h9.6" opacity="0.8"/>
+                <!-- Tekstura opaski -->
+                <path d="M9.5 12l.5 5" stroke-width="0.8" opacity="0.4"/>
+                <path d="M12 12v5" stroke-width="0.8" opacity="0.4"/>
+                <path d="M14.5 12l-.5 5" stroke-width="0.8" opacity="0.4"/>
+            </svg>
+        </div>
+        <div class="price">15 zł</div>
+    </a>
+</div>
+
+</body>
+</html>
+

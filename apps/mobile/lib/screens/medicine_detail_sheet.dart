@@ -910,50 +910,54 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
   }
 
-  /// Sekcja notatki - inline editing z zielonym outline i przyciskiem check
+  /// Sekcja notatki - inline editing z zielonym outline i przyciskiem check wewnątrz
   Widget _buildNoteSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hasNote = _medicine.notatka?.isNotEmpty == true;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Pole notatki
-        Expanded(
-          child: GestureDetector(
-            onTap: () {
-              if (!_isEditingNote) {
-                setState(() {
-                  _isEditingNote = true;
-                  _noteController.text = _medicine.notatka ?? '';
-                });
-                // Schedule focus after build
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _noteFocusNode.requestFocus();
-                });
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? Colors.transparent
-                    : Theme.of(context).colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-                border: _isEditingNote
-                    ? Border.all(color: AppColors.primary, width: 2)
-                    : null,
-              ),
-              child: _isEditingNote
-                  ? TextField(
+    return GestureDetector(
+      onTap: () {
+        if (!_isEditingNote) {
+          setState(() {
+            _isEditingNote = true;
+            _noteController.text = _medicine.notatka ?? '';
+          });
+          // Schedule focus after build
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _noteFocusNode.requestFocus();
+          });
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isDark
+              ? Colors.transparent
+              : Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(8),
+          border: _isEditingNote
+              ? Border.all(color: AppColors.primary, width: 2)
+              : null,
+        ),
+        child: _isEditingNote
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Pole tekstowe - bez wewnętrznego outline
+                  Expanded(
+                    child: TextField(
                       controller: _noteController,
                       focusNode: _noteFocusNode,
                       maxLines: null,
                       minLines: 1,
                       decoration: const InputDecoration(
                         border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
                         isDense: true,
                         contentPadding: EdgeInsets.zero,
                         hintText: 'Wpisz notatkę...',
@@ -962,41 +966,38 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                         color: Theme.of(context).colorScheme.onSurface,
                       ),
                       onSubmitted: (_) => _saveNote(),
-                    )
-                  : Text(
-                      hasNote
-                          ? _medicine.notatka!
-                          : 'Kliknij, aby dodać notatkę',
-                      style: TextStyle(
-                        color: hasNote
-                            ? Theme.of(context).colorScheme.onSurface
-                            : Theme.of(context).colorScheme.onSurfaceVariant,
-                        fontStyle: hasNote
-                            ? FontStyle.normal
-                            : FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Przycisk check wewnątrz pola, wyrównany do prawej
+                  GestureDetector(
+                    onTap: _saveNote,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: NeuDecoration.flatSmall(
+                        isDark: isDark,
+                        radius: 16,
+                      ),
+                      child: Icon(
+                        LucideIcons.check,
+                        size: 16,
+                        color: AppColors.primary,
                       ),
                     ),
-            ),
-          ),
-        ),
-        // Przycisk check (tylko gdy edytujemy)
-        if (_isEditingNote) ...[
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: _saveNote,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 20),
-              child: Icon(
-                LucideIcons.check,
-                size: 18,
-                color: AppColors.primary,
+                  ),
+                ],
+              )
+            : Text(
+                hasNote ? _medicine.notatka! : 'Kliknij, aby dodać notatkę',
+                style: TextStyle(
+                  color: hasNote
+                      ? Theme.of(context).colorScheme.onSurface
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontStyle: hasNote ? FontStyle.normal : FontStyle.italic,
+                ),
               ),
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 

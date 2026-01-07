@@ -70,6 +70,11 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isManagementSheetOpen = false;
   final FocusNode _searchFocusNode = FocusNode();
 
+  // Help tooltip state
+  bool _isHelpTooltipOpen = false;
+  final GlobalKey _helpButtonKey = GlobalKey();
+  OverlayEntry? _helpOverlayEntry;
+
   @override
   void initState() {
     super.initState();
@@ -81,10 +86,12 @@ class _HomeScreenState extends State<HomeScreen> {
     widget.updateService.addListener(_onUpdateChanged);
     widget.updateService.checkForUpdate();
 
-    // Pokaż tooltip pomocy przy pierwszym uruchomieniu
+    // Pokaż tooltip pomocy po dodaniu pierwszego leku
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!widget.storageService.helpTooltipShown && mounted) {
-        _showHelpTooltip(context);
+      if (_medicines.isNotEmpty &&
+          !widget.storageService.helpTooltipShown &&
+          mounted) {
+        _showHelpTooltip();
       }
     });
   }
@@ -95,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _removeHelpOverlay();
     _searchController.dispose();
     _searchFocusNode.dispose();
     widget.updateService.removeListener(_onUpdateChanged);
@@ -572,7 +580,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     radius: 20,
                   ),
                   child: Icon(
-                    LucideIcons.arrowRight,
+                    LucideIcons.check,
                     size: 18,
                     color: theme.colorScheme.primary,
                   ),
@@ -615,12 +623,27 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const SizedBox(width: 8),
-          // Przycisk pomocy - żarówka
-          NeuIconButton(
-            icon: LucideIcons.lightbulb,
-            iconColor: Colors.amber,
-            onPressed: () => _showHelpTooltip(context),
-            tooltip: 'Podpowiedzi',
+          // Przycisk pomocy - żarówka z efektem pressed
+          GestureDetector(
+            key: _helpButtonKey,
+            onTap: _toggleHelpTooltip,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 80),
+              width: 40,
+              height: 40,
+              decoration: _isHelpTooltipOpen
+                  ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
+                  : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+              child: Center(
+                child: Icon(
+                  LucideIcons.lightbulb,
+                  size: 20,
+                  color: _isHelpTooltipOpen
+                      ? Colors.amber
+                      : Colors.amber.shade600,
+                ),
+              ),
+            ),
           ),
           const Spacer(),
           // Widok toggle
@@ -716,154 +739,159 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  /// Pokazuje tooltip z podpowiedziami gestów i ukrytych funkcji
-  void _showHelpTooltip(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+  // ==================== HELP TOOLTIP ====================
+
+  void _toggleHelpTooltip() {
+    if (_isHelpTooltipOpen) {
+      _removeHelpOverlay();
+    } else {
+      _showHelpTooltip();
+    }
+  }
+
+  void _showHelpTooltip() {
+    if (_helpOverlayEntry != null) return;
 
     // Oznacz jako pokazany
     widget.storageService.helpTooltipShown = true;
 
-    showDialog(
-      context: context,
-      barrierColor: Colors.black54,
-      builder: (ctx) => Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.darkBackground
-                : AppColors.lightBackground,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(50),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-              ),
-            ],
+    _helpOverlayEntry = _createHelpOverlayEntry();
+    Overlay.of(context).insert(_helpOverlayEntry!);
+    setState(() => _isHelpTooltipOpen = true);
+  }
+
+  void _removeHelpOverlay() {
+    _helpOverlayEntry?.remove();
+    _helpOverlayEntry = null;
+    if (mounted) {
+      setState(() => _isHelpTooltipOpen = false);
+    }
+  }
+
+  OverlayEntry _createHelpOverlayEntry() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    // Get button position
+    final RenderBox? renderBox =
+        _helpButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    final buttonSize = renderBox?.size ?? const Size(40, 40);
+    final buttonPosition = renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
+
+    const menuWidth = 280.0;
+
+    return OverlayEntry(
+      builder: (context) => Stack(
+        children: [
+          // Tap barrier to close
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _removeHelpOverlay,
+              behavior: HitTestBehavior.opaque,
+              child: Container(color: Colors.transparent),
+            ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header z ikoną żarówki
-              Row(
-                children: [
-                  Icon(LucideIcons.lightbulb, color: Colors.amber, size: 24),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Podpowiedzi',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+          // Menu below button, aligned right
+          Positioned(
+            top: buttonPosition.dy + buttonSize.height + 8,
+            right:
+                MediaQuery.of(context).size.width -
+                buttonPosition.dx -
+                buttonSize.width,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: menuWidth,
+                padding: const EdgeInsets.all(16),
+                decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
+                    Row(
+                      children: [
+                        Icon(
+                          LucideIcons.lightbulb,
+                          color: Colors.amber,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Podpowiedzi',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const Spacer(),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(ctx),
-                    child: Icon(
-                      LucideIcons.x,
-                      size: 20,
-                      color: theme.colorScheme.onSurfaceVariant,
+                    const SizedBox(height: 12),
+                    // Gesty
+                    _buildHelpSectionOverlay(
+                      theme,
+                      icon: LucideIcons.hand,
+                      title: 'Gesty na karcie leku',
+                      items: [
+                        'Dotknięcie → rozwija kartę',
+                        'Przytrzymanie → szczegóły',
+                        'Przeciągnięcie ← → etykiety',
+                        'Przeciągnięcie → → notatka',
+                      ],
                     ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Sekcja: Gesty na karcie leku
-              _buildHelpSection(
-                context,
-                icon: LucideIcons.hand,
-                title: 'Gesty na karcie leku',
-                items: [
-                  'Dotknięcie → rozwija kartę leku',
-                  'Przytrzymanie → otwiera szczegóły i edycję',
-                  'Przeciągnięcie ← → Moje etykiety',
-                  'Przeciągnięcie → → edycja notatki',
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              // Sekcja: Ciekawe funkcje
-              _buildHelpSection(
-                context,
-                icon: LucideIcons.sparkles,
-                title: 'Ciekawe funkcje',
-                items: [
-                  'Kalkulator zapasu: sprawdź do kiedy wystarczy lek',
-                  'Wykrywanie duplikatów: filtr "Potencjalne duplikaty"',
-                  'OCR daty ważności: aparat przy terminie ważności',
-                  'Szukaj w ulotce: sekcja "Ulotka" → wyszukiwarka',
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Przycisk zamknięcia
-              Center(
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(ctx),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 10,
+                    const SizedBox(height: 12),
+                    // Funkcje
+                    _buildHelpSectionOverlay(
+                      theme,
+                      icon: LucideIcons.sparkles,
+                      title: 'Ciekawe funkcje',
+                      items: [
+                        'Kalkulator zapasu leku',
+                        'Wykrywanie duplikatów',
+                        'OCR daty ważności',
+                        'Szukaj w ulotce',
+                      ],
                     ),
-                    decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
-                    child: Text(
-                      'Rozumiem',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                  ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildHelpSection(
-    BuildContext context, {
+  Widget _buildHelpSectionOverlay(
+    ThemeData theme, {
     required IconData icon,
     required String title,
     required List<String> items,
   }) {
-    final theme = Theme.of(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header
         Row(
           children: [
-            Icon(icon, size: 16, color: theme.colorScheme.primary),
+            Icon(icon, size: 14, color: theme.colorScheme.primary),
             const SizedBox(width: 6),
             Text(
               title,
-              style: theme.textTheme.titleSmall?.copyWith(
+              style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.primary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        // Items
+        const SizedBox(height: 6),
         ...items.map(
           (item) => Padding(
-            padding: const EdgeInsets.only(left: 22, bottom: 4),
+            padding: const EdgeInsets.only(left: 20, bottom: 2),
             child: Text(
               '• $item',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 11,
               ),
             ),
           ),
