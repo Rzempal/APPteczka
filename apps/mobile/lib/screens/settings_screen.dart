@@ -11,6 +11,7 @@ import '../services/update_service.dart';
 import '../widgets/bug_report_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
+import '../widgets/coffee_icons.dart';
 
 /// Ekran ustawień aplikacji
 class SettingsScreen extends StatefulWidget {
@@ -1214,28 +1215,22 @@ class _SettingsScreenState extends State<SettingsScreen>
                       _buildCoffeeOption(
                         theme,
                         isDark,
-                        size: 'small',
+                        coffeeSize: CoffeeSize.small,
                         price: '5 zł',
-                        iconUrl:
-                            'https://buycoffee.to/static/img/icons/coffee-small.svg',
                       ),
                       const SizedBox(width: 8),
                       _buildCoffeeOption(
                         theme,
                         isDark,
-                        size: 'medium',
+                        coffeeSize: CoffeeSize.medium,
                         price: '10 zł',
-                        iconUrl:
-                            'https://buycoffee.to/static/img/icons/coffee-medium.svg',
                       ),
                       const SizedBox(width: 8),
                       _buildCoffeeOption(
                         theme,
                         isDark,
-                        size: 'large',
+                        coffeeSize: CoffeeSize.large,
                         price: '15 zł',
-                        iconUrl:
-                            'https://buycoffee.to/static/img/icons/coffee-large.svg',
                       ),
                     ],
                   ),
@@ -1250,29 +1245,22 @@ class _SettingsScreenState extends State<SettingsScreen>
   Widget _buildCoffeeOption(
     ThemeData theme,
     bool isDark, {
-    required String size,
+    required CoffeeSize coffeeSize,
     required String price,
-    required String iconUrl,
   }) {
+    // Map CoffeeSize enum to URL parameter
+    final sizeParam = coffeeSize.name; // 'small', 'medium', 'large'
+
     return Expanded(
       child: GestureDetector(
-        onTap: () => _launchSupportUrl(size),
+        onTap: () => _launchSupportUrl(sizeParam),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
           decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
           child: Column(
             children: [
-              // Ikona kawy z URL
-              Image.network(
-                iconUrl,
-                width: 36,
-                height: 36,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  LucideIcons.coffee,
-                  size: 36,
-                  color: const Color(0xFF00B67A), // BuyCoffee green
-                ),
-              ),
+              // Custom ikona kawy
+              CoffeeIcon(size: coffeeSize, dimension: 40),
               const SizedBox(height: 8),
               Text(
                 price,
