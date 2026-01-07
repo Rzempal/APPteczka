@@ -1167,35 +1167,33 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
+                      // Ikona kawy
+                      Icon(
+                        LucideIcons.coffee,
+                        color: theme.colorScheme.primary,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      // Tekst promocyjny
+                      Expanded(
+                        child: Text(
+                          'Aplikacja jest darmowa i bez reklam, jeśli Ci się podoba',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // Obrazek BuyCoffee button
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.asset(
                           'assets/buycoffee-button.png',
-                          height: 38,
+                          height: 32,
                           fit: BoxFit.contain,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Wesprzyj projekt',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              'i postaw nam kawę',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      const SizedBox(width: 8),
                       Icon(
                         _isSupportOpen
                             ? LucideIcons.chevronUp
@@ -1207,48 +1205,37 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ),
                 ),
               ),
-              // Zawartość zwijana - cennik
+              // Zawartość zwijana - cennik (bez nagłówka)
               if (_isSupportOpen)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Column(
+                  child: Row(
                     children: [
-                      Text(
-                        'Postaw kawę za:',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      _buildCoffeeOption(
+                        theme,
+                        isDark,
+                        size: 'small',
+                        price: '5 zł',
+                        iconUrl:
+                            'https://buycoffee.to/static/img/icons/coffee-small.svg',
                       ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          _buildCoffeeOption(
-                            theme,
-                            isDark,
-                            size: 'small',
-                            price: '5 zł',
-                            iconUrl:
-                                'https://buycoffee.to/static/img/icons/coffee-small.svg',
-                          ),
-                          const SizedBox(width: 8),
-                          _buildCoffeeOption(
-                            theme,
-                            isDark,
-                            size: 'medium',
-                            price: '10 zł',
-                            iconUrl:
-                                'https://buycoffee.to/static/img/icons/coffee-medium.svg',
-                          ),
-                          const SizedBox(width: 8),
-                          _buildCoffeeOption(
-                            theme,
-                            isDark,
-                            size: 'large',
-                            price: '15 zł',
-                            iconUrl:
-                                'https://buycoffee.to/static/img/icons/coffee-large.svg',
-                          ),
-                        ],
+                      const SizedBox(width: 8),
+                      _buildCoffeeOption(
+                        theme,
+                        isDark,
+                        size: 'medium',
+                        price: '10 zł',
+                        iconUrl:
+                            'https://buycoffee.to/static/img/icons/coffee-medium.svg',
+                      ),
+                      const SizedBox(width: 8),
+                      _buildCoffeeOption(
+                        theme,
+                        isDark,
+                        size: 'large',
+                        price: '15 zł',
+                        iconUrl:
+                            'https://buycoffee.to/static/img/icons/coffee-large.svg',
                       ),
                     ],
                   ),
