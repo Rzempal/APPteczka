@@ -19,6 +19,14 @@ erDiagram
     LEK ||--o{ WSKAZANIE : ma
     LEK ||--o{ TAG : ma
     LEK ||--o{ ETYKIETA_REF : ma
+    LEK ||--o{ OPAKOWANIE : ma
+    
+    OPAKOWANIE {
+        uuid id PK
+        date termin_waznosci
+        int ilosc_sztuk
+        int procent_pozostaly
+    }
     
     WSKAZANIE {
         string wartosc
@@ -53,7 +61,8 @@ erDiagram
 | `wskazania` | string[] | ✅ | Lista wskazań do stosowania |
 | `tagi` | string[] | ✅ | Kontrolowane tagi (filtry) |
 | `labels` | string[] | ❌ | ID etykiet użytkownika (max 5) |
-| `terminWaznosci` | Date | ❌ | Opcjonalny termin ważności |
+| `packages` | Package[] | ✅ | Lista opakowań z datami ważności |
+| `terminWaznosci` | Date | ❌ | *Computed*: najkrótsza data z opakowań |
 | `dataDodania` | timestamp | ✅ | Automatyczna data importu |
 
 ---
@@ -80,8 +89,16 @@ interface Medicine {
   wskazania: string[];
   tagi: string[];
   labels?: string[];        // ID etykiet użytkownika
-  terminWaznosci?: Date;
+  packages: MedicinePackage[];
+  terminWaznosci?: Date;    // Computed property (najkrótsza data)
   dataDodania: Date;
+}
+
+interface MedicinePackage {
+  id: string;
+  expiryDate: string;      // ISO8601 YYYY-MM-DD
+  pieceCount?: number;     // Opcjonalna ilość sztuk
+  percentRemaining?: number; // Opcjonalny % pozostały
 }
 
 interface UserLabel {

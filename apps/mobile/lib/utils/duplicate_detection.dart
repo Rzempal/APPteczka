@@ -1,5 +1,7 @@
 /// Moduł wykrywania duplikatów leków
 /// duplicate_detection.dart v0.001 Implementacja wykrywania duplikatów
+library;
+
 import '../models/medicine.dart';
 
 /// Słowa ignorowane przy wykrywaniu duplikatów (warianty, formy, jednostki)

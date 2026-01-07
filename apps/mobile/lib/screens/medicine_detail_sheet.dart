@@ -233,115 +233,9 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                       child: _buildNoteSection(context),
                     ),
 
-                    // Termin ważności - reorganizacja layoutu
+                    // Termin ważności - sekcja wielu opakowań
                     const SizedBox(height: 20),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Linia 1: Tytuł ←→ Ołówek (edycja ręczna)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Termin ważności',
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF6b7280),
-                                  ),
-                            ),
-                            GestureDetector(
-                              onTap: () => _showMonthYearPicker(context),
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: NeuDecoration.flatSmall(
-                                  isDark:
-                                      Theme.of(context).brightness ==
-                                      Brightness.dark,
-                                  radius: 8,
-                                ),
-                                child: Icon(
-                                  LucideIcons.pencil,
-                                  size: 14,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        // Linia 2: Data (badge) + Aparat (OCR)
-                        Row(
-                          children: [
-                            // Badge z datą i statusem
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: statusColor,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    _getStatusIcon(status),
-                                    size: 14,
-                                    color: Colors.white,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _medicine.terminWaznosci != null
-                                        ? _formatDate(_medicine.terminWaznosci!)
-                                        : 'Nie ustawiono',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Przycisk OCR daty
-                            NeuButton(
-                              onPressed: () => _takeDatePhoto(context),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    LucideIcons.camera,
-                                    size: 16,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    'Zrób zdjęcie',
-                                    style: TextStyle(
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.onSurface,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+                    _buildPackagesSection(context, statusColor),
 
                     // Data dodania
                     const SizedBox(height: 20),
@@ -384,6 +278,287 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         child,
       ],
     );
+  }
+
+  /// Sekcja zarządzania wieloma opakowaniami z różnymi datami ważności
+  Widget _buildPackagesSection(BuildContext context, Color statusColor) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final packages = _medicine.sortedPackages;
+    final packageCount = _medicine.packageCount;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header: Termin ważności - Ilość opakowań X + package-plus icon
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'Termin ważności',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6b7280),
+                    ),
+                  ),
+                  if (packageCount > 0) ...[
+                    TextSpan(
+                      text: ' - Ilość opakowań ',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF6b7280),
+                      ),
+                    ),
+                    TextSpan(
+                      text: '$packageCount',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (packageCount > 0)
+              GestureDetector(
+                onTap: () => _showEditPackageCountDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.packagePlus,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Lista opakowań
+        if (packages.isEmpty)
+          _buildEmptyPackageState(context, isDark)
+        else
+          ...packages.asMap().entries.map((entry) {
+            final index = entry.key;
+            final package = entry.value;
+            final isFirst = index == 0;
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index < packages.length - 1 ? 8 : 0,
+              ),
+              child: _buildPackageRow(context, package, isFirst, isDark),
+            );
+          }),
+
+        // Przycisk "Dodaj opakowanie"
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () => _showAddPackageDialog(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.copyPlus,
+                  size: 16,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Dodaj opakowanie',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Stan pusty - brak opakowań
+  Widget _buildEmptyPackageState(BuildContext context, bool isDark) {
+    return GestureDetector(
+      onTap: () => _showAddPackageDialog(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.calendarPlus,
+              size: 16,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Ustaw termin ważności',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Pojedynczy wiersz opakowania
+  Widget _buildPackageRow(
+    BuildContext context,
+    MedicinePackage package,
+    bool isFirst,
+    bool isDark,
+  ) {
+    final status = _getPackageStatus(package);
+    final packageStatusColor = _getStatusColor(status);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Badge z datą
+            GestureDetector(
+              onTap: () => _showEditPackageDateDialog(context, package),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: packageStatusColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(_getStatusIcon(status), size: 14, color: Colors.white),
+                    const SizedBox(width: 6),
+                    Text(
+                      package.displayDate,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Przycisk OCR
+            GestureDetector(
+              onTap: () => _takeDatePhotoForPackage(context, package),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(
+                  LucideIcons.camera,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Przycisk edycji daty
+            GestureDetector(
+              onTap: () => _showEditPackageDateDialog(context, package),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(
+                  LucideIcons.calendarCog,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            const Spacer(),
+            // Przycisk usunięcia (tylko jeśli więcej niż 1 opakowanie)
+            if (_medicine.packages.length > 1)
+              GestureDetector(
+                onTap: () => _deletePackage(package),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.trash2,
+                    size: 14,
+                    color: AppColors.expired,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        // Pozostało (tylko dla pierwszego opakowania)
+        if (isFirst && (package.remainingDescription != null))
+          Padding(
+            padding: const EdgeInsets.only(left: 12, top: 4),
+            child: GestureDetector(
+              onTap: () => _showEditRemainingDialog(context, package),
+              child: Text(
+                '└─ ${package.remainingDescription}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ),
+        // Przycisk dodania "Pozostało" dla pierwszego opakowania bez wartości
+        if (isFirst && package.remainingDescription == null)
+          Padding(
+            padding: const EdgeInsets.only(left: 12, top: 4),
+            child: GestureDetector(
+              onTap: () => _showEditRemainingDialog(context, package),
+              child: Text(
+                '└─ + ustaw ilość pozostałą',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurfaceVariant.withAlpha(150),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  ExpiryStatus _getPackageStatus(MedicinePackage package) {
+    final expiry = package.dateTime;
+    if (expiry == null) return ExpiryStatus.unknown;
+
+    final now = DateTime.now();
+    final daysUntilExpiry = expiry.difference(now).inDays;
+
+    if (daysUntilExpiry < 0) return ExpiryStatus.expired;
+    if (daysUntilExpiry <= 30) return ExpiryStatus.expiringSoon;
+    return ExpiryStatus.valid;
   }
 
   /// Sekcja etykiet z tytułem i ikoną edycji w jednej linii
@@ -719,15 +894,123 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     }
   }
 
-  /// Picker wyboru miesiąca i roku (MM/YYYY)
-  Future<void> _showMonthYearPicker(BuildContext context) async {
-    // Parsuj aktualną datę
-    DateTime? currentDate;
-    if (_medicine.terminWaznosci != null) {
-      currentDate = DateTime.tryParse(_medicine.terminWaznosci!);
-    }
-    currentDate ??= DateTime.now().add(const Duration(days: 365));
+  /// Dialog dodawania nowego opakowania
+  Future<void> _showAddPackageDialog(BuildContext context) async {
+    final currentYear = DateTime.now().year;
+    int selectedMonth = DateTime.now().month;
+    int selectedYear = currentYear + 1;
+    bool useSameDate = false;
 
+    final result = await showDialog<DateTime?>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Dodaj opakowanie'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Przycisk "Taka sama data" (tylko jeśli są inne opakowania)
+              if (_medicine.packages.isNotEmpty) ...[
+                CheckboxListTile(
+                  title: Text(
+                    'Taka sama data (${_medicine.sortedPackages.first.displayDate})',
+                  ),
+                  value: useSameDate,
+                  onChanged: (v) =>
+                      setDialogState(() => useSameDate = v ?? false),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: 12),
+              ],
+              // Picker miesiąca/roku (ukryty jeśli "taka sama")
+              if (!useSameDate)
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        initialValue: selectedMonth,
+                        decoration: const InputDecoration(
+                          labelText: 'Miesiąc',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: List.generate(12, (i) => i + 1)
+                            .map(
+                              (m) => DropdownMenuItem(
+                                value: m,
+                                child: Text(m.toString().padLeft(2, '0')),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) =>
+                            setDialogState(() => selectedMonth = v!),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        initialValue: selectedYear,
+                        decoration: const InputDecoration(
+                          labelText: 'Rok',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: List.generate(15, (i) => currentYear + i)
+                            .map(
+                              (y) => DropdownMenuItem(
+                                value: y,
+                                child: Text(y.toString()),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) =>
+                            setDialogState(() => selectedYear = v!),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (useSameDate && _medicine.packages.isNotEmpty) {
+                  final existingDate = _medicine.sortedPackages.first.dateTime;
+                  Navigator.pop(context, existingDate);
+                } else {
+                  final lastDay = DateTime(selectedYear, selectedMonth + 1, 0);
+                  Navigator.pop(context, lastDay);
+                }
+              },
+              child: const Text('Dodaj'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null) {
+      final newPackage = MedicinePackage(
+        expiryDate: result.toIso8601String().split('T')[0],
+      );
+      final updatedPackages = [..._medicine.packages, newPackage];
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+      await widget.storageService.saveMedicine(updatedMedicine);
+      setState(() {
+        _medicine = updatedMedicine;
+      });
+    }
+  }
+
+  /// Dialog edycji daty konkretnego opakowania
+  Future<void> _showEditPackageDateDialog(
+    BuildContext context,
+    MedicinePackage package,
+  ) async {
+    DateTime currentDate =
+        package.dateTime ?? DateTime.now().add(const Duration(days: 365));
     int selectedMonth = currentDate.month;
     int selectedYear = currentDate.year;
     final currentYear = DateTime.now().year;
@@ -736,10 +1019,9 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Wybierz termin ważności'),
+          title: const Text('Edytuj termin ważności'),
           content: Row(
             children: [
-              // Miesiąc
               Expanded(
                 child: DropdownButtonFormField<int>(
                   initialValue: selectedMonth,
@@ -759,7 +1041,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                 ),
               ),
               const SizedBox(width: 12),
-              // Rok
               Expanded(
                 child: DropdownButtonFormField<int>(
                   initialValue: selectedYear,
@@ -787,7 +1068,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             ),
             FilledButton(
               onPressed: () {
-                // Ustaw datę na ostatni dzień wybranego miesiąca
                 final lastDay = DateTime(selectedYear, selectedMonth + 1, 0);
                 Navigator.pop(context, lastDay);
               },
@@ -799,13 +1079,289 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
 
     if (result != null) {
-      final updatedMedicine = _medicine.copyWith(
-        terminWaznosci: result.toIso8601String().split('T')[0],
+      final updatedPackage = package.copyWith(
+        expiryDate: result.toIso8601String().split('T')[0],
       );
+      final updatedPackages = _medicine.packages
+          .map((p) => p.id == package.id ? updatedPackage : p)
+          .toList();
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
       await widget.storageService.saveMedicine(updatedMedicine);
       setState(() {
         _medicine = updatedMedicine;
       });
+    }
+  }
+
+  /// Dialog edycji ilości pozostałej (sztuki lub %)
+  Future<void> _showEditRemainingDialog(
+    BuildContext context,
+    MedicinePackage package,
+  ) async {
+    // Tryb: 0 = pusty, 1 = sztuki, 2 = procent
+    int mode = package.pieceCount != null
+        ? 1
+        : package.percentRemaining != null
+        ? 2
+        : 0;
+    final pieceController = TextEditingController(
+      text: package.pieceCount?.toString() ?? '',
+    );
+    final percentController = TextEditingController(
+      text: package.percentRemaining?.toString() ?? '',
+    );
+
+    final result = await showDialog<Map<String, int?>>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Ilość pozostała'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Wybór trybu
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Brak'),
+                    selected: mode == 0,
+                    onSelected: (_) => setDialogState(() => mode = 0),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Sztuki'),
+                    selected: mode == 1,
+                    onSelected: (_) => setDialogState(() => mode = 1),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Procent'),
+                    selected: mode == 2,
+                    onSelected: (_) => setDialogState(() => mode = 2),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Input dla wybranego trybu
+              if (mode == 1)
+                TextField(
+                  controller: pieceController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Ilość sztuk',
+                    hintText: 'np. 15',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              if (mode == 2)
+                TextField(
+                  controller: percentController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Procent pozostały',
+                    hintText: 'np. 50',
+                    suffixText: '%',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context, {
+                  'pieceCount': mode == 1
+                      ? int.tryParse(pieceController.text)
+                      : null,
+                  'percentRemaining': mode == 2
+                      ? int.tryParse(percentController.text)
+                      : null,
+                });
+              },
+              child: const Text('Zapisz'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null) {
+      final updatedPackage = MedicinePackage(
+        id: package.id,
+        expiryDate: package.expiryDate,
+        pieceCount: result['pieceCount'],
+        percentRemaining: result['percentRemaining'],
+      );
+      final updatedPackages = _medicine.packages
+          .map((p) => p.id == package.id ? updatedPackage : p)
+          .toList();
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+      await widget.storageService.saveMedicine(updatedMedicine);
+      setState(() {
+        _medicine = updatedMedicine;
+      });
+    }
+  }
+
+  /// Dialog edycji liczby opakowań (szybkie +/-)
+  Future<void> _showEditPackageCountDialog(BuildContext context) async {
+    // Pokaż prosty dialog z info
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Zarządzanie opakowaniami'),
+        content: const Text(
+          'Użyj przycisku "Dodaj opakowanie" aby dodać nowe opakowanie z datą ważności.\n\n'
+          'Użyj ikony kosza przy opakowaniu aby je usunąć.',
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Usuwa opakowanie
+  Future<void> _deletePackage(MedicinePackage package) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Usuń opakowanie?'),
+        content: Text(
+          'Czy na pewno chcesz usunąć opakowanie z datą ${package.displayDate}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.expired),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final updatedPackages = _medicine.packages
+          .where((p) => p.id != package.id)
+          .toList();
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+      await widget.storageService.saveMedicine(updatedMedicine);
+      setState(() {
+        _medicine = updatedMedicine;
+      });
+    }
+  }
+
+  /// OCR daty dla konkretnego opakowania
+  Future<void> _takeDatePhotoForPackage(
+    BuildContext context,
+    MedicinePackage package,
+  ) async {
+    final imagePicker = ImagePicker();
+    final dateOcrService = DateOcrService();
+
+    try {
+      final pickedFile = await imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) return;
+
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text('Rozpoznaję datę...'),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final result = await dateOcrService.recognizeDate(File(pickedFile.path));
+
+      if (mounted) Navigator.of(context).pop();
+
+      if (result.terminWaznosci == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Nie udało się rozpoznać daty. Spróbuj ponownie.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Aktualizuj konkretne opakowanie
+      final updatedPackage = package.copyWith(
+        expiryDate: result.terminWaznosci,
+      );
+      final updatedPackages = _medicine.packages
+          .map((p) => p.id == package.id ? updatedPackage : p)
+          .toList();
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+      await widget.storageService.saveMedicine(updatedMedicine);
+
+      setState(() {
+        _medicine = updatedMedicine;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Data ważności ustawiona: ${_formatDate(result.terminWaznosci!)}',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } on DateOcrException catch (e) {
+      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -985,19 +1541,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     }
   }
 
-  String _getStatusLabel(ExpiryStatus status) {
-    switch (status) {
-      case ExpiryStatus.expired:
-        return 'Przeterminowany';
-      case ExpiryStatus.expiringSoon:
-        return 'Kończy się';
-      case ExpiryStatus.valid:
-        return 'Ważny';
-      case ExpiryStatus.unknown:
-        return 'Brak daty';
-    }
-  }
-
   IconData _getStatusIcon(ExpiryStatus status) {
     switch (status) {
       case ExpiryStatus.expired:
@@ -1017,103 +1560,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
       return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
     } catch (_) {
       return isoDate;
-    }
-  }
-
-  /// Otwiera aparat do zrobienia zdjęcia daty i rozpoznaje ją przez OCR
-  Future<void> _takeDatePhoto(BuildContext context) async {
-    final imagePicker = ImagePicker();
-    final dateOcrService = DateOcrService();
-
-    try {
-      final pickedFile = await imagePicker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
-      );
-
-      if (pickedFile == null) return;
-
-      // Pokaż dialog ładowania
-      if (!mounted) return;
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Rozpoznaję datę...'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-
-      final result = await dateOcrService.recognizeDate(File(pickedFile.path));
-
-      // Zamknij dialog ładowania
-      if (mounted) Navigator.of(context).pop();
-
-      if (result.terminWaznosci == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Nie udało się rozpoznać daty. Spróbuj ponownie.'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-        return;
-      }
-
-      // Aktualizuj lek z nową datą
-      final updatedMedicine = _medicine.copyWith(
-        terminWaznosci: result.terminWaznosci,
-      );
-      await widget.storageService.saveMedicine(updatedMedicine);
-
-      setState(() {
-        _medicine = updatedMedicine;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Data ważności ustawiona: ${_formatDate(result.terminWaznosci!)}',
-            ),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } on DateOcrException catch (e) {
-      if (mounted) Navigator.of(context).pop();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) Navigator.of(context).pop();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Błąd: $e'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
     }
   }
 }

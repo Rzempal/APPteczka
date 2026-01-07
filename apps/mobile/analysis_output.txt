@@ -1,0 +1,28 @@
+Analyzing medicine_detail_sheet.dart...                         
+
+warning - The value of the local variable 'selectedLabels' isn't used - lib\screens\medicine_detail_sheet.dart:566:11 - unused_local_variable
+warning - The declaration '_showMonthYearPicker' isn't referenced - lib\screens\medicine_detail_sheet.dart:898:16 - unused_element
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\medicine_detail_sheet.dart:1027:25 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\medicine_detail_sheet.dart:1047:25 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\medicine_detail_sheet.dart:1123:19 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\medicine_detail_sheet.dart:1142:19 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1382:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1403:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1407:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1432:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1442:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1444:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1452:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1454:30 - use_build_context_synchronously
+warning - The declaration '_getStatusLabel' isn't referenced - lib\screens\medicine_detail_sheet.dart:1640:10 - unused_element
+warning - The declaration '_takeDatePhoto' isn't referenced - lib\screens\medicine_detail_sheet.dart:1676:16 - unused_element
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1693:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1715:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1719:32 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1740:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1750:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1752:30 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1760:33 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\screens\medicine_detail_sheet.dart:1762:30 - use_build_context_synchronously
+
+24 issues found. (ran in 1.3s)
