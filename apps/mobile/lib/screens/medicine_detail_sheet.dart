@@ -940,8 +940,15 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     int selectedMonth = DateTime.now().month;
     int selectedYear = currentYear + 1;
     bool useSameDate = false;
+    bool useSameQuantity = false;
 
-    final result = await showDialog<DateTime?>(
+    // Sprawdź czy pierwsze opakowanie ma ustawioną ilość
+    final firstPackage = _medicine.packages.isNotEmpty
+        ? _medicine.sortedPackages.first
+        : null;
+    final hasQuantity = firstPackage?.remainingDescription != null;
+
+    final result = await showDialog<Map<String, dynamic>?>(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
@@ -960,6 +967,17 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                       setDialogState(() => useSameDate = v ?? false),
                   contentPadding: EdgeInsets.zero,
                 ),
+                // Przycisk "Taka sama ilość" (tylko jeśli pierwsze ma ilość)
+                if (hasQuantity)
+                  CheckboxListTile(
+                    title: Text(
+                      'Taka sama ilość (${firstPackage!.remainingDescription})',
+                    ),
+                    value: useSameQuantity,
+                    onChanged: (v) =>
+                        setDialogState(() => useSameQuantity = v ?? false),
+                    contentPadding: EdgeInsets.zero,
+                  ),
                 const SizedBox(height: 12),
               ],
               // Picker miesiąca/roku (ukryty jeśli "taka sama")
@@ -1016,13 +1034,18 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             ),
             FilledButton(
               onPressed: () {
+                DateTime date;
                 if (useSameDate && _medicine.packages.isNotEmpty) {
-                  final existingDate = _medicine.sortedPackages.first.dateTime;
-                  Navigator.pop(context, existingDate);
+                  date =
+                      _medicine.sortedPackages.first.dateTime ??
+                      DateTime(selectedYear, selectedMonth + 1, 0);
                 } else {
-                  final lastDay = DateTime(selectedYear, selectedMonth + 1, 0);
-                  Navigator.pop(context, lastDay);
+                  date = DateTime(selectedYear, selectedMonth + 1, 0);
                 }
+                Navigator.pop(context, {
+                  'date': date,
+                  'useSameQuantity': useSameQuantity,
+                });
               },
               child: const Text('Dodaj'),
             ),
@@ -1032,9 +1055,22 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
 
     if (result != null) {
-      final newPackage = MedicinePackage(
-        expiryDate: result.toIso8601String().split('T')[0],
-      );
+      final date = result['date'] as DateTime;
+      final copyQuantity = result['useSameQuantity'] as bool;
+
+      MedicinePackage newPackage;
+      if (copyQuantity && firstPackage != null) {
+        newPackage = MedicinePackage(
+          expiryDate: date.toIso8601String().split('T')[0],
+          pieceCount: firstPackage.pieceCount,
+          percentRemaining: firstPackage.percentRemaining,
+        );
+      } else {
+        newPackage = MedicinePackage(
+          expiryDate: date.toIso8601String().split('T')[0],
+        );
+      }
+
       final updatedPackages = [..._medicine.packages, newPackage];
       final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
       await widget.storageService.saveMedicine(updatedMedicine);

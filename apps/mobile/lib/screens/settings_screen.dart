@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
 import '../services/storage_service.dart';
 import '../services/theme_provider.dart';
@@ -109,6 +110,10 @@ class _SettingsScreenState extends State<SettingsScreen>
 
               // Kopia zapasowa (akordeon)
               _buildBackupSection(theme, isDark),
+              const SizedBox(height: 24),
+
+              // Wesprzyj projekt
+              _buildSupportSection(theme, isDark),
               const SizedBox(height: 24),
 
               // Zaawansowane (osobny akordeon)
@@ -718,6 +723,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _isBackupOpen = false;
   bool _isAdvancedOpen = false;
   bool _isThemeOpen = false;
+  bool _isSupportOpen = false;
   ThemeMode? _optimisticMode; // Optimistic UI - lokalna kopia wybranego motywu
   ThemeMode? _switchingMode; // Który przycisk pokazuje spinner
 
@@ -1130,6 +1136,166 @@ class _SettingsScreenState extends State<SettingsScreen>
       const SnackBar(
         content: Text('Przejdź do zakładki "Dodaj" aby zaimportować dane'),
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  // ================== SUPPORT SECTION ==================
+
+  Future<void> _launchSupportUrl(String coffeeSize) async {
+    final url = Uri.parse(
+      'https://buycoffee.to/resztatokod?coffeeSize=$coffeeSize',
+    );
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Widget _buildSupportSection(ThemeData theme, bool isDark) {
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        return Container(
+          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () =>
+                    setLocalState(() => _isSupportOpen = !_isSupportOpen),
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      // Obrazek BuyCoffee button
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          'assets/buycoffee-button.png',
+                          height: 38,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Wesprzyj projekt',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              'i postaw nam kawę',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _isSupportOpen
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        size: 20,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Zawartość zwijana - cennik
+              if (_isSupportOpen)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Postaw kawę za:',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          _buildCoffeeOption(
+                            theme,
+                            isDark,
+                            size: 'small',
+                            price: '5 zł',
+                            iconUrl:
+                                'https://buycoffee.to/static/img/icons/coffee-small.svg',
+                          ),
+                          const SizedBox(width: 8),
+                          _buildCoffeeOption(
+                            theme,
+                            isDark,
+                            size: 'medium',
+                            price: '10 zł',
+                            iconUrl:
+                                'https://buycoffee.to/static/img/icons/coffee-medium.svg',
+                          ),
+                          const SizedBox(width: 8),
+                          _buildCoffeeOption(
+                            theme,
+                            isDark,
+                            size: 'large',
+                            price: '15 zł',
+                            iconUrl:
+                                'https://buycoffee.to/static/img/icons/coffee-large.svg',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCoffeeOption(
+    ThemeData theme,
+    bool isDark, {
+    required String size,
+    required String price,
+    required String iconUrl,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _launchSupportUrl(size),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+          decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
+          child: Column(
+            children: [
+              // Ikona kawy z URL
+              Image.network(
+                iconUrl,
+                width: 36,
+                height: 36,
+                errorBuilder: (context, error, stackTrace) => Icon(
+                  LucideIcons.coffee,
+                  size: 36,
+                  color: const Color(0xFF00B67A), // BuyCoffee green
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                price,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
