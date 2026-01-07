@@ -170,6 +170,11 @@
 |---------|-------|--------|
 | Google Play Developer | $25 jednorazowo | ⬜ |
 
+#### Polityka Darowizn (BuyCoffee)
+
+> [!IMPORTANT]
+> Funkcja "Wesprzyj projekt" otwiera link w **zewnętrznej przeglądarce** i nie oferuje nic w zamian (brak dóbr cyfrowych). Zgodnie z **Payments Policy**, nie wymaga to użycia Google Play Billing. W ankiecie App Content należy zadeklarować brak zakupów w aplikacji (In-App Purchases).
+
 ---
 
 ## � FAZA 6: Backend + Sync (Przyszłość)
@@ -216,4 +221,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-03
+> 📅 **Ostatnia aktualizacja:** 2026-01-07

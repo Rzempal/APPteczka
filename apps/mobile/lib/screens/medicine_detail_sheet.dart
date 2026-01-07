@@ -262,6 +262,10 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                     const SizedBox(height: 20),
                     _buildPackagesSection(context, statusColor),
 
+                    // Kalkulator zużycia leku
+                    const SizedBox(height: 20),
+                    _buildSupplyCalculatorSection(context),
+
                     // Data dodania
                     const SizedBox(height: 20),
                     _buildSection(
@@ -417,6 +421,220 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         ),
       ],
     );
+  }
+
+  /// Sekcja kalkulatora "Do kiedy wystarczy?"
+  Widget _buildSupplyCalculatorSection(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final totalPieces = _medicine.totalPieceCount;
+    final supplyEndDate = _medicine.calculateSupplyEndDate();
+
+    // Sprawdź czy można obliczyć
+    final canCalculate = totalPieces > 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header z ikoną calendar-heart
+        Row(
+          children: [
+            Icon(LucideIcons.calendarHeart, size: 20, color: AppColors.primary),
+            const SizedBox(width: 8),
+            Text(
+              'Do kiedy wystarczy?',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF6b7280),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        if (!canCalculate)
+          // Komunikat: brak danych o ilości sztuk
+          _buildSupplyMissingDataMessage(context)
+        else if (supplyEndDate == null)
+          // Przycisk: ustaw dzienne zużycie
+          _buildSetDailyIntakeButton(context, isDark)
+        else
+          // Wynik: data + liczba dni
+          _buildSupplyResult(context, supplyEndDate, isDark),
+        const SizedBox(height: 8),
+        Text(
+          'Kalkulacja szacunkowa na podstawie Twoich danych. Nie zastępuje zaleceń lekarza.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontSize: 11,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Komunikat gdy brakuje pieceCount w opakowaniach
+  Widget _buildSupplyMissingDataMessage(BuildContext context) {
+    return Text(
+      'Uzupełnij ilość sztuk w opakowaniach',
+      style: TextStyle(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        fontStyle: FontStyle.italic,
+        fontSize: 13,
+      ),
+    );
+  }
+
+  /// Przycisk do ustawienia dziennego zużycia
+  Widget _buildSetDailyIntakeButton(BuildContext context, bool isDark) {
+    return GestureDetector(
+      onTap: () => _showSetDailyIntakeDialog(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.pillBottle,
+              size: 16,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Ustaw dzienne zużycie',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Wyświetla wynik kalkulacji: "Zabraknie od: DD.MM.YYYY (za X dni)"
+  Widget _buildSupplyResult(
+    BuildContext context,
+    DateTime endDate,
+    bool isDark,
+  ) {
+    final now = DateTime.now();
+    final daysRemaining = endDate.difference(now).inDays;
+    final formattedDate =
+        '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
+
+    return GestureDetector(
+      onTap: () => _showSetDailyIntakeDialog(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.calendarOff,
+              size: 16,
+              color: daysRemaining <= 7 ? AppColors.expired : AppColors.primary,
+            ),
+            const SizedBox(width: 8),
+            Text.rich(
+              TextSpan(
+                children: [
+                  const TextSpan(
+                    text: 'Zabraknie od: ',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                  TextSpan(
+                    text: formattedDate,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: daysRemaining <= 7
+                          ? AppColors.expired
+                          : Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  TextSpan(
+                    text: ' (za $daysRemaining dni)',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              LucideIcons.squarePen,
+              size: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Dialog ustawienia dziennego zużycia tabletek
+  Future<void> _showSetDailyIntakeDialog(BuildContext context) async {
+    final controller = TextEditingController(
+      text: _medicine.dailyIntake?.toString() ?? '',
+    );
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Dzienne zużycie'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Łączna ilość sztuk: ${_medicine.totalPieceCount}',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Ile tabletek dziennie?',
+                hintText: 'np. 2',
+                suffixText: 'szt./dzień',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = int.tryParse(controller.text);
+              Navigator.pop(context, value);
+            },
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result > 0) {
+      // Zapisz do Medicine i storage
+      final updated = _medicine.copyWith(dailyIntake: result);
+      await widget.storageService.saveMedicine(updated);
+      setState(() => _medicine = updated);
+    }
   }
 
   /// Stan pusty - brak opakowań

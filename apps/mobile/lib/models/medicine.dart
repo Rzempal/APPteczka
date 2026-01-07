@@ -116,6 +116,7 @@ class Medicine {
   final List<MedicinePackage> packages;
   final String? _legacyTerminWaznosci; // For lazy migration
   final String? leafletUrl;
+  final int? dailyIntake; // Dzienne zużycie tabletek
   final String dataDodania;
 
   Medicine({
@@ -129,6 +130,7 @@ class Medicine {
     this.packages = const [],
     String? terminWaznosci,
     this.leafletUrl,
+    this.dailyIntake,
     required this.dataDodania,
   }) : _legacyTerminWaznosci = terminWaznosci;
 
@@ -146,6 +148,29 @@ class Medicine {
     final sorted = List<MedicinePackage>.from(packages);
     sorted.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
     return sorted;
+  }
+
+  /// Oblicza łączną liczbę sztuk ze wszystkich opakowań
+  int get totalPieceCount {
+    int total = 0;
+    for (final package in packages) {
+      if (package.pieceCount != null) {
+        total += package.pieceCount!;
+      }
+    }
+    return total;
+  }
+
+  /// Oblicza do kiedy wystarczy leku (pierwszy dzień bez leku)
+  /// Zwraca null jeśli brak danych (pieceCount lub dailyIntake)
+  DateTime? calculateSupplyEndDate() {
+    if (dailyIntake == null || dailyIntake! <= 0) return null;
+    final total = totalPieceCount;
+    if (total <= 0) return null;
+
+    // ceil - ostatnia dawka + 1 dzień = pierwszy dzień bez leku
+    final daysRemaining = (total / dailyIntake!).ceil();
+    return DateTime.now().add(Duration(days: daysRemaining));
   }
 
   /// Tworzy z JSON (import/backup) - z lazy migration
@@ -171,6 +196,7 @@ class Medicine {
       notatka: json['notatka'] as String?,
       packages: packages,
       leafletUrl: json['leafletUrl'] as String?,
+      dailyIntake: json['dailyIntake'] as int?,
       dataDodania:
           json['dataDodania'] as String? ?? DateTime.now().toIso8601String(),
     );
@@ -190,6 +216,7 @@ class Medicine {
       // Zachowaj terminWaznosci dla wstecznej kompatybilności
       'terminWaznosci': terminWaznosci,
       'leafletUrl': leafletUrl,
+      if (dailyIntake != null) 'dailyIntake': dailyIntake,
       'dataDodania': dataDodania,
     };
   }
@@ -206,6 +233,7 @@ class Medicine {
     List<MedicinePackage>? packages,
     String? terminWaznosci,
     String? leafletUrl,
+    int? dailyIntake,
     String? dataDodania,
   }) {
     return Medicine(
@@ -219,6 +247,7 @@ class Medicine {
       packages: packages ?? this.packages,
       terminWaznosci: terminWaznosci ?? _legacyTerminWaznosci,
       leafletUrl: leafletUrl ?? this.leafletUrl,
+      dailyIntake: dailyIntake ?? this.dailyIntake,
       dataDodania: dataDodania ?? this.dataDodania,
     );
   }
