@@ -779,6 +779,18 @@ class _HomeScreenState extends State<HomeScreen> {
     final buttonPosition = renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
 
     const menuWidth = 280.0;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Calculate left position - align to button's left edge, but keep within screen
+    var leftPosition = buttonPosition.dx;
+    // If menu would go off right edge, shift left
+    if (leftPosition + menuWidth > screenWidth - 16) {
+      leftPosition = screenWidth - menuWidth - 16;
+    }
+    // Ensure doesn't go off left edge
+    if (leftPosition < 16) {
+      leftPosition = 16;
+    }
 
     return OverlayEntry(
       builder: (context) => Stack(
@@ -791,13 +803,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(color: Colors.transparent),
             ),
           ),
-          // Menu below button, aligned right
+          // Menu below button
           Positioned(
             top: buttonPosition.dy + buttonSize.height + 8,
-            right:
-                MediaQuery.of(context).size.width -
-                buttonPosition.dx -
-                buttonSize.width,
+            left: leftPosition,
             child: Material(
               color: Colors.transparent,
               child: Container(
