@@ -63,7 +63,7 @@ function Update-DeployLog {
         [string]$Status
     )
     
-    $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\1_Prywatne Projekty\Apteczka\log.md"
+    $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\1_PRYWATNE_PROJEKTY_\LOG_APTECZKA\log.md"
     $MAX_ENTRIES = 10
     $SEPARATOR = "`n---`n"
     
