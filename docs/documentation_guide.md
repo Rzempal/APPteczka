@@ -56,6 +56,7 @@ Każdy dokument zaczyna się od:
 | 📏 | Standardy |
 | 🗺️ | Road map |
 | 📚 | Przewodniki |
+| 🛡️ | Disclaimers |
 
 ### Spis treści
 
@@ -122,6 +123,7 @@ docs/
 ├── data_model.md           # ERD, encje, Elasticsearch
 ├── search_logic.md         # Guided Selling, konfigurator
 ├── security.md             # GDPR, PCI DSS
+├── disclaimers.md          # Wyłączenia odpowiedzialności (Medical vs Inventory)
 ├── standards.md            # Konwencje kodu
 ├── documentation_guide.md  # Ten plik
 └── road_map.md             # Plan rozwoju
@@ -142,4 +144,4 @@ docs/
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-14
+> 📅 **Ostatnia aktualizacja:** 2026-01-07

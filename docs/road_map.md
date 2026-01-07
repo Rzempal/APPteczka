@@ -135,9 +135,9 @@
 
 | Element | Status |
 |---------|--------|
-| Privacy Policy URL | ⬜ |
+| Privacy Policy URL | ✅ [docs/privacy_policy.md](privacy_policy.md) |
 | Target Age Group (nie dla dzieci <13) | ⬜ |
-| Data Safety Form | ⬜ |
+| Data Safety Form | ✅ [docs/security.md](security.md) |
 
 #### Graficzne
 
@@ -151,9 +151,9 @@
 
 | Element | Limit | Status |
 |---------|-------|--------|
-| App Name | 30 znaków | ✅ "Karton" |
-| Short Description | 80 znaków | ⬜ |
-| Full Description | 4000 znaków | ⬜ |
+| App Name | 30 znaków | ✅ "Karton z lekami - domowa apteczka" |
+| Short Description | 80 znaków | ✅ [docs/store_listing.md](store_listing.md) |
+| Full Description | 4000 znaków | ✅ [docs/store_listing.md](store_listing.md) |
 | Contact Email | - | ⬜ |
 
 #### Techniczne

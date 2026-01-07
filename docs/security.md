@@ -122,4 +122,49 @@ Aplikacja wyświetla disclaimer w kluczowych miejscach:
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-03
+## Analiza Bezpieczeństwa Funkcji
+
+### Wsparcie Projektu (BuyCoffee)
+
+| Aspekt | Bezpieczeństwo |
+|--------|----------------|
+| **Izolacja** | Link otwiera się w **zewnętrznej przeglądarce**, w pełnej izolacji od danych aplikacji (Sandbox). |
+| **Dane** | Aplikacja nie przekazuje żadnych danych użytkownika do serwisu płatności. |
+| **Płatność** | Proces płatności odbywa się poza aplikacją – brak ryzyka wycieku danych karty z poziomu aplikacji. |
+
+### Kalkulator Zapasów
+
+| Aspekt | Bezpieczeństwo |
+|--------|----------------|
+| **Przetwarzanie** | Kalkulacja `(zapas / zużycie)` odbywa się w 100% lokalnie na urządzeniu. |
+| **Dane zdrowotne** | Informacja o dziennym zużyciu (`dailyIntake`) jest traktowana jako dana wrażliwa i przechowywana lokalnie (Hive). |
+| **Logi** | Wartość zużycia **nie jest** wysyłana w logach diagnostycznych (Bug Report). |
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-07
+
+---
+
+## 4. Google Play Data Safety
+
+Wypełnienie formularza "Bezpieczeństwo danych" w Google Play Console.
+
+### Deklaracja Główna
+
+* **Does your app collect or share any of the required user data types?** → **Yes**
+- **Is all of the user data collected by your app encrypted in transit?** → **Yes** (HTTPS)
+- **Do you provide a way for users to request that their data be deleted?** → **No** (Nie dotyczy - brak konta i brak gromadzenia danych na serwerze).
+
+### Szczegółowa Konfiguracja Typów Danych
+
+#### 📷 Photos and Videos -> Photos (Zdjęcia)
+
+Używane w funkcji: Skaner AI (OCR).
+
+- **Is this data collected?** → **Yes**
+- **Is this data processed ephemerally?** → **Yes**
+    > *Informacja: Zdjęcia są przetwarzane w pamięci i wysyłane do API tylko na czas analizy, nie są zapisywane trwałe w historii konta ani na serwerze.*
+- **Is this data shared?** → **No** (Korzystamy z wyjątku "Service Provider" - Gemini przetwarza dane w naszym imieniu).
+- **Purposes:** App functionality.
+- **Is collection required?** → **No** (Funkcja jest opcjonalna, użytkownik może wpisać dane ręcznie).
