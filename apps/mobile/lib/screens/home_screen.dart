@@ -639,7 +639,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   LucideIcons.lightbulb,
                   size: 20,
                   color: _isHelpTooltipOpen
-                      ? Colors.amber
+                      ? Colors.grey
                       : Colors.amber.shade600,
                 ),
               ),
@@ -847,19 +847,47 @@ class _HomeScreenState extends State<HomeScreen> {
                         'Przeciągnięcie → → notatka',
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    // Funkcje
-                    _buildHelpSectionOverlay(
-                      theme,
-                      icon: LucideIcons.sparkles,
-                      title: 'Ciekawe funkcje',
-                      items: [
-                        'Kalkulator zapasu leku: Karta leku → Termin ważności',
-                        'Wykrywanie duplikatów: oznaczenie ⊡ na liście leków',
-                        'Filtruj po duplikatach: Filtry → Termin ważności',
-                        'Data ważności: wpisz lub zrób zdjęcie w Karta leku → Termin ważności',
-                        'Szukaj w ulotce: Karta leku → Ulotka → Podepnij ulotkę',
-                      ],
+                    const SizedBox(height: 16),
+                    // Przycisk Ciekawe funkcje
+                    GestureDetector(
+                      onTap: () {
+                        _removeHelpOverlay();
+                        _showFeaturesDialog();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: NeuDecoration.flatSmall(
+                          isDark: isDark,
+                          radius: 12,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              LucideIcons.sparkles,
+                              size: 16,
+                              color: theme.colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Ciekawe funkcje',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              LucideIcons.chevronRight,
+                              size: 16,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -904,6 +932,122 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontSize: 11,
               ),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==================== FEATURES DIALOG ====================
+
+  void _showFeaturesDialog() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark
+            ? const Color(0xFF1e293b)
+            : const Color(0xFFe0e8e4),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(
+              LucideIcons.sparkles,
+              color: theme.colorScheme.primary,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Ciekawe funkcje',
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildFeatureItem(
+                theme,
+                icon: LucideIcons.calculator,
+                title: 'Kalkulator zapasu leku',
+                description: 'Karta leku → Termin ważności',
+              ),
+              const SizedBox(height: 12),
+              _buildFeatureItem(
+                theme,
+                icon: LucideIcons.copy,
+                title: 'Wykrywanie duplikatów',
+                description: 'Ikona przy nazwie leku na liście',
+              ),
+              const SizedBox(height: 12),
+              _buildFeatureItem(
+                theme,
+                icon: LucideIcons.funnel,
+                title: 'Filtruj po duplikatach',
+                description: 'Filtry → Termin ważności',
+              ),
+              const SizedBox(height: 12),
+              _buildFeatureItem(
+                theme,
+                icon: LucideIcons.camera,
+                title: 'Data ważności ze zdjęcia',
+                description: 'Karta leku → Termin ważności → Aparat',
+              ),
+              const SizedBox(height: 12),
+              _buildFeatureItem(
+                theme,
+                icon: LucideIcons.search,
+                title: 'Szukaj w ulotce',
+                description: 'Karta leku → Ulotka → Podepnij ulotkę',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Zamknij'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureItem(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: theme.colorScheme.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       ],
