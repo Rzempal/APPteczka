@@ -215,7 +215,8 @@ if (-not $SkipBuild) {
     Push-Location $MOBILE_DIR
     
     try {
-        flutter build apk --release --flavor $Channel --build-name=$VERSION_NAME --build-number=$VERSION_CODE --dart-define=CHANNEL=$Channel
+        # Filtruj komunikaty tree-shaking (informacyjne, nie bledy)
+        flutter build apk --release --flavor $Channel --build-name=$VERSION_NAME --build-number=$VERSION_CODE --dart-define=CHANNEL=$Channel 2>&1 | Where-Object { $_ -notmatch "tree-shaken|Tree-shaking" }
         
         if ($LASTEXITCODE -ne 0) {
             Pop-Location
