@@ -2524,18 +2524,9 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                 items: [
                   'Przytrzymanie → pokaż szczegóły',
                   'Dotknięcie → rozwija kartę w widoku listy',
+                  'Przeciągnij w lewo, aby edytować etykiety.',
+                  'Przeciągnij w prawo, aby edytować notatkę.',
                 ],
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.only(left: 26),
-                child: Text(
-                  'Włącz w ustawieniach gesty przeciągania dla szybkiej edycji etykiet i notatek',
-                  style: widget.theme.textTheme.bodySmall?.copyWith(
-                    color: widget.theme.colorScheme.onSurfaceVariant,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
               ),
 
               const SizedBox(height: 24),

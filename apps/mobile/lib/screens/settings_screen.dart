@@ -875,7 +875,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Przeciągnij kartę leku w lewo aby edytować etykiety, w prawo aby edytować notatkę',
+                                    'Przeciągnij w lewo, aby edytować etykiety. Przeciągnij w prawo, aby edytować notatkę.',
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.onSurfaceVariant,
                                     ),
@@ -919,7 +919,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Przeciągnij w lewo → Etykiety',
+                                  'Przeciągnij w lewo, aby edytować etykiety.',
                                   style: theme.textTheme.bodySmall,
                                 ),
                               ],
@@ -940,7 +940,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Przeciągnij w prawo → Notatka',
+                                  'Przeciągnij w prawo, aby edytować notatkę.',
                                   style: theme.textTheme.bodySmall,
                                 ),
                               ],
