@@ -50,8 +50,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   bool _isImporting = false;
 
   // Expanded sections - nowa kolejność
-  bool _geminiExpanded = true; // 1. Zrób zdjęcie
-  bool _twoPhotoExpanded = false; // 1.5 Tryb 2 zdjęcia
+  bool _aiVisionExpanded = true; // 1. Gemini AI Vision (połączone tryby)
+  int _aiVisionMode = 0; // 0 = 1 zdjęcie, 1 = 2 zdjęcia
   bool _manualExpanded = false; // 2. Dodaj ręcznie
   bool _fileExpanded = false; // 3. Import kopii
   bool _isAdvancedOpen = false; // 4. Zaawansowane (zagnieżdżone)
@@ -127,54 +127,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
                 const SizedBox(height: 16),
 
-                // 1. Gemini AI Scanner
-                _buildExpandableSection(
-                  icon: LucideIcons.imagePlus,
-                  title: '1 zdjęcie = wiele leków',
-                  subtitle:
-                      'Wykorzystaj wsparcie AI i automatycznie dodaj informacje o leku',
-                  isExpanded: _geminiExpanded,
-                  onToggle: () =>
-                      setState(() => _geminiExpanded = !_geminiExpanded),
-                  child: GeminiScanner(
-                    onResult: _handleGeminiResult,
-                    onError: widget.onError,
-                    onImportComplete: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Leki zostały zaimportowane!'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                  ),
-                  isDark: isDark,
-                ),
-
-                const SizedBox(height: 12),
-
-                // 1.5 Tryb 2 zdjęcia (front + data)
-                _buildExpandableSection(
-                  icon: LucideIcons.images,
-                  title: '2 zdjęcia = lek + termin ważności',
-                  subtitle: 'Rozpoznanie leku oraz jego terminu ważności',
-                  isExpanded: _twoPhotoExpanded,
-                  onToggle: () =>
-                      setState(() => _twoPhotoExpanded = !_twoPhotoExpanded),
-                  child: TwoPhotoScanner(
-                    onResult: _handleTwoPhotoResult,
-                    onError: widget.onError,
-                    onComplete: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Lek został zaimportowany!'),
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    },
-                  ),
-                  isDark: isDark,
-                ),
+                // 1. Gemini AI Vision (połączone tryby)
+                _buildAiVisionSection(theme, isDark),
 
                 const SizedBox(height: 12),
 
@@ -188,6 +142,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       setState(() => _manualExpanded = !_manualExpanded),
                   child: _buildManualForm(theme, isDark),
                   isDark: isDark,
+                  iconColor: isDark
+                      ? AppColors.aiAccentDark
+                      : AppColors.aiAccentLight,
                 ),
 
                 const SizedBox(height: 12),
@@ -252,6 +209,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     required VoidCallback onToggle,
     required Widget child,
     required bool isDark,
+    Color? iconColor, // Optional custom icon color (for AI sections)
   }) {
     final theme = Theme.of(context);
 
@@ -266,7 +224,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(icon, color: theme.colorScheme.primary),
+                  Icon(icon, color: iconColor ?? theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -304,6 +262,184 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             ),
         ],
       ),
+    );
+  }
+
+  // ================== SEKCJA GEMINI AI VISION ==================
+
+  Widget _buildAiVisionSection(ThemeData theme, bool isDark) {
+    final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
+
+    return Container(
+      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Header główny - rozwijana sekcja
+          InkWell(
+            onTap: () => setState(() => _aiVisionExpanded = !_aiVisionExpanded),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Icon(LucideIcons.sparkles, color: aiColor),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dodaj za pomocą Gemini AI Vision',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Zrób zdjęcie opakowań i pozwól AI rozpoznać leki',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _aiVisionExpanded
+                        ? LucideIcons.chevronUp
+                        : LucideIcons.chevronDown,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Zawartość rozwijana
+          if (_aiVisionExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                children: [
+                  // Toggle trybów
+                  _buildModeToggle(theme, isDark, aiColor),
+                  const SizedBox(height: 16),
+
+                  // Odpowiedni skaner w zależności od trybu
+                  if (_aiVisionMode == 0)
+                    GeminiScanner(
+                      onResult: _handleGeminiResult,
+                      onError: widget.onError,
+                      onImportComplete: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Leki zostały zaimportowane!'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    )
+                  else
+                    TwoPhotoScanner(
+                      onResult: _handleTwoPhotoResult,
+                      onError: widget.onError,
+                      onComplete: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Lek został zaimportowany!'),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModeToggle(ThemeData theme, bool isDark, Color aiColor) {
+    return Row(
+      children: [
+        // Tryb 1 zdjęcie
+        Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _aiVisionMode = 0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              decoration: _aiVisionMode == 0
+                  ? NeuDecoration.pressedSmall(isDark: isDark)
+                  : NeuDecoration.flatSmall(isDark: isDark),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    LucideIcons.imagePlus,
+                    size: 18,
+                    color: _aiVisionMode == 0
+                        ? aiColor
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '1 zdjęcie',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: _aiVisionMode == 0
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: _aiVisionMode == 0
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Tryb 2 zdjęcia
+        Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _aiVisionMode = 1),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+              decoration: _aiVisionMode == 1
+                  ? NeuDecoration.pressedSmall(isDark: isDark)
+                  : NeuDecoration.flatSmall(isDark: isDark),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    LucideIcons.images,
+                    size: 18,
+                    color: _aiVisionMode == 1
+                        ? aiColor
+                        : theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      '2 zdjęcia',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: _aiVisionMode == 1
+                            ? FontWeight.w600
+                            : FontWeight.normal,
+                        color: _aiVisionMode == 1
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

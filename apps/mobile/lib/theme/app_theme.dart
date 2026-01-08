@@ -12,6 +12,14 @@ class AppColors {
   static const Color primaryDark = Color(0xFF059669);
 
   // ============================================
+  // AI ACCENT - fioletowy dla funkcji AI
+  // ============================================
+  static const Color aiAccentLight = Color(
+    0xFF8B5CF6,
+  ); // Violet-500 (light mode)
+  static const Color aiAccentDark = Color(0xFF9333EA); // Purple-600 (dark mode)
+
+  // ============================================
   // STATUS COLORS - kolory statusów ważności
   // ============================================
   static const Color expired = Color(0xFFef4444);

@@ -111,7 +111,8 @@ class NeuDecoration {
     double radius = 16,
     Color? backgroundColor,
   }) {
-    final bgColor = backgroundColor ??
+    final bgColor =
+        backgroundColor ??
         (isDark ? AppColors.darkSurface : AppColors.lightBackground);
 
     return BoxDecoration(
@@ -369,8 +370,8 @@ class NeuDecoration {
   }
 
   // ============================================
-  // SEARCH BAR FOCUSED - Hybrid "sinking" effect
-  // Reduced shadows + subtle border = element "sinks" visually
+  // SEARCH BAR FOCUSED - Active state with green outline
+  // Reduced shadows + green border = element "sinks" visually with accent
   // ============================================
   static BoxDecoration searchBarFocused({
     required bool isDark,
@@ -380,19 +381,14 @@ class NeuDecoration {
     final shadowDark = isDark
         ? AppColors.darkShadowDark
         : AppColors.lightShadowDark;
-    final borderColor = isDark
-        ? AppColors.darkShadowDark.withValues(alpha: 0.4)
-        : AppColors.lightShadowDark.withValues(alpha: 0.15);
 
     return BoxDecoration(
       color: bgColor,
       borderRadius: BorderRadius.circular(radius),
-      // Subtle top-left inner border for depth
-      border: Border(
-        top: BorderSide(color: borderColor, width: 1.5),
-        left: BorderSide(color: borderColor, width: 1.0),
-        right: BorderSide.none,
-        bottom: BorderSide.none,
+      // Full green outline for active state
+      border: Border.all(
+        color: AppColors.primary.withValues(alpha: isDark ? 0.8 : 0.6),
+        width: 1.5,
       ),
       // Reduced shadows = element "sinks"
       boxShadow: [

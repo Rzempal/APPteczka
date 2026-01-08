@@ -32,7 +32,7 @@ Metody statyczne klasy `NeuDecoration`, używane w `Container(decoration: ...)` 
 | **`.pressedSmall()`** | Wklęsły, subtelniejszy (debossed) | Stan aktywny małych elementów, **aktywny NeuIconButton** | Wybrane filtry, aktywne tagi, toolbar buttons |
 | **`.basin()`** | Płaskie tło (deprecated) | Use `NeuInsetContainer` for true inner shadows | - |
 | **`.searchBar()`** | **Floating pill** z mocnymi cieniami "lewitacji" | Główny pasek wyszukiwania | `HomeScreen` (wyszukiwarka) |
-| **`.searchBarFocused()`** | Wciśnięty pasek wyszukiwania | Fokus na polu wyszukiwania | `HomeScreen` (aktywna wyszukiwarka) |
+| **`.searchBarFocused()`** | Wciśnięty pasek z **zielonym outline** | Fokus na polu wyszukiwania | `HomeScreen` (aktywna wyszukiwarka) |
 | **`.convex()`** | Wypukły z gradientem | Elementy interaktywne "3D" | (Opcjonalne) Przyciski specjalne |
 | **`.statusCard()`** | Wypukły + kolor statusu | Karty zależne od stanu | `MedicineCard` (status: OK, expiring, expired) |
 

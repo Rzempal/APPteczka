@@ -565,28 +565,29 @@ class _HomeScreenState extends State<HomeScreen> {
                   });
                 },
               ),
-            // Submit arrow button
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: GestureDetector(
-                onTap: () {
-                  _searchFocusNode.unfocus();
-                },
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 20,
-                  ),
-                  child: Icon(
-                    LucideIcons.check,
-                    size: 18,
-                    color: theme.colorScheme.primary,
+            // Submit check button - visible only when focused
+            if (_searchFocusNode.hasFocus)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: GestureDetector(
+                  onTap: () {
+                    _searchFocusNode.unfocus();
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: NeuDecoration.flatSmall(
+                      isDark: isDark,
+                      radius: 20,
+                    ),
+                    child: Icon(
+                      LucideIcons.check,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
