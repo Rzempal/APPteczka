@@ -39,6 +39,14 @@ class _GeminiScannerState extends State<GeminiScanner> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Opis trybu
+            Text(
+              'Zrób zdjęcie kilku leków i dodaj wszystkie naraz',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
             // Podgląd zdjęcia lub placeholder
             if (_selectedImage != null) ...[
               ClipRRect(

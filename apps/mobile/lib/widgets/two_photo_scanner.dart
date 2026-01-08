@@ -54,6 +54,17 @@ class _TwoPhotoScannerState extends State<TwoPhotoScanner> {
             // Stepper progress
             _buildStepIndicator(theme),
 
+            const SizedBox(height: 12),
+
+            // Opis trybu
+            Text(
+              'Zrób zdjęcie nazwy leku, a następnie daty ważności',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+
             const SizedBox(height: 16),
 
             // Błąd

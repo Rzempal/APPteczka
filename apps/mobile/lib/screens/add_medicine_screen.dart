@@ -287,9 +287,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                           ),
                         ),
                         Text(
-                          _aiVisionMode == 0
-                              ? 'Zrób zdjęcie kilku leków i dodaj wszystkie naraz'
-                              : 'Zrób zdjęcie nazwy leku, a następnie daty ważności',
+                          'Zrób zdjęcie opakowań i pozwól AI rozpoznać leki',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -354,86 +352,87 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   }
 
   Widget _buildModeToggle(ThemeData theme, bool isDark, Color aiColor) {
-    return Row(
-      children: [
-        // Tryb 1 zdjęcie
-        Expanded(
-          child: GestureDetector(
-            onTap: () => setState(() => _aiVisionMode = 0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              decoration: _aiVisionMode == 0
-                  ? NeuDecoration.pressedSmall(isDark: isDark)
-                  : NeuDecoration.flatSmall(isDark: isDark),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    LucideIcons.imagePlus,
-                    size: 18,
-                    color: _aiVisionMode == 0
-                        ? aiColor
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
+    return NeuInsetContainer(
+      borderRadius: 12,
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        children: [
+          // Tryb 1 zdjęcie
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _aiVisionMode = 0),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: _aiVisionMode == 0
+                    ? NeuDecoration.convex(isDark: isDark, radius: 10)
+                    : null,
+                child: Column(
+                  children: [
+                    Icon(
+                      LucideIcons.imagePlus,
+                      size: 22,
+                      color: _aiVisionMode == 0
+                          ? aiColor
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
                       '1 zdjęcie',
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      style: TextStyle(
+                        fontSize: 12,
                         fontWeight: _aiVisionMode == 0
                             ? FontWeight.w600
                             : FontWeight.normal,
                         color: _aiVisionMode == 0
-                            ? theme.colorScheme.onSurface
+                            ? aiColor
                             : theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        // Tryb 2 zdjęcia
-        Expanded(
-          child: GestureDetector(
-            onTap: () => setState(() => _aiVisionMode = 1),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              decoration: _aiVisionMode == 1
-                  ? NeuDecoration.pressedSmall(isDark: isDark)
-                  : NeuDecoration.flatSmall(isDark: isDark),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    LucideIcons.images,
-                    size: 18,
-                    color: _aiVisionMode == 1
-                        ? aiColor
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
+          // Tryb 2 zdjęcia
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _aiVisionMode = 1),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: _aiVisionMode == 1
+                    ? NeuDecoration.convex(isDark: isDark, radius: 10)
+                    : null,
+                child: Column(
+                  children: [
+                    Icon(
+                      LucideIcons.images,
+                      size: 22,
+                      color: _aiVisionMode == 1
+                          ? aiColor
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
                       '2 zdjęcia',
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      style: TextStyle(
+                        fontSize: 12,
                         fontWeight: _aiVisionMode == 1
                             ? FontWeight.w600
                             : FontWeight.normal,
                         color: _aiVisionMode == 1
-                            ? theme.colorScheme.onSurface
+                            ? aiColor
                             : theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
