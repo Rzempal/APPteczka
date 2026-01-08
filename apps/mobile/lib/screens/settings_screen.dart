@@ -1168,33 +1168,25 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      // Ikona kawy
-                      Icon(
-                        LucideIcons.coffee,
-                        color: theme.colorScheme.primary,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 12),
-                      // Tekst promocyjny
-                      Flexible(
-                        child: Text(
-                          'Aplikacja jest darmowa i bez reklam, jeśli Ci się podoba',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Obrazek BuyCoffee button (obok tekstu)
+                      // Obrazek BuyCoffee button
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.asset(
                           'assets/buycoffee-button.png',
-                          height: 32,
+                          height: 38,
                           fit: BoxFit.contain,
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 12),
+                      // Opis
+                      Expanded(
+                        child: Text(
+                          'Aplikacja jest darmowa i bez reklam, jeśli Ci się podoba',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                       Icon(
                         _isSupportOpen
                             ? LucideIcons.chevronUp
