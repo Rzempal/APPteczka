@@ -89,6 +89,7 @@
 
 - Backend proxy na Vercel
 - Automatyczne rozpoznawanie leków ze zdjęć
+- Rozpoznawanie leków po wpisanej nazwie (AI name lookup)
 - Rate limiting
 
 </details>

@@ -1,7 +1,7 @@
 // src/lib/gemini.ts
 // Helper do komunikacji z Gemini API (server-side)
 
-import { generateImportPrompt } from './prompts';
+import { generateImportPrompt, generateNameLookupPrompt } from './prompts';
 
 export interface GeminiOCRResult {
     leki: Array<{
@@ -13,9 +13,24 @@ export interface GeminiOCRResult {
     }>;
 }
 
+export interface GeminiNameLookupResult {
+    status: 'rozpoznano';
+    lek: {
+        nazwa: string;
+        opis: string;
+        wskazania: string[];
+        tagi: string[];
+    };
+}
+
+export interface GeminiNameLookupError {
+    status: 'nie_rozpoznano';
+    reason: string;
+}
+
 export interface GeminiError {
     error: string;
-    code: 'API_KEY_MISSING' | 'RATE_LIMIT' | 'INVALID_IMAGE' | 'PARSE_ERROR' | 'API_ERROR';
+    code: 'API_KEY_MISSING' | 'RATE_LIMIT' | 'INVALID_INPUT' | 'PARSE_ERROR' | 'API_ERROR';
 }
 
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
@@ -164,6 +179,134 @@ export async function recognizeMedicinesFromImage(
 /**
  * Sprawdza czy wynik to błąd
  */
-export function isGeminiError(result: GeminiOCRResult | GeminiError): result is GeminiError {
+export function isGeminiError(result: GeminiOCRResult | GeminiError | GeminiNameLookupResult | GeminiNameLookupError): result is GeminiError {
     return 'error' in result;
+}
+
+/**
+ * Wyszukuje informacje o leku na podstawie nazwy
+ * UWAGA: Używać tylko server-side (API route)
+ */
+export async function lookupMedicineByName(
+    name: string
+): Promise<GeminiNameLookupResult | GeminiNameLookupError | GeminiError> {
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+        return {
+            error: 'Brak klucza API Gemini. Skonfiguruj GEMINI_API_KEY w .env.local',
+            code: 'API_KEY_MISSING'
+        };
+    }
+
+    const prompt = generateNameLookupPrompt(name);
+
+    try {
+        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        parts: [
+                            { text: prompt }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 2048,
+                }
+            })
+        });
+
+        if (response.status === 429) {
+            return {
+                error: 'Przekroczono limit zapytań do API Gemini. Spróbuj za chwilę.',
+                code: 'RATE_LIMIT'
+            };
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            return {
+                error: `Błąd API Gemini: ${response.status} - ${errorData?.error?.message || 'Nieznany błąd'}`,
+                code: 'API_ERROR'
+            };
+        }
+
+        const data = await response.json();
+        console.log('Gemini Name Lookup raw response:', JSON.stringify(data, null, 2));
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+            console.log('Gemini no text found in response');
+            return {
+                error: 'Gemini nie zwróciło odpowiedzi.',
+                code: 'API_ERROR'
+            };
+        }
+
+        console.log('Gemini text response:', text);
+
+        // Wyciągnij JSON z odpowiedzi
+        let jsonString = text.trim();
+
+        const jsonCodeBlockMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonCodeBlockMatch && jsonCodeBlockMatch[1]) {
+            jsonString = jsonCodeBlockMatch[1].trim();
+        } else {
+            const codeBlockMatch = jsonString.match(/```\s*([\s\S]*?)\s*```/);
+            if (codeBlockMatch && codeBlockMatch[1]) {
+                jsonString = codeBlockMatch[1].trim();
+            } else {
+                const jsonObjectMatch = jsonString.match(/\{[\s\S]*\}/);
+                if (jsonObjectMatch) {
+                    jsonString = jsonObjectMatch[0].trim();
+                }
+            }
+        }
+
+        console.log('Extracted JSON string:', jsonString.substring(0, 300));
+
+        try {
+            const parsed = JSON.parse(jsonString);
+
+            // Sprawdź czy rozpoznano lek
+            if (parsed.status === 'rozpoznano' && parsed.lek) {
+                return {
+                    status: 'rozpoznano',
+                    lek: parsed.lek
+                };
+            }
+
+            // Nie rozpoznano
+            if (parsed.status === 'nie_rozpoznano') {
+                return {
+                    status: 'nie_rozpoznano',
+                    reason: parsed.reason || 'Nie rozpoznano produktu.'
+                };
+            }
+
+            return {
+                error: 'Nieoczekiwany format odpowiedzi od Gemini.',
+                code: 'PARSE_ERROR'
+            };
+
+        } catch (parseErr) {
+            console.error('JSON parse error:', parseErr, 'Raw text:', text);
+            return {
+                error: `Nie udało się sparsować odpowiedzi Gemini.`,
+                code: 'PARSE_ERROR'
+            };
+        }
+
+    } catch (error) {
+        return {
+            error: `Błąd połączenia z API Gemini: ${error instanceof Error ? error.message : 'Nieznany błąd'}`,
+            code: 'API_ERROR'
+        };
+    }
 }

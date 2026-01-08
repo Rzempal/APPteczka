@@ -9,6 +9,7 @@ import '../models/medicine.dart';
 import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/gemini_service.dart';
+import '../services/gemini_name_lookup_service.dart';
 import '../widgets/gemini_scanner.dart';
 import '../widgets/two_photo_scanner.dart';
 import '../widgets/karton_icons.dart';
@@ -42,6 +43,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   List<String> _selectedTags = []; // Zamiana z TextFormField na selektor
   DateTime? _terminWaznosci;
   bool _isSaving = false;
+  bool _isLookingUp = false; // AI name lookup
 
   // Import JSON
   final _jsonController = TextEditingController();
@@ -527,21 +529,53 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Nazwa
-          TextFormField(
-            controller: _nazwaController,
-            decoration: InputDecoration(
-              labelText: 'Nazwa leku *',
-              hintText: 'np. Paracetamol 500mg',
-              prefixIcon: const Icon(LucideIcons.pill),
-              border: const OutlineInputBorder(),
-            ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Podaj nazwę leku';
-              }
-              return null;
-            },
+          // Nazwa z przyciskiem Rozpoznaj
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _nazwaController,
+                  decoration: InputDecoration(
+                    labelText: 'Nazwa leku *',
+                    hintText: 'np. Paracetamol 500mg',
+                    prefixIcon: const Icon(LucideIcons.pill),
+                    border: const OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Podaj nazwę leku';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Przycisk Rozpoznaj AI
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: SizedBox(
+                  height: 48,
+                  child: FilledButton.icon(
+                    onPressed: _isLookingUp ? null : _lookupByName,
+                    icon: _isLookingUp
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(LucideIcons.sparkles, size: 18),
+                    label: const Text('AI'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
 
           const SizedBox(height: 16),
@@ -917,6 +951,66 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  /// Wyszukuje dane leku na podstawie wpisanej nazwy przez AI
+  Future<void> _lookupByName() async {
+    final name = _nazwaController.text.trim();
+    if (name.isEmpty) {
+      _showError('Wpisz nazwę leku');
+      return;
+    }
+
+    if (name.length < 2) {
+      _showError('Nazwa leku jest za krótka');
+      return;
+    }
+
+    setState(() => _isLookingUp = true);
+
+    try {
+      final service = GeminiNameLookupService();
+      final result = await service.lookupByName(name);
+
+      if (!mounted) return;
+
+      if (result.found && result.medicine != null) {
+        final med = result.medicine!;
+
+        // Wypełnij formularz danymi z AI
+        setState(() {
+          // Aktualizuj nazwę jeśli AI poprawiła literówki
+          if (med.nazwa != null && med.nazwa!.isNotEmpty) {
+            _nazwaController.text = med.nazwa!;
+          }
+          _opisController.text = med.opis;
+          _wskazaniaController.text = med.wskazania.join(', ');
+          _selectedTags = processTagsForImport(med.tagi);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Rozpoznano: ${med.nazwa ?? name}'),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      } else {
+        // Nie rozpoznano
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.reason ?? 'Nie rozpoznano produktu'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } on GeminiException catch (e) {
+      _showError(e.message);
+    } catch (e) {
+      _showError('Błąd rozpoznawania: $e');
+    } finally {
+      if (mounted) setState(() => _isLookingUp = false);
     }
   }
 
