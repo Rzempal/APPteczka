@@ -596,12 +596,12 @@ class _SettingsScreenState extends State<SettingsScreen>
           int newIndex;
 
           if (velocity < 0) {
-            // Swipe left → next mode
-            newIndex = (currentIndex + 1) % _themeModes.length;
-          } else {
-            // Swipe right → previous mode
+            // Swipe left → przesun aktywny button w lewo (previous mode)
             newIndex =
                 (currentIndex - 1 + _themeModes.length) % _themeModes.length;
+          } else {
+            // Swipe right → przesun aktywny button w prawo (next mode)
+            newIndex = (currentIndex + 1) % _themeModes.length;
           }
 
           _switchThemeMode(_themeModes[newIndex]);

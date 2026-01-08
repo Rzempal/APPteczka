@@ -364,12 +364,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
           HapticFeedback.lightImpact();
 
-          if (velocity < 0 && _aiVisionMode == 0) {
-            // Swipe left → tryb 2 zdjęcia
-            setState(() => _aiVisionMode = 1);
-          } else if (velocity > 0 && _aiVisionMode == 1) {
-            // Swipe right → tryb 1 zdjęcie
+          if (velocity < 0 && _aiVisionMode == 1) {
+            // Swipe left → przesun na 1 zdjęcie (button w lewo)
             setState(() => _aiVisionMode = 0);
+          } else if (velocity > 0 && _aiVisionMode == 0) {
+            // Swipe right → przesun na 2 zdjęcia (button w prawo)
+            setState(() => _aiVisionMode = 1);
           }
         },
         child: Row(
