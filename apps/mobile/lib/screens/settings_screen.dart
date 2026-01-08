@@ -1173,7 +1173,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         borderRadius: BorderRadius.circular(8),
                         child: Image.asset(
                           'assets/buycoffee-button.png',
-                          height: 38,
+                          height: 48,
                           fit: BoxFit.contain,
                         ),
                       ),
