@@ -337,7 +337,7 @@ export default function Filters({ filters, onFiltersChange, onExportPDF, onCopyL
                                                             {subName}
                                                         </span>
                                                         <div className="flex flex-wrap gap-1.5 pl-2 pr-1">
-                                                            {subTags.map(tag => (
+                                                            {subTags.map((tag: string) => (
                                                                 <button
                                                                     key={tag}
                                                                     onClick={() => handleTagToggle(tag)}
