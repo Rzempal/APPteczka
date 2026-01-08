@@ -4,18 +4,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // =============================================================================
-// KONFIGURACJA EMAIL - RESEND
+// KONFIGURACJA EMAIL - RESEND (domena resztatokod.pl zweryfikowana 2026-01-08)
 // =============================================================================
-// PODCZAS PENDING: Resend wymaga "to" = email konta, "from" = onboarding@resend.dev
-// PO WERYFIKACJI:  Zmień na docelowe wartości poniżej
-// =============================================================================
-const BUG_REPORT_EMAIL = process.env.BUG_REPORT_EMAIL || 'rzempal@gmail.com';
-// TODO (po weryfikacji): 'michal.rapala@resztatokod.pl'
-
+const BUG_REPORT_EMAIL = process.env.BUG_REPORT_EMAIL || 'michal.rapala@resztatokod.pl';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-
-const RESEND_FROM = process.env.RESEND_FROM || 'Karton Bug Reporter <onboarding@resend.dev>';
-// TODO (po weryfikacji): 'Karton Bug Reporter <karton@resztatokod.pl>'
+const RESEND_FROM = process.env.RESEND_FROM || 'Karton <karton@resztatokod.pl>';
 
 interface BugReportRequest {
     log?: string;
@@ -142,7 +135,7 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({
                 from: RESEND_FROM,
                 to: [BUG_REPORT_EMAIL],
-                subject: [${ category || 'bug'}]${ topic || (errorMessage ? errorMessage.substring(0, 50) : 'Raport użytkownika')}`,
+                subject: `[Karton] - [${getCategoryLabel(category)}]: ${topic || (errorMessage ? errorMessage.substring(0, 50) : 'Raport użytkownika')}`,
                 html: htmlContent,
                 attachments: attachments.length > 0 ? attachments : undefined,
             }),
@@ -156,7 +149,7 @@ export async function POST(request: NextRequest) {
 
             const errorMessage = errorData?.message || errorData?.error || 'Nieznany błąd Resend';
             return NextResponse.json(
-                { error: `Błąd wysyłki: ${ errorMessage }`, code: 'SEND_ERROR', details: errorData },
+                { error: `Błąd wysyłki: ${errorMessage}`, code: 'SEND_ERROR', details: errorData },
                 { status: 500 }
             );
         }
@@ -181,3 +174,13 @@ function escapeHtml(text: string): string {
         .replace(/'/g, '&#039;')
         .replace(/\n/g, '<br>');
 }
+
+function getCategoryLabel(category?: string): string {
+    switch (category) {
+        case 'bug': return 'Bug';
+        case 'suggestion': return 'Sugestia';
+        case 'question': return 'Pytanie';
+        default: return 'Bug';
+    }
+}
+

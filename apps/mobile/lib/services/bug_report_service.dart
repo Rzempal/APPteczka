@@ -98,7 +98,7 @@ class BugReportService {
   Future<String> getAppVersion() async {
     try {
       final info = await PackageInfo.fromPlatform();
-      return '${info.version}+${info.buildNumber}';
+      return info.version;
     } catch (e) {
       return 'Unknown';
     }
