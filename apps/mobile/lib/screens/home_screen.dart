@@ -71,10 +71,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isManagementSheetOpen = false;
   final FocusNode _searchFocusNode = FocusNode();
 
-  // Help tooltip state
+  // Help bottom sheet state
   bool _isHelpTooltipOpen = false;
-  final GlobalKey _helpButtonKey = GlobalKey();
-  OverlayEntry? _helpOverlayEntry;
 
   @override
   void initState() {
@@ -92,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_medicines.isNotEmpty &&
           !widget.storageService.helpTooltipShown &&
           mounted) {
-        _showHelpTooltip();
+        _showHelpBottomSheet();
       }
     });
   }
@@ -103,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _removeHelpOverlay();
     _searchController.dispose();
     _searchFocusNode.dispose();
     widget.updateService.removeListener(_onUpdateChanged);
@@ -627,7 +624,6 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 8),
           // Przycisk pomocy - żarówka z efektem pressed
           GestureDetector(
-            key: _helpButtonKey,
             onTap: _toggleHelpTooltip,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 80),
@@ -741,319 +737,39 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // ==================== HELP TOOLTIP ====================
+  // ==================== HELP BOTTOM SHEET ====================
 
   void _toggleHelpTooltip() {
     if (_isHelpTooltipOpen) {
-      _removeHelpOverlay();
+      Navigator.of(context).pop();
     } else {
-      _showHelpTooltip();
+      _showHelpBottomSheet();
     }
   }
 
-  void _showHelpTooltip() {
-    if (_helpOverlayEntry != null) return;
-
+  void _showHelpBottomSheet() {
     // Oznacz jako pokazany
     widget.storageService.helpTooltipShown = true;
 
-    _helpOverlayEntry = _createHelpOverlayEntry();
-    Overlay.of(context).insert(_helpOverlayEntry!);
     setState(() => _isHelpTooltipOpen = true);
-  }
 
-  void _removeHelpOverlay() {
-    _helpOverlayEntry?.remove();
-    _helpOverlayEntry = null;
-    if (mounted) {
-      setState(() => _isHelpTooltipOpen = false);
-    }
-  }
-
-  OverlayEntry _createHelpOverlayEntry() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Get button position
-    final RenderBox? renderBox =
-        _helpButtonKey.currentContext?.findRenderObject() as RenderBox?;
-    final buttonSize = renderBox?.size ?? const Size(40, 40);
-    final buttonPosition = renderBox?.localToGlobal(Offset.zero) ?? Offset.zero;
-
-    const menuWidth = 280.0;
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    // Calculate left position - align to button's left edge, but keep within screen
-    var leftPosition = buttonPosition.dx;
-    // If menu would go off right edge, shift left
-    if (leftPosition + menuWidth > screenWidth - 16) {
-      leftPosition = screenWidth - menuWidth - 16;
-    }
-    // Ensure doesn't go off left edge
-    if (leftPosition < 16) {
-      leftPosition = 16;
-    }
-
-    return OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          // Tap barrier to close
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: _removeHelpOverlay,
-              behavior: HitTestBehavior.opaque,
-              child: Container(color: Colors.transparent),
-            ),
-          ),
-          // Menu below button
-          Positioned(
-            top: buttonPosition.dy + buttonSize.height + 8,
-            left: leftPosition,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                width: menuWidth,
-                padding: const EdgeInsets.all(16),
-                decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Row(
-                      children: [
-                        Icon(
-                          LucideIcons.lightbulb,
-                          color: Colors.amber,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Podpowiedzi',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // Gesty
-                    _buildHelpSectionOverlay(
-                      theme,
-                      icon: LucideIcons.hand,
-                      title: 'Gesty na karcie leku',
-                      items: [
-                        'Dotknięcie → rozwija kartę',
-                        'Przytrzymanie → szczegóły',
-                        'Przeciągnięcie ← → etykiety',
-                        'Przeciągnięcie → → notatka',
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Przycisk Ciekawe funkcje
-                    GestureDetector(
-                      onTap: () {
-                        _removeHelpOverlay();
-                        _showFeaturesDialog();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: NeuDecoration.flatSmall(
-                          isDark: isDark,
-                          radius: 12,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              LucideIcons.sparkles,
-                              size: 16,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Ciekawe funkcje',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              LucideIcons.chevronRight,
-                              size: 16,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHelpSectionOverlay(
-    ThemeData theme, {
-    required IconData icon,
-    required String title,
-    required List<String> items,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 14, color: theme.colorScheme.primary),
-            const SizedBox(width: 6),
-            Text(
-              title,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ...items.map(
-          (item) => Padding(
-            padding: const EdgeInsets.only(left: 20, bottom: 2),
-            child: Text(
-              '• $item',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 11,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // ==================== FEATURES DIALOG ====================
-
-  void _showFeaturesDialog() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark
-            ? const Color(0xFF1e293b)
-            : const Color(0xFFe0e8e4),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: [
-            Icon(
-              LucideIcons.sparkles,
-              color: theme.colorScheme.primary,
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Ciekawe funkcje',
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildFeatureItem(
-                theme,
-                icon: LucideIcons.calculator,
-                title: 'Kalkulator zapasu leku',
-                description: 'Karta leku → Termin ważności',
-              ),
-              const SizedBox(height: 12),
-              _buildFeatureItem(
-                theme,
-                icon: LucideIcons.copy,
-                title: 'Wykrywanie duplikatów',
-                description: 'Ikona przy nazwie leku na liście',
-              ),
-              const SizedBox(height: 12),
-              _buildFeatureItem(
-                theme,
-                icon: LucideIcons.funnel,
-                title: 'Filtruj po duplikatach',
-                description: 'Filtry → Termin ważności',
-              ),
-              const SizedBox(height: 12),
-              _buildFeatureItem(
-                theme,
-                icon: LucideIcons.camera,
-                title: 'Data ważności ze zdjęcia',
-                description: 'Karta leku → Termin ważności → Aparat',
-              ),
-              const SizedBox(height: 12),
-              _buildFeatureItem(
-                theme,
-                icon: LucideIcons.search,
-                title: 'Szukaj w ulotce',
-                description: 'Karta leku → Ulotka → Podepnij ulotkę',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Zamknij'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-    );
-  }
-
-  Widget _buildFeatureItem(
-    ThemeData theme, {
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: theme.colorScheme.primary),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                description,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+      builder: (context) =>
+          _HelpBottomSheetContent(isDark: isDark, theme: theme),
+    ).whenComplete(() {
+      if (mounted) {
+        setState(() => _isHelpTooltipOpen = false);
+      }
+    });
   }
 
   void _showFilterManagement() {
@@ -2626,6 +2342,277 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
               Navigator.pop(ctx);
             },
             child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ==================== HELP BOTTOM SHEET CONTENT ====================
+
+class _HelpBottomSheetContent extends StatefulWidget {
+  final bool isDark;
+  final ThemeData theme;
+
+  const _HelpBottomSheetContent({required this.isDark, required this.theme});
+
+  @override
+  State<_HelpBottomSheetContent> createState() =>
+      _HelpBottomSheetContentState();
+}
+
+class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
+  bool _isFeaturesExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = widget.isDark
+        ? AppColors.darkBackground
+        : AppColors.lightBackground;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.85,
+        expand: false,
+        builder: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: widget.theme.colorScheme.onSurfaceVariant.withAlpha(
+                      80,
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Header
+              Row(
+                children: [
+                  Icon(LucideIcons.lightbulb, color: Colors.amber, size: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Podpowiedzi',
+                    style: widget.theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // === Gesty na karcie leku ===
+              _buildSection(
+                icon: LucideIcons.hand,
+                title: 'Gesty na karcie leku',
+                items: [
+                  'Przytrzymanie → pokaż szczegóły',
+                  'Dotknięcie → rozwija kartę w widoku listy',
+                  'Przeciągnij w lewo → edytuj etykiety',
+                  'Przeciągnij w prawo → edytuj notatkę',
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // === Ciekawe funkcje (rozwijane) ===
+              GestureDetector(
+                onTap: () =>
+                    setState(() => _isFeaturesExpanded = !_isFeaturesExpanded),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: NeuDecoration.flat(
+                    isDark: widget.isDark,
+                    radius: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.sparkles,
+                        color: widget.theme.colorScheme.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Ciekawe funkcje',
+                          style: widget.theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      AnimatedRotation(
+                        duration: const Duration(milliseconds: 200),
+                        turns: _isFeaturesExpanded ? 0.5 : 0,
+                        child: Icon(
+                          LucideIcons.chevronDown,
+                          color: widget.theme.colorScheme.onSurfaceVariant,
+                          size: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Rozwinięta zawartość
+              AnimatedCrossFade(
+                duration: const Duration(milliseconds: 200),
+                crossFadeState: _isFeaturesExpanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                firstChild: const SizedBox.shrink(),
+                secondChild: Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Column(
+                    children: [
+                      _buildFeatureItem(
+                        icon: LucideIcons.calculator,
+                        title: 'Kalkulator zapasu leku',
+                        description: 'Sprawdź do kiedy starczy ci leków',
+                        path: 'Szczegóły leku → Termin ważności',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildFeatureItem(
+                        icon: LucideIcons.copy,
+                        title: 'Wykrywanie duplikatów',
+                        description: 'Ikona pokaże się na karcie leku',
+                        path: 'Filtry → Termin ważności',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildFeatureItem(
+                        icon: LucideIcons.boxes,
+                        title: 'Eksportuj listy',
+                        description: 'PDF tabela do wydruku, kopiuj do schowka',
+                        path: 'Zarządzaj apteczką',
+                      ),
+                      const SizedBox(height: 16),
+                      _buildFeatureItem(
+                        icon: LucideIcons.search,
+                        title: 'Szukaj w ulotce',
+                        description: 'Wyszukaj i przypnij ulotkę leku',
+                        path: 'Karta leku → Ulotka',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSection({
+    required IconData icon,
+    required String title,
+    required List<String> items,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 18, color: widget.theme.colorScheme.primary),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: widget.theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: widget.theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(left: 26, bottom: 8),
+            child: Text(
+              '• $item',
+              style: widget.theme.textTheme.bodyMedium?.copyWith(
+                color: widget.theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeatureItem({
+    required IconData icon,
+    required String title,
+    required String description,
+    required String path,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: NeuDecoration.flatSmall(isDark: widget.isDark, radius: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 24, color: widget.theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: widget.theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: widget.theme.textTheme.bodySmall?.copyWith(
+                    color: widget.theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      LucideIcons.cornerDownRight,
+                      size: 14,
+                      color: widget.theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        path,
+                        style: widget.theme.textTheme.bodySmall?.copyWith(
+                          color: widget.theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
