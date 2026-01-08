@@ -11,6 +11,7 @@ import '../services/update_service.dart';
 import '../widgets/bug_report_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
+import '../widgets/coffee_icons.dart';
 
 /// Ekran ustawień aplikacji
 class SettingsScreen extends StatefulWidget {
@@ -1219,12 +1220,9 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Column(
                     children: [
-                      // 3-way toggle button
-                      Container(
-                        decoration: NeuDecoration.flat(
-                          isDark: isDark,
-                          radius: 12,
-                        ),
+                      // 3-way toggle button (styl jak Motyw aplikacji)
+                      NeuInsetContainer(
+                        borderRadius: 12,
                         padding: const EdgeInsets.all(4),
                         child: Row(
                           children: [
@@ -1286,25 +1284,48 @@ class _SettingsScreenState extends State<SettingsScreen>
   }) {
     final isSelected = _selectedCoffeeSize == size;
 
+    // Map size string to CoffeeSize enum
+    final coffeeSize = switch (size) {
+      'small' => CoffeeSize.small,
+      'medium' => CoffeeSize.medium,
+      'large' => CoffeeSize.large,
+      _ => CoffeeSize.small,
+    };
+
     return Expanded(
       child: GestureDetector(
-        onTap: () => setLocalState(() => _selectedCoffeeSize = size),
+        onTap: () {
+          HapticFeedback.lightImpact();
+          setLocalState(() => _selectedCoffeeSize = size);
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: isSelected
-              ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
+              ? NeuDecoration.convex(isDark: isDark, radius: 10)
               : null,
-          child: Center(
-            child: Text(
-              price,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          child: Column(
+            children: [
+              // Ikona kawy
+              CoffeeIcon(
+                size: coffeeSize,
+                dimension: 32,
                 color: isSelected
                     ? theme.colorScheme.primary
-                    : theme.colorScheme.onSurface,
+                    : theme.colorScheme.onSurfaceVariant,
               ),
-            ),
+              const SizedBox(height: 4),
+              Text(
+                price,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ),
       ),
