@@ -74,6 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // Help bottom sheet state
   bool _isHelpTooltipOpen = false;
 
+  // Sort bottom sheet state
+  bool _isSortSheetOpen = false;
+
   @override
   void initState() {
     super.initState();
@@ -659,20 +662,11 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: _viewMode == ViewMode.full ? 'Widok listy' : 'Pełny widok',
           ),
           const SizedBox(width: 8),
-          // Sortowanie - neumorphic menu
-          NeuSortMenu<SortOption>(
-            currentValue: _sortOption,
-            items: SortOption.values
-                .map(
-                  (opt) => NeuSortMenuItem(
-                    value: opt,
-                    label: opt.label,
-                    icon: opt.icon,
-                  ),
-                )
-                .toList(),
-            onSelected: (option) => setState(() => _sortOption = option),
+          // Sortowanie - bottomSheet
+          NeuIconButton(
             icon: LucideIcons.arrowDownUp,
+            onPressed: _showSortBottomSheet,
+            isActive: _isSortSheetOpen,
             tooltip: 'Sortowanie',
           ),
           const SizedBox(width: 8),
@@ -769,6 +763,112 @@ class _HomeScreenState extends State<HomeScreen> {
       if (mounted) {
         setState(() => _isHelpTooltipOpen = false);
       }
+    });
+  }
+
+  // ==================== SORT BOTTOM SHEET ====================
+
+  void _showSortBottomSheet() {
+    setState(() => _isSortSheetOpen = true);
+
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.7,
+        expand: false,
+        builder: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Icon(
+                    LucideIcons.arrowDownUp,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Sortuj',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Sort options
+              ...SortOption.values.map((option) {
+                final isSelected = option == _sortOption;
+                return InkWell(
+                  onTap: () {
+                    setState(() => _sortOption = option);
+                    Navigator.pop(context);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: isSelected
+                        ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
+                        : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                    child: Row(
+                      children: [
+                        Icon(
+                          option.icon,
+                          size: 20,
+                          color: isSelected
+                              ? AppColors.primary
+                              : theme.colorScheme.onSurface,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            option.label,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                        if (isSelected)
+                          Icon(
+                            LucideIcons.check,
+                            size: 18,
+                            color: AppColors.primary,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+    ).whenComplete(() {
+      if (mounted) setState(() => _isSortSheetOpen = false);
     });
   }
 

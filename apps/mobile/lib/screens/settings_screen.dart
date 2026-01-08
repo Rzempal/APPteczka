@@ -571,6 +571,13 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
+  /// Lista trybów motywu dla swipe gesture
+  static const _themeModes = [
+    ThemeMode.system,
+    ThemeMode.light,
+    ThemeMode.dark,
+  ];
+
   Widget _buildThemeToggle(BuildContext context, ThemeData theme, bool isDark) {
     // Użyj optimistic mode jeśli ustawiony, inaczej aktualny
     final displayMode = _optimisticMode ?? widget.themeProvider.themeMode;
@@ -578,41 +585,102 @@ class _SettingsScreenState extends State<SettingsScreen>
     return NeuInsetContainer(
       borderRadius: 12,
       padding: const EdgeInsets.all(4),
-      child: Row(
-        children: [
-          _buildThemeOption(
-            context,
-            theme,
-            isDark,
-            icon: LucideIcons.sunMoon,
-            label: 'System',
-            mode: ThemeMode.system,
-            isSelected: displayMode == ThemeMode.system,
-            isLoading: _switchingMode == ThemeMode.system,
-          ),
-          _buildThemeOption(
-            context,
-            theme,
-            isDark,
-            icon: LucideIcons.sun,
-            label: 'Jasny',
-            mode: ThemeMode.light,
-            isSelected: displayMode == ThemeMode.light,
-            isLoading: _switchingMode == ThemeMode.light,
-          ),
-          _buildThemeOption(
-            context,
-            theme,
-            isDark,
-            icon: LucideIcons.moon,
-            label: 'Ciemny',
-            mode: ThemeMode.dark,
-            isSelected: displayMode == ThemeMode.dark,
-            isLoading: _switchingMode == ThemeMode.dark,
-          ),
-        ],
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragEnd: (details) {
+          // Swipe gesture - przełączanie motywu
+          final velocity = details.primaryVelocity ?? 0;
+          if (velocity.abs() < 100) return; // Ignoruj małe ruchy
+
+          final currentIndex = _themeModes.indexOf(displayMode);
+          int newIndex;
+
+          if (velocity < 0) {
+            // Swipe left → next mode
+            newIndex = (currentIndex + 1) % _themeModes.length;
+          } else {
+            // Swipe right → previous mode
+            newIndex =
+                (currentIndex - 1 + _themeModes.length) % _themeModes.length;
+          }
+
+          _switchThemeMode(_themeModes[newIndex]);
+        },
+        child: Row(
+          children: [
+            _buildThemeOption(
+              context,
+              theme,
+              isDark,
+              icon: LucideIcons.sunMoon,
+              label: 'System',
+              mode: ThemeMode.system,
+              isSelected: displayMode == ThemeMode.system,
+              isLoading: _switchingMode == ThemeMode.system,
+            ),
+            _buildThemeOption(
+              context,
+              theme,
+              isDark,
+              icon: LucideIcons.sun,
+              label: 'Jasny',
+              mode: ThemeMode.light,
+              isSelected: displayMode == ThemeMode.light,
+              isLoading: _switchingMode == ThemeMode.light,
+            ),
+            _buildThemeOption(
+              context,
+              theme,
+              isDark,
+              icon: LucideIcons.moon,
+              label: 'Ciemny',
+              mode: ThemeMode.dark,
+              isSelected: displayMode == ThemeMode.dark,
+              isLoading: _switchingMode == ThemeMode.dark,
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  /// Wspólna logika zmiany motywu (dla tap i swipe)
+  Future<void> _switchThemeMode(ThemeMode mode) async {
+    if (_switchingMode != null) return; // Już przetwarzamy zmianę
+
+    HapticFeedback.lightImpact();
+
+    final previousMode = _optimisticMode ?? widget.themeProvider.themeMode;
+
+    // Optimistic UI - natychmiast przesuń wskaźnik
+    setState(() {
+      _optimisticMode = mode;
+      _switchingMode = mode;
+    });
+
+    // Zmień motyw
+    await widget.themeProvider.setThemeMode(mode);
+
+    // Sprawdź czy się powiodło i ew. rollback
+    if (mounted) {
+      final actualMode = widget.themeProvider.themeMode;
+      if (actualMode != mode) {
+        // Rollback - zmiana się nie powiodła
+        setState(() {
+          _optimisticMode = previousMode;
+          _switchingMode = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Nie udało się zmienić motywu'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        // Sukces - wyczyść spinner
+        setState(() => _switchingMode = null);
+      }
+    }
   }
 
   Widget _buildThemeOption(
@@ -627,45 +695,8 @@ class _SettingsScreenState extends State<SettingsScreen>
   }) {
     return Expanded(
       child: GestureDetector(
-        onTap: isLoading
-            ? null
-            : () async {
-                // Haptic feedback
-                HapticFeedback.lightImpact();
-
-                final previousMode =
-                    _optimisticMode ?? widget.themeProvider.themeMode;
-
-                // Optimistic UI - natychmiast przesuń wskaźnik
-                setState(() {
-                  _optimisticMode = mode;
-                  _switchingMode = mode;
-                });
-
-                // Zmień motyw
-                await widget.themeProvider.setThemeMode(mode);
-
-                // Sprawdź czy się powiodło i ew. rollback
-                if (mounted) {
-                  final actualMode = widget.themeProvider.themeMode;
-                  if (actualMode != mode) {
-                    // Rollback - zmiana się nie powiodła
-                    setState(() {
-                      _optimisticMode = previousMode;
-                      _switchingMode = null;
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Nie udało się zmienić motywu'),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  } else {
-                    // Sukces - wyczyść spinner
-                    setState(() => _switchingMode = null);
-                  }
-                }
-              },
+        behavior: HitTestBehavior.opaque, // Całe pole dotykowe
+        onTap: isLoading ? null : () => _switchThemeMode(mode),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),

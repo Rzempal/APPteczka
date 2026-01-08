@@ -355,83 +355,109 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     return NeuInsetContainer(
       borderRadius: 12,
       padding: const EdgeInsets.all(4),
-      child: Row(
-        children: [
-          // Tryb 1 zdjęcie
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _aiVisionMode = 0),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: _aiVisionMode == 0
-                    ? NeuDecoration.convex(isDark: isDark, radius: 10)
-                    : null,
-                child: Column(
-                  children: [
-                    Icon(
-                      LucideIcons.imagePlus,
-                      size: 22,
-                      color: _aiVisionMode == 0
-                          ? aiColor
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '1 zdjęcie',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: _aiVisionMode == 0
-                            ? FontWeight.w600
-                            : FontWeight.normal,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onHorizontalDragEnd: (details) {
+          // Swipe gesture - przełączanie trybu AI
+          final velocity = details.primaryVelocity ?? 0;
+          if (velocity.abs() < 100) return; // Ignoruj małe ruchy
+
+          HapticFeedback.lightImpact();
+
+          if (velocity < 0 && _aiVisionMode == 0) {
+            // Swipe left → tryb 2 zdjęcia
+            setState(() => _aiVisionMode = 1);
+          } else if (velocity > 0 && _aiVisionMode == 1) {
+            // Swipe right → tryb 1 zdjęcie
+            setState(() => _aiVisionMode = 0);
+          }
+        },
+        child: Row(
+          children: [
+            // Tryb 1 zdjęcie
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque, // Całe pole dotykowe
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _aiVisionMode = 0);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: _aiVisionMode == 0
+                      ? NeuDecoration.convex(isDark: isDark, radius: 10)
+                      : null,
+                  child: Column(
+                    children: [
+                      Icon(
+                        LucideIcons.imagePlus,
+                        size: 22,
                         color: _aiVisionMode == 0
                             ? aiColor
                             : theme.colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        '1 zdjęcie',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: _aiVisionMode == 0
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                          color: _aiVisionMode == 0
+                              ? aiColor
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          // Tryb 2 zdjęcia
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _aiVisionMode = 1),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: _aiVisionMode == 1
-                    ? NeuDecoration.convex(isDark: isDark, radius: 10)
-                    : null,
-                child: Column(
-                  children: [
-                    Icon(
-                      LucideIcons.images,
-                      size: 22,
-                      color: _aiVisionMode == 1
-                          ? aiColor
-                          : theme.colorScheme.onSurfaceVariant,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '2 zdjęcia',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: _aiVisionMode == 1
-                            ? FontWeight.w600
-                            : FontWeight.normal,
+            // Tryb 2 zdjęcia
+            Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque, // Całe pole dotykowe
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  setState(() => _aiVisionMode = 1);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: _aiVisionMode == 1
+                      ? NeuDecoration.convex(isDark: isDark, radius: 10)
+                      : null,
+                  child: Column(
+                    children: [
+                      Icon(
+                        LucideIcons.images,
+                        size: 22,
                         color: _aiVisionMode == 1
                             ? aiColor
                             : theme.colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        '2 zdjęcia',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: _aiVisionMode == 1
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                          color: _aiVisionMode == 1
+                              ? aiColor
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
