@@ -2524,8 +2524,7 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                 items: [
                   'Przytrzymanie → pokaż szczegóły',
                   'Dotknięcie → rozwija kartę w widoku listy',
-                  'Przeciągnij w lewo, aby edytować etykiety.',
-                  'Przeciągnij w prawo, aby edytować notatkę.',
+                  'Włącz w ustawieniach gesty przeciągania dla szybkiej edycji etykiet i notatek',
                 ],
               ),
 
@@ -2591,7 +2590,7 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                         description: 'Sprawdź do kiedy starczy ci leków',
                         path: 'Szczegóły leku → Termin ważności',
                       ),
-                      const SizedBox(height: 16),
+                      const Divider(height: 24),
                       _buildFeatureItem(
                         icon: LucideIcons.copy,
                         title: 'Wykrywanie duplikatów',
@@ -2599,7 +2598,7 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                             'Specjalna ikona pokaże się na karcie leku.\nMożesz też przefiltrować listę po duplikatach.',
                         path: 'Filtry → Termin ważności',
                       ),
-                      const SizedBox(height: 16),
+                      const Divider(height: 24),
                       _buildFeatureItem(
                         icon: LucideIcons.boxes,
                         title: 'Eksportuj listy',
@@ -2607,7 +2606,7 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                             'Wyeksportuj do PDF w formie tabelki gotowej do wydruku.\nSkopiuj do schowka wypisane po przecinku.',
                         path: 'Zarządzaj apteczką',
                       ),
-                      const SizedBox(height: 16),
+                      const Divider(height: 24),
                       _buildFeatureItem(
                         icon: LucideIcons.search,
                         title: 'Szukaj w ulotce',
@@ -2668,13 +2667,12 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
     required String description,
     required String path,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: NeuDecoration.flatSmall(isDark: widget.isDark, radius: 12),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 24, color: widget.theme.colorScheme.primary),
+          Icon(icon, size: 22, color: widget.theme.colorScheme.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -2693,7 +2691,7 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                     color: widget.theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     Icon(
