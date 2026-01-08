@@ -107,6 +107,9 @@ flutter:
   # Assets
   assets:
     - assets/buycoffee-button.png
+    - assets/buycoffee-button-light.png
+    - assets/buycoffee-button-dark.png
+    - assets/logo_buycoffee.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

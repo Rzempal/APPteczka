@@ -11,7 +11,6 @@ import '../services/update_service.dart';
 import '../widgets/bug_report_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
-import '../widgets/coffee_icons.dart';
 
 /// Ekran ustawień aplikacji
 class SettingsScreen extends StatefulWidget {
@@ -1152,6 +1151,9 @@ class _SettingsScreenState extends State<SettingsScreen>
     }
   }
 
+  // Selected coffee size for support section
+  String _selectedCoffeeSize = 'small'; // 'small', 'medium', 'large'
+
   Widget _buildSupportSection(ThemeData theme, bool isDark) {
     return StatefulBuilder(
       builder: (context, setLocalState) {
@@ -1168,25 +1170,38 @@ class _SettingsScreenState extends State<SettingsScreen>
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      // Obrazek BuyCoffee button
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(
-                          'assets/buycoffee-button.png',
-                          height: 48,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Opis
+                      // H1 + H2
                       Expanded(
-                        child: Text(
-                          'Aplikacja jest darmowa i bez reklam, jeśli Ci się podoba',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Image.asset(
+                                  'assets/logo_buycoffee.png',
+                                  height: 24,
+                                  fit: BoxFit.contain,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Podoba Ci się ten projekt?',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Twoja kawa to paliwo do wdrażania nowych funkcji i utrzymania aplikacji bez reklam.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Icon(
                         _isSupportOpen
                             ? LucideIcons.chevronUp
@@ -1198,31 +1213,59 @@ class _SettingsScreenState extends State<SettingsScreen>
                   ),
                 ),
               ),
-              // Zawartość zwijana - cennik (bez nagłówka)
+              // Zawartość rozwijana
               if (_isSupportOpen)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Row(
+                  child: Column(
                     children: [
-                      _buildCoffeeOption(
-                        theme,
-                        isDark,
-                        coffeeSize: CoffeeSize.small,
-                        price: '5 zł',
+                      // 3-way toggle button
+                      Container(
+                        decoration: NeuDecoration.flat(
+                          isDark: isDark,
+                          radius: 12,
+                        ),
+                        padding: const EdgeInsets.all(4),
+                        child: Row(
+                          children: [
+                            _buildPriceToggle(
+                              theme,
+                              isDark,
+                              setLocalState,
+                              size: 'small',
+                              price: '5 zł',
+                            ),
+                            _buildPriceToggle(
+                              theme,
+                              isDark,
+                              setLocalState,
+                              size: 'medium',
+                              price: '10 zł',
+                            ),
+                            _buildPriceToggle(
+                              theme,
+                              isDark,
+                              setLocalState,
+                              size: 'large',
+                              price: '15 zł',
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      _buildCoffeeOption(
-                        theme,
-                        isDark,
-                        coffeeSize: CoffeeSize.medium,
-                        price: '10 zł',
-                      ),
-                      const SizedBox(width: 8),
-                      _buildCoffeeOption(
-                        theme,
-                        isDark,
-                        coffeeSize: CoffeeSize.large,
-                        price: '15 zł',
+                      const SizedBox(height: 16),
+                      // Przycisk Postaw kawę z dynamicznym linkiem
+                      GestureDetector(
+                        onTap: () => _launchSupportUrl(_selectedCoffeeSize),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            isDark
+                                ? 'assets/buycoffee-button-dark.png'
+                                : 'assets/buycoffee-button-light.png',
+                            height: 56,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -1234,33 +1277,34 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildCoffeeOption(
+  Widget _buildPriceToggle(
     ThemeData theme,
-    bool isDark, {
-    required CoffeeSize coffeeSize,
+    bool isDark,
+    StateSetter setLocalState, {
+    required String size,
     required String price,
   }) {
-    // Map CoffeeSize enum to URL parameter
-    final sizeParam = coffeeSize.name; // 'small', 'medium', 'large'
+    final isSelected = _selectedCoffeeSize == size;
 
     return Expanded(
       child: GestureDetector(
-        onTap: () => _launchSupportUrl(sizeParam),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-          decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
-          child: Column(
-            children: [
-              // Custom ikona kawy
-              CoffeeIcon(size: coffeeSize, dimension: 40),
-              const SizedBox(height: 8),
-              Text(
-                price,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+        onTap: () => setLocalState(() => _selectedCoffeeSize = size),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: isSelected
+              ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
+              : null,
+          child: Center(
+            child: Text(
+              price,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface,
               ),
-            ],
+            ),
           ),
         ),
       ),
