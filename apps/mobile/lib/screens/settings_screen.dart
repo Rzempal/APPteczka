@@ -1031,7 +1031,7 @@ class _SettingsScreenState extends State<SettingsScreen>
           ),
           const SizedBox(height: 4),
           Text(
-            'Zapisz kopię zapasową jako plik JSON',
+            'Zapisz kopię zapasową do pliku',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -1101,9 +1101,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const TextSpan(
-                  text: '" i wczytaj plik .json lub wklej skopiowany JSON.',
-                ),
+                const TextSpan(text: '" i wczytaj plik z kopią zapasową.'),
               ],
             ),
           ),

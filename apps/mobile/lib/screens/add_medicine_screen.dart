@@ -109,7 +109,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                                 ),
                               ),
                               Text(
-                                'Możesz skanować zdjęcia, importować JSON lub dodać ręcznie',
+                                'Możesz skanować zdjęcia, wczytać kopię zapasową lub dodać ręcznie',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
@@ -150,7 +150,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 _buildExpandableSection(
                   icon: LucideIcons.folderDown,
                   title: 'Import kopii zapasowej',
-                  subtitle: 'Wczytaj plik JSON z urządzenia',
+                  subtitle: 'Wczytaj kopię zapasową z urządzenia',
                   isExpanded: _fileExpanded,
                   onToggle: () =>
                       setState(() => _fileExpanded = !_fileExpanded),
@@ -441,7 +441,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Wybierz plik JSON z kopią zapasową lub eksportem z wersji webowej.',
+          'Wybierz plik z kopią zapasową.',
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 16),
@@ -454,7 +454,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(LucideIcons.folderOpen),
-          label: const Text('Wybierz plik JSON'),
+          label: const Text('Wybierz plik'),
         ),
       ],
     );
@@ -746,7 +746,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     // Import leków
     final lekiRaw = data['leki'];
     if (lekiRaw is! List) {
-      throw const FormatException('Brak tablicy "leki" w JSON');
+      throw const FormatException('Brak leków w pliku');
     }
 
     final medicines = <Medicine>[];
