@@ -2282,11 +2282,11 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                 if (name.isEmpty) return;
 
                 final newLabel = UserLabel(
-                  id: const Uuid().v4(),
+                  id: Uuid().v4(),
                   name: name,
                   color: selectedColor,
                 );
-                widget.storageService.addLabel(newLabel);
+                widget.storageService.saveLabel(newLabel);
                 widget.onChanged();
                 _loadLabels();
                 Navigator.pop(ctx);
