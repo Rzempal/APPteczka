@@ -302,4 +302,63 @@ Odpowiedzi AI są nieprzewidywalne. Przy parsowaniu:
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-02
+## 8. Wąskie pole dotykowe w przełącznikach (Flutter mobile)
+
+**Data:** 2026-01-08  
+**Kontekst:** Przełącznik motywu w NeuInsetContainer + convex
+
+### ❌ Błąd
+
+GestureDetector owijał tylko `AnimatedContainer` z padding vertical, a nie cały `Expanded` obszar. Kliknięcie poza ikoną/tekstem nie działało.
+
+```dart
+// ❌ Błędnie - wąskie pole dotykowe
+Expanded(
+  child: GestureDetector(
+    onTap: () => ...,
+    child: AnimatedContainer(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      // ...
+    ),
+  ),
+)
+```
+
+### ✅ Poprawne rozwiązanie
+
+Dodanie `behavior: HitTestBehavior.opaque` oraz swipe gesture na całym Row:
+
+```dart
+// ✅ Poprawnie - całe Expanded jest dotykalne + swipe
+NeuInsetContainer(
+  child: GestureDetector(
+    behavior: HitTestBehavior.opaque,
+    onHorizontalDragEnd: (details) {
+      // Swipe left/right przełącza opcje
+    },
+    child: Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque, // Całe pole!
+            onTap: () => switchOption(0),
+            child: AnimatedContainer(...),
+          ),
+        ),
+      ],
+    ),
+  ),
+)
+```
+
+### Zasada ogólna
+
+Przy tworzeniu przycisków w kontenerach neumorficznych:
+
+- Zawsze używaj `behavior: HitTestBehavior.opaque`
+- Dodawaj swipe gesture dla naturalizmus interakcji
+- Używaj `HapticFeedback.lightImpact()` przy każdej zmianie
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-08

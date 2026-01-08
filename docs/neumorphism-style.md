@@ -136,3 +136,51 @@ Stack(
   ],
 )
 ```
+
+---
+
+## 6. Toggle Switch (`NeuInsetContainer` + `convex`)
+
+Przełączniki 2-3 opcji w zagłębionych kontenerach.
+
+| Właściwość | Wartość |
+|------------|---------|
+| **Kontener** | `NeuInsetContainer` (radius: 12, padding: 4) |
+| **Opcja aktywna** | `NeuDecoration.convex(radius: 10)` |
+| **Hit area** | `GestureDetector(behavior: HitTestBehavior.opaque)` |
+| **Swipe gesture** | `onHorizontalDragEnd` na całym Row |
+| **Haptic feedback** | `HapticFeedback.lightImpact()` przy każdej zmianie |
+
+### Prawidłowa struktura
+
+```dart
+NeuInsetContainer(
+  borderRadius: 12,
+  padding: const EdgeInsets.all(4),
+  child: GestureDetector(
+    behavior: HitTestBehavior.opaque, // Swipe na całym obszarze
+    onHorizontalDragEnd: (details) {
+      final velocity = details.primaryVelocity ?? 0;
+      if (velocity.abs() < 100) return;
+      // Przełącz opcję...
+    },
+    child: Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque, // Tap na całym polu
+            onTap: () => switchOption(0),
+            child: AnimatedContainer(
+              decoration: isSelected ? NeuDecoration.convex(...) : null,
+              // ...
+            ),
+          ),
+        ),
+        // więcej opcji...
+      ],
+    ),
+  ),
+);
+```
+
+> **Ważne:** `HitTestBehavior.opaque` jest kluczowe dla pełnego pola dotykowego. Bez tego klikanie działa tylko na ikonie/tekście.

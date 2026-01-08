@@ -2524,9 +2524,18 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                 items: [
                   'Przytrzymanie → pokaż szczegóły',
                   'Dotknięcie → rozwija kartę w widoku listy',
-                  'Przeciągnij w lewo → edytuj etykiety',
-                  'Przeciągnij w prawo → edytuj notatkę',
                 ],
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.only(left: 26),
+                child: Text(
+                  'Włącz w ustawieniach gesty przeciągania dla szybkiej edycji etykiet i notatek',
+                  style: widget.theme.textTheme.bodySmall?.copyWith(
+                    color: widget.theme.colorScheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
               ),
 
               const SizedBox(height: 24),
@@ -2595,14 +2604,16 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                       _buildFeatureItem(
                         icon: LucideIcons.copy,
                         title: 'Wykrywanie duplikatów',
-                        description: 'Ikona pokaże się na karcie leku',
+                        description:
+                            'Specjalna ikona pokaże się na karcie leku.\nMożesz też przefiltrować listę po duplikatach.',
                         path: 'Filtry → Termin ważności',
                       ),
                       const SizedBox(height: 16),
                       _buildFeatureItem(
                         icon: LucideIcons.boxes,
                         title: 'Eksportuj listy',
-                        description: 'PDF tabela do wydruku, kopiuj do schowka',
+                        description:
+                            'Wyeksportuj do PDF w formie tabelki gotowej do wydruku.\nSkopiuj do schowka wypisane po przecinku.',
                         path: 'Zarządzaj apteczką',
                       ),
                       const SizedBox(height: 16),
@@ -2610,7 +2621,7 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                         icon: LucideIcons.search,
                         title: 'Szukaj w ulotce',
                         description: 'Wyszukaj i przypnij ulotkę leku',
-                        path: 'Karta leku → Ulotka',
+                        path: 'Karta leku → Ulotka → Podepnij ulotkę',
                       ),
                     ],
                   ),
