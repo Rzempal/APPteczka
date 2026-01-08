@@ -1193,6 +1193,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
 
+              const Divider(height: 24),
+
               const SizedBox(height: 24),
 
               // Disclaimer
@@ -1343,11 +1345,14 @@ class _HomeScreenState extends State<HomeScreen> {
         storageService: widget.storageService,
         onChanged: () => _loadMedicines(),
       ),
-    ).then((_) => _loadMedicines());
+    ).then((_) {
+      _loadMedicines();
+      // Powrót do głównego menu po zamknięciu (gest lub przycisk wstecz)
+      _showFilterManagement();
+    });
   }
 
   void _showTagManagement() {
-    // Placeholder - przyszła funkcjonalność
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1358,7 +1363,11 @@ class _HomeScreenState extends State<HomeScreen> {
         storageService: widget.storageService,
         onChanged: () => _loadMedicines(),
       ),
-    ).then((_) => _loadMedicines());
+    ).then((_) {
+      _loadMedicines();
+      // Powrót do głównego menu po zamknięciu (gest lub przycisk wstecz)
+      _showFilterManagement();
+    });
   }
 
   Future<bool> _confirmDelete(Medicine medicine) async {
@@ -1829,6 +1838,7 @@ class _LabelManagementSheet extends StatefulWidget {
 
 class _LabelManagementSheetState extends State<_LabelManagementSheet> {
   late List<UserLabel> _labels;
+  final Set<String> _selectedLabelIds = {};
 
   @override
   void initState() {
@@ -1839,6 +1849,8 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
   void _loadLabels() {
     setState(() {
       _labels = widget.storageService.getLabels();
+      // Usuń zaznaczenia dla usuniętych etykiet
+      _selectedLabelIds.removeWhere((id) => !_labels.any((l) => l.id == id));
     });
   }
 
@@ -1857,21 +1869,57 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header z przyciskiem wstecz, tytułem i przyciskiem dodaj
             Row(
               children: [
+                // Przycisk wstecz
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: NeuDecoration.flatSmall(
+                      isDark: isDark,
+                      radius: 8,
+                    ),
+                    child: Icon(
+                      LucideIcons.arrowLeft,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Icon(LucideIcons.tags, color: theme.colorScheme.primary),
                 const SizedBox(width: 12),
-                Text(
-                  'Zarządzaj etykietami',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    'Zarządzaj etykietami',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                // Przycisk dodaj etykietę
+                GestureDetector(
+                  onTap: _createLabel,
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: NeuDecoration.flatSmall(
+                      isDark: isDark,
+                      radius: 8,
+                    ),
+                    child: Icon(
+                      LucideIcons.plus,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
-              'Przeciągnij etykietę aby zmienić kolejność.',
+              'Przeciągnij etykietę aby zmienić kolejność. Zaznacz aby usunąć wiele.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -1935,6 +1983,7 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                         final color = colorInfo != null
                             ? Color(colorInfo.colorValue)
                             : Colors.grey;
+                        final isSelected = _selectedLabelIds.contains(label.id);
                         return Container(
                           key: ValueKey(label.id),
                           margin: const EdgeInsets.only(bottom: 8),
@@ -1946,6 +1995,20 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                             leading: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
+                                // Checkbox dla multi-select
+                                Checkbox(
+                                  value: isSelected,
+                                  onChanged: (checked) {
+                                    setState(() {
+                                      if (checked == true) {
+                                        _selectedLabelIds.add(label.id);
+                                      } else {
+                                        _selectedLabelIds.remove(label.id);
+                                      }
+                                    });
+                                  },
+                                  activeColor: theme.colorScheme.primary,
+                                ),
                                 // Drag handle
                                 ReorderableDragStartListener(
                                   index: index,
@@ -1955,7 +2018,7 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                                     color: theme.colorScheme.onSurfaceVariant,
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 8),
                                 // Color dot
                                 Container(
                                   width: 24,
@@ -2007,6 +2070,22 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                       },
                     ),
             ),
+            // Przycisk "Usuń zaznaczone" (widoczny gdy >= 1 zaznaczona)
+            if (_selectedLabelIds.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _deleteSelectedLabels,
+                  icon: const Icon(LucideIcons.trash, size: 18),
+                  label: Text('Usuń zaznaczone (${_selectedLabelIds.length})'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -2135,6 +2214,124 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
       ),
     );
   }
+
+  void _createLabel() {
+    final nameController = TextEditingController();
+    LabelColor selectedColor = LabelColor.green;
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Nowa etykieta'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nazwa',
+                  border: OutlineInputBorder(),
+                ),
+                autofocus: true,
+              ),
+              const SizedBox(height: 16),
+              Text('Kolor:', style: theme.textTheme.bodyMedium),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: LabelColor.values.map((c) {
+                  final info = labelColors[c]!;
+                  final isSelected = c == selectedColor;
+                  return GestureDetector(
+                    onTap: () => setDialogState(() => selectedColor = c),
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Color(info.colorValue),
+                        shape: BoxShape.circle,
+                        border: isSelected
+                            ? Border.all(color: Colors.white, width: 3)
+                            : null,
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: Color(info.colorValue),
+                                  blurRadius: 8,
+                                ),
+                              ]
+                            : null,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final name = nameController.text.trim();
+                if (name.isEmpty) return;
+
+                final newLabel = UserLabel(
+                  id: const Uuid().v4(),
+                  name: name,
+                  color: selectedColor,
+                );
+                widget.storageService.addLabel(newLabel);
+                widget.onChanged();
+                _loadLabels();
+                Navigator.pop(ctx);
+              },
+              child: const Text('Dodaj'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _deleteSelectedLabels() {
+    if (_selectedLabelIds.isEmpty) return;
+
+    final count = _selectedLabelIds.length;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Usuń zaznaczone etykiety?'),
+        content: Text(
+          'Czy na pewno chcesz usunąć $count ${count == 1 ? 'etykietę' : 'etykiet'}? Zostaną usunięte ze wszystkich leków.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              for (final id in _selectedLabelIds) {
+                widget.storageService.deleteLabel(id);
+              }
+              widget.onChanged();
+              _selectedLabelIds.clear();
+              _loadLabels();
+              Navigator.pop(ctx);
+            },
+            child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Sheet zarządzania tagami
@@ -2194,14 +2391,34 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header z przyciskiem wstecz
             Row(
               children: [
+                // Przycisk wstecz
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: NeuDecoration.flatSmall(
+                      isDark: isDark,
+                      radius: 8,
+                    ),
+                    child: Icon(
+                      LucideIcons.arrowLeft,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Icon(LucideIcons.hash, color: theme.colorScheme.primary),
                 const SizedBox(width: 12),
-                Text(
-                  'Moje tagi',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    'Moje tagi',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
