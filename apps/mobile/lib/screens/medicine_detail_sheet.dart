@@ -515,7 +515,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
   }
 
-  /// Wyświetla wynik kalkulacji: "Zabraknie od: DD.MM.YYYY (za X dni)"
+  /// Wyświetla wynik kalkulacji: "Zabraknie od: DD.MM.YYYY (za X dni)" z CTA
   Widget _buildSupplyResult(
     BuildContext context,
     DateTime endDate,
@@ -526,10 +526,9 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     final formattedDate =
         '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        // Wiersz z datą i przyciskiem edycji
+        // Data z przyciskiem edycji
         GestureDetector(
           onTap: () => _showSetDailyIntakeDialog(context),
           child: Container(
@@ -583,30 +582,17 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(width: 8),
         // Przycisk "Dodaj do kalendarza"
         GestureDetector(
           onTap: () => _addToCalendar(endDate),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.all(10),
             decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.calendarPlus,
-                  size: 16,
-                  color: AppColors.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Dodaj do kalendarza',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ],
+            child: Icon(
+              LucideIcons.calendarPlus,
+              size: 20,
+              color: AppColors.primary,
             ),
           ),
         ),
@@ -615,7 +601,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
   }
 
   /// Dodaje przypomnienie o końcu zapasu leku do kalendarza systemowego
-  void _addToCalendar(DateTime endDate) {
+  Future<void> _addToCalendar(DateTime endDate) async {
     final medicineName = _medicine.nazwa ?? 'Lek';
     final event = Event(
       title: '$medicineName - koniec',
@@ -624,7 +610,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
       endDate: endDate.add(const Duration(hours: 1)),
       allDay: true,
     );
-    Add2Calendar.addEvent2Cal(event);
+    await Add2Calendar.addEvent2Cal(event);
   }
 
   /// Dialog ustawienia dziennego zużycia tabletek
