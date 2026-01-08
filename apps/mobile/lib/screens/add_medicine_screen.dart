@@ -45,8 +45,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   bool _isSaving = false;
   bool _isLookingUp = false; // AI name lookup
 
-  // Import JSON
-  final _jsonController = TextEditingController();
+  // Import z pliku
   bool _isImporting = false;
 
   // Expanded sections - nowa kolejność
@@ -60,7 +59,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     _nazwaController.dispose();
     _opisController.dispose();
     _wskazaniaController.dispose();
-    _jsonController.dispose();
     super.dispose();
   }
 

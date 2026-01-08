@@ -425,14 +425,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     return '${time.day}.${time.month.toString().padLeft(2, '0')} ${time.hour}:${time.minute.toString().padLeft(2, '0')}';
   }
 
-  String _getVersionText(UpdateService service) {
-    final current = service.currentVersion ?? 'Nieznana';
-    if (service.updateAvailable && service.latestVersion != null) {
-      return 'Obecna: $current → Nowa: ${service.latestVersion}';
-    }
-    return 'Wersja: $current';
-  }
-
   Widget _buildSyncSection(BuildContext context, ThemeData theme, bool isDark) {
     return Container(
       decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
