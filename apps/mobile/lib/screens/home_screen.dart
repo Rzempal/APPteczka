@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:uuid/uuid.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../config/app_config.dart';
 import '../models/medicine.dart';
