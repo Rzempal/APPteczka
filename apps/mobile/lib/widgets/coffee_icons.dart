@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Custom coffee icons for BuyCoffee support section.
-/// Based on SVG designs from docs/buycoffee/icon_coffee.html
+/// Custom coffee icons matching official BuyCoffee.to design.
+/// ViewBox: 0 0 36 36, stroke-width: 2
 class CoffeeIcon extends StatelessWidget {
   final CoffeeSize size;
   final double dimension;
@@ -16,7 +16,7 @@ class CoffeeIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = color ?? const Color(0xFF4A8B5F); // BuyCoffee green
+    final iconColor = color ?? const Color(0xFF00B67A); // BuyCoffee green
 
     return SizedBox(
       width: dimension,
@@ -38,356 +38,156 @@ class _CoffeePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size canvasSize) {
-    final scale = canvasSize.width / 24; // SVG viewBox is 0 0 24 24
+    final scale = canvasSize.width / 36; // Official viewBox is 0 0 36 36
 
     final strokePaint = Paint()
       ..color = color
-      ..strokeWidth = 1.6 * scale
+      ..strokeWidth = 2 * scale
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final fillPaint = Paint()
-      ..color = color.withAlpha(13)
-      ..style = PaintingStyle.fill;
-
     switch (size) {
       case CoffeeSize.small:
-        _drawEspresso(canvas, scale, strokePaint, fillPaint);
+        _drawSmallCoffee(canvas, scale, strokePaint);
         break;
       case CoffeeSize.medium:
-        _drawCappuccino(canvas, scale, strokePaint, fillPaint);
+        _drawMediumCoffee(canvas, scale, strokePaint);
         break;
       case CoffeeSize.large:
-        _drawTakeaway(canvas, scale, strokePaint, fillPaint);
+        _drawLargeCoffee(canvas, scale, strokePaint);
         break;
     }
   }
 
-  /// Espresso - small cup with steam
-  void _drawEspresso(
-    Canvas canvas,
-    double scale,
-    Paint strokePaint,
-    Paint fillPaint,
-  ) {
-    // Steam lines
-    final steamPaint = Paint()
-      ..color = strokePaint.color.withAlpha(153)
-      ..strokeWidth = 1.2 * scale
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    // Steam 1
-    final steam1 = Path()
-      ..moveTo(9 * scale, 2 * scale)
-      ..cubicTo(
-        9 * scale,
-        2 * scale,
-        9.5 * scale,
-        3 * scale,
-        9 * scale,
-        4 * scale,
-      )
-      ..cubicTo(
-        8.5 * scale,
-        5 * scale,
-        9 * scale,
-        6 * scale,
-        9 * scale,
-        6 * scale,
-      );
-    canvas.drawPath(steam1, steamPaint);
-
-    // Steam 2
-    final steam2 = Path()
-      ..moveTo(12 * scale, 1 * scale)
-      ..cubicTo(
-        12 * scale,
-        1 * scale,
-        12.5 * scale,
-        2 * scale,
-        12 * scale,
-        3 * scale,
-      )
-      ..cubicTo(
-        11.5 * scale,
-        4 * scale,
-        12 * scale,
-        5 * scale,
-        12 * scale,
-        5 * scale,
-      );
-    canvas.drawPath(steam2, steamPaint);
-
-    // Cup body fill
+  /// Small coffee - espresso cup (based on BuyCoffee coffee-small.svg)
+  void _drawSmallCoffee(Canvas canvas, double scale, Paint strokePaint) {
+    // Cup body - rounded bottom
     final cupPath = Path()
-      ..moveTo(6 * scale, 9 * scale)
-      ..lineTo(15 * scale, 9 * scale)
-      ..lineTo(15 * scale, 12.5 * scale)
-      ..arcToPoint(
-        Offset(6 * scale, 12.5 * scale),
-        radius: Radius.circular(4.5 * scale),
-        clockwise: false,
-      )
-      ..close();
-    canvas.drawPath(cupPath, fillPaint);
+      ..moveTo(8 * scale, 12 * scale)
+      ..lineTo(8 * scale, 22 * scale)
+      ..quadraticBezierTo(8 * scale, 28 * scale, 14 * scale, 28 * scale)
+      ..lineTo(18 * scale, 28 * scale)
+      ..quadraticBezierTo(24 * scale, 28 * scale, 24 * scale, 22 * scale)
+      ..lineTo(24 * scale, 12 * scale);
     canvas.drawPath(cupPath, strokePaint);
 
-    // Handle
-    final handle = Path()
-      ..moveTo(15 * scale, 10 * scale)
-      ..lineTo(16.5 * scale, 10 * scale)
-      ..arcToPoint(
-        Offset(16.5 * scale, 15 * scale),
-        radius: Radius.circular(2.5 * scale),
-        clockwise: true,
-      )
-      ..lineTo(15 * scale, 15 * scale);
-    canvas.drawPath(handle, strokePaint);
-
-    // Saucer
+    // Cup rim
     canvas.drawLine(
-      Offset(4 * scale, 19 * scale),
-      Offset(17 * scale, 19 * scale),
+      Offset(6 * scale, 12 * scale),
+      Offset(26 * scale, 12 * scale),
       strokePaint,
     );
+
+    // Handle
+    final handlePath = Path()
+      ..moveTo(24 * scale, 14 * scale)
+      ..quadraticBezierTo(30 * scale, 14 * scale, 30 * scale, 20 * scale)
+      ..quadraticBezierTo(30 * scale, 26 * scale, 24 * scale, 26 * scale);
+    canvas.drawPath(handlePath, strokePaint);
+
+    // Steam - single wavy line
+    final steamPath = Path()
+      ..moveTo(16 * scale, 4 * scale)
+      ..quadraticBezierTo(14 * scale, 6 * scale, 16 * scale, 8 * scale)
+      ..quadraticBezierTo(18 * scale, 10 * scale, 16 * scale, 12 * scale);
+    canvas.drawPath(steamPath, strokePaint);
   }
 
-  /// Cappuccino - wide cup with latte art heart
-  void _drawCappuccino(
-    Canvas canvas,
-    double scale,
-    Paint strokePaint,
-    Paint fillPaint,
-  ) {
-    // Steam lines
-    final steamPaint = Paint()
-      ..color = strokePaint.color.withAlpha(153)
-      ..strokeWidth = 1.2 * scale
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    // Steam 1
-    final steam1 = Path()
-      ..moveTo(8 * scale, 2 * scale)
-      ..cubicTo(
-        8 * scale,
-        2 * scale,
-        8.5 * scale,
-        3 * scale,
-        8 * scale,
-        4 * scale,
-      )
-      ..cubicTo(
-        7.5 * scale,
-        5 * scale,
-        8 * scale,
-        6 * scale,
-        8 * scale,
-        6 * scale,
-      );
-    canvas.drawPath(steam1, steamPaint);
-
-    // Steam 2
-    final steam2 = Path()
-      ..moveTo(11 * scale, 1 * scale)
-      ..cubicTo(
-        11 * scale,
-        1 * scale,
-        11.5 * scale,
-        2 * scale,
-        11 * scale,
-        3 * scale,
-      )
-      ..cubicTo(
-        10.5 * scale,
-        4 * scale,
-        11 * scale,
-        5 * scale,
-        11 * scale,
-        5 * scale,
-      );
-    canvas.drawPath(steam2, steamPaint);
-
-    // Steam 3
-    final steam3 = Path()
-      ..moveTo(14 * scale, 2 * scale)
-      ..cubicTo(
-        14 * scale,
-        2 * scale,
-        14.5 * scale,
-        3 * scale,
-        14 * scale,
-        4 * scale,
-      )
-      ..cubicTo(
-        13.5 * scale,
-        5 * scale,
-        14 * scale,
-        6 * scale,
-        14 * scale,
-        6 * scale,
-      );
-    canvas.drawPath(steam3, steamPaint);
-
-    // Wide cup body
+  /// Medium coffee - cappuccino cup (based on BuyCoffee coffee-medium.svg)
+  void _drawMediumCoffee(Canvas canvas, double scale, Paint strokePaint) {
+    // Cup body - wider, rounded
     final cupPath = Path()
-      ..moveTo(3 * scale, 8 * scale)
-      ..lineTo(17 * scale, 8 * scale)
-      ..lineTo(17 * scale, 12.5 * scale)
-      ..quadraticBezierTo(17 * scale, 19 * scale, 10 * scale, 19 * scale)
-      ..lineTo(9 * scale, 19 * scale)
-      ..quadraticBezierTo(3 * scale, 19 * scale, 3 * scale, 12.5 * scale)
-      ..close();
-    canvas.drawPath(cupPath, fillPaint);
+      ..moveTo(6 * scale, 12 * scale)
+      ..lineTo(6 * scale, 22 * scale)
+      ..quadraticBezierTo(6 * scale, 30 * scale, 14 * scale, 30 * scale)
+      ..lineTo(18 * scale, 30 * scale)
+      ..quadraticBezierTo(26 * scale, 30 * scale, 26 * scale, 22 * scale)
+      ..lineTo(26 * scale, 12 * scale);
     canvas.drawPath(cupPath, strokePaint);
 
-    // Latte art heart
-    final heartPaint = Paint()
-      ..color = strokePaint.color.withAlpha(77)
-      ..style = PaintingStyle.fill;
-
-    final heartPath = Path()
-      ..moveTo(10 * scale, 14.3 * scale)
-      ..cubicTo(
-        10 * scale,
-        13.7 * scale,
-        9.6 * scale,
-        11.4 * scale,
-        8.8 * scale,
-        11.4 * scale,
-      )
-      ..cubicTo(
-        8 * scale,
-        11.4 * scale,
-        8 * scale,
-        12.2 * scale,
-        10 * scale,
-        14.3 * scale,
-      )
-      ..moveTo(10 * scale, 14.3 * scale)
-      ..cubicTo(
-        10 * scale,
-        13.7 * scale,
-        10.4 * scale,
-        11.4 * scale,
-        11.2 * scale,
-        11.4 * scale,
-      )
-      ..cubicTo(
-        12 * scale,
-        11.4 * scale,
-        12 * scale,
-        12.2 * scale,
-        10 * scale,
-        14.3 * scale,
-      );
-    canvas.drawPath(heartPath, heartPaint);
-
-    // Handle
-    final handle = Path()
-      ..moveTo(17 * scale, 9 * scale)
-      ..lineTo(19 * scale, 9 * scale)
-      ..arcToPoint(
-        Offset(19 * scale, 15 * scale),
-        radius: Radius.circular(3 * scale),
-        clockwise: true,
-      )
-      ..lineTo(17 * scale, 15 * scale);
-    canvas.drawPath(handle, strokePaint);
-
-    // Saucer
+    // Cup rim
     canvas.drawLine(
-      Offset(2 * scale, 22 * scale),
-      Offset(20 * scale, 22 * scale),
+      Offset(4 * scale, 12 * scale),
+      Offset(28 * scale, 12 * scale),
       strokePaint,
     );
+
+    // Handle
+    final handlePath = Path()
+      ..moveTo(26 * scale, 14 * scale)
+      ..quadraticBezierTo(32 * scale, 14 * scale, 32 * scale, 21 * scale)
+      ..quadraticBezierTo(32 * scale, 28 * scale, 26 * scale, 28 * scale);
+    canvas.drawPath(handlePath, strokePaint);
+
+    // Steam - two wavy lines
+    final steam1 = Path()
+      ..moveTo(12 * scale, 4 * scale)
+      ..quadraticBezierTo(10 * scale, 6 * scale, 12 * scale, 8 * scale)
+      ..quadraticBezierTo(14 * scale, 10 * scale, 12 * scale, 12 * scale);
+    canvas.drawPath(steam1, strokePaint);
+
+    final steam2 = Path()
+      ..moveTo(20 * scale, 4 * scale)
+      ..quadraticBezierTo(18 * scale, 6 * scale, 20 * scale, 8 * scale)
+      ..quadraticBezierTo(22 * scale, 10 * scale, 20 * scale, 12 * scale);
+    canvas.drawPath(steam2, strokePaint);
   }
 
-  /// Takeaway - tall cup with lid
-  void _drawTakeaway(
-    Canvas canvas,
-    double scale,
-    Paint strokePaint,
-    Paint fillPaint,
-  ) {
-    // Cup body
+  /// Large coffee - takeaway cup (based on BuyCoffee coffee-large.svg)
+  void _drawLargeCoffee(Canvas canvas, double scale, Paint strokePaint) {
+    // Cup body - tall, slightly tapered
     final cupPath = Path()
-      ..moveTo(6 * scale, 7 * scale)
-      ..lineTo(7.5 * scale, 20.5 * scale)
-      ..quadraticBezierTo(7.6 * scale, 21.3 * scale, 8.4 * scale, 22 * scale)
-      ..lineTo(15.6 * scale, 22 * scale)
-      ..quadraticBezierTo(
-        16.4 * scale,
-        21.3 * scale,
-        16.5 * scale,
-        20.5 * scale,
-      )
-      ..lineTo(18 * scale, 7 * scale)
-      ..close();
-    canvas.drawPath(cupPath, fillPaint);
+      ..moveTo(8 * scale, 8 * scale)
+      ..lineTo(10 * scale, 30 * scale)
+      ..lineTo(26 * scale, 30 * scale)
+      ..lineTo(28 * scale, 8 * scale);
     canvas.drawPath(cupPath, strokePaint);
 
     // Lid
     final lidPath = Path()
-      ..moveTo(5 * scale, 7 * scale)
-      ..lineTo(19 * scale, 7 * scale)
-      ..lineTo(19 * scale, 6 * scale)
-      ..quadraticBezierTo(19 * scale, 4 * scale, 17 * scale, 4 * scale)
+      ..moveTo(6 * scale, 8 * scale)
+      ..lineTo(30 * scale, 8 * scale)
+      ..lineTo(29 * scale, 4 * scale)
       ..lineTo(7 * scale, 4 * scale)
-      ..quadraticBezierTo(5 * scale, 4 * scale, 5 * scale, 6 * scale)
       ..close();
     canvas.drawPath(lidPath, strokePaint);
 
-    // Lid spout
-    final spoutPath = Path()
-      ..moveTo(14 * scale, 4 * scale)
-      ..lineTo(14 * scale, 2.5 * scale)
-      ..quadraticBezierTo(14 * scale, 2 * scale, 13.5 * scale, 2 * scale)
-      ..lineTo(10.5 * scale, 2 * scale)
-      ..quadraticBezierTo(10 * scale, 2 * scale, 10 * scale, 2.5 * scale)
-      ..lineTo(10 * scale, 4 * scale);
-    canvas.drawPath(spoutPath, strokePaint);
-
-    // Sleeve bands
-    final bandPaint = Paint()
-      ..color = strokePaint.color.withAlpha(204)
-      ..strokeWidth = 1 * scale
-      ..style = PaintingStyle.stroke;
-
+    // Lid top/spout
     canvas.drawLine(
-      Offset(6.5 * scale, 12 * scale),
-      Offset(17.5 * scale, 12 * scale),
-      bandPaint,
-    );
-    canvas.drawLine(
-      Offset(7.2 * scale, 17 * scale),
-      Offset(16.8 * scale, 17 * scale),
-      bandPaint,
+      Offset(14 * scale, 4 * scale),
+      Offset(22 * scale, 4 * scale),
+      strokePaint,
     );
 
-    // Sleeve texture lines
-    final texturePaint = Paint()
-      ..color = strokePaint.color.withAlpha(102)
-      ..strokeWidth = 0.8 * scale
-      ..style = PaintingStyle.stroke;
+    // Sleeve band
+    canvas.drawLine(
+      Offset(9 * scale, 16 * scale),
+      Offset(27 * scale, 16 * scale),
+      strokePaint,
+    );
+    canvas.drawLine(
+      Offset(10 * scale, 24 * scale),
+      Offset(26 * scale, 24 * scale),
+      strokePaint,
+    );
 
-    canvas.drawLine(
-      Offset(9.5 * scale, 12 * scale),
-      Offset(10 * scale, 17 * scale),
-      texturePaint,
-    );
-    canvas.drawLine(
-      Offset(12 * scale, 12 * scale),
-      Offset(12 * scale, 17 * scale),
-      texturePaint,
-    );
-    canvas.drawLine(
-      Offset(14.5 * scale, 12 * scale),
-      Offset(14 * scale, 17 * scale),
-      texturePaint,
-    );
+    // Steam - three wavy lines
+    final steam1 = Path()
+      ..moveTo(14 * scale, -2 * scale)
+      ..quadraticBezierTo(12 * scale, 0 * scale, 14 * scale, 2 * scale);
+    canvas.drawPath(steam1, strokePaint);
+
+    final steam2 = Path()
+      ..moveTo(18 * scale, -4 * scale)
+      ..quadraticBezierTo(16 * scale, -2 * scale, 18 * scale, 0 * scale)
+      ..quadraticBezierTo(20 * scale, 2 * scale, 18 * scale, 4 * scale);
+    canvas.drawPath(steam2, strokePaint);
+
+    final steam3 = Path()
+      ..moveTo(22 * scale, -2 * scale)
+      ..quadraticBezierTo(20 * scale, 0 * scale, 22 * scale, 2 * scale);
+    canvas.drawPath(steam3, strokePaint);
   }
 
   @override
