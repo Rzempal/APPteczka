@@ -1380,12 +1380,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Kopiuj JSON
-                      _buildAdvancedExportClipboard(theme, isDark),
-                      const SizedBox(height: 12),
-                      // Format pliku
-                      _buildAdvancedFormatInfo(theme, isDark),
-                      const SizedBox(height: 12),
                       // Zgłoś problem
                       _buildAdvancedBugReport(theme, isDark),
                       const SizedBox(height: 12),
@@ -1399,152 +1393,6 @@ class _SettingsScreenState extends State<SettingsScreen>
           ),
         );
       },
-    );
-  }
-
-  Widget _buildAdvancedExportClipboard(ThemeData theme, bool isDark) {
-    return NeuInsetContainer(
-      borderRadius: 10,
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                LucideIcons.clipboard,
-                color: theme.colorScheme.primary,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Kopiuj JSON',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _medicineCount > 0 ? _exportToClipboard : null,
-              icon: const Icon(LucideIcons.copy, size: 14),
-              label: const Text('Kopiuj do schowka'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAdvancedFormatInfo(ThemeData theme, bool isDark) {
-    const exampleBackup = '''
-{
-  "leki": [
-    {
-      "id": "abc-123",
-      "nazwa": "Paracetamol",
-      "opis": "Lek przeciwbólowy...",
-      "wskazania": ["ból głowy"],
-      "tagi": ["przeciwbólowy"],
-      "labels": ["label-id-1"],
-      "notatka": "Dawkowanie: 1 tabletka co 6h",
-      "terminWaznosci": "2025-12-31",
-      "dataDodania": "2024-01-15"
-    }
-  ]
-}''';
-
-    return NeuInsetContainer(
-      borderRadius: 10,
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                LucideIcons.fileCode,
-                color: theme.colorScheme.primary,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'Format pliku kopii zapasowej',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Jeśli chcesz ręcznie utworzyć lub edytować plik, użyj tego formatu:',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1a1f1c) : const Color(0xFF1e293b),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              exampleBackup,
-              style: TextStyle(
-                fontFamily: 'monospace',
-                fontSize: 10,
-                height: 1.4,
-                color: isDark
-                    ? AppColors.primary.withAlpha(200)
-                    : const Color(0xFF94a3b8),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          RichText(
-            text: TextSpan(
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 11,
-              ),
-              children: [
-                const TextSpan(text: 'Pola '),
-                TextSpan(
-                  text: 'id',
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    backgroundColor: isDark
-                        ? Colors.white.withAlpha(20)
-                        : Colors.black.withAlpha(10),
-                  ),
-                ),
-                const TextSpan(text: ' i '),
-                TextSpan(
-                  text: 'dataDodania',
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    backgroundColor: isDark
-                        ? Colors.white.withAlpha(20)
-                        : Colors.black.withAlpha(10),
-                  ),
-                ),
-                const TextSpan(
-                  text:
-                      ' zostaną wygenerowane automatycznie przy imporcie, jeśli ich brakuje.',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1689,20 +1537,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     final lastDigit = count % 10;
     if (lastDigit >= 2 && lastDigit <= 4) return 'leki';
     return 'leków';
-  }
-
-  Future<void> _exportToClipboard() async {
-    final json = widget.storageService.exportToJson();
-    await Clipboard.setData(ClipboardData(text: json));
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Skopiowano $_medicineCount leków do schowka'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
   Future<void> _exportToFile() async {

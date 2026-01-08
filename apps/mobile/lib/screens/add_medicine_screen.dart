@@ -54,7 +54,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   int _aiVisionMode = 0; // 0 = 1 zdjęcie, 1 = 2 zdjęcia
   bool _manualExpanded = false; // 2. Dodaj ręcznie
   bool _fileExpanded = false; // 3. Import kopii
-  bool _isAdvancedOpen = false; // 4. Zaawansowane (zagnieżdżone)
 
   @override
   void dispose() {
@@ -160,11 +159,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   child: _buildFileImportSection(theme, isDark),
                   isDark: isDark,
                 ),
-
-                const SizedBox(height: 12),
-
-                // 4. Zaawansowane (nowa sekcja rozwijalna)
-                _buildAdvancedSection(theme, isDark),
 
                 const SizedBox(height: 24),
               ],
@@ -295,7 +289,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                           ),
                         ),
                         Text(
-                          'Zrób zdjęcie opakowań i pozwól AI rozpoznać leki',
+                          _aiVisionMode == 0
+                              ? 'Zrób zdjęcie kilku leków i dodaj wszystkie naraz'
+                              : 'Zrób zdjęcie nazwy leku, a następnie daty ważności',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -440,198 +436,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  // ================== SEKCJA ZAAWANSOWANE ==================
-
-  Widget _buildAdvancedSection(ThemeData theme, bool isDark) {
-    return StatefulBuilder(
-      builder: (context, setLocalState) {
-        return Container(
-          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
-          child: Column(
-            children: [
-              // Header - klikalne
-              InkWell(
-                onTap: () =>
-                    setLocalState(() => _isAdvancedOpen = !_isAdvancedOpen),
-                borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.brainCog,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Zaawansowane',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              'Wklej JSON, prompt AI',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        _isAdvancedOpen
-                            ? LucideIcons.chevronUp
-                            : LucideIcons.chevronDown,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Zawartość zwijana
-              if (_isAdvancedOpen) ...[
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // 4.1 Wklej JSON
-                      _buildJsonImportSection(theme, isDark),
-                      const SizedBox(height: 16),
-                      // 4.2 Wskazówka
-                      _buildHintSection(theme, isDark),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildJsonImportSection(ThemeData theme, bool isDark) {
-    return NeuInsetContainer(
-      borderRadius: 12,
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                LucideIcons.clipboard,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Wklej JSON',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Importuj dane z AI lub kopii zapasowej',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _jsonController,
-            maxLines: 5,
-            decoration: InputDecoration(
-              hintText: '{"leki": [...]}',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _pasteFromClipboard,
-                  icon: const Icon(LucideIcons.clipboardCheck, size: 16),
-                  label: const Text('Wklej'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: _isImporting ? null : _importFromJson,
-                  icon: _isImporting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(LucideIcons.download, size: 16),
-                  label: const Text('Importuj'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHintSection(ThemeData theme, bool isDark) {
-    return NeuInsetContainer(
-      borderRadius: 12,
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                LucideIcons.lightbulb,
-                color: theme.colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Wskazówka',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Możesz też użyć ChatGPT/Claude z ręcznym promptem. Skopiuj prompt poniżej i wklej odpowiedź w sekcji "Wklej JSON".',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _copyAiPrompt,
-              icon: const Icon(LucideIcons.copy, size: 16),
-              label: const Text('Kopiuj prompt AI'),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -873,53 +677,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     await widget.storageService.saveMedicine(medicine);
   }
 
-  Future<void> _pasteFromClipboard() async {
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    if (data?.text != null) {
-      _jsonController.text = data!.text!;
-    }
-  }
-
-  Future<void> _importFromJson() async {
-    final text = _jsonController.text.trim();
-    if (text.isEmpty) {
-      _showError('Wklej dane JSON do zaimportowania');
-      return;
-    }
-
-    setState(() => _isImporting = true);
-
-    try {
-      final medicines = await _parseJsonAndImportLabels(text);
-
-      if (medicines.isEmpty) {
-        throw const FormatException('Brak leków do zaimportowania');
-      }
-
-      final confirmed = await _confirmImport(medicines.length);
-
-      if (confirmed == true) {
-        await widget.storageService.importMedicines(medicines);
-        _jsonController.clear();
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Zaimportowano ${medicines.length} leków'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    } on FormatException catch (e) {
-      _showError(e.message);
-    } catch (e) {
-      _showError('Błąd parsowania JSON: $e');
-    } finally {
-      if (mounted) setState(() => _isImporting = false);
-    }
-  }
-
   Future<void> _importFromFile() async {
     setState(() => _isImporting = true);
 
@@ -1148,35 +905,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     } finally {
       if (mounted) setState(() => _isLookingUp = false);
     }
-  }
-
-  void _copyAiPrompt() {
-    const prompt = '''Rozpoznaj leki ze zdjęcia i zwróć w formacie JSON:
-
-{
-  "leki": [
-    {
-      "nazwa": "Dokładna nazwa leku z opakowania",
-      "opis": "Krótki opis działania (max 100 znaków)",
-      "wskazania": ["wskazanie 1", "wskazanie 2"],
-      "tagi": ["ból", "przeciwgorączkowy", "lek OTC"]
-    }
-  ]
-}
-
-Dozwolone tagi: ból, ból głowy, gorączka, kaszel, katar, alergia, nudności, biegunka, przeciwbólowy, przeciwgorączkowy, przeciwzapalny, antybiotyk, steryd, probiotyk, bez recepty, na receptę, suplement, wyrób medyczny, dla dorosłych, dla dzieci, dla kobiet w ciąży.''';
-
-    Clipboard.setData(const ClipboardData(text: prompt));
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Prompt skopiowany! Wklej go do ChatGPT/Gemini ze zdjęciem leków.',
-        ),
-        behavior: SnackBarBehavior.floating,
-        duration: Duration(seconds: 4),
-      ),
-    );
   }
 
   void _showError(String message) {
