@@ -912,20 +912,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Zarządzaj etykietami
               ListTile(
-                leading: Container(
+                leading: Icon(
+                  LucideIcons.tags,
+                  color: theme.colorScheme.primary,
+                ),
+                title: const Text('Etykiety'),
+                subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
+                trailing: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: NeuDecoration.flatSmall(
                     isDark: isDark,
                     radius: 8,
                   ),
                   child: Icon(
-                    LucideIcons.tags,
-                    color: theme.colorScheme.primary,
+                    LucideIcons.chevronRight,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                title: const Text('Etykiety'),
-                subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
-                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () {
                   Navigator.pop(context);
                   _showLabelManagement();
@@ -936,22 +939,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Zarządzaj tagami
               ListTile(
-                leading: Container(
+                leading: Icon(
+                  LucideIcons.hash,
+                  color: theme.colorScheme.primary,
+                ),
+                title: const Text('Tagi'),
+                subtitle: const Text(
+                  'Dodawaj, edytuj i usuwaj niestandardowe tagi z apteczki',
+                ),
+                trailing: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: NeuDecoration.flatSmall(
                     isDark: isDark,
                     radius: 8,
                   ),
                   child: Icon(
-                    LucideIcons.hash,
-                    color: theme.colorScheme.primary,
+                    LucideIcons.chevronRight,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                title: const Text('Tagi'),
-                subtitle: const Text(
-                  'Dodawaj, edytuj i usuwaj niestandardowe tagi z apteczki',
-                ),
-                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () {
                   Navigator.pop(context);
                   _showTagManagement();
@@ -962,22 +968,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Skopiuj listę leków
               ListTile(
-                leading: Container(
+                leading: Icon(
+                  LucideIcons.list,
+                  color: theme.colorScheme.primary,
+                ),
+                title: const Text('Skopiuj listę leków'),
+                subtitle: const Text(
+                  'Zwraca liste leków oddzielonych przecinkami',
+                ),
+                trailing: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: NeuDecoration.flatSmall(
                     isDark: isDark,
                     radius: 8,
                   ),
                   child: Icon(
-                    LucideIcons.list,
-                    color: theme.colorScheme.primary,
+                    LucideIcons.copy,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                title: const Text('Skopiuj listę leków'),
-                subtitle: const Text(
-                  'Zwraca liste leków oddzielonych przecinkami',
-                ),
-                trailing: const Icon(LucideIcons.copy),
                 onTap: () {
                   Navigator.pop(context);
                   _copyMedicineList();
@@ -988,22 +997,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Tabela do PDF
               ListTile(
-                leading: Container(
+                leading: Icon(
+                  LucideIcons.fileSpreadsheet,
+                  color: theme.colorScheme.primary,
+                ),
+                title: const Text('Tabela leków do PDF'),
+                subtitle: const Text(
+                  'Podgląd, udostępnianie i drukowanie tabeli',
+                ),
+                trailing: Container(
                   padding: const EdgeInsets.all(8),
                   decoration: NeuDecoration.flatSmall(
                     isDark: isDark,
                     radius: 8,
                   ),
                   child: Icon(
-                    LucideIcons.fileSpreadsheet,
-                    color: theme.colorScheme.primary,
+                    LucideIcons.chevronRight,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                title: const Text('Tabela leków do PDF'),
-                subtitle: const Text(
-                  'Podgląd, udostępnianie i drukowanie tabeli',
-                ),
-                trailing: const Icon(LucideIcons.chevronRight),
                 onTap: () {
                   Navigator.pop(context);
                   _previewPdfExport();
