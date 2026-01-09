@@ -23,10 +23,10 @@
 **Model:** Darmowa aplikacja, offline-first
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   ARCHITEKTURA                      │
-├─────────────────────────────────────────────────────┤
-│                                                     │
+┌────────────────────────────────────────────────────┐
+│                   ARCHITEKTURA                     │
+├────────────────────────────────────────────────────┤
+│                                                    │
 │   Google Play ──► Flutter APK (offline-first)      │
 │                        │                           │
 │                        ▼                           │
@@ -36,13 +36,13 @@
 │                        │                           │
 │                        ▼                           │
 │               Gemini API (Google)                  │
-│                                                     │
-│   Landing Page ──► karton.michalrapala.app         │
+│                                                    │
+│   Landing Page ──► kartonzlekami.resztatokod.pl    │
 │               ├── Hero + Features                  │
 │               ├── Screenshots                      │
 │               └── Privacy Policy                   │
-│                                                     │
-└─────────────────────────────────────────────────────┘
+│                                                    │
+└────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -55,7 +55,7 @@
 | 1 | MVP Web (Next.js) | ✅ Ukończona |
 | 2 | MVP Mobile (Flutter) | ✅ Ukończona |
 | 3 | Gemini API Integration | ✅ Ukończona |
-| 4 | Web → Landing Page + API | 📋 Planowana |
+| 4 | Web → Landing Page + API | ✅ Ukończona |
 | 5 | Google Play Store Release | 📋 Planowana |
 | 6 | Backend + Sync (opcjonalne) | 🔮 Przyszłość |
 
@@ -96,35 +96,24 @@
 
 ---
 
-## 📋 FAZA 4: Web → Landing Page + API
+## ✅ FAZA 4: Web → Landing Page + API (Ukończona)
 
 **Cel:** Przekształcenie wersji webowej w stronę promocyjną + zachowanie API dla aplikacji mobilnej
 
-### Do usunięcia
+### Wykonane
 
-| Element | Ścieżka |
-|---------|---------|
-| Stare UI aplikacji | `apps/web/src/app/page.tsx` |
-| Strona dodawania | `apps/web/src/app/dodaj/` |
-| Strona backup | `apps/web/src/app/backup/` |
-| Komponenty UI | `apps/web/src/components/*` |
+- ✅ Usunięto stare UI aplikacji webowej (`page.tsx`, `dodaj/`, `backup/`, `components/`)
+- ✅ Zachowano API endpoints (`gemini-ocr/`, `pdf-proxy/`, `bug-report/`, `gemini-name-lookup/`, `date-ocr/`)
+- ✅ Stworzono Landing Page z animowanym SVG kartonu
+- ✅ Stworzono stronę Privacy Policy (`/privacy`)
+- ✅ Dodano SEO meta tagi + Open Graph
+- ✅ Theme toggle (light/dark) z autodetekcją
+- ✅ CTA do pobrania APK z dynamicznym linkiem wersji
 
-### Do zachowania
+### Subdomena
 
-| Element | Ścieżka |
-|---------|---------|
-| Gemini OCR API | `apps/web/src/app/api/gemini-ocr/` |
-| PDF Proxy API | `apps/web/src/app/api/pdf-proxy/` |
-| Bug Report API | `apps/web/src/app/api/bug-report/` |
-| Lib (prompts, gemini) | `apps/web/src/lib/` |
-
-### Do stworzenia
-
-| Element | Opis |
-|---------|------|
-| Landing Page | Hero, features, screenshots, CTA do Play Store |
-| Privacy Policy | Wymagane przez Google Play |
-| SEO + Open Graph | Meta tagi dla wyszukiwarek i social |
+- URL: `kartonzlekami.resztatokod.pl`
+- Hosting: Vercel
 
 ---
 

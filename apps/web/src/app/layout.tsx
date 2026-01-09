@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
-import { Header } from "@/components/Header";
-import { SvgIcon } from "@/components/SvgIcon";
 
 const dmSans = DM_Sans({
   subsets: ["latin", "latin-ext"],
@@ -11,11 +9,24 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Pudełko na leki – Zarządzaj domową apteczką",
-  description: "Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, śledź terminy ważności, filtruj po objawach.",
-  keywords: ["apteczka", "leki", "zdrowie", "AI", "zarządzanie lekami", "pudełko na leki"],
+  title: "Karton z lekami – Domowa apteczka z AI",
+  description: "Nie kop w pudle. Sprawdź w telefonie. Aplikacja do zarządzania domową apteczką. Skanuj leki AI, śledź terminy ważności, eksportuj do PDF. 100% offline.",
+  keywords: ["apteczka", "leki", "zdrowie", "AI", "zarządzanie lekami", "karton z lekami", "domowa apteczka"],
+  authors: [{ name: "ResztaToKod" }],
   icons: {
     icon: "/favicon.png",
+  },
+  openGraph: {
+    title: "Karton z lekami – Domowa apteczka z AI",
+    description: "Nie kop w pudle. Sprawdź w telefonie.",
+    type: "website",
+    locale: "pl_PL",
+    url: "https://kartonzlekami.resztatokod.pl",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Karton z lekami – Domowa apteczka z AI",
+    description: "Nie kop w pudle. Sprawdź w telefonie.",
   },
 };
 
@@ -25,41 +36,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pl">
+    <html lang="pl" suppressHydrationWarning>
       <body className={`${dmSans.variable} font-sans antialiased`} style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
-        {/* Nagłówek - Animated */}
-        <Header />
-
-        {/* Treść */}
-        <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-          {children}
-        </main>
-
-        {/* Stopka - Neumorphic */}
-        <footer className="pb-6 pt-12">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            {/* Disclaimer */}
-            <div className="neu-flat p-6 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
-              <div className="flex items-start gap-3">
-                <SvgIcon name="alert-triangle" size={28} style={{ color: 'var(--color-warning)' }} />
-                <div>
-                  <p className="font-semibold" style={{ color: 'var(--color-warning)' }}>
-                    Ważne
-                  </p>
-                  <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                    Pudełko na leki to narzędzie informacyjne, NIE porada medyczna.
-                    Zawsze konsultuj się z lekarzem lub farmaceutą przed zastosowaniem leku.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Copyright */}
-            <p className="mt-6 text-center text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Pudełko na leki © {new Date().getFullYear()} • Dane przechowywane lokalnie w przeglądarce
-            </p>
-          </div>
-        </footer>
+        {children}
       </body>
     </html>
   );

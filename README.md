@@ -1,8 +1,8 @@
 # 📦 Karton z lekami – Nie kop w pudle. Sprawdź w telefonie
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-pudelkonaleki.michalrapala.app-blue)](https://pudelkonaleki.michalrapala.app)
+[![Landing Page](https://img.shields.io/badge/🌐_Landing_Page-kartonzlekami.resztatokod.pl-blue)](https://kartonzlekami.resztatokod.pl)
 
-Aplikacja do zarządzania domową apteczką z integracją AI. Kataloguj leki, śledź terminy ważności, filtruj po objawach.
+Aplikacja mobilna do zarządzania domową apteczką z integracją AI. Kataloguj leki, śledź terminy ważności, filtruj po objawach.
 
 > ⚠️ **Ważne:** Karton z lekami to narzędzie informacyjne (wyszukiwarka w ulotkach), NIE porada medyczna. Aplikacja NIE weryfikuje interakcji międzylekowych.
 
@@ -70,7 +70,7 @@ Pudełko-na-leki/
 | Faza | Nazwa | Status |
 |------|-------|--------|
 | 0-3 | MVP Web + Mobile + Gemini API | ✅ Ukończona |
-| 4 | Web → Landing Page + API | 📋 Planowana |
+| 4 | Web → Landing Page + API | ✅ Ukończona |
 | 5 | Google Play Store Release | 📋 Planowana |
 | 6 | Backend + Sync | 🔮 Przyszłość |
 
