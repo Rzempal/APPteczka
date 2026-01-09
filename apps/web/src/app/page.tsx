@@ -66,10 +66,25 @@ export default function LandingPage() {
       <nav className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
         <div className="nav-container">
           <div className="logo">
-            <svg className="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-              <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-              <line x1="12" y1="22.08" x2="12" y2="12" />
+            {/* Ikona kartonu z taśmą */}
+            <svg className="logo-icon" viewBox="0 0 200 200" fill="none">
+              {/* Góra kartonu */}
+              <path d="M100 24 L186 64 L100 104 L14 64 Z" fill="#E6C590" />
+              {/* Taśma na górze */}
+              <path d="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z" fill="var(--color-accent)" />
+              {/* Lewa ściana */}
+              <path d="M12 68 L98 108 L98 186 L12 146 Z" fill="#C29B55" />
+              {/* Taśma na lewej ścianie */}
+              <path d="M 35 78.7 L 65 92.7 L 65 140 L 35 125 Z" fill="var(--color-accent-dark, #059669)" />
+              {/* Prawa ściana */}
+              <path d="M188 68 L188 146 L102 186 L102 108 Z" fill="#D4B070" />
+              {/* Krzyż na prawej ścianie */}
+              <g transform="translate(145, 127) skewY(-25)">
+                <rect x="-25" y="-8" width="50" height="16" fill="var(--color-accent)" rx="1" />
+                <rect x="-8" y="-25" width="16" height="50" fill="var(--color-accent)" rx="1" />
+              </g>
+              {/* Cień taśmy */}
+              <path d="M 35 73.8 L 65 87.7 L 65 92.7 L 35 78.7 Z" fill="var(--color-accent-dark, #059669)" />
             </svg>
             <span>Karton z lekami</span>
           </div>
@@ -303,7 +318,27 @@ export default function LandingPage() {
             <Link href="/privacy">Polityka Prywatności</Link>
             <a href="mailto:michal.rapala@resztatokod.pl">Kontakt</a>
           </nav>
-          <p className="footer-copyright">© 2026 ResztaToKod</p>
+          <a
+            href="https://resztatokod.pl"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="footer-rtk-logo"
+            aria-label="ResztaToKod.pl"
+          >
+            <svg viewBox="0 0 100 100" className="rtk-logo">
+              {/* Węzły sieci neuronowej */}
+              <circle cx="25" cy="45" r="6" className="rtk-node" />
+              <circle cx="70" cy="20" r="6" className="rtk-node" />
+              <circle cx="45" cy="80" r="6" className="rtk-node" />
+              {/* Połączenia */}
+              <line x1="25" y1="45" x2="70" y2="20" className="rtk-link" />
+              <line x1="70" y1="20" x2="45" y2="80" className="rtk-link" />
+              <line x1="25" y1="45" x2="45" y2="80" className="rtk-link" />
+              {/* Strzałka wyjścia */}
+              <line x1="45" y1="80" x2="90" y2="80" className="rtk-link" />
+              <polyline points="80,70 90,80 80,90" className="rtk-arrow" />
+            </svg>
+          </a>
         </div>
       </footer>
     </div>

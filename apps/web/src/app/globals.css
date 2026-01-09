@@ -574,6 +574,42 @@ body {
   color: var(--color-text-muted);
 }
 
+/* --- RTK Logo --- */
+.footer-rtk-logo {
+  display: flex;
+  align-items: center;
+  transition: opacity 0.2s ease;
+}
+
+.footer-rtk-logo:hover {
+  opacity: 0.8;
+}
+
+.rtk-logo {
+  width: 32px;
+  height: 32px;
+}
+
+.rtk-node {
+  fill: var(--color-accent);
+  stroke: none;
+}
+
+.rtk-link {
+  stroke: var(--color-accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  fill: none;
+}
+
+.rtk-arrow {
+  stroke: var(--color-accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
 /* ============================================
    Privacy Page Styles
    ============================================ */
