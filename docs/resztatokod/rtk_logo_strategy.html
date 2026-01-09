@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResztaToKod.pl - System Identyfikacji (Brand Book)</title>
+
+    <!-- Import fontów (Wymagany dla logotypów tekstowych) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* --- BRAND SYSTEM STYLES --- */
+        :root {
+            --bg-core: #0a0a0a;
+            --bg-card: #111111;
+            --text-main: #ffffff;
+            --text-muted: #666666;
+            --border: #333333;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --accent-green: #4CAF50;
+            --accent-blue: #2196F3;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-core);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 60px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+
+        /* Grid dla prezentacji */
+        .logo-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 60px;
+        }
+
+        /* Karta prezentacyjna */
+        .logo-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            /* Wizualizacja | Opis */
+            overflow: hidden;
+        }
+
+        .preview-area {
+            padding: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid var(--border);
+            /* Szachownica dla przezroczystości */
+            background-image: linear-gradient(45deg, #161616 25%, transparent 25%), linear-gradient(-45deg, #161616 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #161616 75%), linear-gradient(-45deg, transparent 75%, #161616 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* Specjalne tło dla wersji Light Mode, żeby było widać czarne logo */
+        .preview-area.light-bg {
+            background-color: #f0f0f0;
+            background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%), linear-gradient(-45deg, #e0e0e0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e0e0e0 75%), linear-gradient(-45deg, transparent 75%, #e0e0e0 75%);
+        }
+
+        .specs-area {
+            padding: 30px;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .specs-area h3 {
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+        }
+
+        .specs-area p {
+            line-height: 1.6;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .specs-table td {
+            padding: 5px 0;
+            color: #888;
+        }
+
+        .specs-table td:last-child {
+            text-align: right;
+            color: #fff;
+        }
+
+        /* Przyciski akcji */
+        .action-buttons {
+            margin-top: auto;
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            border: 1px dashed;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            background: transparent;
+            color: inherit;
+        }
+
+        .btn-copy {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .btn-copy:hover {
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .btn-download {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .btn-download:hover {
+            background: rgba(33, 150, 243, 0.1);
+        }
+
+        @media (max-width: 900px) {
+            .logo-card {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-area {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 40px 20px;
+            }
+        }
+
+        /* --- STYLE DLA SAMYCH LOGO (Współdzielone) --- */
+
+        .rtk-base-svg {
+            fill: none;
+            stroke: #ffffff;
+            stroke-linecap: round;
+            overflow: visible;
+            display: block;
+        }
+
+        /* Animacje dla wersji LONG */
+        .rtk-long-node {
+            fill: #fff;
+            stroke: none;
+            opacity: 0;
+            animation: rtkFadeIn 0.5s ease-out forwards;
+        }
+
+        .rtk-n1 {
+            animation-delay: 0.1s;
+        }
+
+        .rtk-n2 {
+            animation-delay: 0.2s;
+        }
+
+        .rtk-n3 {
+            animation-delay: 0.3s;
+        }
+
+        .rtk-long-link {
+            stroke-dasharray: 50;
+            stroke-dashoffset: 50;
+            stroke-width: 1.5;
+            opacity: 0.6;
+            animation: rtkDraw 0.8s ease-out forwards;
+        }
+
+        .rtk-l1 {
+            animation-delay: 0.4s;
+        }
+
+        .rtk-l2 {
+            animation-delay: 0.5s;
+        }
+
+        .rtk-l3 {
+            animation-delay: 0.6s;
+        }
+
+        .rtk-long-path {
+            stroke-width: 3;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: rtkDraw 1.0s ease-out forwards 1.0s;
+        }
+
+        .rtk-long-cmd {
+            fill: #fff;
+            stroke: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 28px;
+            opacity: 0;
+            animation: rtkFadeIn 0.5s ease-out forwards 1.8s;
+        }
+
+        /* ZAKTUALIZOWANO: Typing dla "cd resztatokod.pl" (17 znaków) */
+        .rtk-long-url {
+            fill: #fff;
+            stroke: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 28px;
+            clip-path: inset(0 100% 0 0);
+            animation: rtkType 1.7s steps(17) forwards 2.3s;
+        }
+
+        /* ZAKTUALIZOWANO: Ruch kursora dla dłuższej frazy */
+        .rtk-long-cursor-g {
+            animation: rtkMoveCursorLong 1.7s steps(17) forwards 2.3s;
+        }
+
+        .rtk-long-cursor {
+            fill: #fff;
+            stroke: none;
+            opacity: 0;
+            animation: rtkBlink 1s step-end infinite 2.0s;
+        }
+
+        /* Animacje dla wersji SHORT */
+        .rtk-short-cursor {
+            fill: #fff;
+            stroke: none;
+            animation: rtkBlink 1s step-end infinite;
+        }
+
+        /* Keyframes */
+        @keyframes rtkFadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes rtkDraw {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        @keyframes rtkType {
+            to {
+                clip-path: inset(0 0 0 0);
+            }
+        }
+
+        /* POPRAWIONA animacja ruchu kursora - zmniejszony dystans do 300px */
+        @keyframes rtkMoveCursorLong {
+            to {
+                transform: translateX(300px);
+            }
+        }
+
+        @keyframes rtkBlink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>ResztaToKod.pl</h1>
+        <div class="subtitle">System Identyfikacji Wizualnej v1.0</div>
+    </header>
+
+    <div class="logo-grid">
+
+        <!-- ========================================== -->
+        <!-- WARIANT 1: LONG (Pełna animacja)           -->
+        <!-- ========================================== -->
+        <article class="logo-card">
+            <div class="preview-area">
+
+                <!-- START KODU DO KOPIOWANIA: WARIANT LONG -->
+                <svg viewBox="0 0 440 60" class="rtk-base-svg" style="width: 100%; max-width: 440px; height: auto;">
+                    <!-- 1. Sieć neuronowa (Chaos) -->
+                    <circle cx="5" cy="15" r="2" class="rtk-long-node rtk-n1" />
+                    <circle cx="20" cy="5" r="2" class="rtk-long-node rtk-n2" />
+                    <circle cx="10" cy="30" r="2" class="rtk-long-node rtk-n3" />
+                    <line x1="5" y1="15" x2="20" y2="5" class="rtk-long-link rtk-l1" />
+                    <line x1="20" y1="5" x2="10" y2="30" class="rtk-long-link rtk-l2" />
+                    <line x1="5" y1="15" x2="10" y2="30" class="rtk-long-link rtk-l3" />
+
+                    <!-- 2. Linia przepływu (Process) -->
+                    <path d="M 10 30 L 40 30" class="rtk-long-path" />
+
+                    <!-- 3. Prompt (Static >_) -->
+                    <text x="48" y="38" class="rtk-long-cmd">&gt;_</text>
+
+                    <!-- 4. Wpisywana komenda (Typing "cd resztatokod.pl") -->
+                    <!-- x=86 to pozycja startowa (za promptem) -->
+                    <text x="86" y="38" class="rtk-long-url" xml:space="preserve">cd resztatokod.pl</text>
+
+                    <!-- 5. Kursor -->
+                    <g class="rtk-long-cursor-g">
+                        <rect x="86" y="16" width="14" height="26" class="rtk-long-cursor" />
+                    </g>
+                </svg>
+                <!-- END KODU DO KOPIOWANIA -->
+
+            </div>
+            <div class="specs-area">
+                <h3>01. Primary Logo (Long)</h3>
+                <table class="specs-table">
+                    <tr>
+                        <td>Wymiar bazowy:</td>
+                        <td>440x60 px</td>
+                    </tr>
+                    <tr>
+                        <td>Proporcje:</td>
+                        <td>~7.3:1</td>
+                    </tr>
+                    <tr>
+                        <td>Technologia:</td>
+                        <td>SVG + CSS Animation</td>
+                    </tr>
+                </table>
+                <h3>Symbolika & Zastosowanie</h3>
+                <p>
+                    Pełna sekwencja narracyjna marki. Przedstawia transformację z nieuporządkowanej struktury (sieć
+                    neuronowa/chaos) w liniowy proces.
+                </p>
+                <div class="action-buttons">
+                    <button class="btn btn-copy" onclick="copyCode(this)">Skopiuj kod SVG</button>
+                    <button class="btn btn-download" onclick="downloadPNG(this, 'resztatokod-logo-long')">Pobierz
+                        PNG</button>
+                </div>
+            </div>
+        </article>
+
+
+        <!-- ========================================== -->
+        <!-- WARIANT 2: SHORT (Neural + Line + cd)      -->
+        <!-- ========================================== -->
+        <article class="logo-card">
+            <div class="preview-area">
+
+                <!-- START KODU DO KOPIOWANIA: WARIANT SHORT -->
+                <svg viewBox="0 0 110 40" class="rtk-base-svg" style="width: 140px; height: auto;">
+                    <circle cx="5" cy="15" r="2" class="rtk-long-node rtk-n1" />
+                    <circle cx="20" cy="5" r="2" class="rtk-long-node rtk-n2" />
+                    <circle cx="10" cy="30" r="2" class="rtk-long-node rtk-n3" />
+                    <line x1="5" y1="15" x2="20" y2="5" class="rtk-long-link rtk-l1" />
+                    <line x1="20" y1="5" x2="10" y2="30" class="rtk-long-link rtk-l2" />
+                    <line x1="5" y1="15" x2="10" y2="30" class="rtk-long-link rtk-l3" />
+                    <path d="M 10 30 L 32 30" stroke="#ffffff" stroke-width="2" class="rtk-long-path"
+                        style="animation: none; stroke-dashoffset: 0; stroke-dasharray: none;" />
+                    <text x="32" y="30" fill="#ffffff" stroke="none" font-family="'JetBrains Mono', monospace"
+                        font-weight="700" font-size="28px">cd</text>
+                    <rect x="68" y="8" width="14" height="26" class="rtk-short-cursor" />
+                </svg>
+                <!-- END KODU DO KOPIOWANIA -->
+
+            </div>
+            <div class="specs-area">
+                <h3>02. Compact Logo (Short)</h3>
+                <table class="specs-table">
+                    <tr>
+                        <td>Wymiar bazowy:</td>
+                        <td>110x40 px</td>
+                    </tr>
+                    <tr>
+                        <td>Proporcje:</td>
+                        <td>~2.75:1</td>
+                    </tr>
+                    <tr>
+                        <td>Technologia:</td>
+                        <td>SVG (Static/Light)</td>
+                    </tr>
+                </table>
+                <h3>Symbolika & Zastosowanie</h3>
+                <p>Minimalistyczna wersja do nagłówków mobilnych, sticky menu i znaków wodnych.</p>
+                <div class="action-buttons">
+                    <button class="btn btn-copy" onclick="copyCode(this)">Skopiuj kod SVG</button>
+                    <button class="btn btn-download" onclick="downloadPNG(this, 'resztatokod-logo-short')">Pobierz
+                        PNG</button>
+                </div>
+            </div>
+        </article>
+
+
+        <!-- ========================================== -->
+        <!-- WARIANT 3: FAVICON DARK (White lines)      -->
+        <!-- ========================================== -->
+        <article class="logo-card">
+            <div class="preview-area">
+
+                <!-- START KODU DO KOPIOWANIA: WARIANT FAVICON DARK -->
+                <!-- Bez tła, białe linie. -->
+                <svg viewBox="0 0 100 100"
+                    style="width: 100px; height: 100px; fill: none; stroke: #ffffff; stroke-linecap: round;">
+                    <!-- Węzły (Asymetryczne) -->
+                    <circle cx="25" cy="45" r="8" fill="#ffffff" stroke="none" />
+                    <circle cx="70" cy="20" r="8" fill="#ffffff" stroke="none" />
+                    <circle cx="45" cy="80" r="8" fill="#ffffff" stroke="none" />
+                    <!-- Połączenia -->
+                    <line x1="25" y1="45" x2="70" y2="20" stroke-width="6" />
+                    <line x1="70" y1="20" x2="45" y2="80" stroke-width="6" />
+                    <line x1="25" y1="45" x2="45" y2="80" stroke-width="6" />
+                    <!-- Strzałka wyjścia -->
+                    <line x1="45" y1="80" x2="90" y2="80" stroke-width="6" />
+                    <polyline points="80,70 90,80 80,90" stroke-width="6" stroke-linejoin="round" />
+                </svg>
+                <!-- END KODU DO KOPIOWANIA -->
+
+            </div>
+            <div class="specs-area">
+                <h3>03. Favicon (Dark Mode / Transparent)</h3>
+                <table class="specs-table">
+                    <tr>
+                        <td>Tło:</td>
+                        <td>Brak (Przezroczyste)</td>
+                    </tr>
+                    <tr>
+                        <td>Kolor:</td>
+                        <td>Biały (#ffffff)</td>
+                    </tr>
+                </table>
+                <h3>Opis</h3>
+                <p>
+                    Wersja bez tła z białymi konturami. Przeznaczona do wyświetlania na ciemnych tłach.
+                </p>
+                <div class="action-buttons">
+                    <button class="btn btn-copy" onclick="copyCode(this)">Skopiuj kod SVG</button>
+                    <button class="btn btn-download" onclick="downloadPNG(this, 'resztatokod-favicon-white')">Pobierz
+                        PNG</button>
+                </div>
+            </div>
+        </article>
+
+
+        <!-- ========================================== -->
+        <!-- WARIANT 4: FAVICON LIGHT (Black lines)     -->
+        <!-- ========================================== -->
+        <article class="logo-card">
+            <div class="preview-area light-bg">
+
+                <!-- START KODU DO KOPIOWANIA: WARIANT FAVICON LIGHT -->
+                <!-- Bez tła, czarne linie (#000000) -->
+                <svg viewBox="0 0 100 100"
+                    style="width: 100px; height: 100px; fill: none; stroke: #000000; stroke-linecap: round;">
+                    <!-- Węzły (Asymetryczne) -->
+                    <circle cx="25" cy="45" r="8" fill="#000000" stroke="none" />
+                    <circle cx="70" cy="20" r="8" fill="#000000" stroke="none" />
+                    <circle cx="45" cy="80" r="8" fill="#000000" stroke="none" />
+                    <!-- Połączenia -->
+                    <line x1="25" y1="45" x2="70" y2="20" stroke-width="6" />
+                    <line x1="70" y1="20" x2="45" y2="80" stroke-width="6" />
+                    <line x1="25" y1="45" x2="45" y2="80" stroke-width="6" />
+                    <!-- Strzałka wyjścia -->
+                    <line x1="45" y1="80" x2="90" y2="80" stroke-width="6" />
+                    <polyline points="80,70 90,80 80,90" stroke-width="6" stroke-linejoin="round" />
+                </svg>
+                <!-- END KODU DO KOPIOWANIA -->
+
+            </div>
+            <div class="specs-area">
+                <h3>04. Favicon (Light Mode / Transparent)</h3>
+                <table class="specs-table">
+                    <tr>
+                        <td>Tło:</td>
+                        <td>Brak (Przezroczyste)</td>
+                    </tr>
+                    <tr>
+                        <td>Kolor:</td>
+                        <td>Czarny (#000000)</td>
+                    </tr>
+                </table>
+                <h3>Opis</h3>
+                <p>
+                    Wersja bez tła z czarnymi konturami. Przeznaczona do wyświetlania na jasnych tłach.
+                </p>
+                <div class="action-buttons">
+                    <button class="btn btn-copy" onclick="copyCode(this)">Skopiuj kod SVG</button>
+                    <button class="btn btn-download" onclick="downloadPNG(this, 'resztatokod-favicon-black')">Pobierz
+                        PNG</button>
+                </div>
+            </div>
+        </article>
+
+
+        <!-- ========================================== -->
+        <!-- WARIANT 5: FAVICON ADAPTIVE (Auto)         -->
+        <!-- ========================================== -->
+        <article class="logo-card">
+            <div class="preview-area" style="background: linear-gradient(90deg, #333 50%, #eee 50%);">
+
+                <!-- START KODU DO KOPIOWANIA: WARIANT FAVICON ADAPTIVE -->
+                <!-- Automatycznie zmienia kolor (Biały na ciemnym, Czarny na jasnym) -->
+                <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                    <style>
+                        /* Domyślnie ciemny (dla jasnych teł) */
+                        :root {
+                            --icon-color: #000000;
+                        }
+
+                        /* Jeśli użytkownik ma Dark Mode - zmień na biały */
+                        @media (prefers-color-scheme: dark) {
+                            :root {
+                                --icon-color: #ffffff;
+                            }
+                        }
+
+                        .rtk-adaptive {
+                            stroke: var(--icon-color);
+                            fill: none;
+                            stroke-width: 6;
+                            stroke-linecap: round;
+                            stroke-linejoin: round;
+                        }
+
+                        .rtk-adaptive-fill {
+                            fill: var(--icon-color);
+                            stroke: none;
+                        }
+                    </style>
+
+                    <circle cx="25" cy="45" r="8" class="rtk-adaptive-fill" />
+                    <circle cx="70" cy="20" r="8" class="rtk-adaptive-fill" />
+                    <circle cx="45" cy="80" r="8" class="rtk-adaptive-fill" />
+
+                    <line x1="25" y1="45" x2="70" y2="20" class="rtk-adaptive" />
+                    <line x1="70" y1="20" x2="45" y2="80" class="rtk-adaptive" />
+                    <line x1="25" y1="45" x2="45" y2="80" class="rtk-adaptive" />
+
+                    <line x1="45" y1="80" x2="90" y2="80" class="rtk-adaptive" />
+                    <polyline points="80,70 90,80 80,90" class="rtk-adaptive" />
+                </svg>
+                <!-- END KODU DO KOPIOWANIA -->
+
+            </div>
+            <div class="specs-area">
+                <h3>05. Favicon (Adaptive / Auto)</h3>
+                <table class="specs-table">
+                    <tr>
+                        <td>Tło:</td>
+                        <td>Brak (Przezroczyste)</td>
+                    </tr>
+                    <tr>
+                        <td>Kolor:</td>
+                        <td>Auto (CSS Media Query)</td>
+                    </tr>
+                </table>
+                <h3>Zastosowanie Pro</h3>
+                <p>
+                    Ten plik SVG zawiera wbudowany styl CSS, który wykrywa ustawienia systemowe użytkownika. Będzie
+                    czarny w trybie jasnym i biały w trybie ciemnym.
+                </p>
+                <div class="action-buttons">
+                    <button class="btn btn-copy" onclick="copyCode(this)">Skopiuj kod SVG</button>
+                    <!-- PNG download not available for adaptive since it depends on browser state -->
+                    <button class="btn btn-download" disabled style="opacity: 0.5; cursor: not-allowed;">Pobierz PNG
+                        (Niedostępne dla Adaptive)</button>
+                </div>
+            </div>
+        </article>
+
+        <!-- ========================================== -->
+        <!-- WARIANT 6: APP ICON LIGHT (White BG)       -->
+        <!-- ========================================== -->
+        <article class="logo-card">
+            <div class="preview-area light-bg">
+
+                <!-- START KODU DO KOPIOWANIA: WARIANT APP LIGHT -->
+                <svg viewBox="0 0 100 100" style="width: 100px; height: 100px;">
+                    <!-- Tło Squircle -->
+                    <rect width="100" height="100" rx="22" fill="#ffffff" stroke="none" />
+
+                    <!-- Elementy Czarne -->
+                    <g fill="none" stroke="#000000" stroke-linecap="round">
+                        <circle cx="25" cy="45" r="8" fill="#000000" stroke="none" />
+                        <circle cx="70" cy="20" r="8" fill="#000000" stroke="none" />
+                        <circle cx="45" cy="80" r="8" fill="#000000" stroke="none" />
+
+                        <line x1="25" y1="45" x2="70" y2="20" stroke-width="6" />
+                        <line x1="70" y1="20" x2="45" y2="80" stroke-width="6" />
+                        <line x1="25" y1="45" x2="45" y2="80" stroke-width="6" />
+
+                        <line x1="45" y1="80" x2="90" y2="80" stroke-width="6" />
+                        <polyline points="80,70 90,80 80,90" stroke-width="6" stroke-linejoin="round" />
+                    </g>
+                </svg>
+                <!-- END KODU DO KOPIOWANIA -->
+
+            </div>
+            <div class="specs-area">
+                <h3>06. App Icon (Light / White Background)</h3>
+                <table class="specs-table">
+                    <tr>
+                        <td>Tło:</td>
+                        <td>Białe (#ffffff)</td>
+                    </tr>
+                    <tr>
+                        <td>Linie:</td>
+                        <td>Czarne (#000000)</td>
+                    </tr>
+                    <tr>
+                        <td>Kształt:</td>
+                        <td>Squircle (Nowoczesny)</td>
+                    </tr>
+                </table>
+                <h3>Zastosowanie</h3>
+                <p>
+                    Ikona aplikacji lub profilowa (Social Media) na białym tle. Kształt Squircle (zaokrąglony kwadrat)
+                    pasuje do standardów iOS i Android.
+                </p>
+                <div class="action-buttons">
+                    <button class="btn btn-copy" onclick="copyCode(this)">Skopiuj kod SVG</button>
+                    <button class="btn btn-download" onclick="downloadPNG(this, 'resztatokod-app-icon-white')">Pobierz
+                        PNG</button>
+                </div>
+            </div>
+        </article>
+
+        <!-- ========================================== -->
+        <!-- WARIANT 7: APP ICON DARK (Black BG)        -->
+        <!-- ========================================== -->
+        <article class="logo-card">
+            <div class="preview-area">
+
+                <!-- START KODU DO KOPIOWANIA: WARIANT APP DARK -->
+                <svg viewBox="0 0 100 100" style="width: 100px; height: 100px;">
+                    <!-- Tło Squircle -->
+                    <rect width="100" height="100" rx="22" fill="#0a0a0a" stroke="none" />
+
+                    <!-- Elementy Białe -->
+                    <g fill="none" stroke="#ffffff" stroke-linecap="round">
+                        <circle cx="25" cy="45" r="8" fill="#ffffff" stroke="none" />
+                        <circle cx="70" cy="20" r="8" fill="#ffffff" stroke="none" />
+                        <circle cx="45" cy="80" r="8" fill="#ffffff" stroke="none" />
+
+                        <line x1="25" y1="45" x2="70" y2="20" stroke-width="6" />
+                        <line x1="70" y1="20" x2="45" y2="80" stroke-width="6" />
+                        <line x1="25" y1="45" x2="45" y2="80" stroke-width="6" />
+
+                        <line x1="45" y1="80" x2="90" y2="80" stroke-width="6" />
+                        <polyline points="80,70 90,80 80,90" stroke-width="6" stroke-linejoin="round" />
+                    </g>
+                </svg>
+                <!-- END KODU DO KOPIOWANIA -->
+
+            </div>
+            <div class="specs-area">
+                <h3>07. App Icon (Dark / Black Background)</h3>
+                <table class="specs-table">
+                    <tr>
+                        <td>Tło:</td>
+                        <td>Czarne (#0a0a0a)</td>
+                    </tr>
+                    <tr>
+                        <td>Linie:</td>
+                        <td>Białe (#ffffff)</td>
+                    </tr>
+                    <tr>
+                        <td>Kształt:</td>
+                        <td>Squircle (Nowoczesny)</td>
+                    </tr>
+                </table>
+                <h3>Zastosowanie</h3>
+                <p>
+                    Ikona aplikacji lub profilowa na ciemnym tle. Idealna do trybu ciemnego lub jako elegancki element
+                    marki.
+                </p>
+                <div class="action-buttons">
+                    <button class="btn btn-copy" onclick="copyCode(this)">Skopiuj kod SVG</button>
+                    <button class="btn btn-download" onclick="downloadPNG(this, 'resztatokod-app-icon-black')">Pobierz
+                        PNG</button>
+                </div>
+            </div>
+        </article>
+
+    </div>
+
+    <!-- Script to handle copying and downloading -->
+    <script>
+        function copyCode(button) {
+            const card = button.closest('.logo-card');
+            const svgElement = card.querySelector('.preview-area svg');
+
+            if (svgElement) {
+                const svgCode = svgElement.outerHTML;
+                navigator.clipboard.writeText(svgCode).then(() => {
+                    const originalText = button.textContent;
+                    button.textContent = "Skopiowano!";
+                    button.style.backgroundColor = "rgba(76, 175, 80, 0.2)";
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.backgroundColor = "transparent";
+                    }, 2000);
+                }).catch(err => {
+                    console.error('Błąd kopiowania:', err);
+                    button.textContent = "Błąd";
+                });
+            }
+        }
+
+        function downloadPNG(button, filename) {
+            const card = button.closest('.logo-card');
+            const originalSvg = card.querySelector('.preview-area svg');
+
+            if (!originalSvg) return;
+
+            // 1. Setup high-res canvas
+            const canvas = document.createElement('canvas');
+            const scale = 8; // High resolution multiplier (Higher for crisp app icons)
+            const baseWidth = originalSvg.viewBox.baseVal.width || 100;
+            const baseHeight = originalSvg.viewBox.baseVal.height || 100;
+
+            canvas.width = baseWidth * scale;
+            canvas.height = baseHeight * scale;
+            const ctx = canvas.getContext('2d');
+
+            // 2. Clone SVG to modify for export (freeze animations)
+            const clonedSvg = originalSvg.cloneNode(true);
+
+            // Set explicit dimensions on clone
+            clonedSvg.setAttribute('width', canvas.width);
+            clonedSvg.setAttribute('height', canvas.height);
+
+            // 3. Inject CSS to freeze animations at "finished" state
+            const style = document.createElement('style');
+            style.textContent = `
+                /* Force full visibility */
+                * { opacity: 1 !important; stroke-dashoffset: 0 !important; animation: none !important; transition: none !important; }
+                /* Ensure text is visible and formatted */
+                text { font-family: 'JetBrains Mono', monospace; font-weight: 700; fill: #ffffff; }
+                /* Handle clipping reveal for typing effect */
+                .rtk-long-url { clip-path: none !important; }
+                /* Position cursor at end */
+                .rtk-long-cursor-g { transform: translateX(300px) !important; }
+                /* Special handling for light version text/strokes */
+                svg[style*="stroke: #000000"] text { fill: #000000 !important; }
+            `;
+            clonedSvg.prepend(style);
+
+            // 4. Serialize to XML
+            const data = (new XMLSerializer()).serializeToString(clonedSvg);
+            const img = new Image();
+
+            // Handle external fonts loading issue in Canvas by using a Blob
+            const svgBlob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+
+            img.onload = () => {
+                ctx.drawImage(img, 0, 0);
+                URL.revokeObjectURL(url);
+
+                // 5. Trigger download
+                const link = document.createElement('a');
+                link.download = filename + '.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            };
+
+            img.src = url;
+        }
+    </script>
+
+</body>
+
+</html>
