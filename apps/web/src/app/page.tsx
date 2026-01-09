@@ -1,13 +1,12 @@
 'use client';
 
-// src/app/page.tsx v1.0.0 
+// src/app/page.tsx v2.0.0 
 // Landing Page - Karton z lekami
-// Design: Neumorphism with animated SVG hero
+// Design: Organic/Biomorphic with Mint Palette
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// Types
 interface VersionData {
   version?: string;
   apkUrl?: string;
@@ -18,7 +17,6 @@ export default function LandingPage() {
   const [versionData, setVersionData] = useState<VersionData>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // Theme detection and toggle
   useEffect(() => {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -30,7 +28,6 @@ export default function LandingPage() {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Fetch APK version
   useEffect(() => {
     const fetchVersion = async () => {
       try {
@@ -53,20 +50,47 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="landing-page">
+    <div className="landing-page organic">
+      {/* Animated Blob Background */}
+      <div className="blob-bg" aria-hidden="true">
+        <div className="blob blob-1"></div>
+        <div className="blob blob-2"></div>
+        <div className="blob blob-3"></div>
+      </div>
+
       {/* Navbar */}
       <nav className="navbar">
         <div className="container nav-content">
           <div className="logo">
-            <span className="logo-icon">📦</span>
+            <svg className="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+              <line x1="12" y1="22.08" x2="12" y2="12" />
+            </svg>
             Karton z lekami
           </div>
           <button
-            className="theme-toggle neu-button"
+            className="theme-toggle"
             onClick={toggleTheme}
-            aria-label="Toggle theme"
+            aria-label="Przełącz motyw"
           >
-            {theme === 'dark' ? '☀️' : '🌙'}
+            {theme === 'dark' ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            )}
           </button>
         </div>
       </nav>
@@ -74,22 +98,17 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="hero">
         <div className="container hero-content">
-          <div className="hero-card neu-card">
+          <div className="hero-card organic-card">
             {/* Animated Box Icon */}
             <div className="app-icon">
               <div className="hero-stage">
                 <svg viewBox="0 0 200 200">
-                  {/* Box shake group */}
                   <g className="anim-box-shake" transform="translate(10, 15) scale(0.9)">
-
-                    {/* Back layer: Flaps and Inner */}
                     <g className="anim-flaps">
                       <path className="fill-flap" d="M14 64 L100 34 L85 5 L5 30 Z" opacity="0.9" />
                       <path className="fill-flap" d="M186 64 L100 34 L115 5 L195 30 Z" opacity="0.9" />
                       <path className="fill-inner" d="M100 108 L186 64 L100 34 L14 64 Z" />
                     </g>
-
-                    {/* Middle layer: Items dropping */}
                     <g className="anim-items" id="anim-bottle">
                       <g transform="translate(100, 45) rotate(5)">
                         <rect x="-12" y="0" width="24" height="42" rx="4" className="fill-bottle" />
@@ -104,7 +123,6 @@ export default function LandingPage() {
                         <path className="fill-tube" d="M-10 25 L10 25 L8 -15 L-8 -15 Z" />
                         <path className="fill-tube-dark" d="M-10 25 L0 25 L0 -15 L-8 -15 Z" />
                         <path className="fill-tube" d="M-8 -15 L8 -15 L10 -20 L-10 -20 Z" />
-                        <rect x="-9" y="5" width="18" height="5" fill="white" opacity="0.3" />
                       </g>
                     </g>
                     <g className="anim-items" id="anim-box">
@@ -112,7 +130,7 @@ export default function LandingPage() {
                         <path className="fill-box-side" d="M-12 -18 L-20 -24 L-20 12 L-12 18 Z" />
                         <path className="fill-box" d="M-12 -18 L12 -18 L12 18 L-12 18 Z" />
                         <path fill="#ffffff" d="M-12 -18 L12 -18 L4 -24 L-20 -24 Z" />
-                        <rect x="-6" y="-6" width="12" height="12" fill="var(--color-mint)" rx="1" opacity="0.9" />
+                        <rect x="-6" y="-6" width="12" height="12" fill="var(--color-accent)" rx="1" opacity="0.9" />
                       </g>
                     </g>
                     <g className="anim-items" id="anim-blister">
@@ -125,12 +143,8 @@ export default function LandingPage() {
                         </g>
                       </g>
                     </g>
-
-                    {/* Front layer: Box walls */}
                     <path d="M12 68 L98 108 L98 186 L12 146 Z" className="fill-left" />
                     <path d="M188 68 L188 146 L102 186 L102 108 Z" className="fill-right" />
-
-                    {/* Top layer: Closed lid */}
                     <g className="anim-lid">
                       <path d="M100 24 L186 64 L100 104 L14 64 Z" className="fill-top" />
                       <path className="fill-tape-light" d="M 35 73.8 L 65 87.7 L 151 47.7 L 121 33.8 Z" />
@@ -141,7 +155,6 @@ export default function LandingPage() {
                         <rect x="-8" y="-25" width="16" height="50" className="fill-tape-light" rx="1" />
                       </g>
                     </g>
-
                   </g>
                 </svg>
               </div>
@@ -153,7 +166,6 @@ export default function LandingPage() {
             </p>
 
             <div className="buttons-container">
-              {/* Primary CTA: APK Download */}
               <a
                 href={versionData.apkUrl?.replace('http://', 'https://') || 'https://michalrapala.app/releases/'}
                 className="btn btn-primary"
@@ -170,7 +182,6 @@ export default function LandingPage() {
                 </span>
               </a>
 
-              {/* Secondary: Google Play placeholder */}
               <div className="btn btn-secondary btn-disabled">
                 <svg className="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M3 3l18 9-18 9V3z" />
@@ -185,31 +196,50 @@ export default function LandingPage() {
       {/* Features Section */}
       <section className="features">
         <div className="container">
-          <div className="features-card neu-card">
+          <div className="features-card organic-card">
             <h2 className="features-title">Funkcje aplikacji</h2>
             <div className="features-grid">
               <div className="feature-item">
-                <span className="feature-icon">📷</span>
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
                 <span className="feature-text">Dodaj lek ze zdjęcia (AI Vision)</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">📁</span>
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
                 <span className="feature-text">Import leków z pliku</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">🔍</span>
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
                 <span className="feature-text">Wygodne filtrowanie i wyszukiwanie</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">⏰</span>
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
                 <span className="feature-text">Alerty terminów ważności</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">📄</span>
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
                 <span className="feature-text">Eksport do PDF</span>
               </div>
               <div className="feature-item">
-                <span className="feature-icon">🔒</span>
+                <svg className="feature-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
                 <span className="feature-text">100% prywatność – dane na urządzeniu</span>
               </div>
             </div>
@@ -222,21 +252,21 @@ export default function LandingPage() {
         <div className="container">
           <h2 className="section-title">Zrzuty ekranu</h2>
           <div className="screenshots-grid">
-            <div className="screenshot-item neu-card">
+            <div className="screenshot-item organic-card">
               <img
                 src="/screenshoots/screenshot_karton_z_lekami_apteczka.jpg"
                 alt="Ekran główny - lista leków"
                 loading="lazy"
               />
             </div>
-            <div className="screenshot-item neu-card">
+            <div className="screenshot-item organic-card">
               <img
                 src="/screenshoots/screenshot_karton_z_lekami_dodaj_leki.jpg"
                 alt="Dodawanie leków"
                 loading="lazy"
               />
             </div>
-            <div className="screenshot-item neu-card">
+            <div className="screenshot-item organic-card">
               <img
                 src="/screenshoots/screenshot_karton_z_lekami_lek.jpg"
                 alt="Szczegóły leku"
@@ -252,7 +282,11 @@ export default function LandingPage() {
         <div className="container">
           <div className="disclaimer-card">
             <div className="disclaimer-title">
-              <span>⚠️</span>
+              <svg className="disclaimer-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
               Ważna informacja
             </div>
             <p className="disclaimer-text">
@@ -267,7 +301,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="footer">
         <div className="container footer-content">
-          <p className="footer-brand">📦 Karton z lekami</p>
+          <p className="footer-brand">Karton z lekami</p>
           <nav className="footer-nav">
             <Link href="/privacy">Polityka Prywatności</Link>
             <a href="mailto:michal.rapala@resztatokod.pl">Kontakt</a>
