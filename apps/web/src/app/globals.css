@@ -1531,10 +1531,30 @@ select:focus-visible {
 }
 
 /* ============================================
-   🌿 ORGANIC 2.0 / BIOMORPHIC STYLES
+   💎 PREMIUM ORGANIC Styles
    ============================================ */
 
-/* Blob Background - More fluid */
+/* 1. Typography & Base */
+:root {
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 8px;
+  --shadow-soft: 0 4px 20px -2px rgba(16, 185, 129, 0.08);
+  --shadow-hover: 0 12px 30px -4px rgba(16, 185, 129, 0.12);
+}
+
+.landing-page.organic h1,
+.landing-page.organic h2,
+.landing-page.organic h3,
+.landing-page.organic .logo {
+  font-family: var(--font-fraunces), serif;
+  font-weight: 600;
+  /* Stronger weight for headings */
+  letter-spacing: -0.03em;
+  /* Tighter tracking for display font */
+}
+
+/* 2. Background - Subtle Atmosphere */
 .blob-bg {
   position: fixed;
   top: 0;
@@ -1543,193 +1563,210 @@ select:focus-visible {
   height: 100%;
   z-index: -1;
   overflow: hidden;
-  opacity: 0.6;
+  opacity: 0.25;
+  /* Very subtle */
   pointer-events: none;
-  filter: blur(60px);
+  filter: blur(80px);
   background: var(--color-bg);
-  /* Base mixture */
 }
 
-/* Organic Cards - Asymmetric & Soft */
+/* 3. Components - Consistent Design System */
+
+/* Cards: Uniform, Clean, predictable */
 .organic-card {
   background: rgba(255, 255, 255, 0.85);
-  /* Milky white */
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  /* Asymmetric shape base */
-  border-radius: 40px 30px 45px 35px;
+  /* Milky */
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  border-radius: var(--radius-lg);
+  /* Consistent radius */
   box-shadow:
-    0 20px 50px -10px rgba(16, 185, 129, 0.15),
-    /* Mint glow */
-    0 10px 20px -10px rgba(0, 0, 0, 0.05);
-  /* Soft depth */
-  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    0 1px 2px rgba(0, 0, 0, 0.02),
+    var(--shadow-soft);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
 }
 
 [data-theme="dark"] .organic-card {
-  background: rgba(15, 23, 42, 0.6);
-  /* Deep navy milky */
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow:
-    0 20px 60px -10px rgba(16, 185, 129, 0.1),
-    0 0 0 1px rgba(16, 185, 129, 0.1);
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
 }
 
 .organic-card:hover {
-  transform: translateY(-8px) scale(1.01);
-  box-shadow:
-    0 30px 60px -12px rgba(16, 185, 129, 0.25),
-    0 12px 24px -8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  /* Subtle lift */
+  box-shadow: var(--shadow-hover);
 }
 
-/* Asymmetric Variations for Cards */
-.organic-card:nth-child(even) {
-  border-radius: 35px 45px 30px 40px;
-}
-
+/* Remove the random asymmetry - it looks disjointed */
+.organic-card:nth-child(even),
 .organic-card:nth-child(3n) {
-  border-radius: 45px 35px 40px 30px;
+  border-radius: var(--radius-lg);
 }
 
-/* Floating Animation */
-@keyframes float-y {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
+/* Hero Section - Anchored */
 .landing-page.organic .hero-card {
-  /* Hero gets a unique organic shape */
-  border-radius: 50px 40px 60px 40px / 40px 60px 40px 50px;
-  background: radial-gradient(circle at top left,
+  border-radius: 32px;
+  /* Slightly larger for Hero */
+  background: radial-gradient(circle at top right,
       rgba(255, 255, 255, 0.9),
-      rgba(255, 255, 255, 0.7));
-  animation: float-y 6s ease-in-out infinite;
+      rgba(255, 255, 255, 0.6));
+  /* No floating animation on the whole card - distracting */
+  animation: none;
 }
 
 [data-theme="dark"] .landing-page.organic .hero-card {
-  background: radial-gradient(circle at top left,
-      rgba(30, 41, 59, 0.8),
-      rgba(15, 23, 42, 0.6));
+  background: radial-gradient(circle at top right,
+      rgba(30, 41, 59, 0.9),
+      rgba(15, 23, 42, 0.7));
 }
 
-/* Navbar - No Glass, Just Floating Elements */
+/* Navbar - Stabilized */
 .landing-page.organic .navbar {
   background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-bottom: none;
   padding: 1.5rem 0;
+  position: absolute;
+  /* Anchor to top */
+  width: 100%;
+  z-index: 50;
+  top: 0;
 }
 
 .landing-page.organic .nav-content {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 0.75rem 1.5rem;
   border-radius: 100px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
-  margin: 0 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  margin: 0 auto;
+  max-width: 1200px;
+  /* Align with container */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 [data-theme="dark"] .landing-page.organic .nav-content {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Buttons - Organic Blobs */
+/* Buttons - Premium Feel */
 .landing-page.organic .btn {
-  border-radius: 60px 40px 50px 70px / 50px 70px 40px 60px;
-  transition: all 0.4s ease;
+  border-radius: 100px;
+  /* Perfect pill */
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .landing-page.organic .btn:hover {
-  border-radius: 70px 50px 40px 60px / 60px 40px 70px 50px;
+  transform: translateY(-1px);
+}
+
+.landing-page.organic .btn:active {
+  transform: scale(0.98);
 }
 
 .landing-page.organic .btn-primary {
-  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
-  box-shadow:
-    4px 10px 25px -5px rgba(16, 185, 129, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  background: var(--color-accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  border: none;
 }
 
 .landing-page.organic .btn-primary:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow:
-    6px 15px 35px -5px rgba(16, 185, 129, 0.5),
-    inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  background: var(--color-accent-dark);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
 }
 
-/* Icons - Soft & Colorful */
+/* Icons - Consistent Sizing */
 .landing-page.organic .feature-icon {
-  background: rgba(16, 185, 129, 0.1);
-  padding: 8px;
-  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-  width: 48px;
-  height: 48px;
-  margin-right: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  padding: 10px;
+  border-radius: 16px;
+  /* Matching concept */
+  width: 56px;
+  height: 56px;
+  margin-right: 16px;
   color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Feature Items - No Border, Just Glow */
+/* Feature Grid - Clean */
 .landing-page.organic .feature-item {
-  background: rgba(255, 255, 255, 0.4);
-  border: none;
+  background: transparent;
+  /* Remove card bg for features to clean up visual noise, or keep subtle */
+  border: 1px solid transparent;
   box-shadow: none;
-  border-radius: 20px 25px 20px 25px;
-}
-
-[data-theme="dark"] .landing-page.organic .feature-item {
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: flex-start;
+  padding: 1.5rem;
 }
 
 .landing-page.organic .feature-item:hover {
-  background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.15);
+  background: rgba(255, 255, 255, 0.5);
+  /* subtle */
+  border-color: rgba(16, 185, 129, 0.1);
 }
 
 [data-theme="dark"] .landing-page.organic .feature-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+
 }
 
-/* Screenshots - Image Containers */
+/* Screenshots - Polished Frames */
 .landing-page.organic .screenshot-item {
-  border-radius: 40px 30px 40px 30px;
-  padding: 0;
-  overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-radius: 32px;
+  padding: 8px;
+  /* Frame padding */
+  background: white;
+  box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .landing-page.organic .screenshot-item {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.05);
 }
 
 .landing-page.organic .screenshot-item img {
-  border-radius: 36px 26px 36px 26px;
-  /* Inner radius matching outer */
+  border-radius: 24px;
 }
 
-/* Theme Toggle - Blob */
+/* Theme Toggle */
 .landing-page.organic .theme-toggle {
-  border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-  background: rgba(16, 185, 129, 0.1);
-  border: none;
-  width: 48px;
-  height: 48px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .landing-page.organic .theme-toggle:hover {
-  border-radius: 60% 40% 30% 70% / 50% 60% 50% 50%;
-  background: var(--color-accent);
-  transform: rotate(15deg);
+  background: rgba(0, 0, 0, 0.05);
+  transform: none;
 }
 
-/* Footer - Clean */
+[data-theme="dark"] .landing-page.organic .theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Footer - Standardized */
 .landing-page.organic .footer {
-  border-top: none;
-  background: linear-gradient(to top, rgba(16, 185, 129, 0.05), transparent);
+  border-top: 1px solid rgba(16, 185, 129, 0.1);
+  background: transparent;
+  margin-top: 4rem;
 }

@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { DM_Sans, Fraunces } from "next/font/google";
 import "./globals.css";
 
 const dmSans = DM_Sans({
   subsets: ["latin", "latin-ext"],
   variable: "--font-dm-sans",
   weight: ["400", "500", "600", "700"],
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-fraunces",
+  // Fraunces is a variable font, so weight is adjustable automatically usually, 
+  // but defining axes can be helpful if needed. Default is fine.
 });
 
 export const metadata: Metadata = {
@@ -37,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pl" suppressHydrationWarning>
-      <body className={`${dmSans.variable} font-sans antialiased`} style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
+      <body className={`${dmSans.variable} ${fraunces.variable} font-sans antialiased`} style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}>
         {children}
       </body>
     </html>
