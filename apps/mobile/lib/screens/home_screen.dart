@@ -23,10 +23,10 @@ import '../utils/duplicate_detection.dart';
 
 /// Opcje sortowania
 enum SortOption {
-  nameAsc('Nazwa A-Z', LucideIcons.arrowUpAZ),
-  nameDesc('Nazwa Z-A', LucideIcons.arrowDownAZ),
-  expiryAsc('Termin ważności od najkrótszego', LucideIcons.clockArrowUp),
-  expiryDesc('Termin ważności od najdłuższego', LucideIcons.clockArrowDown),
+  nameAsc('Nazwa A-Z', LucideIcons.arrowDownAZ),
+  nameDesc('Nazwa Z-A', LucideIcons.arrowUpAZ),
+  expiryAsc('Termin ważności od najkrótszego', LucideIcons.clockArrowDown),
+  expiryDesc('Termin ważności od najdłuższego', LucideIcons.clockArrowUp),
   dateAddedAsc('Data dodania od najstarszego', LucideIcons.calendarArrowUp),
   dateAddedDesc('Data dodania od najnowszego', LucideIcons.calendarArrowDown);
 
