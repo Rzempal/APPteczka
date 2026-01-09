@@ -325,18 +325,25 @@ export default function LandingPage() {
             className="footer-rtk-logo"
             aria-label="ResztaToKod.pl"
           >
-            <svg viewBox="0 0 100 100" className="rtk-logo">
-              {/* Węzły sieci neuronowej */}
-              <circle cx="25" cy="45" r="6" className="rtk-node" />
-              <circle cx="70" cy="20" r="6" className="rtk-node" />
-              <circle cx="45" cy="80" r="6" className="rtk-node" />
-              {/* Połączenia */}
-              <line x1="25" y1="45" x2="70" y2="20" className="rtk-link" />
-              <line x1="70" y1="20" x2="45" y2="80" className="rtk-link" />
-              <line x1="25" y1="45" x2="45" y2="80" className="rtk-link" />
-              {/* Strzałka wyjścia */}
-              <line x1="45" y1="80" x2="90" y2="80" className="rtk-link" />
-              <polyline points="80,70 90,80 80,90" className="rtk-arrow" />
+            {/* RTK Logo LONG - animowane */}
+            <svg viewBox="0 0 440 60" className="rtk-logo-long">
+              {/* 1. Sieć neuronowa (Chaos) */}
+              <circle cx="5" cy="15" r="2" className="rtk-node rtk-n1" />
+              <circle cx="20" cy="5" r="2" className="rtk-node rtk-n2" />
+              <circle cx="10" cy="30" r="2" className="rtk-node rtk-n3" />
+              <line x1="5" y1="15" x2="20" y2="5" className="rtk-link rtk-l1" />
+              <line x1="20" y1="5" x2="10" y2="30" className="rtk-link rtk-l2" />
+              <line x1="5" y1="15" x2="10" y2="30" className="rtk-link rtk-l3" />
+              {/* 2. Linia przepływu */}
+              <path d="M 10 30 L 40 30" className="rtk-path" />
+              {/* 3. Prompt >_ */}
+              <text x="48" y="38" className="rtk-cmd">&gt;_</text>
+              {/* 4. Typing "cd resztatokod.pl" */}
+              <text x="86" y="38" className="rtk-url">cd resztatokod.pl</text>
+              {/* 5. Kursor */}
+              <g className="rtk-cursor-g">
+                <rect x="86" y="16" width="14" height="26" className="rtk-cursor" />
+              </g>
             </svg>
           </a>
         </div>
