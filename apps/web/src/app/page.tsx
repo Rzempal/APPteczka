@@ -134,7 +134,9 @@ export default function LandingPage() {
               <div className="phone-frame">
                 <div className="phone-notch"></div>
                 <img
-                  src="/screenshoots/screenshot_karton_z_lekami_apteczka.jpg"
+                  src={theme === 'dark'
+                    ? "/screenshoots/screenshot_karton_z_lekami_apteczka_dark.jpg"
+                    : "/screenshoots/screenshot_karton_z_lekami_apteczka.jpg"}
                   alt="Aplikacja Karton z lekami"
                   className="phone-screen"
                 />
@@ -239,7 +241,9 @@ export default function LandingPage() {
             <div className="screenshots-grid">
               <div className="screenshot-card">
                 <img
-                  src="/screenshoots/screenshot_karton_z_lekami_apteczka.jpg"
+                  src={theme === 'dark'
+                    ? "/screenshoots/screenshot_karton_z_lekami_apteczka_dark.jpg"
+                    : "/screenshoots/screenshot_karton_z_lekami_apteczka.jpg"}
                   alt="Lista leków w apteczce"
                   loading="lazy"
                 />
@@ -247,7 +251,9 @@ export default function LandingPage() {
               </div>
               <div className="screenshot-card">
                 <img
-                  src="/screenshoots/screenshot_karton_z_lekami_dodaj_leki.jpg"
+                  src={theme === 'dark'
+                    ? "/screenshoots/screenshot_karton_z_lekami_dodaj_leki_dark.jpg"
+                    : "/screenshoots/screenshot_karton_z_lekami_dodaj_leki.jpg"}
                   alt="Dodawanie nowego leku"
                   loading="lazy"
                 />
@@ -255,7 +261,9 @@ export default function LandingPage() {
               </div>
               <div className="screenshot-card">
                 <img
-                  src="/screenshoots/screenshot_karton_z_lekami_lek.jpg"
+                  src={theme === 'dark'
+                    ? "/screenshoots/screenshot_karton_z_lekami_lek_dark.jpg"
+                    : "/screenshoots/screenshot_karton_z_lekami_lek.jpg"}
                   alt="Szczegóły leku"
                   loading="lazy"
                 />
