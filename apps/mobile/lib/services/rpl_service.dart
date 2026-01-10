@@ -182,37 +182,56 @@ class RplService {
   /// Wyszukuje lek po kodzie EAN/GTIN
   /// Prubuje kilka endpointow API RPL
   Future<RplDrugInfo?> fetchDrugByEan(String ean) async {
-    // Sprawdz cache
-    if (_eanCache.containsKey(ean)) {
-      _log.fine('Cache hit for EAN: $ean');
-      return _eanCache[ean];
-    }
-
-    _log.info('Fetching drug info for EAN: $ean');
-
-    // Walidacja EAN
-    if (!_isValidEan(ean)) {
+    // Normalizacja EAN - UPC-A (12 cyfr) -> EAN-13 (dodaj wiodace zero)
+    final normalizedEan = _normalizeEan(ean);
+    if (normalizedEan == null) {
       _log.warning('Invalid EAN format: $ean');
       return null;
     }
 
-    // Proba 1: GET z parametrem gtin (rejestry.ezdrowie.gov.pl)
-    var result = await _tryFetchByGtinGet(ean);
+    // Sprawdz cache
+    if (_eanCache.containsKey(normalizedEan)) {
+      _log.fine('Cache hit for EAN: $normalizedEan');
+      return _eanCache[normalizedEan];
+    }
+
+    _log.info('Fetching drug info for EAN: $normalizedEan (original: $ean)');
+
+    // Proba 1: POST do search/public (bardziej niezawodne filtrowanie)
+    var result = await _tryFetchByGtinPost(normalizedEan);
     if (result != null) {
-      _eanCache[ean] = result;
+      _eanCache[normalizedEan] = result;
       return result;
     }
 
-    // Proba 2: POST do search/public (rejestrymedyczne.ezdrowie.gov.pl)
-    result = await _tryFetchByGtinPost(ean);
+    // Proba 2: GET z parametrem gtin (fallback)
+    result = await _tryFetchByGtinGet(normalizedEan);
     if (result != null) {
-      _eanCache[ean] = result;
+      _eanCache[normalizedEan] = result;
       return result;
     }
 
     // Nie znaleziono - zapisz null w cache
-    _eanCache[ean] = null;
-    _log.info('No drug found for EAN: $ean');
+    _eanCache[normalizedEan] = null;
+    _log.info('No drug found for EAN: $normalizedEan');
+    return null;
+  }
+
+  /// Normalizuje kod EAN - konwertuje UPC-A na EAN-13
+  String? _normalizeEan(String ean) {
+    // Usun spacje i inne znaki
+    final cleaned = ean.replaceAll(RegExp(r'[^0-9]'), '');
+
+    // UPC-A (12 cyfr) -> EAN-13 (dodaj wiodace zero)
+    if (cleaned.length == 12) {
+      return '0$cleaned';
+    }
+
+    // EAN-13 lub EAN-8
+    if (cleaned.length == 13 || cleaned.length == 8) {
+      return cleaned;
+    }
+
     return null;
   }
 
@@ -307,24 +326,10 @@ class RplService {
     return null;
   }
 
-  /// Waliduje format kodu EAN
-  bool _isValidEan(String ean) {
-    // EAN-13 lub EAN-8
-    if (ean.length != 13 && ean.length != 8) {
-      return false;
-    }
-
-    // Tylko cyfry
-    if (!RegExp(r'^\d+$').hasMatch(ean)) {
-      return false;
-    }
-
-    return true;
-  }
-
   /// Sprawdza czy kod EAN jest prawdopodobnie polskim lekiem (590...)
   bool isPolishPharmaceutical(String ean) {
-    return ean.startsWith('590');
+    final normalized = _normalizeEan(ean);
+    return normalized != null && normalized.startsWith('590');
   }
 
   /// Czysci cache EAN
