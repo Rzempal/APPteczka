@@ -10,6 +10,7 @@ import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/gemini_service.dart';
 import '../services/gemini_name_lookup_service.dart';
+import '../services/date_ocr_service.dart';
 import '../widgets/gemini_scanner.dart';
 import '../widgets/two_photo_scanner.dart';
 import '../widgets/barcode_scanner.dart';
@@ -727,15 +728,89 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   }
 
   /// Handler dla skanera kodow kreskowych (lista lekow)
+  /// Batch processing: OCR dat + AI enrichment
   void _handleBarcodeResult(List<ScannedDrug> drugs) async {
     if (drugs.isEmpty) return;
 
-    final importedMedicines = <Medicine>[];
+    // Pokaz dialog przetwarzania
+    final progressNotifier = ValueNotifier<_ProcessingProgress>(
+      _ProcessingProgress(current: 0, total: drugs.length * 2, stage: 'OCR'),
+    );
 
-    for (final drug in drugs) {
-      final medicine = drug.toMedicine(const Uuid().v4());
-      await widget.storageService.saveMedicine(medicine);
-      importedMedicines.add(medicine);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _ProcessingDialog(progress: progressNotifier),
+    );
+
+    final dateOcrService = DateOcrService();
+    final geminiService = GeminiNameLookupService();
+    final importedMedicines = <Medicine>[];
+    final failedOcrDrugs = <ScannedDrug>[];
+
+    try {
+      // === ETAP 1: Batch OCR dat (rownolegle) ===
+      await Future.wait(drugs.map((drug) async {
+        if (drug.tempImagePath != null && drug.expiryDate == null) {
+          try {
+            final result = await dateOcrService.recognizeDate(
+              File(drug.tempImagePath!),
+            );
+            if (result.terminWaznosci != null) {
+              drug.expiryDate = result.terminWaznosci;
+            } else {
+              failedOcrDrugs.add(drug);
+            }
+          } catch (_) {
+            failedOcrDrugs.add(drug);
+          }
+        }
+        progressNotifier.value = progressNotifier.value.increment();
+      }));
+
+      // === ETAP 2: AI enrichment (rownolegle) ===
+      progressNotifier.value = progressNotifier.value.copyWith(stage: 'AI');
+
+      await Future.wait(drugs.map((drug) async {
+        try {
+          final result = await geminiService.lookupByName(drug.drugInfo.fullName);
+          if (result.found && result.medicine != null) {
+            // Tworzymy Medicine z polaczeniem danych z RPL i AI
+            final med = result.medicine!;
+            final medicine = Medicine(
+              id: const Uuid().v4(),
+              nazwa: drug.drugInfo.fullName,
+              opis: med.opis,
+              wskazania: med.wskazania,
+              tagi: [
+                ...drug.toMedicine('').tagi, // tagi z RPL (Rp/OTC, forma, substancje)
+                ...processTagsForImport(med.tagi), // tagi z AI
+              ].toSet().toList(), // usun duplikaty
+              packages: drug.expiryDate != null
+                  ? [MedicinePackage(expiryDate: drug.expiryDate!, pieceCount: drug.pieceCount)]
+                  : [],
+              dataDodania: DateTime.now().toIso8601String(),
+              leafletUrl: drug.drugInfo.leafletUrl,
+            );
+            await widget.storageService.saveMedicine(medicine);
+            importedMedicines.add(medicine);
+          } else {
+            // AI nie rozpoznalo - zapisz tylko dane z RPL
+            final medicine = drug.toMedicine(const Uuid().v4());
+            await widget.storageService.saveMedicine(medicine);
+            importedMedicines.add(medicine);
+          }
+        } catch (_) {
+          // Blad AI - zapisz tylko dane z RPL
+          final medicine = drug.toMedicine(const Uuid().v4());
+          await widget.storageService.saveMedicine(medicine);
+          importedMedicines.add(medicine);
+        }
+        progressNotifier.value = progressNotifier.value.increment();
+      }));
+    } finally {
+      // Zamknij dialog przetwarzania
+      if (mounted) Navigator.of(context).pop();
     }
 
     if (!mounted) return;
@@ -749,9 +824,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       ),
     );
 
-    // Pokaz sheet do uzupelniania dat dla lekow bez daty
+    // Pokaz dialog reczny dla lekow bez rozpoznanej daty
     final medicinesWithoutDate = importedMedicines
-        .where((m) => m.terminWaznosci == null || m.terminWaznosci!.isEmpty)
+        .where((m) => m.packages.isEmpty || m.packages.first.expiryDate.isEmpty)
         .toList();
 
     if (medicinesWithoutDate.isNotEmpty) {
@@ -1003,6 +1078,96 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         content: Text(message),
         backgroundColor: Theme.of(context).colorScheme.error,
         behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}
+
+// ==================== POMOCNICZE KLASY PRZETWARZANIA ====================
+
+/// Stan przetwarzania batch
+class _ProcessingProgress {
+  final int current;
+  final int total;
+  final String stage; // 'OCR' lub 'AI'
+
+  const _ProcessingProgress({
+    required this.current,
+    required this.total,
+    required this.stage,
+  });
+
+  _ProcessingProgress increment() {
+    return _ProcessingProgress(
+      current: current + 1,
+      total: total,
+      stage: stage,
+    );
+  }
+
+  _ProcessingProgress copyWith({String? stage}) {
+    return _ProcessingProgress(
+      current: current,
+      total: total,
+      stage: stage ?? this.stage,
+    );
+  }
+
+  double get progress => total > 0 ? current / total : 0;
+}
+
+/// Dialog przetwarzania z progressem
+class _ProcessingDialog extends StatelessWidget {
+  final ValueNotifier<_ProcessingProgress> progress;
+
+  const _ProcessingDialog({required this.progress});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
+
+    return Dialog(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: ValueListenableBuilder<_ProcessingProgress>(
+          valueListenable: progress,
+          builder: (context, prog, _) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  prog.stage == 'OCR' ? LucideIcons.scanText : LucideIcons.sparkles,
+                  size: 48,
+                  color: aiColor,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  prog.stage == 'OCR'
+                      ? 'Rozpoznaje daty...'
+                      : 'AI uzupelnia dane...',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${prog.current} / ${prog.total}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                LinearProgressIndicator(
+                  value: prog.progress,
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                  valueColor: AlwaysStoppedAnimation<Color>(aiColor),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
