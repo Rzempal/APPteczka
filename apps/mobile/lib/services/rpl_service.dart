@@ -270,13 +270,13 @@ class RplService {
 
   /// Proba POST do search/public
   Future<RplDrugInfo?> _tryFetchByGtinPost(String ean) async {
-    // Strony numerowane od 0, nie od 1
+    // Oryginalny format z dokumentacji - searchValues z konkretnym polem gtin
     final payload = {
       'page': 0,
       'size': 10,
-      'sortField': 'medicinalProductName',
-      'sortDirection': 'ASC',
-      'searchValue': ean,
+      'searchValues': [
+        {'name': 'gtin', 'value': ean}
+      ]
     };
 
     try {
