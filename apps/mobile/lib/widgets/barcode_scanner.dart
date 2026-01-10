@@ -578,7 +578,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       final drugInfo = await _rplService.fetchDrugByEan(ean);
 
       if (drugInfo == null) {
-        _showError('Nie znaleziono leku o kodzie $ean');
+        _showError('Nie znaleziono leku w bazie RPL.\nKod: $ean\nMozesz dodac lek reczenie.');
         return;
       }
 

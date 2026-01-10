@@ -12,6 +12,7 @@ Aplikacja mobilna do zarządzania domową apteczką z integracją AI. Kataloguj 
 
 - ✅ Import leków z JSON (przez prompt AI)
 - ✅ **Gemini AI OCR** – automatyczne rozpoznawanie leków ze zdjęć
+- ✅ **Skaner kodów kreskowych EAN** – ciągłe skanowanie z API Rejestru Produktów Leczniczych
 - ✅ Filtrowanie po tagach, objawach, terminie ważności
 - ✅ Wyszukiwanie tekstowe
 - ✅ Edycja terminów ważności z alertami
