@@ -1,4 +1,4 @@
-// barcode_scanner.dart v1.4.0 - Skaner kodow kreskowych EAN z batch processing
+// barcode_scanner.dart v1.5.0 - Skaner kodow kreskowych EAN z batch processing
 // Widget do skanowania lekow z Rejestru Produktow Leczniczych
 
 import 'dart:io';
@@ -274,10 +274,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       }
     } else {
       // Tryb daty waznosci - pokaz nazwe leku
-      icon = LucideIcons.calendar;
+      icon = LucideIcons.camera;
       iconColor = Colors.orange;
       title = _currentDrug?.drugInfo.fullName ?? 'Dodaj date waznosci';
-      subtitle = 'Uzyj Aparat lub Pomin';
+      subtitle = 'Zrob 📷 zdjecie daty waznosci lub Pomin';
     }
 
     return NeuInsetContainer(
@@ -460,23 +460,23 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               ),
             ),
 
-            // Tryb daty - przycisk zdjecia (snapshot)
-            if (_mode == ScannerMode.expiryDate)
-              Positioned(
-                bottom: 16,
-                left: 16,
-                child: _buildControlButton(
-                  icon: LucideIcons.camera,
-                  label: 'Aparat',
-                  onTap: _captureExpiryDatePhoto,
-                ),
-              ),
-
-            // Tryb daty - przycisk pomin
+            // Tryb daty - przycisk zdjecia (prawy gorny rog)
             if (_mode == ScannerMode.expiryDate)
               Positioned(
                 top: 16,
                 right: 16,
+                child: _buildControlButton(
+                  icon: LucideIcons.camera,
+                  label: '📷 Zapisz zdjecie',
+                  onTap: _captureExpiryDatePhoto,
+                ),
+              ),
+
+            // Tryb daty - przycisk pomin (lewy dolny rog)
+            if (_mode == ScannerMode.expiryDate)
+              Positioned(
+                bottom: 16,
+                left: 16,
                 child: _buildControlButton(
                   icon: LucideIcons.skipForward,
                   label: 'Pomin',
@@ -757,7 +757,21 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     if (snapshotFile != null) {
       // Zapisz sciezke do snapshotu - OCR zostanie wykonany przy zakonczeniu
       _currentDrug!.tempImagePath = snapshotFile.path;
-      HapticFeedback.lightImpact();
+      HapticFeedback.mediumImpact();
+
+      // Animacja "Zapisano"
+      setState(() {
+        _showSuccess = true;
+        _successMessage = 'Zapisano zdjecie 📷';
+      });
+
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      if (!mounted) return;
+      setState(() {
+        _showSuccess = false;
+        _successMessage = null;
+      });
     }
 
     // Od razu wracamy do skanowania EAN (batch mode)
