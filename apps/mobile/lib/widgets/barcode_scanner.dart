@@ -1,12 +1,14 @@
-// barcode_scanner.dart v1.2.0 - Skaner kodow kreskowych EAN z ciagalym skanowaniem
+// barcode_scanner.dart v1.3.0 - Skaner kodow kreskowych EAN z ciagalym skanowaniem
 // Widget do skanowania lekow z Rejestru Produktow Leczniczych
 
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/medicine.dart';
 import '../services/rpl_service.dart';
 import '../services/date_ocr_service.dart';
@@ -162,10 +164,12 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   // Kontroler skanera
   MobileScannerController? _controller;
 
+  // Klucz do RepaintBoundary dla snapshotu
+  final GlobalKey _scannerKey = GlobalKey();
+
   // Serwisy
   final RplService _rplService = RplService();
   final DateOcrService _dateOcrService = DateOcrService();
-  final ImagePicker _imagePicker = ImagePicker();
 
   // Stan
   ScannerMode _mode = ScannerMode.ean;
@@ -355,11 +359,14 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
         height: 280,
         child: Stack(
           children: [
-            // Widok kamery
+            // Widok kamery (owiniety w RepaintBoundary dla snapshotu)
             if (_controller != null)
-              MobileScanner(
-                controller: _controller!,
-                onDetect: _onBarcodeDetected,
+              RepaintBoundary(
+                key: _scannerKey,
+                child: MobileScanner(
+                  controller: _controller!,
+                  onDetect: _onBarcodeDetected,
+                ),
               ),
 
             // Overlay z ramka celownika
@@ -715,30 +722,50 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     }
   }
 
+  /// Robi snapshot z widoku kamery (bez opuszczania UI)
+  Future<File?> _takeSnapshot() async {
+    try {
+      final boundary = _scannerKey.currentContext?.findRenderObject()
+          as RenderRepaintBoundary?;
+      if (boundary == null) return null;
+
+      // Przechwytujemy klatke z wysokim pixelRatio dla lepszej jakosci OCR
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return null;
+
+      // Zapisz do pliku tymczasowego
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final file = File('${tempDir.path}/snapshot_$timestamp.png');
+      await file.writeAsBytes(byteData.buffer.asUint8List());
+
+      return file;
+    } catch (e) {
+      _showError('Blad snapshotu: $e');
+      return null;
+    }
+  }
+
   Future<void> _captureExpiryDatePhoto() async {
     if (_currentDrug == null) return;
 
     setState(() => _isProcessing = true);
 
     try {
-      // Zrob zdjecie aparatem
-      final image = await _imagePicker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
-      );
+      // Snapshot z widoku kamery (bez opuszczania UI)
+      final snapshotFile = await _takeSnapshot();
 
-      if (image == null) {
+      if (snapshotFile == null) {
         setState(() => _isProcessing = false);
         return;
       }
 
-      // Zapisz sciezke do zdjecia
-      _currentDrug!.tempImagePath = image.path;
+      // Zapisz sciezke do snapshotu
+      _currentDrug!.tempImagePath = snapshotFile.path;
 
       // OCR daty
-      final result = await _dateOcrService.recognizeDate(File(image.path));
+      final result = await _dateOcrService.recognizeDate(snapshotFile);
 
       if (result.terminWaznosci != null) {
         HapticFeedback.mediumImpact();
