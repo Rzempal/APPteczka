@@ -257,18 +257,11 @@ class RplService {
         final content = data['content'] as List<dynamic>?;
 
         if (content != null && content.isNotEmpty) {
-          // Szukaj produktu z pasujacym GTIN
-          for (final item in content) {
-            final itemMap = item as Map<String, dynamic>;
-            final gtins = itemMap['gtin'] as String? ?? '';
-            if (gtins.contains(ean)) {
-              final result = RplDrugInfo.fromJson(itemMap);
-              _log.info('Found drug via GET: ${result.fullName} (GTIN match)');
-              return result;
-            }
-          }
-          // Jesli nie znaleziono dokladnego dopasowania GTIN, nie zwracaj nic
-          _log.warning('No exact GTIN match in GET results for $ean');
+          // API filtruje po eanGtin po stronie serwera - bierzemy pierwszy wynik
+          final result =
+              RplDrugInfo.fromJson(content[0] as Map<String, dynamic>);
+          _log.info('Found drug via GET: ${result.fullName}');
+          return result;
         }
       } else {
         _log.warning('GET eanGtin error: ${response.statusCode}');
@@ -317,21 +310,9 @@ class RplService {
         } else if (data is Map<String, dynamic>) {
           final content = data['content'];
           if (content is List && content.isNotEmpty) {
-            // Szukaj produktu z DOKLADNIE pasujacym GTIN
-            for (final item in content) {
-              final itemMap = item as Map<String, dynamic>;
-              final gtins = itemMap['gtin'] as String? ?? '';
-              // GTIN moze byc lista oddzielona znakami, szukaj dokladnego dopasowania
-              if (gtins.contains(ean)) {
-                result = RplDrugInfo.fromJson(itemMap);
-                _log.info('GTIN match found: $ean in "$gtins"');
-                break;
-              }
-            }
-            // NIE zwracaj pierwszego wyniku jesli nie ma dopasowania GTIN!
-            if (result == null) {
-              _log.warning('No exact GTIN match for $ean in ${content.length} results');
-            }
+            // API filtruje po gtin po stronie serwera - bierzemy pierwszy wynik
+            result =
+                RplDrugInfo.fromJson(content[0] as Map<String, dynamic>);
           }
         }
 
