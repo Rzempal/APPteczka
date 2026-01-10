@@ -269,7 +269,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       } else {
         icon = LucideIcons.barcode;
         iconColor = theme.colorScheme.primary;
-        title = 'Zeskanuj kod kreskowy';
+        title = _isScannerActive
+            ? 'Zeskanuj kod kreskowy'
+            : 'Uruchom skaner by rozpocząć';
         subtitle = 'Skieruj aparat na kod EAN opakowania';
       }
     } else {
@@ -629,7 +631,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 Icon(LucideIcons.sparkles, color: aiColor),
                 const SizedBox(width: 8),
                 Text(
-                  'Zakoncz i przetworz (${_scannedDrugs.length})',
+                  'Zakończ i przetwórz (${_scannedDrugs.length})',
                   style: TextStyle(color: aiColor, fontWeight: FontWeight.w600),
                 ),
               ],
