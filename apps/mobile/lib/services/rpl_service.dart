@@ -180,6 +180,7 @@ class RplService {
   // ==================== WYSZUKIWANIE PO EAN/GTIN ====================
 
   /// Wyszukuje lek po kodzie EAN/GTIN
+  /// Prubuje kilka endpointow API RPL
   Future<RplDrugInfo?> fetchDrugByEan(String ean) async {
     // Sprawdz cache
     if (_eanCache.containsKey(ean)) {
@@ -195,6 +196,61 @@ class RplService {
       return null;
     }
 
+    // Proba 1: GET z parametrem gtin (rejestry.ezdrowie.gov.pl)
+    var result = await _tryFetchByGtinGet(ean);
+    if (result != null) {
+      _eanCache[ean] = result;
+      return result;
+    }
+
+    // Proba 2: POST do search/public (rejestrymedyczne.ezdrowie.gov.pl)
+    result = await _tryFetchByGtinPost(ean);
+    if (result != null) {
+      _eanCache[ean] = result;
+      return result;
+    }
+
+    // Nie znaleziono - zapisz null w cache
+    _eanCache[ean] = null;
+    _log.info('No drug found for EAN: $ean');
+    return null;
+  }
+
+  /// Proba GET z parametrem gtin
+  Future<RplDrugInfo?> _tryFetchByGtinGet(String ean) async {
+    final endpoint = Uri.parse(
+      '$_baseUrl/search/public?gtin=${Uri.encodeComponent(ean)}&size=10&page=0',
+    );
+
+    try {
+      final response = await http
+          .get(endpoint, headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'KartonZLekami/1.0',
+          })
+          .timeout(_timeout);
+
+      _log.fine('GET gtin response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final content = data['content'] as List<dynamic>?;
+
+        if (content != null && content.isNotEmpty) {
+          final result = RplDrugInfo.fromJson(content[0] as Map<String, dynamic>);
+          _log.info('Found drug via GET: ${result.fullName}');
+          return result;
+        }
+      }
+    } catch (e) {
+      _log.warning('GET gtin error: $e');
+    }
+
+    return null;
+  }
+
+  /// Proba POST do search/public
+  Future<RplDrugInfo?> _tryFetchByGtinPost(String ean) async {
     final payload = {
       'page': 1,
       'size': 10,
@@ -216,13 +272,12 @@ class RplService {
           )
           .timeout(_timeout);
 
-      _log.fine('Response status: ${response.statusCode}');
+      _log.fine('POST search response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         RplDrugInfo? result;
 
-        // API moze zwrocic liste lub obiekt z polem 'content'
         if (data is List && data.isNotEmpty) {
           result = RplDrugInfo.fromJson(data[0] as Map<String, dynamic>);
         } else if (data is Map<String, dynamic>) {
@@ -232,46 +287,24 @@ class RplService {
           }
         }
 
-        // Zapisz w cache (takze null - zeby nie odpytywac ponownie)
-        _eanCache[ean] = result;
-
         if (result != null) {
-          _log.info('Found drug: ${result.fullName}');
-        } else {
-          _log.info('No drug found for EAN: $ean');
+          _log.info('Found drug via POST: ${result.fullName}');
+          return result;
         }
-
-        return result;
-      } else if (response.statusCode == 429) {
-        _log.warning('Rate limited by API');
-        throw RplException(
-          'Zbyt wiele zapytan. Poczekaj chwile i sprobuj ponownie.',
-          'RATE_LIMITED',
-        );
-      } else {
-        _log.warning('API error: ${response.statusCode}');
-        throw RplException(
-          'Blad serwera RPL: ${response.statusCode}',
-          'API_ERROR',
-        );
+      } else if (response.statusCode == 500) {
+        _log.warning('API RPL zwrocilo blad 500 - serwer chwilowo niedostepny');
       }
     } on SocketException catch (e) {
       _log.severe('Network error', e);
       throw RplException(
-        'Brak polaczenia z internetem. Sprawdz polaczenie i sprobuj ponownie.',
+        'Brak polaczenia z internetem.',
         'NETWORK_ERROR',
       );
-    } on http.ClientException catch (e) {
-      _log.severe('HTTP client error', e);
-      throw RplException(
-        'Blad polaczenia z serwerem.',
-        'CONNECTION_ERROR',
-      );
     } catch (e) {
-      if (e is RplException) rethrow;
-      _log.severe('Unexpected error', e);
-      throw RplException('Nieoczekiwany blad: $e', 'UNKNOWN_ERROR');
+      _log.warning('POST search error: $e');
     }
+
+    return null;
   }
 
   /// Waliduje format kodu EAN
