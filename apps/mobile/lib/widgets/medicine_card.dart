@@ -204,63 +204,68 @@ class _MedicineCardState extends State<MedicineCard>
     Color statusColor,
     IconData statusIcon,
   ) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Lewa strona: Nazwa + Ikona duplikatu + Etykiety (tylko w compact)
-        Expanded(
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              // Nazwa leku
-              Text(
-                _medicine.nazwa ?? 'Nieznany lek',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
-                  fontSize: widget.isCompact ? 15 : 18,
-                ),
-              ),
-              // Ikona duplikatu
-              if (widget.isDuplicate)
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withAlpha(30),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Icon(
-                    LucideIcons.copy,
-                    size: 14,
-                    color: AppColors.primary,
+    // W expanded mode - kliknięcie w nagłówek zwija do compact
+    return GestureDetector(
+      onTap: widget.isCompact ? null : widget.onExpand,
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Lewa strona: Nazwa + Ikona duplikatu + Etykiety (tylko w compact)
+          Expanded(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                // Nazwa leku z context menu na long press
+                GestureDetector(
+                  onLongPress: () => _showContextMenu(context),
+                  child: Text(
+                    _medicine.nazwa ?? 'Nieznany lek',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                      fontSize: widget.isCompact ? 15 : 18,
+                    ),
                   ),
                 ),
-              // Etykiety tylko w compact mode
-              if (widget.isCompact) ...[
-                ...medicineLabels.take(3).map((label) => _buildBadge(label, isDark)),
-                if (medicineLabels.length > 3)
-                  _buildBadgeCount(medicineLabels.length - 3, isDark),
+                // Ikona duplikatu
+                if (widget.isDuplicate)
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withAlpha(30),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Icon(
+                      LucideIcons.copy,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                // Etykiety tylko w compact mode
+                if (widget.isCompact) ...[
+                  ...medicineLabels.take(3).map((label) => _buildBadge(label, isDark)),
+                  if (medicineLabels.length > 3)
+                    _buildBadgeCount(medicineLabels.length - 3, isDark),
+                ],
               ],
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        // Chevron
-        if (widget.isCompact)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            child: Icon(
-              LucideIcons.chevronDown,
-              size: 16,
-              color: theme.colorScheme.onSurface,
             ),
-          )
-        else
-          GestureDetector(
-            onTap: widget.onExpand,
-            child: Container(
+          ),
+          const SizedBox(width: 8),
+          // Chevron
+          if (widget.isCompact)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Icon(
+                LucideIcons.chevronDown,
+                size: 16,
+                color: theme.colorScheme.onSurface,
+              ),
+            )
+          else
+            Container(
               padding: const EdgeInsets.all(8),
               decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
               child: Icon(
@@ -269,8 +274,83 @@ class _MedicineCardState extends State<MedicineCard>
                 color: theme.colorScheme.onSurface,
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  /// Context menu dla nazwy leku (long press)
+  void _showContextMenu(BuildContext context) {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        return Container(
+          margin: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
           ),
-      ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Nagłówek
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  _medicine.nazwa ?? 'Lek',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const Divider(height: 1),
+              // Opcje
+              ListTile(
+                leading: Icon(LucideIcons.squarePen, color: AppColors.primary),
+                title: const Text('Edytuj lek'),
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.onEdit?.call();
+                },
+              ),
+              ListTile(
+                leading: Icon(LucideIcons.copy, color: theme.colorScheme.onSurface),
+                title: const Text('Kopiuj nazwę'),
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: _medicine.nazwa ?? ''));
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Skopiowano nazwę')),
+                  );
+                },
+              ),
+              if (_medicine.leafletUrl != null)
+                ListTile(
+                  leading: Icon(LucideIcons.fileText, color: AppColors.valid),
+                  title: const Text('Pokaż ulotkę'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showPdfViewer(context);
+                  },
+                ),
+              ListTile(
+                leading: Icon(LucideIcons.trash2, color: AppColors.expired),
+                title: Text('Usuń lek', style: TextStyle(color: AppColors.expired)),
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.onDelete?.call();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -414,11 +494,11 @@ class _MedicineCardState extends State<MedicineCard>
               GestureDetector(
                 onTap: onEdit,
                 child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
                   child: Icon(
                     LucideIcons.squarePen,
-                    size: 16,
+                    size: 18,
                     color: theme.colorScheme.onSurface,
                   ),
                 ),
@@ -536,7 +616,7 @@ class _MedicineCardState extends State<MedicineCard>
             decoration: BoxDecoration(
               color: isDark ? Colors.transparent : theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
-              border: _isEditingNote ? Border.all(color: AppColors.primary, width: 2) : null,
+              // Brak border w trybie edycji
             ),
             child: _isEditingNote
                 ? Row(
@@ -565,10 +645,9 @@ class _MedicineCardState extends State<MedicineCard>
                       GestureDetector(
                         onTap: _saveNote,
                         child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 14),
-                          child: Icon(LucideIcons.check, size: 14, color: AppColors.primary),
+                          padding: const EdgeInsets.all(8),
+                          decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                          child: Icon(LucideIcons.check, size: 18, color: AppColors.primary),
                         ),
                       ),
                     ],
@@ -727,9 +806,9 @@ class _MedicineCardState extends State<MedicineCard>
             GestureDetector(
               onTap: () => _showEditPackageDateDialog(context, package),
               child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-                child: Icon(LucideIcons.calendarCog, size: 14, color: theme.colorScheme.onSurface),
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                child: Icon(LucideIcons.calendarCog, size: 18, color: theme.colorScheme.onSurface),
               ),
             ),
             const SizedBox(width: 4),
@@ -737,9 +816,9 @@ class _MedicineCardState extends State<MedicineCard>
             GestureDetector(
               onTap: () => _showEditRemainingDialog(context, package),
               child: Container(
-                padding: const EdgeInsets.all(6),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-                child: Icon(LucideIcons.blocks, size: 14, color: theme.colorScheme.onSurface),
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                child: Icon(LucideIcons.blocks, size: 18, color: theme.colorScheme.onSurface),
               ),
             ),
             const Spacer(),
@@ -748,9 +827,9 @@ class _MedicineCardState extends State<MedicineCard>
               GestureDetector(
                 onTap: () => _deletePackage(package),
                 child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-                  child: Icon(LucideIcons.trash2, size: 14, color: AppColors.expired),
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                  child: Icon(LucideIcons.trash2, size: 18, color: AppColors.expired),
                 ),
               ),
           ],
@@ -912,7 +991,7 @@ class _MedicineCardState extends State<MedicineCard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Przycisk "Więcej"
+        // Przycisk "Więcej" / "Mniej"
         GestureDetector(
           onTap: () => setState(() => _isMoreExpanded = !_isMoreExpanded),
           child: Container(
@@ -924,13 +1003,13 @@ class _MedicineCardState extends State<MedicineCard>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  LucideIcons.chevronsUpDown,
+                  _isMoreExpanded ? LucideIcons.chevronsDownUp : LucideIcons.chevronsUpDown,
                   size: 16,
                   color: theme.colorScheme.onSurface,
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Więcej',
+                  _isMoreExpanded ? 'Mniej' : 'Więcej',
                   style: TextStyle(
                     color: theme.colorScheme.onSurface,
                     fontSize: 13,
@@ -1002,13 +1081,13 @@ class _MedicineCardState extends State<MedicineCard>
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(width: 8),
+            const Spacer(),
             GestureDetector(
               onTap: () => _showEditCustomTagsDialog(context),
               child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 6),
-                child: Icon(LucideIcons.squarePen, size: 12, color: theme.colorScheme.onSurface),
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                child: Icon(LucideIcons.squarePen, size: 18, color: theme.colorScheme.onSurface),
               ),
             ),
           ],
@@ -1051,15 +1130,15 @@ class _MedicineCardState extends State<MedicineCard>
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(width: 8),
+            const Spacer(),
             GestureDetector(
               onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
               child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 6),
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
                 child: Icon(
                   _isLabelsOpen ? LucideIcons.chevronUp : LucideIcons.squarePen,
-                  size: 12,
+                  size: 18,
                   color: theme.colorScheme.onSurface,
                 ),
               ),
@@ -1089,14 +1168,28 @@ class _MedicineCardState extends State<MedicineCard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Usuń lek',
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurfaceVariant,
+        // CTA najpierw
+        NeuButton(
+          onPressed: widget.onDelete,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.trash2, size: 18, color: AppColors.expired),
+              const SizedBox(width: 8),
+              Text(
+                'Usuń lek z apteczki',
+                style: TextStyle(
+                  color: AppColors.expired,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
+        // Warning na końcu
+        const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
@@ -1120,26 +1213,6 @@ class _MedicineCardState extends State<MedicineCard>
             ],
           ),
         ),
-        const SizedBox(height: 8),
-        NeuButton(
-          onPressed: widget.onDelete,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(LucideIcons.trash2, size: 14, color: AppColors.expired),
-              const SizedBox(width: 6),
-              Text(
-                'Usuń cały lek z apteczki',
-                style: TextStyle(
-                  color: AppColors.expired,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
@@ -1149,17 +1222,17 @@ class _MedicineCardState extends State<MedicineCard>
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         NeuButton(
-          onPressed: widget.onEdit,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          onPressed: widget.onExpand,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(LucideIcons.squarePen, size: 14, color: AppColors.primary),
+              Icon(LucideIcons.chevronUp, size: 18, color: theme.colorScheme.onSurface),
               const SizedBox(width: 6),
               Text(
-                'Edytuj',
+                'Zwiń',
                 style: TextStyle(
-                  color: AppColors.primary,
+                  color: theme.colorScheme.onSurface,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
