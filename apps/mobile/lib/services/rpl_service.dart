@@ -1,4 +1,4 @@
-// rpl_service.dart v2.0.0 - Rejestr Produktow Leczniczych API
+// rpl_service.dart v2.1.0 - Rejestr Produktow Leczniczych API
 // Serwis do wyszukiwania lekow po nazwie i kodzie EAN/GTIN
 
 import 'dart:convert';
@@ -61,13 +61,31 @@ class RplDrugInfo {
     this.packaging,
   });
 
-  factory RplDrugInfo.fromJson(Map<String, dynamic> json) {
+  /// Tworzy RplDrugInfo z JSON.
+  /// [targetEan] - opcjonalny kod EAN do dopasowania opakowania z listy packages[].
+  factory RplDrugInfo.fromJson(Map<String, dynamic> json, {String? targetEan}) {
     // Parsowanie packaging z tablicy packages (jesli dostepna)
     String? packaging;
     final packages = json['packages'] as List<dynamic>?;
     if (packages != null && packages.isNotEmpty) {
-      final firstPackage = packages[0] as Map<String, dynamic>;
-      packaging = firstPackage['packaging'] as String?;
+      Map<String, dynamic>? matchedPackage;
+
+      // Jesli mamy targetEan, szukaj dopasowania po gtin
+      if (targetEan != null) {
+        final targetNormalized = _stripLeadingZeros(targetEan);
+        for (final pkg in packages) {
+          final pkgMap = pkg as Map<String, dynamic>;
+          final gtin = pkgMap['gtin'] as String?;
+          if (gtin != null && _stripLeadingZeros(gtin) == targetNormalized) {
+            matchedPackage = pkgMap;
+            break;
+          }
+        }
+      }
+
+      // Fallback do pierwszego opakowania
+      matchedPackage ??= packages[0] as Map<String, dynamic>;
+      packaging = matchedPackage['packaging'] as String?;
     }
 
     return RplDrugInfo(
@@ -146,6 +164,12 @@ class RplDrugInfo {
       return 'https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/$id/leaflet';
     }
     return null;
+  }
+
+  /// Usuwa wiodace zera z kodu EAN/GTIN dla porownania
+  /// Np. "05908229303481" -> "5908229303481"
+  static String _stripLeadingZeros(String code) {
+    return code.replaceFirst(RegExp('^0+'), '');
   }
 }
 
@@ -248,8 +272,9 @@ class RplService {
 
     if (result != null) {
       // Pobierz szczegoly (accessibilityCategory, packaging, activeSubstance)
+      // Przekaz normalizedEan do dopasowania opakowania po GTIN
       if (result.id != null) {
-        final details = await _fetchDetails(result.id!);
+        final details = await _fetchDetails(result.id!, targetEan: normalizedEan);
         if (details != null) {
           result = result.copyWith(
             accessibilityCategory: details.accessibilityCategory,
@@ -271,7 +296,8 @@ class RplService {
   }
 
   /// Pobiera szczegolowe informacje o leku po ID
-  Future<RplDrugInfo?> _fetchDetails(int id) async {
+  /// [targetEan] - kod EAN do dopasowania opakowania z listy packages[]
+  Future<RplDrugInfo?> _fetchDetails(int id, {String? targetEan}) async {
     final endpoint = Uri.parse('$_baseUrl/search/public/details/$id');
 
     try {
@@ -286,7 +312,7 @@ class RplService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final result = RplDrugInfo.fromJson(data);
+        final result = RplDrugInfo.fromJson(data, targetEan: targetEan);
         _log.info(
             'Fetched details: accessibilityCategory=${result.accessibilityCategory}, packaging=${result.packaging}');
         return result;
