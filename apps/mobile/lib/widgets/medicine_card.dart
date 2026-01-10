@@ -1,27 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:add_2_calendar/add_2_calendar.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
+import '../services/storage_service.dart';
+import '../services/pdf_cache_service.dart';
 import '../theme/app_theme.dart';
+import '../screens/pdf_viewer_screen.dart';
 import 'neumorphic/neumorphic.dart';
+import 'label_selector.dart';
+import 'leaflet_search_sheet.dart';
+import 'filters_sheet.dart' show tagCategories;
 
-/// Karta leku - styl neumorficzny z animacjami tap
-/// Obsługuje Light/Dark mode z gradientami statusu
+/// Karta leku - styl neumorficzny z akordeonem
+/// v2.0 - zintegrowane funkcje z bottomSheet
 class MedicineCard extends StatefulWidget {
   final Medicine medicine;
   final List<UserLabel> labels;
-  final VoidCallback? onTap;
+  final StorageService? storageService;
   final VoidCallback? onExpand;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final Function(String)? onTagTap;
+  final Function(String)? onLabelTap;
+  final VoidCallback? onMedicineUpdated;
   final bool isCompact;
-  final bool isDuplicate; // Nowe: oznaczenie duplikatu
+  final bool isDuplicate;
 
   const MedicineCard({
     super.key,
     required this.medicine,
     this.labels = const [],
-    this.onTap,
+    this.storageService,
     this.onExpand,
+    this.onEdit,
+    this.onDelete,
+    this.onTagTap,
+    this.onLabelTap,
+    this.onMedicineUpdated,
     this.isCompact = false,
     this.isDuplicate = false,
   });
@@ -35,10 +52,19 @@ class _MedicineCardState extends State<MedicineCard>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   bool _isPressed = false;
+  bool _isMoreExpanded = false; // Akordeon "Więcej"
+  bool _isLabelsOpen = false;
+  late Medicine _medicine;
+
+  // Inline note editing
+  bool _isEditingNote = false;
+  late TextEditingController _noteController;
+  late FocusNode _noteFocusNode;
 
   @override
   void initState() {
     super.initState();
+    _medicine = widget.medicine;
     _controller = AnimationController(
       duration: NeuDecoration.tapDuration,
       vsync: this,
@@ -47,16 +73,53 @@ class _MedicineCardState extends State<MedicineCard>
       begin: 1.0,
       end: NeuDecoration.tapScale,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+
+    _noteController = TextEditingController(text: _medicine.notatka ?? '');
+    _noteFocusNode = FocusNode();
+    _noteFocusNode.addListener(_onNoteFocusChange);
+  }
+
+  @override
+  void didUpdateWidget(covariant MedicineCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.medicine.id != widget.medicine.id) {
+      _medicine = widget.medicine;
+      _noteController.text = _medicine.notatka ?? '';
+      _isMoreExpanded = false;
+      _isLabelsOpen = false;
+    }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _noteController.dispose();
+    _noteFocusNode.removeListener(_onNoteFocusChange);
+    _noteFocusNode.dispose();
     super.dispose();
   }
 
+  void _onNoteFocusChange() {
+    if (!_noteFocusNode.hasFocus && _isEditingNote) {
+      _saveNote();
+    }
+  }
+
+  Future<void> _saveNote() async {
+    final newNote = _noteController.text.trim();
+    if (newNote != (_medicine.notatka ?? '')) {
+      final updatedMedicine = _medicine.copyWith(
+        notatka: newNote.isEmpty ? null : newNote,
+      );
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+    }
+    setState(() => _isEditingNote = false);
+  }
+
   void _handleTapDown(TapDownDetails details) {
-    if (widget.onTap != null) {
+    if (widget.onExpand != null) {
       setState(() => _isPressed = true);
       _controller.forward();
       HapticFeedback.lightImpact();
@@ -78,282 +141,53 @@ class _MedicineCardState extends State<MedicineCard>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final status = widget.medicine.expiryStatus;
+    final status = _medicine.expiryStatus;
     final gradient = _getGradient(status, isDark);
     final statusColor = _getStatusColor(status);
-    final statusLabel = _getStatusLabel(status);
     final statusIcon = _getStatusIcon(status);
 
     // Pobierz etykiety dla tego leku
     final medicineLabels = widget.labels
-        .where((l) => widget.medicine.labels.contains(l.id))
+        .where((l) => _medicine.labels.contains(l.id))
         .toList();
-
-    // Unified interaction: Tap = Expand/Collapse (if available), Long Press = Details
-    // isCompact=false & onExpand==null (Full View) => Tap does nothing.
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: GestureDetector(
-        onTapDown: _handleTapDown,
-        onTapUp: _handleTapUp,
-        onTapCancel: _handleTapCancel,
-        onTap: widget.onExpand, // Tap toggles accordion (if enabled)
-        onLongPress: widget.onTap, // Long press opens details
+        onTapDown: widget.isCompact ? _handleTapDown : null,
+        onTapUp: widget.isCompact ? _handleTapUp : null,
+        onTapCancel: widget.isCompact ? _handleTapCancel : null,
+        onTap: widget.isCompact ? widget.onExpand : null,
         child: AnimatedBuilder(
           animation: _scaleAnimation,
           builder: (context, child) =>
               Transform.scale(scale: _scaleAnimation.value, child: child),
           child: AnimatedContainer(
-            duration: NeuDecoration.tapDuration,
-            decoration: _isPressed
-                ? _getPressedDecoration(isDark, gradient, statusColor)
-                : NeuDecoration.statusCard(
-                    isDark: isDark,
-                    gradient: gradient,
-                    radius: 20,
-                  ),
+            duration: const Duration(milliseconds: 200),
+            decoration: widget.isCompact
+                ? (_isPressed
+                    ? _getPressedDecoration(isDark, gradient, statusColor)
+                    : NeuDecoration.statusCard(
+                        isDark: isDark,
+                        gradient: gradient,
+                        radius: 20,
+                      ))
+                : NeuDecoration.pressed(isDark: isDark, radius: 20),
             child: Padding(
               padding: EdgeInsets.all(widget.isCompact ? 12 : 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Nagłówek: [Nazwa + Etykiety] align left | [Chevron] align right
-                  // W trybie split touch - cały nagłówek reaguje na onExpand
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Lewa strona: Nazwa + Ikona duplikatu + Etykiety
-                      Expanded(
-                        child: Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            // Nazwa leku
-                            Text(
-                              widget.medicine.nazwa ?? 'Nieznany lek',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface,
-                                fontSize: widget.isCompact ? 15 : null,
-                              ),
-                            ),
-                            // Ikona duplikatu
-                            if (widget.isDuplicate)
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withAlpha(30),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Icon(
-                                  LucideIcons.copy,
-                                  size: 14,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            // Etykiety
-                            ...medicineLabels
-                                .take(3)
-                                .map((label) => _buildBadge(label, isDark)),
-                            if (medicineLabels.length > 3)
-                              _buildBadgeCount(
-                                medicineLabels.length - 3,
-                                isDark,
-                              ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Prawa strona: Chevron (w compact lub expanded accordion)
-                      // W trybie Full View (onExpand == null) - PUSTO
-                      if (widget.isCompact)
-                        // Strzałka rozwijania akordeonu
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          child: Icon(
-                            LucideIcons.chevronDown,
-                            size: 16,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        )
-                      else if (widget.onExpand != null)
-                        // Strzałka zwijania akordeonu (gdy karta rozwinięta)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          child: Icon(
-                            LucideIcons.chevronUp,
-                            size: 16,
-                            color: theme.colorScheme.onSurface,
-                          ),
-                        ),
-                    ],
-                  ),
+                  // Nagłówek: [Nazwa + Etykiety] | [Chevron]
+                  _buildHeader(theme, isDark, medicineLabels, statusColor, statusIcon),
 
-                  // Compact: opis (left) + status icon (right) - bez daty
-                  if (widget.isCompact) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        // Opis z fade-out po prawej
-                        Expanded(
-                          child: ShaderMask(
-                            shaderCallback: (bounds) => LinearGradient(
-                              colors: [
-                                Colors.white,
-                                Colors.white,
-                                Colors.white.withValues(alpha: 0),
-                              ],
-                              stops: const [0.0, 0.85, 1.0],
-                            ).createShader(bounds),
-                            blendMode: BlendMode.dstIn,
-                            child: Text(
-                              widget.medicine.opis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Status icon (zamiast daty)
-                        if (statusLabel != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              statusIcon,
-                              size: 12,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ] else ...[
-                    // Full view
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
+                  // Compact: opis + status
+                  if (widget.isCompact)
+                    _buildCompactContent(theme, statusColor, statusIcon),
 
-                        // Opis
-                        Text(
-                          widget.medicine.opis,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        // #tags - styl neumorficzny
-                        if (widget.medicine.tagi.isNotEmpty)
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: widget.medicine.tagi.take(4).map((tag) {
-                              return _buildTag(tag, isDark, theme);
-                            }).toList(),
-                          ),
-
-                        // Notatka jeśli istnieje - styl neumorficzny basin
-                        if (widget.medicine.notatka != null &&
-                            widget.medicine.notatka!.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: NeuDecoration.basin(
-                              isDark: isDark,
-                              radius: 12,
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  LucideIcons.stickyNote,
-                                  size: 14,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    widget.medicine.notatka!,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-
-                        // Data ważności + Badge statusu (align right)
-                        if (widget.medicine.terminWaznosci != null) ...[
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.only(left: 8),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  LucideIcons.calendar,
-                                  size: 14,
-                                  color: statusColor,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Ważny do: ${_formatDate(widget.medicine.terminWaznosci!)}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: statusColor,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                                const Spacer(),
-                                // Badge statusu
-                                if (statusLabel != null)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: statusColor,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      statusIcon,
-                                      size: 12,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
+                  // Expanded: pełna treść
+                  if (!widget.isCompact)
+                    _buildExpandedContent(theme, isDark, statusColor),
                 ],
               ),
             ),
@@ -363,37 +197,1624 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  /// Dekoracja dla stanu pressed - subtelniejsze cienie
-  /// Dekoracja dla stanu pressed - skalowanie załatwia sprawę,
-  /// ale możemy zmniejszyć cień.
-  BoxDecoration _getPressedDecoration(
+  Widget _buildHeader(
+    ThemeData theme,
     bool isDark,
-    LinearGradient gradient,
+    List<UserLabel> medicineLabels,
+    Color statusColor,
+    IconData statusIcon,
+  ) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Lewa strona: Nazwa + Ikona duplikatu + Etykiety (tylko w compact)
+        Expanded(
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              // Nazwa leku
+              Text(
+                _medicine.nazwa ?? 'Nieznany lek',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                  fontSize: widget.isCompact ? 15 : 18,
+                ),
+              ),
+              // Ikona duplikatu
+              if (widget.isDuplicate)
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withAlpha(30),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(
+                    LucideIcons.copy,
+                    size: 14,
+                    color: AppColors.primary,
+                  ),
+                ),
+              // Etykiety tylko w compact mode
+              if (widget.isCompact) ...[
+                ...medicineLabels.take(3).map((label) => _buildBadge(label, isDark)),
+                if (medicineLabels.length > 3)
+                  _buildBadgeCount(medicineLabels.length - 3, isDark),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        // Chevron
+        if (widget.isCompact)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Icon(
+              LucideIcons.chevronDown,
+              size: 16,
+              color: theme.colorScheme.onSurface,
+            ),
+          )
+        else
+          GestureDetector(
+            onTap: widget.onExpand,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+              child: Icon(
+                LucideIcons.chevronUp,
+                size: 16,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildCompactContent(ThemeData theme, Color statusColor, IconData statusIcon) {
+    return Column(
+      children: [
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            // Opis z fade-out
+            Expanded(
+              child: ShaderMask(
+                shaderCallback: (bounds) => LinearGradient(
+                  colors: [
+                    Colors.white,
+                    Colors.white,
+                    Colors.white.withValues(alpha: 0),
+                  ],
+                  stops: const [0.0, 0.85, 1.0],
+                ).createShader(bounds),
+                blendMode: BlendMode.dstIn,
+                child: Text(
+                  _medicine.opis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ),
+            // Status icon
+            if (_medicine.terminWaznosci != null) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: statusColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(statusIcon, size: 12, color: Colors.white),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildExpandedContent(ThemeData theme, bool isDark, Color statusColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 12),
+
+        // === OPIS ===
+        _buildSection(
+          theme,
+          isDark,
+          title: 'Opis',
+          onEdit: () => _showEditDescriptionDialog(context),
+          child: Text(
+            _medicine.opis,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ),
+
+        // === WSKAZANIA ===
+        if (_medicine.wskazania.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _buildSection(
+            theme,
+            isDark,
+            title: 'Wskazania',
+            onEdit: () => _showEditWskazaniaDialog(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _medicine.wskazania
+                  .map((w) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text('• $w', style: theme.textTheme.bodySmall),
+                      ))
+                  .toList(),
+            ),
+          ),
+        ],
+
+        // === ULOTKA ===
+        const SizedBox(height: 16),
+        _buildLeafletSection(context, theme, isDark),
+
+        // === NOTATKA ===
+        const SizedBox(height: 16),
+        _buildNoteSection(context, theme, isDark),
+
+        // === TERMIN WAŻNOŚCI ===
+        const SizedBox(height: 16),
+        _buildPackagesSection(context, theme, isDark, statusColor),
+
+        // === KALKULATOR ZAPASU ===
+        const SizedBox(height: 16),
+        _buildSupplyCalculatorSection(context, theme, isDark),
+
+        // === WIĘCEJ (akordeon) ===
+        const SizedBox(height: 16),
+        _buildMoreSection(context, theme, isDark),
+
+        // === PRZYCISKI AKCJI ===
+        const SizedBox(height: 16),
+        _buildActionButtons(context, theme, isDark),
+      ],
+    );
+  }
+
+  // ==================== SEKCJE ====================
+
+  Widget _buildSection(
+    ThemeData theme,
+    bool isDark, {
+    required String title,
+    required Widget child,
+    VoidCallback? onEdit,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: child),
+            if (onEdit != null) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: onEdit,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                  child: Icon(
+                    LucideIcons.squarePen,
+                    size: 16,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLeafletSection(BuildContext context, ThemeData theme, bool isDark) {
+    final hasLeaflet = _medicine.leafletUrl != null && _medicine.leafletUrl!.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Ulotka',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 6),
+        if (hasLeaflet)
+          Row(
+            children: [
+              NeuButton(
+                onPressed: () => _showPdfViewer(context),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(LucideIcons.fileText, size: 14, color: AppColors.valid),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Pokaż PDF',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _detachLeaflet,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                  child: Icon(LucideIcons.pinOff, size: 16, color: AppColors.expired),
+                ),
+              ),
+            ],
+          )
+        else
+          NeuButton(
+            onPressed: () => _showLeafletSearch(context),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.fileSearch,
+                  size: 14,
+                  color: theme.colorScheme.onSurface,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Znajdź ulotkę',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildNoteSection(BuildContext context, ThemeData theme, bool isDark) {
+    final hasNote = _medicine.notatka?.isNotEmpty == true;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Notatka',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 6),
+        GestureDetector(
+          onTap: () {
+            if (!_isEditingNote) {
+              setState(() {
+                _isEditingNote = true;
+                _noteController.text = _medicine.notatka ?? '';
+              });
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _noteFocusNode.requestFocus();
+              });
+            }
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.transparent : theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(8),
+              border: _isEditingNote ? Border.all(color: AppColors.primary, width: 2) : null,
+            ),
+            child: _isEditingNote
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _noteController,
+                          focusNode: _noteFocusNode,
+                          maxLines: null,
+                          minLines: 1,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                            hintText: 'Wpisz notatkę...',
+                          ),
+                          style: TextStyle(
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 13,
+                          ),
+                          onSubmitted: (_) => _saveNote(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _saveNote,
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 14),
+                          child: Icon(LucideIcons.check, size: 14, color: AppColors.primary),
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    hasNote ? _medicine.notatka! : 'Kliknij, aby dodać notatkę',
+                    style: TextStyle(
+                      color: hasNote
+                          ? theme.colorScheme.onSurface
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontStyle: hasNote ? FontStyle.normal : FontStyle.italic,
+                      fontSize: 13,
+                    ),
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPackagesSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
     Color statusColor,
   ) {
-    // W stanie pressed używamy po prostu statusCard ale z mniejszymi cieniami
-    // (symulowanymi przz NeuDecoration.statusCard parametry? Nie mamy ich tam).
-    // Więc zwracamy to samo, ale scaleAnimation zrobi robotę.
-    // Ewentualnie możemy zwrócić "płaską" wersję bez cienia.
+    final packages = _medicine.sortedPackages;
+    final packageCount = _medicine.packageCount;
 
-    // Używamy helpera z NeuDecoration.statusCard ale modyfikujemy shadow ręcznie
-    // dla efektu "wciśnięcia" (mniejszy blur/distance)
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Termin ważności',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (packageCount > 0) ...[
+              Text(
+                ' - $packageCount op.',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
 
+        if (packages.isEmpty)
+          _buildEmptyPackageState(context, theme, isDark)
+        else
+          ...packages.map((package) {
+            final pkgStatus = _getPackageStatus(package);
+            final pkgColor = _getStatusColor(pkgStatus);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: _buildPackageRow(context, theme, isDark, package, pkgColor),
+            );
+          }),
+
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () => _showAddPackageDialog(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(LucideIcons.packagePlus, size: 14, color: theme.colorScheme.onSurface),
+                const SizedBox(width: 6),
+                Text(
+                  'Dodaj opakowanie',
+                  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyPackageState(BuildContext context, ThemeData theme, bool isDark) {
+    return GestureDetector(
+      onTap: () => _showAddPackageDialog(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.calendarPlus, size: 14, color: theme.colorScheme.onSurfaceVariant),
+            const SizedBox(width: 6),
+            Text(
+              'Ustaw termin ważności',
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPackageRow(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    MedicinePackage package,
+    Color packageColor,
+  ) {
+    final pkgStatus = _getPackageStatus(package);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            // Badge z datą
+            GestureDetector(
+              onTap: () => _showEditPackageDateDialog(context, package),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: packageColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(_getStatusIcon(pkgStatus), size: 12, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Text(
+                      package.displayDate,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Edytuj datę
+            GestureDetector(
+              onTap: () => _showEditPackageDateDialog(context, package),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(LucideIcons.calendarCog, size: 14, color: theme.colorScheme.onSurface),
+              ),
+            ),
+            const SizedBox(width: 4),
+            // Ilość
+            GestureDetector(
+              onTap: () => _showEditRemainingDialog(context, package),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(LucideIcons.blocks, size: 14, color: theme.colorScheme.onSurface),
+              ),
+            ),
+            const Spacer(),
+            // Usuń (tylko jeśli >1 opakowanie)
+            if (_medicine.packages.length > 1)
+              GestureDetector(
+                onTap: () => _deletePackage(package),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                  child: Icon(LucideIcons.trash2, size: 14, color: AppColors.expired),
+                ),
+              ),
+          ],
+        ),
+        // Status opakowania
+        Padding(
+          padding: const EdgeInsets.only(left: 10, top: 2),
+          child: GestureDetector(
+            onTap: () => _showEditRemainingDialog(context, package),
+            child: Text(
+              '└─ ${package.remainingDescription}',
+              style: TextStyle(
+                fontSize: 11,
+                color: theme.colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSupplyCalculatorSection(BuildContext context, ThemeData theme, bool isDark) {
+    final totalPieces = _medicine.totalPieceCount;
+    final supplyEndDate = _medicine.calculateSupplyEndDate();
+    final canCalculate = totalPieces > 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(LucideIcons.calendarHeart, size: 16, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Text(
+              'Do kiedy wystarczy?',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        if (!canCalculate)
+          Text(
+            'Uzupełnij ilość sztuk w opakowaniach',
+            style: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+              fontSize: 12,
+            ),
+          )
+        else if (supplyEndDate == null)
+          GestureDetector(
+            onTap: () => _showSetDailyIntakeDialog(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(LucideIcons.pillBottle, size: 14, color: theme.colorScheme.onSurface),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Ustaw dzienne zużycie',
+                    style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          _buildSupplyResult(context, theme, isDark, supplyEndDate),
+
+        const SizedBox(height: 4),
+        Text(
+          'Kalkulacja szacunkowa. Nie zastępuje zaleceń lekarza.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 10,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSupplyResult(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    DateTime endDate,
+  ) {
+    final now = DateTime.now();
+    final daysRemaining = endDate.difference(now).inDays;
+    final formattedDate =
+        '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
+
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () => _showSetDailyIntakeDialog(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.calendarOff,
+                  size: 14,
+                  color: daysRemaining <= 7 ? AppColors.expired : AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: formattedDate,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: daysRemaining <= 7
+                              ? AppColors.expired
+                              : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      TextSpan(
+                        text: ' (za $daysRemaining dni)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        GestureDetector(
+          onTap: () => _addToCalendar(endDate),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            child: Icon(LucideIcons.calendarPlus, size: 16, color: AppColors.primary),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMoreSection(BuildContext context, ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Przycisk "Więcej"
+        GestureDetector(
+          onTap: () => setState(() => _isMoreExpanded = !_isMoreExpanded),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: _isMoreExpanded
+                ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
+                : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.chevronsUpDown,
+                  size: 16,
+                  color: theme.colorScheme.onSurface,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Więcej',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Rozwinięta zawartość
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          crossFadeState:
+              _isMoreExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          firstChild: const SizedBox.shrink(),
+          secondChild: Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // === TAGI ===
+                _buildTagsSection(context, theme, isDark),
+
+                // === ETYKIETY ===
+                const SizedBox(height: 12),
+                _buildLabelsSection(context, theme, isDark),
+
+                // === DATA DODANIA ===
+                const SizedBox(height: 12),
+                Text(
+                  'Dodano',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  _formatDate(_medicine.dataDodania),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+
+                // === USUŃ LEK ===
+                const SizedBox(height: 16),
+                _buildDeleteSection(context, theme, isDark),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTagsSection(BuildContext context, ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              '#Tags',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => _showEditCustomTagsDialog(context),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 6),
+                child: Icon(LucideIcons.squarePen, size: 12, color: theme.colorScheme.onSurface),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (_medicine.tagi.isEmpty)
+          Text(
+            'Brak tagów',
+            style: TextStyle(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+              fontSize: 12,
+            ),
+          )
+        else
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: _medicine.tagi.map((tag) {
+              return GestureDetector(
+                onTap: () => widget.onTagTap?.call(tag),
+                child: _buildTag(tag, isDark, theme),
+              );
+            }).toList(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildLabelsSection(BuildContext context, ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Etykiety',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 6),
+                child: Icon(
+                  _isLabelsOpen ? LucideIcons.chevronUp : LucideIcons.squarePen,
+                  size: 12,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (widget.storageService != null)
+          LabelSelector(
+            storageService: widget.storageService!,
+            selectedLabelIds: _medicine.labels,
+            isOpen: _isLabelsOpen,
+            onToggle: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
+            onLabelTap: (labelId) => widget.onLabelTap?.call(labelId),
+            onChanged: (newLabelIds) async {
+              final updatedMedicine = _medicine.copyWith(labels: newLabelIds);
+              await widget.storageService?.saveMedicine(updatedMedicine);
+              setState(() => _medicine = updatedMedicine);
+              widget.onMedicineUpdated?.call();
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildDeleteSection(BuildContext context, ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Usuń lek',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.expiringSoon.withAlpha(20)
+                : AppColors.expiringSoon.withAlpha(30),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: AppColors.expiringSoon.withAlpha(50)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(LucideIcons.lightbulb, size: 14, color: AppColors.expiringSoon),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Aby usunąć jedno opakowanie, przejdź do sekcji "Termin ważności"',
+                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        NeuButton(
+          onPressed: widget.onDelete,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.trash2, size: 14, color: AppColors.expired),
+              const SizedBox(width: 6),
+              Text(
+                'Usuń cały lek z apteczki',
+                style: TextStyle(
+                  color: AppColors.expired,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context, ThemeData theme, bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        NeuButton(
+          onPressed: widget.onEdit,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.squarePen, size: 14, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Text(
+                'Edytuj',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==================== DIALOGI ====================
+
+  Future<void> _showEditDescriptionDialog(BuildContext context) async {
+    final controller = TextEditingController(text: _medicine.opis);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edytuj opis'),
+        content: TextField(
+          controller: controller,
+          maxLines: 5,
+          decoration: const InputDecoration(
+            hintText: 'Opis działania leku...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final updatedMedicine = _medicine.copyWith(opis: result);
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+    }
+  }
+
+  Future<void> _showEditWskazaniaDialog(BuildContext context) async {
+    final controller = TextEditingController(text: _medicine.wskazania.join(', '));
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edytuj wskazania'),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            hintText: 'Wskazania oddzielone przecinkami...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      final wskazania = result
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+      final updatedMedicine = _medicine.copyWith(wskazania: wskazania);
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+    }
+  }
+
+  Future<void> _showEditCustomTagsDialog(BuildContext context) async {
+    final categorizedTags = tagCategories.values.expand((e) => e).toSet();
+    final customTags = _medicine.tagi.where((t) => !categorizedTags.contains(t)).toList();
+    final controller = TextEditingController(text: customTags.join(', '));
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edytuj własne tagi'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tagi spoza listy kontrolowanej. Oddziel przecinkami.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              maxLines: 2,
+              decoration: const InputDecoration(
+                hintText: 'np. domowe, mama, dziecko...',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      final systemTags = _medicine.tagi.where((t) => categorizedTags.contains(t)).toList();
+      final newCustomTags = result
+          .split(',')
+          .map((s) => s.trim().toLowerCase())
+          .where((s) => s.isNotEmpty)
+          .toList();
+
+      final updatedMedicine = _medicine.copyWith(tagi: [...systemTags, ...newCustomTags]);
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+    }
+  }
+
+  Future<void> _showAddPackageDialog(BuildContext context) async {
+    final currentYear = DateTime.now().year;
+    int selectedMonth = DateTime.now().month;
+    int selectedYear = currentYear + 1;
+    bool useSameDate = false;
+    bool useSameQuantity = false;
+
+    final firstPackage = _medicine.packages.isNotEmpty ? _medicine.sortedPackages.first : null;
+    final hasQuantity = firstPackage?.remainingDescription != null;
+
+    final result = await showDialog<Map<String, dynamic>?>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Dodaj opakowanie'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_medicine.packages.isNotEmpty) ...[
+                CheckboxListTile(
+                  title: Text('Taka sama data (${_medicine.sortedPackages.first.displayDate})'),
+                  value: useSameDate,
+                  onChanged: (v) => setDialogState(() => useSameDate = v ?? false),
+                  contentPadding: EdgeInsets.zero,
+                ),
+                if (hasQuantity)
+                  CheckboxListTile(
+                    title: Text('Taka sama ilość (${firstPackage!.remainingDescription})'),
+                    value: useSameQuantity,
+                    onChanged: (v) => setDialogState(() => useSameQuantity = v ?? false),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                const SizedBox(height: 12),
+              ],
+              if (!useSameDate)
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: selectedMonth,
+                        decoration: const InputDecoration(
+                          labelText: 'Miesiąc',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: List.generate(12, (i) => i + 1)
+                            .map((m) => DropdownMenuItem(
+                                  value: m,
+                                  child: Text(m.toString().padLeft(2, '0')),
+                                ))
+                            .toList(),
+                        onChanged: (v) => setDialogState(() => selectedMonth = v!),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        value: selectedYear,
+                        decoration: const InputDecoration(
+                          labelText: 'Rok',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: List.generate(15, (i) => currentYear + i)
+                            .map((y) => DropdownMenuItem(value: y, child: Text(y.toString())))
+                            .toList(),
+                        onChanged: (v) => setDialogState(() => selectedYear = v!),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () {
+                DateTime date;
+                if (useSameDate && _medicine.packages.isNotEmpty) {
+                  date = _medicine.sortedPackages.first.dateTime ??
+                      DateTime(selectedYear, selectedMonth + 1, 0);
+                } else {
+                  date = DateTime(selectedYear, selectedMonth + 1, 0);
+                }
+                Navigator.pop(context, {'date': date, 'useSameQuantity': useSameQuantity});
+              },
+              child: const Text('Dodaj'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null) {
+      final date = result['date'] as DateTime;
+      final copyQuantity = result['useSameQuantity'] as bool;
+
+      MedicinePackage newPackage;
+      if (copyQuantity && firstPackage != null) {
+        newPackage = MedicinePackage(
+          expiryDate: date.toIso8601String().split('T')[0],
+          pieceCount: firstPackage.pieceCount,
+          percentRemaining: firstPackage.percentRemaining,
+        );
+      } else {
+        newPackage = MedicinePackage(expiryDate: date.toIso8601String().split('T')[0]);
+      }
+
+      final updatedPackages = [..._medicine.packages, newPackage];
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+    }
+  }
+
+  Future<void> _showEditPackageDateDialog(
+    BuildContext context,
+    MedicinePackage package,
+  ) async {
+    DateTime currentDate = package.dateTime ?? DateTime.now().add(const Duration(days: 365));
+    int selectedMonth = currentDate.month;
+    int selectedYear = currentDate.year;
+    final currentYear = DateTime.now().year;
+
+    final result = await showDialog<DateTime>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Edytuj termin ważności'),
+          content: Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  value: selectedMonth,
+                  decoration: const InputDecoration(
+                    labelText: 'Miesiąc',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: List.generate(12, (i) => i + 1)
+                      .map((m) => DropdownMenuItem(
+                            value: m,
+                            child: Text(m.toString().padLeft(2, '0')),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setDialogState(() => selectedMonth = v!),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: DropdownButtonFormField<int>(
+                  value: selectedYear,
+                  decoration: const InputDecoration(
+                    labelText: 'Rok',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: List.generate(15, (i) => currentYear + i)
+                      .map((y) => DropdownMenuItem(value: y, child: Text(y.toString())))
+                      .toList(),
+                  onChanged: (v) => setDialogState(() => selectedYear = v!),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final lastDay = DateTime(selectedYear, selectedMonth + 1, 0);
+                Navigator.pop(context, lastDay);
+              },
+              child: const Text('Zapisz'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null) {
+      final updatedPackage = package.copyWith(expiryDate: result.toIso8601String().split('T')[0]);
+      final updatedPackages =
+          _medicine.packages.map((p) => p.id == package.id ? updatedPackage : p).toList();
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+    }
+  }
+
+  Future<void> _showEditRemainingDialog(
+    BuildContext context,
+    MedicinePackage package,
+  ) async {
+    bool isOpen = package.isOpen;
+    int valueMode = package.pieceCount != null
+        ? 1
+        : package.percentRemaining != null
+            ? 2
+            : 0;
+    final pieceController = TextEditingController(text: package.pieceCount?.toString() ?? '');
+    final percentController =
+        TextEditingController(text: package.percentRemaining?.toString() ?? '');
+
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Określ pozostałą ilość'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Status opakowania',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Zamknięte'),
+                    selected: !isOpen,
+                    onSelected: (_) => setDialogState(() {
+                      isOpen = false;
+                      if (valueMode == 2) valueMode = 0;
+                    }),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Otwarte'),
+                    selected: isOpen,
+                    onSelected: (_) => setDialogState(() => isOpen = true),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Ilość (opcjonalne)',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Brak'),
+                    selected: valueMode == 0,
+                    onSelected: (_) => setDialogState(() => valueMode = 0),
+                  ),
+                  ChoiceChip(
+                    label: const Text('Sztuki'),
+                    selected: valueMode == 1,
+                    onSelected: (_) => setDialogState(() => valueMode = 1),
+                  ),
+                  if (isOpen)
+                    ChoiceChip(
+                      label: const Text('Procent'),
+                      selected: valueMode == 2,
+                      onSelected: (_) => setDialogState(() => valueMode = 2),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (valueMode == 1)
+                TextField(
+                  controller: pieceController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: isOpen ? 'Pozostało sztuk' : 'Ilość sztuk',
+                    hintText: 'np. 30',
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+              if (valueMode == 2)
+                TextField(
+                  controller: percentController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Pozostało procent',
+                    hintText: 'np. 50',
+                    suffixText: '%',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context, {
+                  'isOpen': isOpen,
+                  'pieceCount': valueMode == 1 ? int.tryParse(pieceController.text) : null,
+                  'percentRemaining':
+                      valueMode == 2 ? int.tryParse(percentController.text) : null,
+                });
+              },
+              child: const Text('Zapisz'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (result != null) {
+      final updatedPackage = MedicinePackage(
+        id: package.id,
+        expiryDate: package.expiryDate,
+        isOpen: result['isOpen'] as bool,
+        pieceCount: result['pieceCount'] as int?,
+        percentRemaining: result['percentRemaining'] as int?,
+      );
+      final updatedPackages =
+          _medicine.packages.map((p) => p.id == package.id ? updatedPackage : p).toList();
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+    }
+  }
+
+  Future<void> _deletePackage(MedicinePackage package) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Usuń opakowanie?'),
+        content: Text('Czy na pewno chcesz usunąć opakowanie z datą ${package.displayDate}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.expired),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final updatedPackages = _medicine.packages.where((p) => p.id != package.id).toList();
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+    }
+  }
+
+  Future<void> _showSetDailyIntakeDialog(BuildContext context) async {
+    final controller = TextEditingController(text: _medicine.dailyIntake?.toString() ?? '');
+
+    final result = await showDialog<int>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Dzienne zużycie'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Łączna ilość sztuk: ${_medicine.totalPieceCount}',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Ile tabletek dziennie?',
+                hintText: 'np. 2',
+                suffixText: 'szt./dzień',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = int.tryParse(controller.text);
+              Navigator.pop(context, value);
+            },
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result > 0) {
+      final updated = _medicine.copyWith(dailyIntake: result);
+      await widget.storageService?.saveMedicine(updated);
+      setState(() => _medicine = updated);
+      widget.onMedicineUpdated?.call();
+    }
+  }
+
+  Future<void> _addToCalendar(DateTime endDate) async {
+    final medicineName = _medicine.nazwa ?? 'Lek';
+    final event = Event(
+      title: '$medicineName - koniec',
+      description: 'Przypomnienie: koniec zapasu leku "$medicineName".',
+      startDate: endDate,
+      endDate: endDate.add(const Duration(hours: 1)),
+      allDay: true,
+    );
+    await Add2Calendar.addEvent2Cal(event);
+  }
+
+  void _showLeafletSearch(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (_, scrollController) => LeafletSearchSheet(
+            initialQuery: _medicine.nazwa ?? '',
+            onLeafletSelected: (url) => _attachLeaflet(url),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _attachLeaflet(String url) async {
+    final updatedMedicine = _medicine.copyWith(leafletUrl: url);
+    await widget.storageService?.saveMedicine(updatedMedicine);
+    setState(() => _medicine = updatedMedicine);
+    widget.onMedicineUpdated?.call();
+
+    final cacheService = PdfCacheService();
+    cacheService.getPdfFile(url, _medicine.id);
+  }
+
+  Future<void> _detachLeaflet() async {
+    final cacheService = PdfCacheService();
+    await cacheService.clearCache(_medicine.id);
+
+    final updatedMedicine = Medicine(
+      id: _medicine.id,
+      nazwa: _medicine.nazwa,
+      opis: _medicine.opis,
+      wskazania: _medicine.wskazania,
+      tagi: _medicine.tagi,
+      labels: _medicine.labels,
+      notatka: _medicine.notatka,
+      terminWaznosci: _medicine.terminWaznosci,
+      leafletUrl: null,
+      dataDodania: _medicine.dataDodania,
+      packages: _medicine.packages,
+      dailyIntake: _medicine.dailyIntake,
+    );
+    await widget.storageService?.saveMedicine(updatedMedicine);
+    setState(() => _medicine = updatedMedicine);
+    widget.onMedicineUpdated?.call();
+  }
+
+  void _showPdfViewer(BuildContext context) {
+    if (_medicine.leafletUrl == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PdfViewerScreen(
+          url: _medicine.leafletUrl!,
+          title: _medicine.nazwa ?? 'Ulotka leku',
+          medicineId: _medicine.id,
+        ),
+      ),
+    );
+  }
+
+  // ==================== HELPERS ====================
+
+  BoxDecoration _getPressedDecoration(bool isDark, LinearGradient gradient, Color statusColor) {
     return BoxDecoration(
       gradient: gradient,
       borderRadius: BorderRadius.circular(20),
-      // Brak cienia lub szczątkowy cień "inner" (trudne na gradiencie)
-      // Zostawiamy czyste, scale załatwia wizualny feedback
       boxShadow: [],
     );
   }
 
-  /// Badge etykiety - kolorowe tło z białym tekstem
   Widget _buildBadge(UserLabel label, bool isDark) {
     final colorInfo = labelColors[label.color]!;
     final bgColor = Color(colorInfo.hexValue);
-
-    // Określ kolor tekstu na podstawie jasności tła
     final textColor = _getContrastColor(bgColor);
 
     return Container(
@@ -414,7 +1835,6 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  /// Badge count indicator when more than 2 labels
   Widget _buildBadgeCount(int count, bool isDark) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
@@ -433,7 +1853,6 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  /// Tag - prosty Badge (transparent bg, gray outline, # inny kolor)
   Widget _buildTag(String tag, bool isDark, ThemeData theme) {
     final borderColor = isDark ? Colors.grey.shade600 : Colors.grey.shade400;
     return Container(
@@ -470,35 +1889,24 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  /// Zwraca kontrastowy kolor tekstu dla danego tła
   Color _getContrastColor(Color background) {
-    // Oblicz jasność tła
     final luminance = background.computeLuminance();
-    // Dla jasnych kolorów (yellow, orange) użyj ciemnego tekstu
     return luminance > 0.5 ? const Color(0xFF1e293b) : Colors.white;
   }
 
   LinearGradient _getGradient(ExpiryStatus status, bool isDark) {
     switch (status) {
       case ExpiryStatus.expired:
-        return isDark
-            ? AppColors.darkGradientExpired
-            : AppColors.lightGradientExpired;
+        return isDark ? AppColors.darkGradientExpired : AppColors.lightGradientExpired;
       case ExpiryStatus.expiringSoon:
-        // Dark mode: neutralne tło (jak valid) - tylko expired ma czerwone
         return isDark
             ? AppColors.darkGradientValid
-            : const LinearGradient(
-                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
-              );
+            : const LinearGradient(colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)]);
       case ExpiryStatus.valid:
         return isDark
             ? AppColors.darkGradientValid
-            : const LinearGradient(
-                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
-              );
+            : const LinearGradient(colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)]);
       case ExpiryStatus.unknown:
-        // Neutral gradient - light gray
         return LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -522,19 +1930,6 @@ class _MedicineCardState extends State<MedicineCard>
     }
   }
 
-  String? _getStatusLabel(ExpiryStatus status) {
-    switch (status) {
-      case ExpiryStatus.expired:
-        return 'Przeterminowany';
-      case ExpiryStatus.expiringSoon:
-        return 'Kończy się';
-      case ExpiryStatus.valid:
-        return 'Ważny';
-      case ExpiryStatus.unknown:
-        return null;
-    }
-  }
-
   IconData _getStatusIcon(ExpiryStatus status) {
     switch (status) {
       case ExpiryStatus.expired:
@@ -546,6 +1941,16 @@ class _MedicineCardState extends State<MedicineCard>
       case ExpiryStatus.unknown:
         return LucideIcons.circleOff;
     }
+  }
+
+  ExpiryStatus _getPackageStatus(MedicinePackage package) {
+    final expiry = package.dateTime;
+    if (expiry == null) return ExpiryStatus.unknown;
+    final now = DateTime.now();
+    final daysUntilExpiry = expiry.difference(now).inDays;
+    if (daysUntilExpiry < 0) return ExpiryStatus.expired;
+    if (daysUntilExpiry <= 30) return ExpiryStatus.expiringSoon;
+    return ExpiryStatus.valid;
   }
 
   String _formatDate(String isoDate) {

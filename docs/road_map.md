@@ -211,9 +211,33 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 **Zrodlo danych:** `rejestrymedyczne.ezdrowie.gov.pl` (oficjalne API rzadowe)
 
 **Pliki:**
-- `lib/widgets/barcode_scanner.dart` - widget skanera (v1.4.0)
+- `lib/widgets/barcode_scanner.dart` - widget skanera (v1.5.0)
 - `lib/services/rpl_service.dart` - serwis API RPL (v2.1.0)
 - `lib/screens/add_medicine_screen.dart` - batch handler + AI enrichment
+
+---
+
+### Lista Lekow - Akordeon v2.0
+
+**Data:** 2026-01-10
+
+**Zmiany:**
+- Usunięto przełącznik widoku (lista/kafelki) - tylko jeden tryb
+- Usunięto bottomSheet ze szczegółami leku
+- MedicineCard v2.0 z wbudowanymi wszystkimi funkcjami:
+  - Tryb compact (domyślny): flat neumorphic, minimalne info
+  - Tryb expanded (akordeon): pressed/inset style, pełne szczegóły
+- Sekcja "Więcej" jako wewnętrzny akordeon z:
+  - Zarządzanie tagami
+  - Zarządzanie etykietami
+  - Data dodania
+  - Usuwanie leku
+- Usunięto funkcję OCR daty z listy (niepotrzebna dzięki batch scanning)
+- Inline edycja notatki (bez dialogu)
+
+**Pliki:**
+- `lib/widgets/medicine_card.dart` - v2.0 z akordeonem
+- `lib/screens/home_screen.dart` - uproszczona logika widoku
 
 ---
 
@@ -232,4 +256,4 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-10 (batch scanning v1.4.0)
+> 📅 **Ostatnia aktualizacja:** 2026-01-10 (MedicineCard v2.0 akordeon)
