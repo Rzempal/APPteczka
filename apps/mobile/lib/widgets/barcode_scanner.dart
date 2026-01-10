@@ -1,4 +1,4 @@
-// barcode_scanner.dart v1.3.0 - Skaner kodow kreskowych EAN z ciagalym skanowaniem
+// barcode_scanner.dart v1.4.0 - Skaner kodow kreskowych EAN z batch processing
 // Widget do skanowania lekow z Rejestru Produktow Leczniczych
 
 import 'dart:io';
@@ -11,7 +11,6 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/medicine.dart';
 import '../services/rpl_service.dart';
-import '../services/date_ocr_service.dart';
 import '../theme/app_theme.dart';
 import 'neumorphic/neumorphic.dart';
 
@@ -169,7 +168,6 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
   // Serwisy
   final RplService _rplService = RplService();
-  final DateOcrService _dateOcrService = DateOcrService();
 
   // Stan
   ScannerMode _mode = ScannerMode.ean;
@@ -616,6 +614,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   }
 
   Widget _buildFinishButton(ThemeData theme, bool isDark) {
+    final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
+
     return Row(
       children: [
         Expanded(
@@ -628,12 +628,12 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(LucideIcons.check, color: theme.colorScheme.primary),
+                Icon(LucideIcons.sparkles, color: aiColor),
                 const SizedBox(width: 8),
                 Text(
-                  'Zakoncz skanowanie (${_scannedDrugs.length})',
+                  'Zakoncz i przetworz (${_scannedDrugs.length})',
                   style: TextStyle(
-                    color: theme.colorScheme.primary,
+                    color: aiColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -747,45 +747,21 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     }
   }
 
+  /// Robi snapshot daty waznosci (batch mode - OCR pozniej)
   Future<void> _captureExpiryDatePhoto() async {
     if (_currentDrug == null) return;
 
-    setState(() => _isProcessing = true);
+    // Snapshot z widoku kamery (bez opuszczania UI)
+    final snapshotFile = await _takeSnapshot();
 
-    try {
-      // Snapshot z widoku kamery (bez opuszczania UI)
-      final snapshotFile = await _takeSnapshot();
-
-      if (snapshotFile == null) {
-        setState(() => _isProcessing = false);
-        return;
-      }
-
-      // Zapisz sciezke do snapshotu
+    if (snapshotFile != null) {
+      // Zapisz sciezke do snapshotu - OCR zostanie wykonany przy zakonczeniu
       _currentDrug!.tempImagePath = snapshotFile.path;
-
-      // OCR daty
-      final result = await _dateOcrService.recognizeDate(snapshotFile);
-
-      if (result.terminWaznosci != null) {
-        HapticFeedback.mediumImpact();
-        _currentDrug!.expiryDate = result.terminWaznosci;
-        _finishCurrentDrug();
-      } else {
-        // Nie rozpoznano - pokaz dialog recznego wprowadzania
-        if (mounted) {
-          _showManualDateInput();
-        }
-      }
-    } on DateOcrException catch (e) {
-      _showError(e.message);
-    } catch (e) {
-      _showError('Blad OCR: $e');
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
+      HapticFeedback.lightImpact();
     }
+
+    // Od razu wracamy do skanowania EAN (batch mode)
+    _finishCurrentDrug();
   }
 
   void _showManualDateInput() {

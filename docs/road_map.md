@@ -184,22 +184,36 @@
 
 ## ✅ Ukonczone Funkcje (poza fazami)
 
-### Skaner Kodow Kreskowych EAN
+### Skaner Kodow Kreskowych EAN (v1.4.0)
 
 **Data:** 2026-01-10
 
 **Implementacja:**
 - Ciagale skanowanie kodow EAN aparatem (mobile_scanner)
 - Wyszukiwanie lekow w Rejestrze Produktow Leczniczych (API CeZ)
-- Automatyczne rozpoznawanie daty waznosci (OCR) lub reczne wprowadzanie
-- Plynny flow: skan EAN → skan daty → kolejny lek → zakoncz
+- Batch processing: snapshot daty → OCR na koncu
+- AI enrichment: Gemini uzupelnia opis, tagi, wskazania
 - Haptic feedback i animacje sukcesu
+
+**Flow (v1.4.0 - batch mode):**
+```
+EAN → RPL API → snapshot daty → kolejny lek → ...
+                                              ↓
+                              [Zakoncz i przetworz]
+                                              ↓
+                              Batch OCR dat (rownolegle)
+                                              ↓
+                              AI enrichment (rownolegle)
+                                              ↓
+                              Dialog reczny (fallback)
+```
 
 **Zrodlo danych:** `rejestrymedyczne.ezdrowie.gov.pl` (oficjalne API rzadowe)
 
 **Pliki:**
-- `lib/widgets/barcode_scanner.dart` - widget skanera
-- `lib/services/rpl_service.dart` - serwis API RPL (rozszerzony o EAN lookup)
+- `lib/widgets/barcode_scanner.dart` - widget skanera (v1.4.0)
+- `lib/services/rpl_service.dart` - serwis API RPL (v2.1.0)
+- `lib/screens/add_medicine_screen.dart` - batch handler + AI enrichment
 
 ---
 
@@ -218,4 +232,4 @@
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-10
+> 📅 **Ostatnia aktualizacja:** 2026-01-10 (batch scanning v1.4.0)
