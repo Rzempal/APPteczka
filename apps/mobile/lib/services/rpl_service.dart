@@ -197,15 +197,15 @@ class RplService {
 
     _log.info('Fetching drug info for EAN: $normalizedEan (original: $ean)');
 
-    // Proba 1: POST do search/public (bardziej niezawodne filtrowanie)
-    var result = await _tryFetchByGtinPost(normalizedEan);
+    // Proba 1: GET z parametrem eanGtin (glowna metoda - dziala!)
+    var result = await _tryFetchByGtinGet(normalizedEan);
     if (result != null) {
       _eanCache[normalizedEan] = result;
       return result;
     }
 
-    // Proba 2: GET z parametrem gtin (fallback)
-    result = await _tryFetchByGtinGet(normalizedEan);
+    // Proba 2: POST do search/public (fallback)
+    result = await _tryFetchByGtinPost(normalizedEan);
     if (result != null) {
       _eanCache[normalizedEan] = result;
       return result;
@@ -235,34 +235,46 @@ class RplService {
     return null;
   }
 
-  /// Proba GET z parametrem gtin
+  /// Proba GET z parametrem eanGtin (glowna metoda - dziala!)
   Future<RplDrugInfo?> _tryFetchByGtinGet(String ean) async {
+    // Poprawny endpoint i parametry zgodnie z dokumentacja API
     final endpoint = Uri.parse(
-      '$_baseUrl/search/public?gtin=${Uri.encodeComponent(ean)}&size=10&page=0',
+      '$_baseUrl/search/public?eanGtin=${Uri.encodeComponent(ean)}&isAdvancedSearch=false&size=10&page=0',
     );
 
     try {
       final response = await http
           .get(endpoint, headers: {
             'Accept': 'application/json',
-            'User-Agent': 'KartonZLekami/1.0',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
           })
           .timeout(_timeout);
 
-      _log.fine('GET gtin response status: ${response.statusCode}');
+      _log.fine('GET eanGtin response status: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final content = data['content'] as List<dynamic>?;
 
         if (content != null && content.isNotEmpty) {
-          final result = RplDrugInfo.fromJson(content[0] as Map<String, dynamic>);
-          _log.info('Found drug via GET: ${result.fullName}');
-          return result;
+          // Szukaj produktu z pasujacym GTIN
+          for (final item in content) {
+            final itemMap = item as Map<String, dynamic>;
+            final gtins = itemMap['gtin'] as String? ?? '';
+            if (gtins.contains(ean)) {
+              final result = RplDrugInfo.fromJson(itemMap);
+              _log.info('Found drug via GET: ${result.fullName} (GTIN match)');
+              return result;
+            }
+          }
+          // Jesli nie znaleziono dokladnego dopasowania GTIN, nie zwracaj nic
+          _log.warning('No exact GTIN match in GET results for $ean');
         }
+      } else {
+        _log.warning('GET eanGtin error: ${response.statusCode}');
       }
     } catch (e) {
-      _log.warning('GET gtin error: $e');
+      _log.warning('GET eanGtin error: $e');
     }
 
     return null;
