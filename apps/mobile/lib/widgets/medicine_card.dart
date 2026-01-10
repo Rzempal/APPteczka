@@ -494,11 +494,11 @@ class _MedicineCardState extends State<MedicineCard>
               GestureDetector(
                 onTap: onEdit,
                 child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                  padding: const EdgeInsets.all(10),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                   child: Icon(
                     LucideIcons.squarePen,
-                    size: 18,
+                    size: 20,
                     color: theme.colorScheme.onSurface,
                   ),
                 ),
@@ -630,6 +630,10 @@ class _MedicineCardState extends State<MedicineCard>
                           minLines: 1,
                           decoration: const InputDecoration(
                             border: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            errorBorder: InputBorder.none,
+                            disabledBorder: InputBorder.none,
                             isDense: true,
                             contentPadding: EdgeInsets.zero,
                             hintText: 'Wpisz notatkę...',
@@ -645,9 +649,9 @@ class _MedicineCardState extends State<MedicineCard>
                       GestureDetector(
                         onTap: _saveNote,
                         child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-                          child: Icon(LucideIcons.check, size: 18, color: AppColors.primary),
+                          padding: const EdgeInsets.all(10),
+                          decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                          child: Icon(LucideIcons.check, size: 20, color: AppColors.primary),
                         ),
                       ),
                     ],
@@ -806,9 +810,9 @@ class _MedicineCardState extends State<MedicineCard>
             GestureDetector(
               onTap: () => _showEditPackageDateDialog(context, package),
               child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-                child: Icon(LucideIcons.calendarCog, size: 18, color: theme.colorScheme.onSurface),
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                child: Icon(LucideIcons.calendarCog, size: 20, color: theme.colorScheme.onSurface),
               ),
             ),
             const SizedBox(width: 4),
@@ -816,9 +820,9 @@ class _MedicineCardState extends State<MedicineCard>
             GestureDetector(
               onTap: () => _showEditRemainingDialog(context, package),
               child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-                child: Icon(LucideIcons.blocks, size: 18, color: theme.colorScheme.onSurface),
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                child: Icon(LucideIcons.blocks, size: 20, color: theme.colorScheme.onSurface),
               ),
             ),
             const Spacer(),
@@ -827,9 +831,9 @@ class _MedicineCardState extends State<MedicineCard>
               GestureDetector(
                 onTap: () => _deletePackage(package),
                 child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-                  child: Icon(LucideIcons.trash2, size: 18, color: AppColors.expired),
+                  padding: const EdgeInsets.all(10),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                  child: Icon(LucideIcons.trash2, size: 20, color: AppColors.expired),
                 ),
               ),
           ],
@@ -1021,23 +1025,23 @@ class _MedicineCardState extends State<MedicineCard>
           ),
         ),
 
-        // Rozwinięta zawartość
+        // Rozwinięta zawartość z paddingiem dla cieni
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 200),
           crossFadeState:
               _isMoreExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
           firstChild: const SizedBox.shrink(),
           secondChild: Padding(
-            padding: const EdgeInsets.only(top: 12),
+            padding: const EdgeInsets.only(top: 12, left: 4, right: 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // === TAGI ===
-                _buildTagsSection(context, theme, isDark),
-
-                // === ETYKIETY ===
-                const SizedBox(height: 12),
+                // === ETYKIETY (najpierw) ===
                 _buildLabelsSection(context, theme, isDark),
+
+                // === TAGI ===
+                const SizedBox(height: 12),
+                _buildTagsSection(context, theme, isDark),
 
                 // === DATA DODANIA ===
                 const SizedBox(height: 12),
@@ -1085,9 +1089,9 @@ class _MedicineCardState extends State<MedicineCard>
             GestureDetector(
               onTap: () => _showEditCustomTagsDialog(context),
               child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-                child: Icon(LucideIcons.squarePen, size: 18, color: theme.colorScheme.onSurface),
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                child: Icon(LucideIcons.squarePen, size: 20, color: theme.colorScheme.onSurface),
               ),
             ),
           ],
@@ -1134,11 +1138,11 @@ class _MedicineCardState extends State<MedicineCard>
             GestureDetector(
               onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
               child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Icon(
                   _isLabelsOpen ? LucideIcons.chevronUp : LucideIcons.squarePen,
-                  size: 18,
+                  size: 20,
                   color: theme.colorScheme.onSurface,
                 ),
               ),
