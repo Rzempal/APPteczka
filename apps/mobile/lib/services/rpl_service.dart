@@ -270,12 +270,13 @@ class RplService {
 
   /// Proba POST do search/public
   Future<RplDrugInfo?> _tryFetchByGtinPost(String ean) async {
+    // Strony numerowane od 0, nie od 1
     final payload = {
-      'page': 1,
+      'page': 0,
       'size': 10,
-      'searchValues': [
-        {'name': 'gtin', 'value': ean}
-      ]
+      'sortField': 'medicinalProductName',
+      'sortDirection': 'ASC',
+      'searchValue': ean,
     };
 
     try {
@@ -285,7 +286,9 @@ class RplService {
             headers: {
               'Content-Type': 'application/json; charset=UTF-8',
               'Accept': 'application/json',
-              'User-Agent': 'KartonZLekami/1.0',
+              'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+              'Origin': 'https://rejestrymedyczne.ezdrowie.gov.pl',
+              'Referer': 'https://rejestrymedyczne.ezdrowie.gov.pl/rpl/search/public',
             },
             body: jsonEncode(payload),
           )
@@ -302,7 +305,21 @@ class RplService {
         } else if (data is Map<String, dynamic>) {
           final content = data['content'];
           if (content is List && content.isNotEmpty) {
-            result = RplDrugInfo.fromJson(content[0] as Map<String, dynamic>);
+            // Szukaj produktu z DOKLADNIE pasujacym GTIN
+            for (final item in content) {
+              final itemMap = item as Map<String, dynamic>;
+              final gtins = itemMap['gtin'] as String? ?? '';
+              // GTIN moze byc lista oddzielona znakami, szukaj dokladnego dopasowania
+              if (gtins.contains(ean)) {
+                result = RplDrugInfo.fromJson(itemMap);
+                _log.info('GTIN match found: $ean in "$gtins"');
+                break;
+              }
+            }
+            // NIE zwracaj pierwszego wyniku jesli nie ma dopasowania GTIN!
+            if (result == null) {
+              _log.warning('No exact GTIN match for $ean in ${content.length} results');
+            }
           }
         }
 
@@ -312,6 +329,8 @@ class RplService {
         }
       } else if (response.statusCode == 500) {
         _log.warning('API RPL zwrocilo blad 500 - serwer chwilowo niedostepny');
+      } else {
+        _log.warning('POST response: ${response.statusCode}');
       }
     } on SocketException catch (e) {
       _log.severe('Network error', e);
