@@ -218,16 +218,13 @@ class _MedicineCardState extends State<MedicineCard>
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                // Nazwa leku z context menu na long press
-                GestureDetector(
-                  onLongPress: () => _showContextMenu(context),
-                  child: Text(
-                    _medicine.nazwa ?? 'Nieznany lek',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                      fontSize: widget.isCompact ? 15 : 18,
-                    ),
+                // Nazwa leku z natywnym zaznaczaniem tekstu (Android context menu)
+                SelectableText(
+                  _medicine.nazwa ?? 'Nieznany lek',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                    fontSize: widget.isCompact ? 15 : 18,
                   ),
                 ),
                 // Ikona duplikatu
@@ -276,81 +273,6 @@ class _MedicineCardState extends State<MedicineCard>
             ),
         ],
       ),
-    );
-  }
-
-  /// Context menu dla nazwy leku (long press)
-  void _showContextMenu(BuildContext context) {
-    HapticFeedback.mediumImpact();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
-        return Container(
-          margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Nagłówek
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  _medicine.nazwa ?? 'Lek',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const Divider(height: 1),
-              // Opcje
-              ListTile(
-                leading: Icon(LucideIcons.squarePen, color: AppColors.primary),
-                title: const Text('Edytuj lek'),
-                onTap: () {
-                  Navigator.pop(context);
-                  widget.onEdit?.call();
-                },
-              ),
-              ListTile(
-                leading: Icon(LucideIcons.copy, color: theme.colorScheme.onSurface),
-                title: const Text('Kopiuj nazwę'),
-                onTap: () {
-                  Clipboard.setData(ClipboardData(text: _medicine.nazwa ?? ''));
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Skopiowano nazwę')),
-                  );
-                },
-              ),
-              if (_medicine.leafletUrl != null)
-                ListTile(
-                  leading: Icon(LucideIcons.fileText, color: AppColors.valid),
-                  title: const Text('Pokaż ulotkę'),
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showPdfViewer(context);
-                  },
-                ),
-              ListTile(
-                leading: Icon(LucideIcons.trash2, color: AppColors.expired),
-                title: Text('Usuń lek', style: TextStyle(color: AppColors.expired)),
-                onTap: () {
-                  Navigator.pop(context);
-                  widget.onDelete?.call();
-                },
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -616,7 +538,10 @@ class _MedicineCardState extends State<MedicineCard>
             decoration: BoxDecoration(
               color: isDark ? Colors.transparent : theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
-              // Brak border w trybie edycji
+              border: Border.all(
+                color: isDark ? Colors.grey.shade700 : Colors.grey.shade400,
+                width: 1,
+              ),
             ),
             child: _isEditingNote
                 ? Row(
