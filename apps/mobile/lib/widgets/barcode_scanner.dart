@@ -506,7 +506,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
             )
           else
             Icon(
-              LucideIcons.alertCircle,
+              LucideIcons.circleAlert,
               size: 16,
               color: Colors.orange,
             ),
