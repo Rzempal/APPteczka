@@ -4,6 +4,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../models/medicine.dart';
@@ -164,6 +165,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   // Serwisy
   final RplService _rplService = RplService();
   final DateOcrService _dateOcrService = DateOcrService();
+  final ImagePicker _imagePicker = ImagePicker();
 
   // Stan
   ScannerMode _mode = ScannerMode.ean;
@@ -714,19 +716,29 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   }
 
   Future<void> _captureExpiryDatePhoto() async {
-    if (_currentDrug == null || _controller == null) return;
+    if (_currentDrug == null) return;
 
     setState(() => _isProcessing = true);
 
     try {
-      // Snapshot z aktualnego widoku kamery (bez opuszczania skanera)
-      final picture = await _controller!.takePicture();
+      // Zrob zdjecie aparatem
+      final image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
 
-      // Zapisz sciezke do snapshotu
-      _currentDrug!.tempImagePath = picture.path;
+      if (image == null) {
+        setState(() => _isProcessing = false);
+        return;
+      }
+
+      // Zapisz sciezke do zdjecia
+      _currentDrug!.tempImagePath = image.path;
 
       // OCR daty
-      final result = await _dateOcrService.recognizeDate(File(picture.path));
+      final result = await _dateOcrService.recognizeDate(File(image.path));
 
       if (result.terminWaznosci != null) {
         HapticFeedback.mediumImpact();
