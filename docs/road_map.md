@@ -217,7 +217,7 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 
 ---
 
-### Lista Lekow - Akordeon v2.1
+### Lista Lekow - Akordeon v2.2
 
 **Data:** 2026-01-10
 
@@ -245,8 +245,14 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 - Usunięty wewnętrzny outline z notatki w trybie edycji
 - Przycisk "Edytuj" na dole karty zmieniony na "Zwiń"
 
+**Zmiany v2.2 (bug fixes):**
+- Powiększone ikony edycji (padding 10, size 20) - łatwiejsze trafienie palcem
+- Usunięta zielona ramka z TextField w notatce (focusedBorder: none)
+- Dodany padding (left/right: 4) do sekcji "Więcej" - cienie nie są podcinane
+- Zmieniona kolejność sekcji: Etykiety, Tagi, Dodano, Usuń lek
+
 **Pliki:**
-- `lib/widgets/medicine_card.dart` - v2.1 z akordeonem
+- `lib/widgets/medicine_card.dart` - v2.2 z akordeonem
 - `lib/screens/home_screen.dart` - uproszczona logika widoku
 
 ---
@@ -266,4 +272,4 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-10 (MedicineCard v2.1 UX refinements)
+> 📅 **Ostatnia aktualizacja:** 2026-01-10 (MedicineCard v2.2 bug fixes)
