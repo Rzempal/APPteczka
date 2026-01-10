@@ -74,7 +74,8 @@ class ScannedDrug {
         tags.add('syrop');
       } else if (formLower.contains('masc') || formLower.contains('krem')) {
         tags.add('maść');
-      } else if (formLower.contains('zastrzyk') || formLower.contains('iniekcj')) {
+      } else if (formLower.contains('zastrzyk') ||
+          formLower.contains('iniekcj')) {
         tags.add('zastrzyki');
       } else if (formLower.contains('krople')) {
         tags.add('krople');
@@ -84,7 +85,8 @@ class ScannedDrug {
         tags.add('czopki');
       } else if (formLower.contains('plast')) {
         tags.add('plastry');
-      } else if (formLower.contains('zawies') || formLower.contains('proszek')) {
+      } else if (formLower.contains('zawies') ||
+          formLower.contains('proszek')) {
         tags.add('proszek/zawiesina');
       }
     }
@@ -110,7 +112,9 @@ class ScannedDrug {
     final lower = packaging.toLowerCase();
 
     // Wzorzec 1: "28 tabl.", "30 kaps.", "10 amp."
-    final countMatch = RegExp(r'^(\d+)\s*(tabl|kaps|amp|sasz|czop|plast)').firstMatch(lower);
+    final countMatch = RegExp(
+      r'^(\d+)\s*(tabl|kaps|amp|sasz|czop|plast)',
+    ).firstMatch(lower);
     if (countMatch != null) {
       return int.tryParse(countMatch.group(1)!);
     }
@@ -148,11 +152,7 @@ class BarcodeScannerWidget extends StatefulWidget {
   /// Callback bledu
   final void Function(String? error)? onError;
 
-  const BarcodeScannerWidget({
-    super.key,
-    this.onComplete,
-    this.onError,
-  });
+  const BarcodeScannerWidget({super.key, this.onComplete, this.onError});
 
   @override
   State<BarcodeScannerWidget> createState() => _BarcodeScannerWidgetState();
@@ -277,7 +277,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       icon = LucideIcons.camera;
       iconColor = Colors.orange;
       title = _currentDrug?.drugInfo.fullName ?? 'Dodaj date waznosci';
-      subtitle = 'Zrob 📷 zdjecie daty waznosci lub Pomin';
+      subtitle = 'Zrob zdjecie daty waznosci lub Pomin';
     }
 
     return NeuInsetContainer(
@@ -467,7 +467,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 right: 16,
                 child: _buildControlButton(
                   icon: LucideIcons.camera,
-                  label: '📷 Zapisz zdjecie',
+                  label: 'Zapisz zdjecie',
                   onTap: _captureExpiryDatePhoto,
                 ),
               ),
@@ -561,11 +561,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(
-            LucideIcons.pill,
-            size: 16,
-            color: theme.colorScheme.primary,
-          ),
+          Icon(LucideIcons.pill, size: 16, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -602,12 +598,14 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 ),
               ),
             )
-          else
+          else if (drug.tempImagePath != null)
             Icon(
-              LucideIcons.circleAlert,
+              LucideIcons.imagePlus,
               size: 16,
-              color: Colors.orange,
-            ),
+              color: theme.colorScheme.primary,
+            )
+          else
+            Icon(LucideIcons.circleAlert, size: 16, color: Colors.orange),
         ],
       ),
     );
@@ -632,10 +630,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 const SizedBox(width: 8),
                 Text(
                   'Zakoncz i przetworz (${_scannedDrugs.length})',
-                  style: TextStyle(
-                    color: aiColor,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(color: aiColor, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -678,7 +673,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       final drugInfo = await _rplService.fetchDrugByEan(ean);
 
       if (drugInfo == null) {
-        _showError('Nie znaleziono leku w bazie RPL.\nKod: $ean\nMozesz dodac lek reczenie.');
+        _showError(
+          'Nie znaleziono leku w bazie RPL.\nKod: $ean\nMozesz dodac lek reczenie.',
+        );
         return;
       }
 
@@ -725,8 +722,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   /// Robi snapshot z widoku kamery (bez opuszczania UI)
   Future<File?> _takeSnapshot() async {
     try {
-      final boundary = _scannerKey.currentContext?.findRenderObject()
-          as RenderRepaintBoundary?;
+      final boundary =
+          _scannerKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary?;
       if (boundary == null) return null;
 
       // Przechwytujemy klatke z wysokim pixelRatio dla lepszej jakosci OCR
@@ -762,7 +760,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       // Animacja "Zapisano"
       setState(() {
         _showSuccess = true;
-        _successMessage = 'Zapisano zdjecie 📷';
+        _successMessage = 'Zapisano zdjecie';
       });
 
       await Future.delayed(const Duration(milliseconds: 600));
@@ -803,8 +801,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
             Text(
               _currentDrug?.drugInfo.fullName ?? '',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
