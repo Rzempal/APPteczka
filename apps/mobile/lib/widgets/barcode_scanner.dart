@@ -25,6 +25,9 @@ class ScannedDrug {
     this.expiryDate,
   });
 
+  /// Ilość sztuk z opakowania (cache)
+  int? get pieceCount => _parsePackaging();
+
   /// Konwertuje do modelu Medicine
   Medicine toMedicine(String id) {
     final pieceCount = _parsePackaging();
@@ -539,6 +542,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   }
 
   Widget _buildDrugItem(ScannedDrug drug, ThemeData theme, bool isDark) {
+    final pieceCount = drug.pieceCount;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -550,11 +555,24 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              drug.drugInfo.fullName,
-              style: theme.textTheme.bodyMedium,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  drug.drugInfo.fullName,
+                  style: theme.textTheme.bodyMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                // Pokaż ilość sztuk jeśli dostępna
+                if (pieceCount != null)
+                  Text(
+                    '$pieceCount szt.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
             ),
           ),
           if (drug.expiryDate != null)
@@ -655,10 +673,16 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       final drug = ScannedDrug(ean: ean, drugInfo: drugInfo);
       _scannedEans.add(ean);
 
+      // Komunikat z nazwa i iloscia sztuk
+      String message = drugInfo.fullName;
+      if (drug.pieceCount != null) {
+        message += '\n${drug.pieceCount} szt.';
+      }
+
       setState(() {
         _currentDrug = drug;
         _showSuccess = true;
-        _successMessage = drugInfo.fullName;
+        _successMessage = message;
       });
 
       // Pokaz sukces przez chwile
