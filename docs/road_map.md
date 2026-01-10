@@ -182,33 +182,40 @@
 
 ---
 
-## 💡 IDEAS BACKLOG (Pomysły na przyszłość)
+## ✅ Ukonczone Funkcje (poza fazami)
 
-> [!NOTE]
-> Pomysły zebrane podczas rozwoju, do rozważenia w przyszłości.
+### Skaner Kodow Kreskowych EAN
 
-### EAN Lookup - Automatyczne uzupełnianie dat ważności
+**Data:** 2026-01-10
 
-**Idea:** Skanowanie kodu EAN opakowania i pobieranie informacji o leku z zewnętrznego API.
+**Implementacja:**
+- Ciagale skanowanie kodow EAN aparatem (mobile_scanner)
+- Wyszukiwanie lekow w Rejestrze Produktow Leczniczych (API CeZ)
+- Automatyczne rozpoznawanie daty waznosci (OCR) lub reczne wprowadzanie
+- Plynny flow: skan EAN → skan daty → kolejny lek → zakoncz
+- Haptic feedback i animacje sukcesu
 
-**Potencjalne źródła:**
+**Zrodlo danych:** `rejestrymedyczne.ezdrowie.gov.pl` (oficjalne API rzadowe)
 
-- [Open Food Facts](https://openfoodfacts.org/) - otwarty, ale głównie żywność
-- [Rejestr Leków MZ](https://rejestrymedyczne.cez.gov.pl/) - oficjalny, ale bez API dla dat ważności
-- Własna baza danych budowana przez użytkowników
-
-**Korzyści:**
-
-- Automatyczne uzupełnianie nazwy i opisu leku
-- Możliwość sugerowania typowego okresu ważności
-- Weryfikacja autentyczności opakowania
-
-**Wymagania:**
-
-- Integracja z zewnętrznym API
-- Fallback gdy produkt nie znaleziony
-- Możliwość zgłaszania nowych produktów
+**Pliki:**
+- `lib/widgets/barcode_scanner.dart` - widget skanera
+- `lib/services/rpl_service.dart` - serwis API RPL (rozszerzony o EAN lookup)
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-07
+## 💡 IDEAS BACKLOG (Pomysly na przyszlosc)
+
+> [!NOTE]
+> Pomysly zebrane podczas rozwoju, do rozważenia w przyszlosci.
+
+### Sugestie typowego okresu waznosci
+
+**Idea:** Na podstawie zeskanowanego leku sugerowac typowy okres waznosci (np. 2-3 lata dla tabletek).
+
+**Korzyści:**
+- Szybsze wprowadzanie dat gdy OCR zawiedzie
+- Przypomnienia o weryfikacji daty
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-10

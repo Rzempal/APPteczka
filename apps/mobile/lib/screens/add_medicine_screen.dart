@@ -12,6 +12,7 @@ import '../services/gemini_service.dart';
 import '../services/gemini_name_lookup_service.dart';
 import '../widgets/gemini_scanner.dart';
 import '../widgets/two_photo_scanner.dart';
+import '../widgets/barcode_scanner.dart';
 import '../widgets/karton_icons.dart';
 import '../widgets/batch_date_input_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
@@ -51,8 +52,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   // Expanded sections - nowa kolejność
   bool _aiVisionExpanded = true; // 1. Gemini AI Vision (połączone tryby)
   int _aiVisionMode = 0; // 0 = 1 zdjęcie, 1 = 2 zdjęcia
-  bool _manualExpanded = false; // 2. Dodaj ręcznie
-  bool _fileExpanded = false; // 3. Import kopii
+  bool _barcodeExpanded = false; // 2. Skanuj kod kreskowy
+  bool _manualExpanded = false; // 3. Dodaj ręcznie
+  bool _fileExpanded = false; // 4. Import kopii
 
   @override
   void dispose() {
@@ -129,7 +131,22 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
                 const SizedBox(height: 12),
 
-                // 2. Dodaj ręcznie (przesunięte)
+                // 2. Skanuj kod kreskowy (EAN)
+                _buildExpandableSection(
+                  icon: LucideIcons.barcode,
+                  title: 'Skanuj kod kreskowy',
+                  subtitle: 'Ciagale skanowanie kodow EAN z apteczki',
+                  isExpanded: _barcodeExpanded,
+                  onToggle: () =>
+                      setState(() => _barcodeExpanded = !_barcodeExpanded),
+                  child: _buildBarcodeSection(theme, isDark),
+                  isDark: isDark,
+                  iconColor: theme.colorScheme.primary,
+                ),
+
+                const SizedBox(height: 12),
+
+                // 3. Dodaj ręcznie (przesunięte)
                 _buildExpandableSection(
                   icon: LucideIcons.pencil,
                   title: 'Dodaj ręcznie',
@@ -146,7 +163,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
                 const SizedBox(height: 12),
 
-                // 3. Import z pliku (przesunięte)
+                // 4. Import z pliku (przesunięte)
                 _buildExpandableSection(
                   icon: LucideIcons.folderDown,
                   title: 'Import kopii zapasowej',
@@ -462,6 +479,15 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
   }
 
+  // ================== SEKCJA SKANER KODOW KRESKOWYCH ==================
+
+  Widget _buildBarcodeSection(ThemeData theme, bool isDark) {
+    return BarcodeScannerWidget(
+      onComplete: _handleBarcodeResult,
+      onError: widget.onError,
+    );
+  }
+
   Widget _buildFileImportSection(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -698,6 +724,47 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       dataDodania: DateTime.now().toIso8601String(),
     );
     await widget.storageService.saveMedicine(medicine);
+  }
+
+  /// Handler dla skanera kodow kreskowych (lista lekow)
+  void _handleBarcodeResult(List<ScannedDrug> drugs) async {
+    if (drugs.isEmpty) return;
+
+    final importedMedicines = <Medicine>[];
+
+    for (final drug in drugs) {
+      final medicine = drug.toMedicine(const Uuid().v4());
+      await widget.storageService.saveMedicine(medicine);
+      importedMedicines.add(medicine);
+    }
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Zaimportowano ${importedMedicines.length} lekow ze skanera',
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    // Pokaz sheet do uzupelniania dat dla lekow bez daty
+    final medicinesWithoutDate = importedMedicines
+        .where((m) => m.terminWaznosci == null || m.terminWaznosci!.isEmpty)
+        .toList();
+
+    if (medicinesWithoutDate.isNotEmpty) {
+      BatchDateInputSheet.showIfNeeded(
+        context: context,
+        medicines: medicinesWithoutDate,
+        storageService: widget.storageService,
+        onComplete: () {},
+      );
+    }
+
+    // Zwin sekcje skanera
+    setState(() => _barcodeExpanded = false);
   }
 
   Future<void> _importFromFile() async {
