@@ -1,10 +1,9 @@
-// barcode_scanner.dart v1.0.0 - Skaner kodow kreskowych EAN z ciagalym skanowaniem
+// barcode_scanner.dart v1.2.0 - Skaner kodow kreskowych EAN z ciagalym skanowaniem
 // Widget do skanowania lekow z Rejestru Produktow Leczniczych
 
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../models/medicine.dart';
@@ -18,11 +17,13 @@ class ScannedDrug {
   final String ean;
   final RplDrugInfo drugInfo;
   String? expiryDate;
+  String? tempImagePath; // Sciezka do snapshotu daty waznosci
 
   ScannedDrug({
     required this.ean,
     required this.drugInfo,
     this.expiryDate,
+    this.tempImagePath,
   });
 
   /// Ilość sztuk z opakowania (cache)
@@ -163,7 +164,6 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   // Serwisy
   final RplService _rplService = RplService();
   final DateOcrService _dateOcrService = DateOcrService();
-  final ImagePicker _imagePicker = ImagePicker();
 
   // Stan
   ScannerMode _mode = ScannerMode.ean;
@@ -250,35 +250,53 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   }
 
   Widget _buildHeader(ThemeData theme, bool isDark) {
+    // Dynamiczne tresci headera w zaleznosci od stanu
+    String title;
+    String subtitle;
+    IconData icon;
+    Color? iconColor;
+
+    if (_mode == ScannerMode.ean) {
+      if (_isProcessing) {
+        icon = LucideIcons.search;
+        iconColor = Colors.orange;
+        title = 'Szukam w bazie RPL...';
+        subtitle = 'Sprawdzam kod EAN';
+      } else {
+        icon = LucideIcons.barcode;
+        iconColor = theme.colorScheme.primary;
+        title = 'Zeskanuj kod kreskowy';
+        subtitle = 'Skieruj aparat na kod EAN opakowania';
+      }
+    } else {
+      // Tryb daty waznosci - pokaz nazwe leku
+      icon = LucideIcons.calendar;
+      iconColor = Colors.orange;
+      title = _currentDrug?.drugInfo.fullName ?? 'Dodaj date waznosci';
+      subtitle = 'Uzyj Aparat lub Pomin';
+    }
+
     return NeuInsetContainer(
       borderRadius: 12,
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Icon(
-            _mode == ScannerMode.ean
-                ? LucideIcons.barcode
-                : LucideIcons.calendar,
-            color: theme.colorScheme.primary,
-            size: 28,
-          ),
+          Icon(icon, color: iconColor, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _mode == ScannerMode.ean
-                      ? 'Zeskanuj kod kreskowy'
-                      : 'Zeskanuj date waznosci',
+                  title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  _mode == ScannerMode.ean
-                      ? 'Skieruj aparat na kod EAN opakowania'
-                      : 'Zrob zdjecie daty waznosci lub wprowadz recznie',
+                  subtitle,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -435,26 +453,14 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               ),
             ),
 
-            // Tryb daty - przycisk recznego wprowadzania
+            // Tryb daty - przycisk zdjecia (snapshot)
             if (_mode == ScannerMode.expiryDate)
               Positioned(
                 bottom: 16,
                 left: 16,
                 child: _buildControlButton(
-                  icon: LucideIcons.pencil,
-                  label: 'Recznie',
-                  onTap: _showManualDateInput,
-                ),
-              ),
-
-            // Tryb daty - przycisk zdjecia
-            if (_mode == ScannerMode.expiryDate)
-              Positioned(
-                bottom: 60,
-                left: 16,
-                child: _buildControlButton(
                   icon: LucideIcons.camera,
-                  label: 'Zdjecie',
+                  label: 'Aparat',
                   onTap: _captureExpiryDatePhoto,
                 ),
               ),
@@ -708,26 +714,19 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   }
 
   Future<void> _captureExpiryDatePhoto() async {
-    if (_currentDrug == null) return;
+    if (_currentDrug == null || _controller == null) return;
 
     setState(() => _isProcessing = true);
 
     try {
-      // Zrob zdjecie
-      final image = await _imagePicker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1920,
-        imageQuality: 85,
-      );
+      // Snapshot z aktualnego widoku kamery (bez opuszczania skanera)
+      final picture = await _controller!.takePicture();
 
-      if (image == null) {
-        setState(() => _isProcessing = false);
-        return;
-      }
+      // Zapisz sciezke do snapshotu
+      _currentDrug!.tempImagePath = picture.path;
 
       // OCR daty
-      final result = await _dateOcrService.recognizeDate(File(image.path));
+      final result = await _dateOcrService.recognizeDate(File(picture.path));
 
       if (result.terminWaznosci != null) {
         HapticFeedback.mediumImpact();
