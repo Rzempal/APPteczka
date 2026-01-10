@@ -35,9 +35,6 @@ enum SortOption {
   const SortOption(this.label, this.icon);
 }
 
-/// Widok listy
-enum ViewMode { list, full }
-
 /// Główny ekran - lista leków (Apteczka)
 class HomeScreen extends StatefulWidget {
   final StorageService storageService;
@@ -63,7 +60,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Medicine> _medicines = [];
   FilterState _filterState = const FilterState();
   SortOption _sortOption = SortOption.nameAsc;
-  ViewMode _viewMode = ViewMode.full;
   String? _expandedMedicineId; // ID karty rozwiniętej jako akordeon
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
@@ -200,177 +196,91 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   : Stack(
                       children: [
-                        // Główna lista
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            // Dla szerokich ekranów (tablet, foldable) i trybu full - 2 kolumny
-                            final isWideScreen = constraints.maxWidth >= 600;
-                            final useGrid =
-                                isWideScreen && _viewMode == ViewMode.full;
+                        // Główna lista - tryb akordeonowy
+                        ListView.builder(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          itemCount: _filteredMedicines.length,
+                          itemBuilder: (context, index) {
+                            final medicine = _filteredMedicines[index];
+                            final swipeEnabled =
+                                widget.storageService.swipeGesturesEnabled;
+                            final isExpanded = _expandedMedicineId == medicine.id;
 
-                            if (useGrid) {
-                              // Layout dwukolumnowy z dynamiczną wysokością kart
-                              // Używamy Row z dwoma Expanded kolumnami
-                              final leftItems = <Medicine>[];
-                              final rightItems = <Medicine>[];
-                              for (
-                                int i = 0;
-                                i < _filteredMedicines.length;
-                                i++
-                              ) {
-                                if (i.isEven) {
-                                  leftItems.add(_filteredMedicines[i]);
-                                } else {
-                                  rightItems.add(_filteredMedicines[i]);
-                                }
-                              }
+                            final card = MedicineCard(
+                              medicine: medicine,
+                              labels: _allLabels,
+                              storageService: widget.storageService,
+                              isCompact: !isExpanded,
+                              isDuplicate: hasDuplicates(
+                                medicine,
+                                _medicines,
+                              ),
+                              onExpand: () {
+                                setState(() {
+                                  // Toggle - kliknięcie na rozwiniętą kartę zwija ją
+                                  if (_expandedMedicineId == medicine.id) {
+                                    _expandedMedicineId = null;
+                                  } else {
+                                    _expandedMedicineId = medicine.id;
+                                  }
+                                });
+                              },
+                              onEdit: () => _editMedicine(medicine),
+                              onDelete: () => _deleteMedicineWithConfirm(medicine),
+                              onTagTap: (tag) => _filterByTag(tag),
+                              onLabelTap: (labelId) => _filterByLabel(labelId),
+                              onMedicineUpdated: _loadMedicines,
+                            );
 
-                              return SingleChildScrollView(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: IntrinsicHeight(
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Lewa kolumna
-                                      Expanded(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: leftItems
-                                              .map(
-                                                (medicine) => MedicineCard(
-                                                  medicine: medicine,
-                                                  labels: _allLabels,
-                                                  isCompact: false,
-                                                  isDuplicate: hasDuplicates(
-                                                    medicine,
-                                                    _medicines,
-                                                  ),
-                                                  onTap: () =>
-                                                      _showMedicineDetails(
-                                                        medicine,
-                                                      ),
-                                                ),
-                                              )
-                                              .toList(),
-                                        ),
-                                      ),
-                                      // Prawa kolumna
-                                      Expanded(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: rightItems
-                                              .map(
-                                                (medicine) => MedicineCard(
-                                                  medicine: medicine,
-                                                  labels: _allLabels,
-                                                  isCompact: false,
-                                                  isDuplicate: hasDuplicates(
-                                                    medicine,
-                                                    _medicines,
-                                                  ),
-                                                  onTap: () =>
-                                                      _showMedicineDetails(
-                                                        medicine,
-                                                      ),
-                                                ),
-                                              )
-                                              .toList(),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
+                            if (!swipeEnabled) {
+                              return card;
                             }
 
-                            // Lista dla wąskich ekranów lub trybu list
-                            return ListView.builder(
-                              padding: const EdgeInsets.only(bottom: 16),
-                              itemCount: _filteredMedicines.length,
-                              itemBuilder: (context, index) {
-                                final medicine = _filteredMedicines[index];
-                                final swipeEnabled =
-                                    widget.storageService.swipeGesturesEnabled;
-
-                                final card = MedicineCard(
-                                  medicine: medicine,
-                                  labels: _allLabels,
-                                  // Karta jest compact chyba że jest rozwinięta lub globalny widok to full
-                                  isCompact:
-                                      _viewMode == ViewMode.list &&
-                                      _expandedMedicineId != medicine.id,
-                                  isDuplicate: hasDuplicates(
-                                    medicine,
-                                    _medicines,
-                                  ),
-                                  onExpand: _viewMode == ViewMode.list
-                                      ? () {
-                                          setState(() {
-                                            // Toggle - kliknięcie na rozwiniętą kartę zwija ją
-                                            if (_expandedMedicineId ==
-                                                medicine.id) {
-                                              _expandedMedicineId = null;
-                                            } else {
-                                              _expandedMedicineId = medicine.id;
-                                            }
-                                          });
-                                        }
-                                      : null,
-                                  onTap: () => _showMedicineDetails(medicine),
-                                );
-
-                                if (!swipeEnabled) {
-                                  return card;
+                            return Dismissible(
+                              key: Key(medicine.id),
+                              direction: DismissDirection.horizontal,
+                              // Swipe w prawo → notatki
+                              background: Container(
+                                alignment: Alignment.centerLeft,
+                                padding: const EdgeInsets.only(left: 32),
+                                color: Colors.transparent,
+                                child: Icon(
+                                  LucideIcons.clipboardPenLine,
+                                  size: 32,
+                                  color: isDark
+                                      ? AppColors.primary
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                ),
+                              ),
+                              // Swipe w lewo → etykiety
+                              secondaryBackground: Container(
+                                alignment: Alignment.centerRight,
+                                padding: const EdgeInsets.only(right: 32),
+                                color: Colors.transparent,
+                                child: Icon(
+                                  LucideIcons.tags,
+                                  size: 32,
+                                  color: isDark
+                                      ? AppColors.primary
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.primary,
+                                ),
+                              ),
+                              confirmDismiss: (direction) async {
+                                if (direction ==
+                                    DismissDirection.endToStart) {
+                                  // Swipe w lewo → edycja etykiet
+                                  _showLabelsSheet(medicine);
+                                } else {
+                                  // Swipe w prawo → edycja notatki
+                                  _showEditNoteDialog(medicine);
                                 }
-
-                                return Dismissible(
-                                  key: Key(medicine.id),
-                                  direction: DismissDirection.horizontal,
-                                  // Swipe w prawo → notatki
-                                  background: Container(
-                                    alignment: Alignment.centerLeft,
-                                    padding: const EdgeInsets.only(left: 32),
-                                    color: Colors.transparent,
-                                    child: Icon(
-                                      LucideIcons.clipboardPenLine,
-                                      size: 32,
-                                      color: isDark
-                                          ? AppColors.primary
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                    ),
-                                  ),
-                                  // Swipe w lewo → etykiety
-                                  secondaryBackground: Container(
-                                    alignment: Alignment.centerRight,
-                                    padding: const EdgeInsets.only(right: 32),
-                                    color: Colors.transparent,
-                                    child: Icon(
-                                      LucideIcons.tags,
-                                      size: 32,
-                                      color: isDark
-                                          ? AppColors.primary
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                    ),
-                                  ),
-                                  confirmDismiss: (direction) async {
-                                    if (direction ==
-                                        DismissDirection.endToStart) {
-                                      // Swipe w lewo → edycja etykiet
-                                      _showLabelsSheet(medicine);
-                                    } else {
-                                      // Swipe w prawo → edycja notatki
-                                      _showEditNoteDialog(medicine);
-                                    }
-                                    return false; // Nie usuwaj karty
-                                  },
-                                  child: card,
-                                );
+                                return false; // Nie usuwaj karty
                               },
+                              child: card,
                             );
                           },
                         ),
@@ -647,21 +557,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           const Spacer(),
-          // Widok toggle
-          NeuIconButton(
-            icon: _viewMode == ViewMode.full
-                ? LucideIcons.layoutGrid
-                : LucideIcons.list,
-            onPressed: () {
-              setState(() {
-                _viewMode = _viewMode == ViewMode.full
-                    ? ViewMode.list
-                    : ViewMode.full;
-              });
-            },
-            tooltip: _viewMode == ViewMode.full ? 'Widok listy' : 'Pełny widok',
-          ),
-          const SizedBox(width: 8),
           // Sortowanie - bottomSheet
           NeuIconButton(
             icon: LucideIcons.arrowDownUp,
@@ -1235,6 +1130,49 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+  }
+
+  /// Usuwa lek z potwierdzeniem
+  void _deleteMedicineWithConfirm(Medicine medicine) async {
+    if (await _confirmDelete(medicine)) {
+      _deleteMedicine(medicine);
+    }
+  }
+
+  /// Otwiera ekran edycji leku
+  void _editMedicine(Medicine medicine) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditMedicineScreen(
+          storageService: widget.storageService,
+          medicine: medicine,
+        ),
+      ),
+    );
+    if (result == true) {
+      _loadMedicines();
+    }
+  }
+
+  /// Filtruje listę po tagu
+  void _filterByTag(String tag) {
+    setState(() {
+      final newTags = Set<String>.from(_filterState.selectedTags);
+      newTags.add(tag);
+      _filterState = _filterState.copyWith(selectedTags: newTags);
+      _expandedMedicineId = null; // Zwija kartę po filtracji
+    });
+  }
+
+  /// Filtruje listę po etykiecie
+  void _filterByLabel(String labelId) {
+    setState(() {
+      final newLabels = Set<String>.from(_filterState.selectedLabels);
+      newLabels.add(labelId);
+      _filterState = _filterState.copyWith(selectedLabels: newLabels);
+      _expandedMedicineId = null; // Zwija kartę po filtracji
+    });
   }
 
   String _getPolishPlural(int count) {
