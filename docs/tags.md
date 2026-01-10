@@ -2,7 +2,7 @@
 
 Dokumentacja Master Listy tagów używanych w aplikacji APPteczka / Karton z lekami.
 
-> **Ostatnia aktualizacja:** 2026-01-06
+> **Ostatnia aktualizacja:** 2026-01-10
 
 ---
 
@@ -21,7 +21,8 @@ Tagi służą do kategoryzacji leków, umożliwiając:
 ```
 # Tagi
 ├── Klasyfikacja
-│   ├── Rodzaj leku
+│   ├── Rodzaj i postać leku
+│   ├── Substancja czynna (dynamiczna - z API RPL)
 │   ├── Grupa docelowa
 │   └── Typ infekcji
 ├── Objawy i działanie
@@ -39,7 +40,7 @@ Tagi służą do kategoryzacji leków, umożliwiając:
 
 ### Klasyfikacja
 
-#### Rodzaj leku
+#### Rodzaj i postać leku
 
 | Tag | Opis |
 |-----|------|
@@ -47,6 +48,25 @@ Tagi służą do kategoryzacji leków, umożliwiając:
 | `na receptę` | Leki Rx wymagające recepty |
 | `suplement` | Suplementy diety |
 | `wyrób medyczny` | Wyroby medyczne (testy, opatrunki) |
+| `tabletki` | Tabletki, tabletki powlekane |
+| `kapsułki` | Kapsułki twarde i miękkie |
+| `syrop` | Syropy i roztwory doustne |
+| `maść` | Maści, kremy, żele |
+| `zastrzyki` | Roztwory do wstrzykiwań |
+| `krople` | Krople do oczu, uszu, nosa |
+| `aerozol` | Aerozole, spray |
+| `czopki` | Czopki doodbytnicze |
+| `plastry` | Plastry lecznicze |
+| `proszek/zawiesina` | Proszki, zawiesiny, granulaty |
+
+#### Substancja czynna (dynamiczna)
+
+Tagi substancji czynnych są automatycznie generowane ze skanera kodów EAN (API RPL):
+
+- Wyświetlane w filtrach tylko gdy występują w apteczce użytkownika
+- Niemodyfikowalne przez użytkownika (readonly)
+- Rozpoznawane po łacińskiej nomenklaturze (np. `Escitalopramum`, `Paracetamolum`)
+- Wieloskładnikowe leki mają rozdzielone substancje (np. `Paracetamolum + Codeini phosphas`)
 
 #### Grupa docelowa
 
@@ -99,11 +119,12 @@ Master Lista jest zsynchronizowana w następujących miejscach:
 
 | Plik | Platforma | Zastosowanie |
 |------|-----------|--------------|
-| [filters_sheet.dart](file:///c:/Users/rzemp/GitHub/APPteczka/apps/mobile/lib/widgets/filters_sheet.dart) | Mobile | Filtrowanie leków |
-| [tag_selector_widget.dart](file:///c:/Users/rzemp/GitHub/APPteczka/apps/mobile/lib/widgets/tag_selector_widget.dart) | Mobile | Ręczne dodawanie leku |
-| [types.ts](file:///c:/Users/rzemp/GitHub/APPteczka/apps/web/src/lib/types.ts) | Web | Definicja typów tagów |
-| [prompts.ts](file:///c:/Users/rzemp/GitHub/APPteczka/apps/web/src/lib/prompts.ts) | Web | Prompt do auto-tagowania |
-| [dual-ocr.ts](file:///c:/Users/rzemp/GitHub/APPteczka/apps/web/src/lib/dual-ocr.ts) | Web | Prompt dual OCR |
+| [filters_sheet.dart](../apps/mobile/lib/widgets/filters_sheet.dart) | Mobile | Filtrowanie leków + dynamiczne substancje |
+| [tag_selector_widget.dart](../apps/mobile/lib/widgets/tag_selector_widget.dart) | Mobile | Ręczne dodawanie leku |
+| [barcode_scanner.dart](../apps/mobile/lib/widgets/barcode_scanner.dart) | Mobile | Auto-tagowanie ze skanera EAN |
+| [types.ts](../apps/web/src/lib/types.ts) | Web | Definicja typów tagów |
+| [prompts.ts](../apps/web/src/lib/prompts.ts) | Web | Prompt do auto-tagowania |
+| [dual-ocr.ts](../apps/web/src/lib/dual-ocr.ts) | Web | Prompt dual OCR |
 
 ---
 

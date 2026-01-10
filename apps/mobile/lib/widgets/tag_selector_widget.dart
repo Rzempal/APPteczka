@@ -3,7 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'dart:math' as math;
 import '../theme/app_theme.dart';
 import 'neumorphic/neumorphic.dart';
-import 'filters_sheet.dart'; // Dla tagCategories i tagsObjawIDzialanie
+import 'filters_sheet.dart'; // Dla tagCategories, tagsObjawIDzialanie, isActiveSubstanceTag
 
 /// Widget do wyboru tagów systemowych z listy pogrupowanej jak w filtrach.
 /// Użytkownik może tylko zaznaczać tagi - nie dodawać własnych.
@@ -105,24 +105,31 @@ class _TagSelectorWidgetState extends State<TagSelectorWidget> {
             spacing: 6,
             runSpacing: 6,
             children: widget.selectedTags.map((tag) {
+              final isSubstance = isActiveSubstanceTag(tag);
               return Chip(
                 label: Text(
                   '#$tag',
                   style: TextStyle(
                     fontSize: 12,
                     fontFamily: 'monospace',
-                    color: theme.colorScheme.onSurface,
+                    color: isSubstance
+                        ? Colors.blue.shade700
+                        : theme.colorScheme.onSurface,
+                    fontStyle: isSubstance ? FontStyle.italic : FontStyle.normal,
                   ),
                 ),
-                deleteIcon: Icon(
-                  LucideIcons.x,
-                  size: 14,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                onDeleted: () => _toggleTag(tag),
-                backgroundColor: isDark
-                    ? Colors.grey.shade800
-                    : Colors.grey.shade200,
+                // Substancje czynne sa readonly - bez przycisku X
+                deleteIcon: isSubstance
+                    ? null
+                    : Icon(
+                        LucideIcons.x,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                onDeleted: isSubstance ? null : () => _toggleTag(tag),
+                backgroundColor: isSubstance
+                    ? (isDark ? Colors.blue.shade900 : Colors.blue.shade50)
+                    : (isDark ? Colors.grey.shade800 : Colors.grey.shade200),
                 side: BorderSide.none,
                 padding: const EdgeInsets.symmetric(horizontal: 4),
               );

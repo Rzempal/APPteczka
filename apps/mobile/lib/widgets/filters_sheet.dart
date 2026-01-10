@@ -129,9 +129,26 @@ const Map<String, List<String>> tagsObjawIDzialanie = {
   ],
 };
 
-/// Podkategorie dla "Klasyfikacja" - Rodzaj leku, Grupa docelowa, Typ infekcji
+/// Podkategorie dla "Klasyfikacja" - Rodzaj i postac, Grupa docelowa, Typ infekcji
 const Map<String, List<String>> tagsKlasyfikacja = {
-  'Rodzaj leku': ['bez recepty', 'na receptę', 'suplement', 'wyrób medyczny'],
+  'Rodzaj i postać leku': [
+    // Status recepty
+    'bez recepty',
+    'na receptę',
+    'suplement',
+    'wyrób medyczny',
+    // Postaci farmaceutyczne
+    'tabletki',
+    'kapsułki',
+    'syrop',
+    'maść',
+    'zastrzyki',
+    'krople',
+    'aerozol',
+    'czopki',
+    'plastry',
+    'proszek/zawiesina',
+  ],
   'Grupa docelowa': [
     'dla dorosłych',
     'dla dzieci',
@@ -145,10 +162,46 @@ const Map<String, List<String>> tagsKlasyfikacja = {
     'infekcja wirusowa',
     'przeziębienie',
   ],
+  // 'Substancja czynna' - dynamiczna, generowana z apteczki uzytkownika
 };
 
 /// Wszystkie tagi kategorii (dla wykluczeń w "Moje")
 final Map<String, List<String>> tagCategories = {...tagsKlasyfikacja};
+
+/// Identyfikuje tagi bedace substancjami czynnymi (lacinska nomenklatura)
+/// Np. "Escitalopramum", "Paracetamolum", "Ambroxoli hydrochloridum"
+bool isActiveSubstanceTag(String tag) {
+  // Substancje czynne maja lacinska nazwe - koncowki typowe
+  final lower = tag.toLowerCase();
+  final latinEndings = [
+    'um', 'is', 'us', 'ae', 'i', 'as', 'os', // typowe lacińskie
+    'dum', 'lum', 'num', 'rum', 'tum', // -um z przedrostkiem
+    'chloridum', 'bromidum', 'iodidum', // sole
+    'natricum', 'kalicum', 'calcicum', // sole z kationami
+  ];
+
+  // Sprawdz czy konczy sie na lacinska koncowke
+  for (final ending in latinEndings) {
+    if (lower.endsWith(ending) && tag.length > ending.length + 2) {
+      return true;
+    }
+  }
+
+  // Sprawdz czy zawiera typowe wzorce substancji
+  if (lower.contains(' hydrochloridum') ||
+      lower.contains(' natricum') ||
+      lower.contains(' kalicum') ||
+      lower.contains('acidum ')) {
+    return true;
+  }
+
+  return false;
+}
+
+/// Wyodrębnia substancje czynne z listy tagów
+List<String> extractActiveSubstances(List<String> tags) {
+  return tags.where(isActiveSubstanceTag).toList()..sort();
+}
 
 /// Filtr Sheet - styl zbliżony do wersji Web
 class FiltersSheet extends StatefulWidget {
@@ -426,10 +479,8 @@ class _FiltersSheetState extends State<FiltersSheet> {
                       if (_tagsExpanded) ...[
                         const SizedBox(height: 12),
 
-                        // === KLASYFIKACJA (z podkategoriami) ===
-                        _buildCategoryWithSubcategories(
-                          'Klasyfikacja',
-                          tagsKlasyfikacja,
+                        // === KLASYFIKACJA (z podkategoriami + dynamiczna Substancja czynna) ===
+                        _buildKlasyfikacjaWithSubstances(
                           _expandedCategories['Klasyfikacja'] ?? false,
                         ),
 
@@ -721,6 +772,148 @@ class _FiltersSheetState extends State<FiltersSheet> {
     );
   }
 
+  /// Buduje sekcje Klasyfikacja z dynamiczna podkategoria "Substancja czynna"
+  Widget _buildKlasyfikacjaWithSubstances(bool isExpanded) {
+    // Pobierz substancje czynne z dostepnych tagow
+    final activeSubstances = extractActiveSubstances(widget.availableTags);
+
+    // Polacz statyczne kategorie z dynamiczna
+    final subcategories = Map<String, List<String>>.from(tagsKlasyfikacja);
+    if (activeSubstances.isNotEmpty) {
+      subcategories['Substancja czynna'] = activeSubstances;
+    }
+
+    // Zlicz wszystkie dostepne tagi
+    final allTags = subcategories.values.expand((t) => t).toList();
+    final availableTags =
+        allTags.where((t) => widget.availableTags.contains(t)).toList();
+
+    if (availableTags.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final selectedCount =
+        availableTags.where((t) => _state.selectedTags.contains(t)).length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Główny nagłówek kategorii
+        InkWell(
+          onTap: () {
+            setState(() {
+              _expandedCategories['Klasyfikacja'] =
+                  !(_expandedCategories['Klasyfikacja'] ?? false);
+            });
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+            child: Row(
+              children: [
+                Transform.rotate(
+                  angle: isExpanded ? math.pi / 2 : 0,
+                  child: Icon(
+                    LucideIcons.chevronRight,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(150),
+                    size: 14,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Klasyfikacja',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${availableTags.length}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(100),
+                  ),
+                ),
+                if (selectedCount > 0) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$selectedCount',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        // Podkategorie
+        if (isExpanded)
+          Padding(
+            padding: const EdgeInsets.only(left: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: subcategories.entries.map((subEntry) {
+                final subName = subEntry.key;
+                final subTags =
+                    subEntry.value
+                        .where((t) => widget.availableTags.contains(t))
+                        .toList()
+                      ..sort();
+
+                if (subTags.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8, bottom: 4),
+                      child: Text(
+                        subName,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withAlpha(150),
+                        ),
+                      ),
+                    ),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: subTags.map(_buildTagChip).toList(),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
   Widget _buildCategorySection(
     String name,
     List<String> tags,
@@ -795,9 +988,11 @@ class _FiltersSheetState extends State<FiltersSheet> {
       ...tagCategories.values.expand((e) => e),
       ...tagsObjawIDzialanie.values.expand((e) => e),
     };
-    final otherTags =
-        widget.availableTags.where((t) => !categorizedTags.contains(t)).toList()
-          ..sort();
+    // Wyklucz substancje czynne (wyswietlane w Klasyfikacja > Substancja czynna)
+    final otherTags = widget.availableTags
+        .where((t) => !categorizedTags.contains(t) && !isActiveSubstanceTag(t))
+        .toList()
+      ..sort();
 
     if (otherTags.isEmpty) {
       return const SizedBox.shrink();

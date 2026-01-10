@@ -45,6 +45,9 @@ class RplDrugInfo {
   final String marketingAuthorisationHolder;
   final String? atcCode;
   final int? id;
+  // Nowe pola z details API
+  final String? accessibilityCategory; // "OTC", "Rp", "Rpz"
+  final String? packaging; // "28 tabl. (2 x 14)", "1 butelka 120 ml"
 
   RplDrugInfo({
     required this.name,
@@ -54,9 +57,19 @@ class RplDrugInfo {
     required this.marketingAuthorisationHolder,
     this.atcCode,
     this.id,
+    this.accessibilityCategory,
+    this.packaging,
   });
 
   factory RplDrugInfo.fromJson(Map<String, dynamic> json) {
+    // Parsowanie packaging z tablicy packages (jesli dostepna)
+    String? packaging;
+    final packages = json['packages'] as List<dynamic>?;
+    if (packages != null && packages.isNotEmpty) {
+      final firstPackage = packages[0] as Map<String, dynamic>;
+      packaging = firstPackage['packaging'] as String?;
+    }
+
     return RplDrugInfo(
       id: json['id'] as int?,
       name: json['medicinalProductName'] as String? ??
@@ -76,6 +89,35 @@ class RplDrugInfo {
               json['marketingAuthorisationHolder'] as String? ??
               '',
       atcCode: json['atcCode'] as String?,
+      accessibilityCategory: json['accessibilityCategory'] as String?,
+      packaging: packaging,
+    );
+  }
+
+  /// Kopiuje z nowymi wartosciami (merge details)
+  RplDrugInfo copyWith({
+    String? name,
+    String? power,
+    String? form,
+    String? activeSubstance,
+    String? marketingAuthorisationHolder,
+    String? atcCode,
+    int? id,
+    String? accessibilityCategory,
+    String? packaging,
+  }) {
+    return RplDrugInfo(
+      name: name ?? this.name,
+      power: power ?? this.power,
+      form: form ?? this.form,
+      activeSubstance: activeSubstance ?? this.activeSubstance,
+      marketingAuthorisationHolder:
+          marketingAuthorisationHolder ?? this.marketingAuthorisationHolder,
+      atcCode: atcCode ?? this.atcCode,
+      id: id ?? this.id,
+      accessibilityCategory:
+          accessibilityCategory ?? this.accessibilityCategory,
+      packaging: packaging ?? this.packaging,
     );
   }
 
@@ -180,7 +222,7 @@ class RplService {
   // ==================== WYSZUKIWANIE PO EAN/GTIN ====================
 
   /// Wyszukuje lek po kodzie EAN/GTIN
-  /// Prubuje kilka endpointow API RPL
+  /// Prubuje kilka endpointow API RPL, nastepnie pobiera szczegoly
   Future<RplDrugInfo?> fetchDrugByEan(String ean) async {
     // Normalizacja EAN - UPC-A (12 cyfr) -> EAN-13 (dodaj wiodace zero)
     final normalizedEan = _normalizeEan(ean);
@@ -199,14 +241,25 @@ class RplService {
 
     // Proba 1: GET z parametrem eanGtin (glowna metoda - dziala!)
     var result = await _tryFetchByGtinGet(normalizedEan);
-    if (result != null) {
-      _eanCache[normalizedEan] = result;
-      return result;
+    if (result == null) {
+      // Proba 2: POST do search/public (fallback)
+      result = await _tryFetchByGtinPost(normalizedEan);
     }
 
-    // Proba 2: POST do search/public (fallback)
-    result = await _tryFetchByGtinPost(normalizedEan);
     if (result != null) {
+      // Pobierz szczegoly (accessibilityCategory, packaging, activeSubstance)
+      if (result.id != null) {
+        final details = await _fetchDetails(result.id!);
+        if (details != null) {
+          result = result.copyWith(
+            accessibilityCategory: details.accessibilityCategory,
+            packaging: details.packaging,
+            activeSubstance: details.activeSubstance.isNotEmpty
+                ? details.activeSubstance
+                : result.activeSubstance,
+          );
+        }
+      }
       _eanCache[normalizedEan] = result;
       return result;
     }
@@ -214,6 +267,36 @@ class RplService {
     // Nie znaleziono - zapisz null w cache
     _eanCache[normalizedEan] = null;
     _log.info('No drug found for EAN: $normalizedEan');
+    return null;
+  }
+
+  /// Pobiera szczegolowe informacje o leku po ID
+  Future<RplDrugInfo?> _fetchDetails(int id) async {
+    final endpoint = Uri.parse('$_baseUrl/search/public/details/$id');
+
+    try {
+      final response = await http
+          .get(endpoint, headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+          })
+          .timeout(_timeout);
+
+      _log.fine('GET details response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final result = RplDrugInfo.fromJson(data);
+        _log.info(
+            'Fetched details: accessibilityCategory=${result.accessibilityCategory}, packaging=${result.packaging}');
+        return result;
+      } else {
+        _log.warning('GET details error: ${response.statusCode}');
+      }
+    } catch (e) {
+      _log.warning('GET details error: $e');
+    }
+
     return null;
   }
 
