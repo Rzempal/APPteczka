@@ -174,7 +174,7 @@ class _MedicineCardState extends State<MedicineCard>
                     ),
                     _getPressedDecoration(isDark, gradient, statusColor),
                     t,
-                  )
+                  )!
                 : NeuDecoration.pressed(isDark: isDark, radius: 20);
 
             return Transform.scale(
