@@ -1,3 +1,4 @@
+// medicine.dart v0.002 Added barcode verification fields
 import 'package:uuid/uuid.dart';
 
 /// Opakowanie leku z własną datą ważności
@@ -118,6 +119,8 @@ class Medicine {
   final String? leafletUrl;
   final int? dailyIntake; // Dzienne zużycie tabletek
   final String dataDodania;
+  final bool isVerifiedByBarcode; // Dane zweryfikowane po kodzie kreskowym (RPL)
+  final String? verificationNote; // Monit o konflikcie nazwa/kod
 
   Medicine({
     required this.id,
@@ -132,6 +135,8 @@ class Medicine {
     this.leafletUrl,
     this.dailyIntake,
     required this.dataDodania,
+    this.isVerifiedByBarcode = false,
+    this.verificationNote,
   }) : _legacyTerminWaznosci = terminWaznosci;
 
   /// Computed property - zwraca najkrótszą datę (wsteczna kompatybilność)
@@ -199,6 +204,8 @@ class Medicine {
       dailyIntake: json['dailyIntake'] as int?,
       dataDodania:
           json['dataDodania'] as String? ?? DateTime.now().toIso8601String(),
+      isVerifiedByBarcode: json['isVerifiedByBarcode'] as bool? ?? false,
+      verificationNote: json['verificationNote'] as String?,
     );
   }
 
@@ -218,6 +225,8 @@ class Medicine {
       'leafletUrl': leafletUrl,
       if (dailyIntake != null) 'dailyIntake': dailyIntake,
       'dataDodania': dataDodania,
+      if (isVerifiedByBarcode) 'isVerifiedByBarcode': isVerifiedByBarcode,
+      if (verificationNote != null) 'verificationNote': verificationNote,
     };
   }
 
@@ -235,6 +244,8 @@ class Medicine {
     String? leafletUrl,
     int? dailyIntake,
     String? dataDodania,
+    bool? isVerifiedByBarcode,
+    String? verificationNote,
   }) {
     return Medicine(
       id: id ?? this.id,
@@ -249,6 +260,8 @@ class Medicine {
       leafletUrl: leafletUrl ?? this.leafletUrl,
       dailyIntake: dailyIntake ?? this.dailyIntake,
       dataDodania: dataDodania ?? this.dataDodania,
+      isVerifiedByBarcode: isVerifiedByBarcode ?? this.isVerifiedByBarcode,
+      verificationNote: verificationNote ?? this.verificationNote,
     );
   }
 
