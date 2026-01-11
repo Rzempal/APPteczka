@@ -45,6 +45,9 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Przygotuj temat maila
+        const subject = `[Karton] - [${getCategoryLabel(category)}]: ${topic || (errorMessage ? errorMessage.substring(0, 50) : 'Raport użytkownika')}`;
+
         // Przygotuj treść emaila
         const timestamp = new Date().toISOString();
         const htmlContent = `
@@ -52,23 +55,25 @@ export async function POST(request: NextRequest) {
 <html>
 <head>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; }
-        .header { background: #1a1a2e; color: #4ade80; padding: 20px; border-radius: 8px; }
-        .section { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
-        .label { font-weight: bold; color: #666; margin-bottom: 5px; }
-        pre { background: #1a1a2e; color: #e2e8f0; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 12px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; color: #333; }
+        .header { background: #1a1a2e; color: #4ade80; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .section { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; border-left: 4px solid #ddd; }
+        .label { font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; font-size: 11px; letter-spacing: 0.05em; }
+        pre { background: #1a1a2e; color: #e2e8f0; padding: 15px; border-radius: 8px; overflow-x: auto; font-size: 12px; line-height: 1.5; }
         .error { color: #ef4444; font-weight: bold; }
+        .ai-prompt { background: #f0f7ff; border: 2px dashed #0070f3; padding: 20px; border-radius: 8px; margin-top: 40px; }
+        .copy-hint { font-size: 12px; color: #0070f3; font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Bug Report - Karton na leki</h1>
-        <p>Otrzymano: ${timestamp}</p>
+        <h1 style="margin:0; font-size: 24px;">${escapeHtml(subject)}</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.7; font-size: 13px;">Otrzymano: ${timestamp}</p>
     </div>
 
     ${errorMessage ? `
-    <div class="section">
-        <div class="label">Błąd:</div>
+    <div class="section" style="border-left-color: #ef4444;">
+        <div class="label">Błąd systemowy:</div>
         <p class="error">${escapeHtml(errorMessage)}</p>
     </div>
     ` : ''}
@@ -83,12 +88,12 @@ export async function POST(request: NextRequest) {
     ${text ? `
     <div class="section">
         <div class="label">Opis użytkownika:</div>
-        <p>${escapeHtml(text)}</p>
+        <p style="white-space: pre-wrap;">${escapeHtml(text)}</p>
     </div>
     ` : ''}
 
     <div class="section">
-        <div class="label">Informacje o urządzeniu:</div>
+        <div class="label">Informacje o systemie:</div>
         <p><strong>Wersja aplikacji:</strong> ${appVersion || 'Nieznana'}</p>
         <p><strong>Urządzenie:</strong> ${deviceInfo || 'Nieznane'}</p>
         <p><strong>Kategoria:</strong> ${category || 'Nieznana'}</p>
@@ -103,7 +108,24 @@ export async function POST(request: NextRequest) {
     </div>
     ` : ''}
 
-    ${screenshot ? '<p><em>Screenshot dołączony jako załącznik</em></p>' : ''}
+    ${screenshot ? '<p style="color: #666; font-style: italic;">📷 Screenshot dołączony jako załącznik</p>' : ''}
+
+    <div class="ai-prompt">
+        <div class="copy-hint">PROMPT DLA CLAUDE/GEMINI (Szybkie rozwiązanie):</div>
+        <pre id="ai-copy-content">--- AI SOLVER PROMPT ---
+Zanalizuj poniższy raport z aplikacji "Karton" i zaproponuj rozwiązanie/implementację:
+
+KONTEKST:
+- Kategoria: ${category || 'Błąd'}
+- Temat: ${topic || 'Brak'}
+- Błąd: ${errorMessage || 'Brak'}
+- Opis użytkownika: ${text || 'Brak'}
+- Urządzenie: ${deviceInfo || 'Nieznane'}
+- Wersja: ${appVersion || 'Nieznane'}
+
+DANE TECHNICZNE (LOGI):
+${log ? log : 'Brak logów.'}</pre>
+    </div>
 </body>
 </html>
         `;
@@ -135,7 +157,7 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({
                 from: RESEND_FROM,
                 to: [BUG_REPORT_EMAIL],
-                subject: `[Karton] - [${getCategoryLabel(category)}]: ${topic || (errorMessage ? errorMessage.substring(0, 50) : 'Raport użytkownika')}`,
+                subject: subject,
                 html: htmlContent,
                 attachments: attachments.length > 0 ? attachments : undefined,
             }),
