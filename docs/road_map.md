@@ -217,43 +217,43 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 
 ---
 
-### Gemini AI Vision - Rozpoznawanie Kodow Kreskowych (v1.0)
+### Gemini AI - Wspomaganie skanera i recznego dodawania (v2.0)
 
 **Data:** 2026-01-11
 
-**Implementacja:**
-- Rozszerzenie promptu Gemini o ekstrakcje kodow EAN-13/EAN-8 ze zdjec
-- Walidacja kodow algorytmem Modulo 10 (ean_validator.dart)
-- Automatyczne wyszukiwanie lekow w RPL po rozpoznanym kodzie
-- Merge danych: RPL (nazwa, substancja, postac, ulotka) + Gemini (opis, data waznosci, tagi)
-- Priorytet kodu kreskowego nad nazwa tekstowa
+**Architektura (v2.0):**
+Gemini AI dziala jako "silnik w tle" wspomagajacy:
+1. **Skaner kodow kreskowych** - AI enrichment (opis, tagi, wskazania)
+2. **Reczne dodawanie** - przycisk "AI" przy nazwie leku
 
-**Flow:**
+**Flow skanera:**
 ```
-Zdjecie leku
-    ↓
-Gemini AI (nazwa + EAN + opis + data)
-    ↓
-[Walidacja EAN - Modulo 10]
-    ↓
-[RPL API lookup po kodzie]
-    ↓
-Merge: RPL (oficjalne dane) + Gemini (opis/data)
-    ↓
-Medicine z isVerifiedByBarcode=true
+EAN → RPL API → snapshot daty → ...
+                                ↓
+                [Zakoncz i przetworz]
+                                ↓
+                Batch OCR dat (rownolegle)
+                                ↓
+                AI enrichment (Gemini - opis/tagi)
+                                ↓
+                Zapis do bazy
 ```
 
-**Wskaznik weryfikacji:**
-- Ikona tarczy + tekst "Zweryfikowano po kodzie kreskowym" w sekcji Dodano
-- Monit przy konflikcie: "Nazwa nie pasuje do kodu kreskowego, wyszukano po kodzie"
+**Flow recznego dodawania:**
+```
+Nazwa leku → [AI] → Gemini → opis + wskazania + tagi
+```
+
+**Usuniete w v2.0:**
+- Widget GeminiScanner (skanowanie zdjec opakowan)
+- Tryb "2 zdjecia" (dual photo mode)
+- Sekcja "Gemini AI Vision" z ekranu dodawania
 
 **Pliki:**
-- `apps/web/src/lib/prompts.ts` - prompt z instrukcja EAN (v0.002)
-- `apps/mobile/lib/services/gemini_service.dart` - pole ean w ScannedMedicine (v0.003)
-- `apps/mobile/lib/utils/ean_validator.dart` - walidacja Modulo 10 (v0.001)
-- `apps/mobile/lib/models/medicine.dart` - pola weryfikacji (v0.002)
-- `apps/mobile/lib/screens/add_medicine_screen.dart` - logika merge RPL+Gemini
-- `apps/mobile/lib/widgets/medicine_card.dart` - wskaznik weryfikacji (v2.3)
+- `apps/web/src/lib/prompts.ts` - prompt z instrukcja EAN (v0.003)
+- `apps/mobile/lib/services/gemini_service.dart` - serwis Gemini (v0.003)
+- `apps/mobile/lib/services/gemini_name_lookup_service.dart` - lookup po nazwie
+- `apps/mobile/lib/screens/add_medicine_screen.dart` - AI enrichment w skanerze
 
 ---
 
