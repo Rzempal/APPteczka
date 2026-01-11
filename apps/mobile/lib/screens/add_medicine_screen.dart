@@ -12,7 +12,6 @@ import '../services/gemini_service.dart';
 import '../services/gemini_name_lookup_service.dart';
 import '../services/date_ocr_service.dart';
 import '../widgets/gemini_scanner.dart';
-import '../widgets/two_photo_scanner.dart';
 import '../widgets/barcode_scanner.dart';
 import '../widgets/karton_icons.dart';
 import '../widgets/batch_date_input_sheet.dart';
@@ -53,8 +52,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   bool _isImporting = false;
 
   // Expanded sections - nowa kolejność
-  bool _aiVisionExpanded = true; // 1. Gemini AI Vision (połączone tryby)
-  int _aiVisionMode = 0; // 0 = 1 zdjęcie, 1 = 2 zdjęcia
+  bool _aiVisionExpanded = true; // 1. Gemini AI Vision
   bool _barcodeExpanded = false; // 2. Skanuj kod kreskowy
   bool _manualExpanded = false; // 3. Dodaj ręcznie
   bool _fileExpanded = false; // 4. Import kopii
@@ -326,158 +324,24 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             ),
           ),
 
-          // Zawartość rozwijana
+          // Zawartość rozwijana - jeden tryb skanowania
           if (_aiVisionExpanded)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
-                children: [
-                  // Toggle trybów
-                  _buildModeToggle(theme, isDark, aiColor),
-                  const SizedBox(height: 16),
-
-                  // Odpowiedni skaner w zależności od trybu
-                  if (_aiVisionMode == 0)
-                    GeminiScanner(
-                      onResult: _handleGeminiResult,
-                      onError: widget.onError,
-                      onImportComplete: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Leki zostały zaimportowane!'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                    )
-                  else
-                    TwoPhotoScanner(
-                      onResult: _handleTwoPhotoResult,
-                      onError: widget.onError,
-                      onComplete: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Lek został zaimportowany!'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
+              child: GeminiScanner(
+                onResult: _handleGeminiResult,
+                onError: widget.onError,
+                onImportComplete: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Leki zostały zaimportowane!'),
+                      behavior: SnackBarBehavior.floating,
                     ),
-                ],
+                  );
+                },
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildModeToggle(ThemeData theme, bool isDark, Color aiColor) {
-    return NeuInsetContainer(
-      borderRadius: 12,
-      padding: const EdgeInsets.all(4),
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onHorizontalDragEnd: (details) {
-          // Swipe gesture - przełączanie trybu AI
-          final velocity = details.primaryVelocity ?? 0;
-          if (velocity.abs() < 100) return; // Ignoruj małe ruchy
-
-          HapticFeedback.lightImpact();
-
-          if (velocity < 0 && _aiVisionMode == 1) {
-            // Swipe left → przesun na 1 zdjęcie (button w lewo)
-            setState(() => _aiVisionMode = 0);
-          } else if (velocity > 0 && _aiVisionMode == 0) {
-            // Swipe right → przesun na 2 zdjęcia (button w prawo)
-            setState(() => _aiVisionMode = 1);
-          }
-        },
-        child: Row(
-          children: [
-            // Tryb 1 zdjęcie
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque, // Całe pole dotykowe
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  setState(() => _aiVisionMode = 0);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: _aiVisionMode == 0
-                      ? NeuDecoration.convex(isDark: isDark, radius: 10)
-                      : null,
-                  child: Column(
-                    children: [
-                      Icon(
-                        LucideIcons.imagePlus,
-                        size: 22,
-                        color: _aiVisionMode == 0
-                            ? aiColor
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '1 zdjęcie',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: _aiVisionMode == 0
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                          color: _aiVisionMode == 0
-                              ? aiColor
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Tryb 2 zdjęcia
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque, // Całe pole dotykowe
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  setState(() => _aiVisionMode = 1);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: _aiVisionMode == 1
-                      ? NeuDecoration.convex(isDark: isDark, radius: 10)
-                      : null,
-                  child: Column(
-                    children: [
-                      Icon(
-                        LucideIcons.images,
-                        size: 22,
-                        color: _aiVisionMode == 1
-                            ? aiColor
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '2 zdjęcia',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: _aiVisionMode == 1
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                          color: _aiVisionMode == 1
-                              ? aiColor
-                              : theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -845,20 +709,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     }
 
     return tags.toList();
-  }
-
-  /// Handler dla trybu 2-zdjęciowego (pojedynczy lek)
-  void _handleTwoPhotoResult(ScannedMedicine lek) async {
-    final medicine = Medicine(
-      id: const Uuid().v4(),
-      nazwa: lek.nazwa,
-      opis: lek.opis,
-      wskazania: lek.wskazania,
-      tagi: processTagsForImport(lek.tagi),
-      terminWaznosci: lek.terminWaznosci,
-      dataDodania: DateTime.now().toIso8601String(),
-    );
-    await widget.storageService.saveMedicine(medicine);
   }
 
   /// Handler dla skanera kodow kreskowych (lista lekow)

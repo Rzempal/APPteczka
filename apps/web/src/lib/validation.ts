@@ -7,9 +7,11 @@ import { ALL_ALLOWED_TAGS } from './types';
 /**
  * Schema dla pojedynczego leku (import)
  * wskazania i tagi są opcjonalne dla OCR - mogą być puste
+ * ean jest opcjonalne - może być null gdy kod kreskowy niewidoczny
  */
 const MedicineImportItemSchema = z.object({
     nazwa: z.string().nullable(),
+    ean: z.string().nullable().optional(),
     opis: z.string().min(1, 'Opis jest wymagany'),
     wskazania: z.array(z.string()).default([]),
     tagi: z.array(z.string()).default([])
