@@ -164,6 +164,7 @@ class _MedicineCardState extends State<MedicineCard>
               Transform.scale(scale: _scaleAnimation.value, child: child),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
             decoration: widget.isCompact
                 ? (_isPressed
                     ? _getPressedDecoration(isDark, gradient, statusColor)
@@ -1856,10 +1857,21 @@ class _MedicineCardState extends State<MedicineCard>
   // ==================== HELPERS ====================
 
   BoxDecoration _getPressedDecoration(bool isDark, LinearGradient gradient, Color statusColor) {
+    // Only ONE placeholder shadow for the dark shadow.
+    // The light/white shadow (second in statusCard) has no pair,
+    // so it disappears immediately instead of animating.
     return BoxDecoration(
       gradient: gradient,
       borderRadius: BorderRadius.circular(20),
-      boxShadow: [],
+      boxShadow: [
+        BoxShadow(
+          color: Colors.transparent,
+          offset: isDark
+              ? const Offset(0, 8) // Match dark mode statusCard
+              : const Offset(NeuDecoration.shadowDistance, NeuDecoration.shadowDistance),
+          blurRadius: isDark ? 32 : NeuDecoration.shadowBlur,
+        ),
+      ],
     );
   }
 
