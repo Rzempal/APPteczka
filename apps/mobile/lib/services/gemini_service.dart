@@ -1,4 +1,4 @@
-// gemini_service.dart v0.002 Added AppLogger integration
+// gemini_service.dart v0.003 Added EAN field to ScannedMedicine
 
 import 'dart:convert';
 import 'dart:io';
@@ -25,6 +25,7 @@ class GeminiScanResult {
 /// Pojedynczy lek rozpoznany przez Gemini
 class ScannedMedicine {
   final String? nazwa;
+  final String? ean;
   final String opis;
   final List<String> wskazania;
   final List<String> tagi;
@@ -32,6 +33,7 @@ class ScannedMedicine {
 
   ScannedMedicine({
     this.nazwa,
+    this.ean,
     required this.opis,
     required this.wskazania,
     required this.tagi,
@@ -41,6 +43,7 @@ class ScannedMedicine {
   factory ScannedMedicine.fromJson(Map<String, dynamic> json) {
     return ScannedMedicine(
       nazwa: json['nazwa'] as String?,
+      ean: json['ean'] as String?,
       opis: json['opis'] as String? ?? '',
       wskazania: List<String>.from(json['wskazania'] ?? []),
       tagi: List<String>.from(json['tagi'] ?? []),

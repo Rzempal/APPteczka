@@ -14,7 +14,7 @@ import 'leaflet_search_sheet.dart';
 import 'filters_sheet.dart' show tagCategories;
 
 /// Karta leku - styl neumorficzny z akordeonem
-/// v2.0 - zintegrowane funkcje z bottomSheet
+/// v2.3 - wskaznik weryfikacji po kodzie kreskowym w sekcji Dodano
 class MedicineCard extends StatefulWidget {
   final Medicine medicine;
   final List<UserLabel> labels;
@@ -968,7 +968,7 @@ class _MedicineCardState extends State<MedicineCard>
                 const SizedBox(height: 12),
                 _buildTagsSection(context, theme, isDark),
 
-                // === DATA DODANIA ===
+                // === DATA DODANIA + WERYFIKACJA ===
                 const SizedBox(height: 12),
                 Text(
                   'Dodano',
@@ -985,6 +985,55 @@ class _MedicineCardState extends State<MedicineCard>
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
+                // Wskaźnik weryfikacji po kodzie kreskowym
+                if (_medicine.isVerifiedByBarcode) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(
+                        LucideIcons.shieldCheck,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'Zweryfikowano po kodzie kreskowym',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                // Monit o konflikcie nazwa/kod (jeśli obecny)
+                if (_medicine.verificationNote != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        LucideIcons.info,
+                        size: 14,
+                        color: theme.colorScheme.tertiary,
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          _medicine.verificationNote!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: theme.colorScheme.tertiary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
 
                 // === USUŃ LEK ===
                 const SizedBox(height: 16),

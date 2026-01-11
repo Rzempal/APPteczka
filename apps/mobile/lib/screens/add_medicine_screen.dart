@@ -20,6 +20,8 @@ import '../widgets/neumorphic/neumorphic.dart';
 import '../widgets/tag_selector_widget.dart';
 import '../theme/app_theme.dart';
 import '../utils/tag_normalization.dart';
+import '../utils/ean_validator.dart';
+import '../services/rpl_service.dart';
 
 /// Ekran dodawania leków - wszystkie metody importu
 class AddMedicineScreen extends StatefulWidget {
@@ -678,28 +680,106 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
   void _handleGeminiResult(GeminiScanResult result) async {
     final importedMedicines = <Medicine>[];
+    int verifiedCount = 0;
+    final rplService = RplService();
 
     for (final lek in result.leki) {
-      final medicine = Medicine(
-        id: const Uuid().v4(),
-        nazwa: lek.nazwa,
-        opis: lek.opis,
-        wskazania: lek.wskazania,
-        tagi: processTagsForImport(lek.tagi),
-        terminWaznosci: lek.terminWaznosci,
-        dataDodania: DateTime.now().toIso8601String(),
-      );
+      Medicine medicine;
+
+      // Sprawdz czy mamy poprawny kod kreskowy
+      final normalizedEan = EanValidator.normalize(lek.ean);
+
+      if (normalizedEan != null) {
+        // Probuj pobrac dane z RPL
+        final rplInfo = await rplService.fetchDrugByEan(normalizedEan);
+
+        if (rplInfo != null) {
+          // Sukces - merge danych RPL + Gemini
+          verifiedCount++;
+
+          // Sprawdz czy nazwa z Gemini rozni sie od RPL (konflikt)
+          String? verificationNote;
+          if (lek.nazwa != null && lek.nazwa!.isNotEmpty) {
+            final geminiNameLower = lek.nazwa!.toLowerCase().trim();
+            final rplNameLower = rplInfo.name.toLowerCase().trim();
+            // Jesli nazwa Gemini nie zawiera sie w nazwie RPL i odwrotnie
+            if (!rplNameLower.contains(geminiNameLower) &&
+                !geminiNameLower.contains(rplNameLower)) {
+              verificationNote =
+                  'Nazwa nie pasuje do kodu kreskowego, wyszukano po kodzie';
+            }
+          }
+
+          // Buduj opis z danych RPL + Gemini
+          final opisParts = <String>[];
+          if (rplInfo.activeSubstance.isNotEmpty) {
+            opisParts.add(rplInfo.activeSubstance);
+          }
+          if (rplInfo.form.isNotEmpty) {
+            opisParts.add(rplInfo.form);
+          }
+          if (lek.opis.isNotEmpty) {
+            opisParts.add(lek.opis);
+          }
+          final mergedOpis = opisParts.join('. ');
+
+          // Generuj tagi z RPL (podobnie jak w barcode_scanner.dart)
+          final rplTags = _generateRplTags(rplInfo);
+
+          medicine = Medicine(
+            id: const Uuid().v4(),
+            nazwa: rplInfo.fullName, // RPL ma priorytet
+            opis: mergedOpis,
+            wskazania: lek.wskazania, // Gemini
+            tagi: [
+              ...rplTags, // Tagi z RPL (recepta, forma, substancje)
+              ...processTagsForImport(lek.tagi), // Tagi z Gemini
+            ].toSet().toList(), // Usun duplikaty
+            terminWaznosci: lek.terminWaznosci, // Gemini (RPL nie ma dat)
+            dataDodania: DateTime.now().toIso8601String(),
+            leafletUrl: rplInfo.leafletUrl, // RPL
+            isVerifiedByBarcode: true,
+            verificationNote: verificationNote,
+          );
+        } else {
+          // EAN poprawny ale nie znaleziono w RPL - uzyj danych Gemini
+          medicine = Medicine(
+            id: const Uuid().v4(),
+            nazwa: lek.nazwa,
+            opis: lek.opis,
+            wskazania: lek.wskazania,
+            tagi: processTagsForImport(lek.tagi),
+            terminWaznosci: lek.terminWaznosci,
+            dataDodania: DateTime.now().toIso8601String(),
+          );
+        }
+      } else {
+        // Brak EAN lub niepoprawny - uzyj danych Gemini (jak do tej pory)
+        medicine = Medicine(
+          id: const Uuid().v4(),
+          nazwa: lek.nazwa,
+          opis: lek.opis,
+          wskazania: lek.wskazania,
+          tagi: processTagsForImport(lek.tagi),
+          terminWaznosci: lek.terminWaznosci,
+          dataDodania: DateTime.now().toIso8601String(),
+        );
+      }
+
       await widget.storageService.saveMedicine(medicine);
       importedMedicines.add(medicine);
     }
 
     if (!mounted) return;
 
+    // Snackbar z informacja o weryfikacji
+    final snackMessage = verifiedCount > 0
+        ? 'Zaimportowano ${importedMedicines.length} leków ($verifiedCount zweryfikowanych)'
+        : 'Zaimportowano ${importedMedicines.length} leków z Gemini AI';
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          'Zaimportowano ${importedMedicines.length} leków z Gemini AI',
-        ),
+        content: Text(snackMessage),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -711,6 +791,60 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       storageService: widget.storageService,
       onComplete: () {},
     );
+  }
+
+  /// Generuje tagi na podstawie danych z RPL (kopiowane z barcode_scanner.dart)
+  List<String> _generateRplTags(RplDrugInfo drugInfo) {
+    final tags = <String>{};
+
+    // 1. Status recepty (accessibilityCategory)
+    final category = drugInfo.accessibilityCategory?.toUpperCase();
+    if (category != null) {
+      if (category == 'OTC') {
+        tags.add('bez recepty');
+      } else if (category == 'RP' || category == 'RPZ') {
+        tags.add('na receptę');
+      }
+    }
+
+    // 2. Postac farmaceutyczna
+    if (drugInfo.form.isNotEmpty) {
+      final formLower = drugInfo.form.toLowerCase();
+      if (formLower.contains('tabletk')) {
+        tags.add('tabletki');
+      } else if (formLower.contains('kaps')) {
+        tags.add('kapsułki');
+      } else if (formLower.contains('syrop')) {
+        tags.add('syrop');
+      } else if (formLower.contains('masc') || formLower.contains('krem')) {
+        tags.add('maść');
+      } else if (formLower.contains('zastrzyk') ||
+          formLower.contains('iniekcj')) {
+        tags.add('zastrzyki');
+      } else if (formLower.contains('krople')) {
+        tags.add('krople');
+      } else if (formLower.contains('aerozol') || formLower.contains('spray')) {
+        tags.add('aerozol');
+      } else if (formLower.contains('czopk')) {
+        tags.add('czopki');
+      } else if (formLower.contains('plast')) {
+        tags.add('plastry');
+      } else if (formLower.contains('zawies') ||
+          formLower.contains('proszek')) {
+        tags.add('proszek/zawiesina');
+      }
+    }
+
+    // 3. Substancje czynne (dzielimy po " + ")
+    if (drugInfo.activeSubstance.isNotEmpty) {
+      final substances = drugInfo.activeSubstance
+          .split(RegExp(r'\s*\+\s*'))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty);
+      tags.addAll(substances);
+    }
+
+    return tags.toList();
   }
 
   /// Handler dla trybu 2-zdjęciowego (pojedynczy lek)

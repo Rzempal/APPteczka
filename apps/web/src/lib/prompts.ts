@@ -1,4 +1,4 @@
-// src/lib/prompts.ts
+// src/lib/prompts.ts v0.002 Added EAN barcode extraction instructions
 // Generatory promptów do wklejenia w ChatGPT/Claude/Gemini
 
 import type { Medicine } from './types';
@@ -19,8 +19,11 @@ Na jednym zdjęciu może znajdować się jeden lub kilka różnych leków.
 ## Zadanie
 
 1. Przeanalizuj obraz i rozpoznaj **nazwy leków widoczne na opakowaniach**.
-2. Jeśli na zdjęciu jest więcej niż jeden lek, zwróć **osobny obiekt dla każdego**.
-3. **Zgadywanie jest zabronione.**
+2. **Zidentyfikuj kody kreskowe (EAN-13, EAN-8)** na każdym opakowaniu. Jeśli kod jest wyraźnie widoczny, zwróć go w polu \`ean\`.
+3. Jeśli na zdjęciu jest więcej niż jeden lek, zwróć **osobny obiekt dla każdego**.
+4. **Zgadywanie jest zabronione.**
+
+**Priorytet kodu kreskowego:** Jeśli nazwa na opakowaniu i kod kreskowy wydają się dotyczyć różnych produktów, priorytetyzuj kod kreskowy - jest bardziej wiarygodny niż tekst.
 
 Jeżeli:
 - nazwa leku jest nieczytelna,
@@ -51,6 +54,7 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
   "leki": [
     {
       "nazwa": "string | null",
+      "ean": "string | null",
       "opis": "string",
       "wskazania": ["string", "string"],
       "tagi": ["tag1", "tag2"],
@@ -59,6 +63,12 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
   ]
 }
 \`\`\`
+
+### Pole ean (kod kreskowy)
+
+- Jeśli na opakowaniu widoczny jest kod kreskowy (EAN-13 lub EAN-8), zwróć **same cyfry** (np. "5909990733828").
+- Jeśli kod jest niewyraźny, częściowo zasłonięty lub niewidoczny, zwróć **null**.
+- Kody kreskowe na lekach mają zazwyczaj 13 cyfr (EAN-13) lub 8 cyfr (EAN-8).
 
 ### Pole terminWaznosci
 

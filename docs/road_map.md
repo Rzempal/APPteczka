@@ -217,6 +217,46 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 
 ---
 
+### Gemini AI Vision - Rozpoznawanie Kodow Kreskowych (v1.0)
+
+**Data:** 2026-01-11
+
+**Implementacja:**
+- Rozszerzenie promptu Gemini o ekstrakcje kodow EAN-13/EAN-8 ze zdjec
+- Walidacja kodow algorytmem Modulo 10 (ean_validator.dart)
+- Automatyczne wyszukiwanie lekow w RPL po rozpoznanym kodzie
+- Merge danych: RPL (nazwa, substancja, postac, ulotka) + Gemini (opis, data waznosci, tagi)
+- Priorytet kodu kreskowego nad nazwa tekstowa
+
+**Flow:**
+```
+Zdjecie leku
+    ↓
+Gemini AI (nazwa + EAN + opis + data)
+    ↓
+[Walidacja EAN - Modulo 10]
+    ↓
+[RPL API lookup po kodzie]
+    ↓
+Merge: RPL (oficjalne dane) + Gemini (opis/data)
+    ↓
+Medicine z isVerifiedByBarcode=true
+```
+
+**Wskaznik weryfikacji:**
+- Ikona tarczy + tekst "Zweryfikowano po kodzie kreskowym" w sekcji Dodano
+- Monit przy konflikcie: "Nazwa nie pasuje do kodu kreskowego, wyszukano po kodzie"
+
+**Pliki:**
+- `apps/web/src/lib/prompts.ts` - prompt z instrukcja EAN (v0.002)
+- `apps/mobile/lib/services/gemini_service.dart` - pole ean w ScannedMedicine (v0.003)
+- `apps/mobile/lib/utils/ean_validator.dart` - walidacja Modulo 10 (v0.001)
+- `apps/mobile/lib/models/medicine.dart` - pola weryfikacji (v0.002)
+- `apps/mobile/lib/screens/add_medicine_screen.dart` - logika merge RPL+Gemini
+- `apps/mobile/lib/widgets/medicine_card.dart` - wskaznik weryfikacji (v2.3)
+
+---
+
 ### Lista Lekow - Akordeon v2.2
 
 **Data:** 2026-01-10
@@ -272,4 +312,4 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-10 (MedicineCard v2.2 bug fixes)
+> 📅 **Ostatnia aktualizacja:** 2026-01-11 (Gemini AI Vision - rozpoznawanie kodow kreskowych)
