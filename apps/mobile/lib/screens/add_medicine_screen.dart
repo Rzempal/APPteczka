@@ -8,6 +8,7 @@ import 'package:file_picker/file_picker.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../services/storage_service.dart';
+import '../services/gemini_service.dart';
 import '../services/gemini_name_lookup_service.dart';
 import '../services/date_ocr_service.dart';
 import '../widgets/barcode_scanner.dart';
@@ -48,7 +49,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   bool _isImporting = false;
 
   // Expanded sections
-  bool _barcodeExpanded = true; // 1. Skaner kodów kreskowych (domyślnie rozwinięty)
+  bool _barcodeExpanded =
+      true; // 1. Skaner kodów kreskowych (domyślnie rozwinięty)
   bool _manualExpanded = false; // 2. Dodaj ręcznie
   bool _fileExpanded = false; // 3. Import kopii
 
@@ -561,64 +563,77 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     try {
       // === ETAP 1: Batch OCR dat (rownolegle) ===
-      await Future.wait(drugs.map((drug) async {
-        if (drug.tempImagePath != null && drug.expiryDate == null) {
-          try {
-            final result = await dateOcrService.recognizeDate(
-              File(drug.tempImagePath!),
-            );
-            if (result.terminWaznosci != null) {
-              drug.expiryDate = result.terminWaznosci;
-            } else {
+      await Future.wait(
+        drugs.map((drug) async {
+          if (drug.tempImagePath != null && drug.expiryDate == null) {
+            try {
+              final result = await dateOcrService.recognizeDate(
+                File(drug.tempImagePath!),
+              );
+              if (result.terminWaznosci != null) {
+                drug.expiryDate = result.terminWaznosci;
+              } else {
+                failedOcrDrugs.add(drug);
+              }
+            } catch (_) {
               failedOcrDrugs.add(drug);
             }
-          } catch (_) {
-            failedOcrDrugs.add(drug);
           }
-        }
-        progressNotifier.value = progressNotifier.value.increment();
-      }));
+          progressNotifier.value = progressNotifier.value.increment();
+        }),
+      );
 
       // === ETAP 2: AI enrichment (rownolegle) ===
       progressNotifier.value = progressNotifier.value.copyWith(stage: 'AI');
 
-      await Future.wait(drugs.map((drug) async {
-        try {
-          final result = await geminiService.lookupByName(drug.drugInfo.fullName);
-          if (result.found && result.medicine != null) {
-            // Tworzymy Medicine z polaczeniem danych z RPL i AI
-            final med = result.medicine!;
-            final medicine = Medicine(
-              id: const Uuid().v4(),
-              nazwa: drug.drugInfo.fullName,
-              opis: med.opis,
-              wskazania: med.wskazania,
-              tagi: [
-                ...drug.toMedicine('').tagi, // tagi z RPL (Rp/OTC, forma, substancje)
-                ...processTagsForImport(med.tagi), // tagi z AI
-              ].toSet().toList(), // usun duplikaty
-              packages: drug.expiryDate != null
-                  ? [MedicinePackage(expiryDate: drug.expiryDate!, pieceCount: drug.pieceCount)]
-                  : [],
-              dataDodania: DateTime.now().toIso8601String(),
-              leafletUrl: drug.drugInfo.leafletUrl,
+      await Future.wait(
+        drugs.map((drug) async {
+          try {
+            final result = await geminiService.lookupByName(
+              drug.drugInfo.fullName,
             );
-            await widget.storageService.saveMedicine(medicine);
-            importedMedicines.add(medicine);
-          } else {
-            // AI nie rozpoznalo - zapisz tylko dane z RPL
+            if (result.found && result.medicine != null) {
+              // Tworzymy Medicine z polaczeniem danych z RPL i AI
+              final med = result.medicine!;
+              final medicine = Medicine(
+                id: const Uuid().v4(),
+                nazwa: drug.drugInfo.fullName,
+                opis: med.opis,
+                wskazania: med.wskazania,
+                tagi: [
+                  ...drug
+                      .toMedicine('')
+                      .tagi, // tagi z RPL (Rp/OTC, forma, substancje)
+                  ...processTagsForImport(med.tagi), // tagi z AI
+                ].toSet().toList(), // usun duplikaty
+                packages: drug.expiryDate != null
+                    ? [
+                        MedicinePackage(
+                          expiryDate: drug.expiryDate!,
+                          pieceCount: drug.pieceCount,
+                        ),
+                      ]
+                    : [],
+                dataDodania: DateTime.now().toIso8601String(),
+                leafletUrl: drug.drugInfo.leafletUrl,
+              );
+              await widget.storageService.saveMedicine(medicine);
+              importedMedicines.add(medicine);
+            } else {
+              // AI nie rozpoznalo - zapisz tylko dane z RPL
+              final medicine = drug.toMedicine(const Uuid().v4());
+              await widget.storageService.saveMedicine(medicine);
+              importedMedicines.add(medicine);
+            }
+          } catch (_) {
+            // Blad AI - zapisz tylko dane z RPL
             final medicine = drug.toMedicine(const Uuid().v4());
             await widget.storageService.saveMedicine(medicine);
             importedMedicines.add(medicine);
           }
-        } catch (_) {
-          // Blad AI - zapisz tylko dane z RPL
-          final medicine = drug.toMedicine(const Uuid().v4());
-          await widget.storageService.saveMedicine(medicine);
-          importedMedicines.add(medicine);
-        }
-        progressNotifier.value = progressNotifier.value.increment();
-      }));
+          progressNotifier.value = progressNotifier.value.increment();
+        }),
+      );
     } finally {
       // Zamknij dialog przetwarzania
       if (mounted) Navigator.of(context).pop();
@@ -949,7 +964,9 @@ class _ProcessingDialog extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  prog.stage == 'OCR' ? LucideIcons.scanText : LucideIcons.sparkles,
+                  prog.stage == 'OCR'
+                      ? LucideIcons.scanText
+                      : LucideIcons.sparkles,
                   size: 48,
                   color: aiColor,
                 ),
