@@ -751,6 +751,9 @@ class _SettingsScreenState extends State<SettingsScreen>
   ThemeMode? _optimisticMode; // Optimistic UI - lokalna kopia wybranego motywu
   ThemeMode? _switchingMode; // Który przycisk pokazuje spinner
 
+  /// Lista rozmiarów kawy dla swipe gesture
+  static const _coffeeSizes = ['small', 'medium', 'large'];
+
   Widget _buildDisclaimerSection(ThemeData theme, bool isDark) {
     return Container(
       decoration: BoxDecoration(
@@ -1245,30 +1248,60 @@ class _SettingsScreenState extends State<SettingsScreen>
                       NeuInsetContainer(
                         borderRadius: 12,
                         padding: const EdgeInsets.all(4),
-                        child: Row(
-                          children: [
-                            _buildPriceToggle(
-                              theme,
-                              isDark,
-                              setLocalState,
-                              size: 'small',
-                              price: '5 zł',
-                            ),
-                            _buildPriceToggle(
-                              theme,
-                              isDark,
-                              setLocalState,
-                              size: 'medium',
-                              price: '10 zł',
-                            ),
-                            _buildPriceToggle(
-                              theme,
-                              isDark,
-                              setLocalState,
-                              size: 'large',
-                              price: '15 zł',
-                            ),
-                          ],
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onHorizontalDragEnd: (details) {
+                            // Swipe gesture - przełączanie rozmiaru kawy
+                            final velocity = details.primaryVelocity ?? 0;
+                            if (velocity.abs() < 100) return;
+
+                            final currentIndex = _coffeeSizes.indexOf(
+                              _selectedCoffeeSize,
+                            );
+                            int newIndex;
+
+                            if (velocity < 0) {
+                              // Swipe left → mniejsza kawa
+                              newIndex =
+                                  (currentIndex - 1 + _coffeeSizes.length) %
+                                  _coffeeSizes.length;
+                            } else {
+                              // Swipe right → większa kawa
+                              newIndex =
+                                  (currentIndex + 1) % _coffeeSizes.length;
+                            }
+
+                            HapticFeedback.lightImpact();
+                            setLocalState(
+                              () =>
+                                  _selectedCoffeeSize = _coffeeSizes[newIndex],
+                            );
+                          },
+                          child: Row(
+                            children: [
+                              _buildPriceToggle(
+                                theme,
+                                isDark,
+                                setLocalState,
+                                size: 'small',
+                                price: '5 zł',
+                              ),
+                              _buildPriceToggle(
+                                theme,
+                                isDark,
+                                setLocalState,
+                                size: 'medium',
+                                price: '10 zł',
+                              ),
+                              _buildPriceToggle(
+                                theme,
+                                isDark,
+                                setLocalState,
+                                size: 'large',
+                                price: '15 zł',
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -1315,6 +1348,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           HapticFeedback.lightImpact();
           setLocalState(() => _selectedCoffeeSize = size);
