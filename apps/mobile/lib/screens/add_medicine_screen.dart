@@ -8,10 +8,8 @@ import 'package:file_picker/file_picker.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../services/storage_service.dart';
-import '../services/gemini_service.dart';
 import '../services/gemini_name_lookup_service.dart';
 import '../services/date_ocr_service.dart';
-import '../widgets/gemini_scanner.dart';
 import '../widgets/barcode_scanner.dart';
 import '../widgets/karton_icons.dart';
 import '../widgets/batch_date_input_sheet.dart';
@@ -19,8 +17,6 @@ import '../widgets/neumorphic/neumorphic.dart';
 import '../widgets/tag_selector_widget.dart';
 import '../theme/app_theme.dart';
 import '../utils/tag_normalization.dart';
-import '../utils/ean_validator.dart';
-import '../services/rpl_service.dart';
 
 /// Ekran dodawania leków - wszystkie metody importu
 class AddMedicineScreen extends StatefulWidget {
@@ -51,11 +47,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   // Import z pliku
   bool _isImporting = false;
 
-  // Expanded sections - nowa kolejność
-  bool _aiVisionExpanded = true; // 1. Gemini AI Vision
-  bool _barcodeExpanded = false; // 2. Skanuj kod kreskowy
-  bool _manualExpanded = false; // 3. Dodaj ręcznie
-  bool _fileExpanded = false; // 4. Import kopii
+  // Expanded sections
+  bool _barcodeExpanded = true; // 1. Skaner kodów kreskowych (domyślnie rozwinięty)
+  bool _manualExpanded = false; // 2. Dodaj ręcznie
+  bool _fileExpanded = false; // 3. Import kopii
 
   @override
   void dispose() {
@@ -127,27 +122,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
                 const SizedBox(height: 16),
 
-                // 1. Gemini AI Vision (połączone tryby)
-                _buildAiVisionSection(theme, isDark),
+                // 1. Skaner kodów kreskowych (wspomagany AI)
+                _buildBarcodeScannerSection(theme, isDark),
 
                 const SizedBox(height: 12),
 
-                // 2. Skanuj kod kreskowy (EAN)
-                _buildExpandableSection(
-                  icon: LucideIcons.barcode,
-                  title: 'Skanuj kod kreskowy',
-                  subtitle: 'Ciagale skanowanie kodow EAN z apteczki',
-                  isExpanded: _barcodeExpanded,
-                  onToggle: () =>
-                      setState(() => _barcodeExpanded = !_barcodeExpanded),
-                  child: _buildBarcodeSection(theme, isDark),
-                  isDark: isDark,
-                  iconColor: theme.colorScheme.primary,
-                ),
-
-                const SizedBox(height: 12),
-
-                // 3. Dodaj ręcznie (przesunięte)
+                // 2. Dodaj ręcznie (z AI)
                 _buildExpandableSection(
                   icon: LucideIcons.pencil,
                   title: 'Dodaj ręcznie',
@@ -164,7 +144,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
                 const SizedBox(height: 12),
 
-                // 4. Import z pliku (przesunięte)
+                // 3. Import z pliku
                 _buildExpandableSection(
                   icon: LucideIcons.folderDown,
                   title: 'Import kopii zapasowej',
@@ -275,9 +255,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
   }
 
-  // ================== SEKCJA GEMINI AI VISION ==================
+  // ================== SEKCJA SKANER KODÓW KRESKOWYCH ==================
 
-  Widget _buildAiVisionSection(ThemeData theme, bool isDark) {
+  /// Buduje sekcję skanera kodów kreskowych z ikoną kaskadową (barcode + AI)
+  Widget _buildBarcodeScannerSection(ThemeData theme, bool isDark) {
     final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
 
     return Container(
@@ -285,27 +266,59 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          // Header główny - rozwijana sekcja
+          // Header z ikoną kaskadową
           InkWell(
-            onTap: () => setState(() => _aiVisionExpanded = !_aiVisionExpanded),
+            onTap: () => setState(() => _barcodeExpanded = !_barcodeExpanded),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(LucideIcons.sparkles, color: aiColor),
+                  // Ikona kaskadowa: barcode + AI sparkles
+                  SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          LucideIcons.barcode,
+                          color: theme.colorScheme.primary,
+                          size: 24,
+                        ),
+                        Positioned(
+                          right: -4,
+                          bottom: -4,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.darkBackground
+                                  : AppColors.lightBackground,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              LucideIcons.sparkles,
+                              color: aiColor,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Dodaj za pomocą Gemini AI Vision',
+                          'Skaner kodów kreskowych',
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          'Zrób zdjęcie opakowań i pozwól AI rozpoznać leki',
+                          'Dodaj lek skanując kod kreskowy i datę ważności swoim aparatem',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -314,7 +327,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     ),
                   ),
                   Icon(
-                    _aiVisionExpanded
+                    _barcodeExpanded
                         ? LucideIcons.chevronUp
                         : LucideIcons.chevronDown,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -324,34 +337,17 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             ),
           ),
 
-          // Zawartość rozwijana - jeden tryb skanowania
-          if (_aiVisionExpanded)
+          // Zawartość rozwijana - skaner
+          if (_barcodeExpanded)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: GeminiScanner(
-                onResult: _handleGeminiResult,
+              child: BarcodeScannerWidget(
+                onComplete: _handleBarcodeResult,
                 onError: widget.onError,
-                onImportComplete: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Leki zostały zaimportowane!'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
               ),
             ),
         ],
       ),
-    );
-  }
-
-  // ================== SEKCJA SKANER KODOW KRESKOWYCH ==================
-
-  Widget _buildBarcodeSection(ThemeData theme, bool isDark) {
-    return BarcodeScannerWidget(
-      onComplete: _handleBarcodeResult,
-      onError: widget.onError,
     );
   }
 
@@ -542,176 +538,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
   // ==================== HANDLERS ====================
 
-  void _handleGeminiResult(GeminiScanResult result) async {
-    final importedMedicines = <Medicine>[];
-    int verifiedCount = 0;
-    final rplService = RplService();
-
-    for (final lek in result.leki) {
-      Medicine medicine;
-
-      // Sprawdz czy mamy poprawny kod kreskowy
-      final normalizedEan = EanValidator.normalize(lek.ean);
-
-      if (normalizedEan != null) {
-        // Probuj pobrac dane z RPL
-        final rplInfo = await rplService.fetchDrugByEan(normalizedEan);
-
-        if (rplInfo != null) {
-          // Sukces - merge danych RPL + Gemini
-          verifiedCount++;
-
-          // Sprawdz czy nazwa z Gemini rozni sie od RPL (konflikt)
-          String? verificationNote;
-          if (lek.nazwa != null && lek.nazwa!.isNotEmpty) {
-            final geminiNameLower = lek.nazwa!.toLowerCase().trim();
-            final rplNameLower = rplInfo.name.toLowerCase().trim();
-            // Jesli nazwa Gemini nie zawiera sie w nazwie RPL i odwrotnie
-            if (!rplNameLower.contains(geminiNameLower) &&
-                !geminiNameLower.contains(rplNameLower)) {
-              verificationNote =
-                  'Nazwa nie pasuje do kodu kreskowego, wyszukano po kodzie';
-            }
-          }
-
-          // Buduj opis z danych RPL + Gemini
-          final opisParts = <String>[];
-          if (rplInfo.activeSubstance.isNotEmpty) {
-            opisParts.add(rplInfo.activeSubstance);
-          }
-          if (rplInfo.form.isNotEmpty) {
-            opisParts.add(rplInfo.form);
-          }
-          if (lek.opis.isNotEmpty) {
-            opisParts.add(lek.opis);
-          }
-          final mergedOpis = opisParts.join('. ');
-
-          // Generuj tagi z RPL (podobnie jak w barcode_scanner.dart)
-          final rplTags = _generateRplTags(rplInfo);
-
-          medicine = Medicine(
-            id: const Uuid().v4(),
-            nazwa: rplInfo.fullName, // RPL ma priorytet
-            opis: mergedOpis,
-            wskazania: lek.wskazania, // Gemini
-            tagi: [
-              ...rplTags, // Tagi z RPL (recepta, forma, substancje)
-              ...processTagsForImport(lek.tagi), // Tagi z Gemini
-            ].toSet().toList(), // Usun duplikaty
-            terminWaznosci: lek.terminWaznosci, // Gemini (RPL nie ma dat)
-            dataDodania: DateTime.now().toIso8601String(),
-            leafletUrl: rplInfo.leafletUrl, // RPL
-            isVerifiedByBarcode: true,
-            verificationNote: verificationNote,
-          );
-        } else {
-          // EAN poprawny ale nie znaleziono w RPL - uzyj danych Gemini
-          medicine = Medicine(
-            id: const Uuid().v4(),
-            nazwa: lek.nazwa,
-            opis: lek.opis,
-            wskazania: lek.wskazania,
-            tagi: processTagsForImport(lek.tagi),
-            terminWaznosci: lek.terminWaznosci,
-            dataDodania: DateTime.now().toIso8601String(),
-          );
-        }
-      } else {
-        // Brak EAN lub niepoprawny - uzyj danych Gemini (jak do tej pory)
-        medicine = Medicine(
-          id: const Uuid().v4(),
-          nazwa: lek.nazwa,
-          opis: lek.opis,
-          wskazania: lek.wskazania,
-          tagi: processTagsForImport(lek.tagi),
-          terminWaznosci: lek.terminWaznosci,
-          dataDodania: DateTime.now().toIso8601String(),
-        );
-      }
-
-      await widget.storageService.saveMedicine(medicine);
-      importedMedicines.add(medicine);
-    }
-
-    if (!mounted) return;
-
-    // Snackbar z informacja o weryfikacji
-    final snackMessage = verifiedCount > 0
-        ? 'Zaimportowano ${importedMedicines.length} leków ($verifiedCount zweryfikowanych)'
-        : 'Zaimportowano ${importedMedicines.length} leków z Gemini AI';
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(snackMessage),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-
-    // Pokaż sheet do uzupełniania dat dla leków bez daty
-    BatchDateInputSheet.showIfNeeded(
-      context: context,
-      medicines: importedMedicines,
-      storageService: widget.storageService,
-      onComplete: () {},
-    );
-  }
-
-  /// Generuje tagi na podstawie danych z RPL (kopiowane z barcode_scanner.dart)
-  List<String> _generateRplTags(RplDrugInfo drugInfo) {
-    final tags = <String>{};
-
-    // 1. Status recepty (accessibilityCategory)
-    final category = drugInfo.accessibilityCategory?.toUpperCase();
-    if (category != null) {
-      if (category == 'OTC') {
-        tags.add('bez recepty');
-      } else if (category == 'RP' || category == 'RPZ') {
-        tags.add('na receptę');
-      }
-    }
-
-    // 2. Postac farmaceutyczna
-    if (drugInfo.form.isNotEmpty) {
-      final formLower = drugInfo.form.toLowerCase();
-      if (formLower.contains('tabletk')) {
-        tags.add('tabletki');
-      } else if (formLower.contains('kaps')) {
-        tags.add('kapsułki');
-      } else if (formLower.contains('syrop')) {
-        tags.add('syrop');
-      } else if (formLower.contains('masc') || formLower.contains('krem')) {
-        tags.add('maść');
-      } else if (formLower.contains('zastrzyk') ||
-          formLower.contains('iniekcj')) {
-        tags.add('zastrzyki');
-      } else if (formLower.contains('krople')) {
-        tags.add('krople');
-      } else if (formLower.contains('aerozol') || formLower.contains('spray')) {
-        tags.add('aerozol');
-      } else if (formLower.contains('czopk')) {
-        tags.add('czopki');
-      } else if (formLower.contains('plast')) {
-        tags.add('plastry');
-      } else if (formLower.contains('zawies') ||
-          formLower.contains('proszek')) {
-        tags.add('proszek/zawiesina');
-      }
-    }
-
-    // 3. Substancje czynne (dzielimy po " + ")
-    if (drugInfo.activeSubstance.isNotEmpty) {
-      final substances = drugInfo.activeSubstance
-          .split(RegExp(r'\s*\+\s*'))
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty);
-      tags.addAll(substances);
-    }
-
-    return tags.toList();
-  }
-
-  /// Handler dla skanera kodow kreskowych (lista lekow)
+  /// Handler dla skanera kodów kreskowych (lista leków)
   /// Batch processing: OCR dat + AI enrichment
   void _handleBarcodeResult(List<ScannedDrug> drugs) async {
     if (drugs.isEmpty) return;

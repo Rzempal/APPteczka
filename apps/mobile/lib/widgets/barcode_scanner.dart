@@ -272,14 +272,14 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
         title = _isScannerActive
             ? 'Zeskanuj kod kreskowy'
             : 'Uruchom skaner by rozpocząć';
-        subtitle = 'Skieruj aparat na kod EAN opakowania';
+        subtitle = 'Skieruj aparat na kod kreskowy na opakowaniu';
       }
     } else {
       // Tryb daty waznosci - pokaz nazwe leku
       icon = LucideIcons.camera;
       iconColor = Colors.orange;
-      title = _currentDrug?.drugInfo.fullName ?? 'Dodaj date waznosci';
-      subtitle = 'Zrob zdjecie daty waznosci lub Pomin';
+      title = _currentDrug?.drugInfo.fullName ?? 'Dodaj datę ważności';
+      subtitle = 'Zrób zdjęcie daty ważności lub Pomiń';
     }
 
     return NeuInsetContainer(
@@ -481,7 +481,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 left: 16,
                 child: _buildControlButton(
                   icon: LucideIcons.skipForward,
-                  label: 'Pomin',
+                  label: 'Pomiń',
                   onTap: _skipExpiryDate,
                 ),
               ),
@@ -713,7 +713,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     } on RplException catch (e) {
       _showError(e.message);
     } catch (e) {
-      _showError('Blad: $e');
+      _showError('Błąd: $e');
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -742,7 +742,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
       return file;
     } catch (e) {
-      _showError('Blad snapshotu: $e');
+      _showError('Błąd zdjęcia: $e');
       return null;
     }
   }
@@ -796,7 +796,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Wprowadz date waznosci',
+              'Wprowadź datę ważności',
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
@@ -811,7 +811,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               controller: controller,
               keyboardType: TextInputType.datetime,
               decoration: const InputDecoration(
-                labelText: 'Data waznosci (MM/YYYY)',
+                labelText: 'Data ważności (MM/YYYY)',
                 hintText: '03/2027',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(LucideIcons.calendar),
@@ -827,7 +827,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                       Navigator.pop(context);
                       _skipExpiryDate();
                     },
-                    child: const Text('Pomin'),
+                    child: const Text('Pomiń'),
                   ),
                 ),
                 const SizedBox(width: 12),
