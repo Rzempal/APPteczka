@@ -159,22 +159,33 @@ class _MedicineCardState extends State<MedicineCard>
         onTapCancel: widget.isCompact ? _handleTapCancel : null,
         onTap: widget.isCompact ? widget.onExpand : null,
         child: AnimatedBuilder(
-          animation: _scaleAnimation,
-          builder: (context, child) =>
-              Transform.scale(scale: _scaleAnimation.value, child: child),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            decoration: widget.isCompact
-                ? (_isPressed
-                    ? _getPressedDecoration(isDark, gradient, statusColor)
-                    : NeuDecoration.statusCard(
-                        isDark: isDark,
-                        gradient: gradient,
-                        radius: 20,
-                      ))
-                : NeuDecoration.pressed(isDark: isDark, radius: 20),
-            child: Padding(
+          animation: _controller,
+          builder: (context, child) {
+            // Synchronized animation: scale + decoration use same controller
+            final t = _controller.value;
+            final scale = 1.0 - (t * (1.0 - NeuDecoration.tapScale));
+
+            final decoration = widget.isCompact
+                ? BoxDecoration.lerp(
+                    NeuDecoration.statusCard(
+                      isDark: isDark,
+                      gradient: gradient,
+                      radius: 20,
+                    ),
+                    _getPressedDecoration(isDark, gradient, statusColor),
+                    t,
+                  )
+                : NeuDecoration.pressed(isDark: isDark, radius: 20);
+
+            return Transform.scale(
+              scale: scale,
+              child: Container(
+                decoration: decoration,
+                child: child,
+              ),
+            );
+          },
+          child: Padding(
               padding: EdgeInsets.all(widget.isCompact ? 12 : 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1857,19 +1868,43 @@ class _MedicineCardState extends State<MedicineCard>
   // ==================== HELPERS ====================
 
   BoxDecoration _getPressedDecoration(bool isDark, LinearGradient gradient, Color statusColor) {
-    // Only ONE placeholder shadow for the dark shadow.
-    // The light/white shadow (second in statusCard) has no pair,
-    // so it disappears immediately instead of animating.
+    // Matching shadow structure for smooth BoxDecoration.lerp() interpolation.
+    // Same number of shadows as statusCard, but all transparent.
+    if (!isDark) {
+      // Light mode: 2 shadows matching statusCard structure
+      return BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.transparent,
+            offset: Offset(NeuDecoration.shadowDistance, NeuDecoration.shadowDistance),
+            blurRadius: NeuDecoration.shadowBlur,
+          ),
+          BoxShadow(
+            color: Colors.transparent,
+            offset: Offset(-NeuDecoration.shadowDistanceSm, -NeuDecoration.shadowDistanceSm),
+            blurRadius: NeuDecoration.shadowBlurSm,
+          ),
+        ],
+      );
+    }
+
+    // Dark mode: 2 shadows matching statusCard structure
     return BoxDecoration(
       gradient: gradient,
       borderRadius: BorderRadius.circular(20),
-      boxShadow: [
+      border: Border.all(color: Colors.transparent, width: 1),
+      boxShadow: const [
         BoxShadow(
           color: Colors.transparent,
-          offset: isDark
-              ? const Offset(0, 8) // Match dark mode statusCard
-              : const Offset(NeuDecoration.shadowDistance, NeuDecoration.shadowDistance),
-          blurRadius: isDark ? 32 : NeuDecoration.shadowBlur,
+          offset: Offset(0, 8),
+          blurRadius: 32,
+        ),
+        BoxShadow(
+          color: Colors.transparent,
+          offset: Offset(0, 0),
+          blurRadius: 12,
         ),
       ],
     );
