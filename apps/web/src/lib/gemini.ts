@@ -6,6 +6,7 @@ import { generateImportPrompt, generateNameLookupPrompt } from './prompts';
 export interface GeminiOCRResult {
     leki: Array<{
         nazwa: string | null;
+        ean: string | null;
         opis: string;
         wskazania: string[];
         tagi: string[];
