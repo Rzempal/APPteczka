@@ -16,6 +16,7 @@ $ErrorActionPreference = "Stop"
 $PROJECT_ROOT = Split-Path -Parent $PSScriptRoot
 $MOBILE_DIR = Join-Path $PROJECT_ROOT "apps\mobile"
 $RELEASES_DIR = Join-Path $PROJECT_ROOT "releases"
+$RETENTION_COUNT = 3
 
 function Print-Info($msg) { Write-Host $msg -ForegroundColor Cyan }
 function Print-Success($msg) { Write-Host $msg -ForegroundColor Green }
@@ -126,6 +127,65 @@ $commitLines
     
     Set-Content -Path $LOG_PATH -Value $finalContent -Encoding UTF8
     Print-Success "Log zapisany: $LOG_PATH"
+}
+
+function Cleanup-RemoteApks {
+    param(
+        [string]$WinSCP,
+        [string]$OpenCmd,
+        [string]$RemotePath,
+        [string]$Pattern,
+        [int]$KeepCount
+    )
+    
+    Print-Warn "Sprzatanie starych APK (Limit: $KeepCount)..."
+    
+    $xmlLog = Join-Path $env:TEMP "winscp_ls_$([guid]::NewGuid()).xml"
+    $lsScript = Join-Path $env:TEMP "winscp_ls_$([guid]::NewGuid()).txt"
+    $rmScript = Join-Path $env:TEMP "winscp_rm_$([guid]::NewGuid()).txt"
+    
+    try {
+        $OpenCmd | Out-File $lsScript -Encoding UTF8
+        "ls ""$RemotePath""" | Out-File $lsScript -Append -Encoding UTF8
+        "exit" | Out-File $lsScript -Append -Encoding UTF8
+        
+        & $WinSCP /script="$lsScript" /xmllog="$xmlLog" /loglevel=0 | Out-Null
+        
+        if (Test-Path $xmlLog) {
+            [xml]$xml = Get-Content $xmlLog
+            $files = $xml.session.ls.file | Where-Object { $_.type -eq "file" -and $_.filename -like $Pattern }
+            
+            # Sort descending by filename (contains timestamp)
+            $sortedFiles = $files | Sort-Object -Property filename -Descending
+            
+            if ($sortedFiles.Count -gt $KeepCount) {
+                $toDelete = $sortedFiles[$KeepCount..($sortedFiles.Count - 1)]
+                Print-Info ("Znaleziono {0} starych APK do usuniecia (Kanal: $Pattern)." -f $toDelete.Count)
+                
+                $OpenCmd | Out-File $rmScript -Encoding UTF8
+                foreach ($f in $toDelete) {
+                    $remoteFile = $RemotePath + $f.filename
+                    Print-Info "  Usuwanie: $($f.filename)"
+                    "rm ""$remoteFile""" | Out-File $rmScript -Append -Encoding UTF8
+                }
+                "exit" | Out-File $rmScript -Append -Encoding UTF8
+                
+                & $WinSCP /script="$rmScript" /loglevel=0 | Out-Null
+                Print-Success "Sprzatanie zakonczone sukcesem."
+            }
+            else {
+                Print-Info "Brak starych APK do usuniecia dla wzorca $Pattern."
+            }
+        }
+    }
+    catch {
+        Print-Warn "Pominieto sprzatanie z powodu bledu: $_"
+    }
+    finally {
+        if (Test-Path $lsScript) { Remove-Item $lsScript -ErrorAction SilentlyContinue }
+        if (Test-Path $xmlLog) { Remove-Item $xmlLog -ErrorAction SilentlyContinue }
+        if (Test-Path $rmScript) { Remove-Item $rmScript -ErrorAction SilentlyContinue }
+    }
 }
 
 # === Start Skryptu ===
@@ -361,6 +421,10 @@ if (-not $SkipUpload) {
         if ($LASTEXITCODE -eq 0) {
             Print-Success "[4/4] Upload zakonczony sukcesem!"
             $DEPLOY_STATUS = "ok"
+
+            # 5. Cleanup
+            $APK_PATTERN = if ($Channel -eq "internal") { "karton-dev_*.apk" } else { "karton-z-lekami_*.apk" }
+            Cleanup-RemoteApks -WinSCP $winScp -OpenCmd $openCmd -RemotePath $UPLOAD_REMOTE_PATH -Pattern $APK_PATTERN -KeepCount $RETENTION_COUNT
         }
         else {
             Print-Error "[4/4] Blad uploadu (ExitCode: $LASTEXITCODE). Sprawdz logi w releases/winscp_log.xml"

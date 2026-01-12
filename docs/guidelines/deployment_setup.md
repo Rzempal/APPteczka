@@ -45,6 +45,9 @@ Skrypt `deploy_apk.ps1` (v12) oferuje automatyzację procesów pomocniczych:
   - Ostatnie 4 commity z Git.
   - Czas trwania całego procesu.
   - Status uploadu.
+- **Strategia czyszczenia (Cleanup)**: Po udanym przesłaniu nowej wersji, skrypt automatycznie usuwa stare pliki APK z serwera.
+  - Domyślnie zachowywane są **3 ostatnie wersje** dla każdego kanału (internal/production).
+  - Zapobiega to przepełnieniu miejsca na serwerze przy częstych wdrożeniach.
 - **Pominięcie builda/uploadu**: Użyj `-SkipBuild` lub `-SkipUpload`, aby przeprowadzić tylko wybrane części procesu.
 
 ## Rozwiązywanie problemów
