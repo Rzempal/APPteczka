@@ -58,7 +58,8 @@ class _RplAutocompleteState extends State<RplAutocomplete> {
   List<RplSearchResult> _results = [];
   bool _isLoading = false;
   Timer? _debounce;
-  bool _isSelecting = false; // Flaga zapobiegająca ponownemu wyszukiwaniu po wyborze
+  bool _isSelecting =
+      false; // Flaga zapobiegająca ponownemu wyszukiwaniu po wyborze
 
   @override
   void initState() {
@@ -243,7 +244,7 @@ class _RplAutocompleteState extends State<RplAutocomplete> {
               ),
             ),
             Icon(
-              LucideIcons.checkCircle,
+              LucideIcons.circleCheck,
               size: 18,
               color: isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight,
             ),
@@ -289,15 +290,15 @@ class _RplAutocompleteState extends State<RplAutocomplete> {
                   ),
                 )
               : _controller.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(LucideIcons.x),
-                      onPressed: () {
-                        _controller.clear();
-                        _removeOverlay();
-                        setState(() => _results = []);
-                      },
-                    )
-                  : null,
+              ? IconButton(
+                  icon: const Icon(LucideIcons.x),
+                  onPressed: () {
+                    _controller.clear();
+                    _removeOverlay();
+                    setState(() => _results = []);
+                  },
+                )
+              : null,
           border: const OutlineInputBorder(),
           helperText: 'Wpisz min. 3 znaki, aby wyszukać w RPL',
           helperStyle: theme.textTheme.bodySmall?.copyWith(
