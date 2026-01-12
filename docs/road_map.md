@@ -220,15 +220,15 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 
 ---
 
-### Gemini AI - Wspomaganie skanera i recznego dodawania (v2.0)
+### Gemini AI - Wspomaganie skanera i recznego dodawania (v2.1)
 
 **Data:** 2026-01-11
 
-**Architektura (v2.0):**
+**Architektura (v2.1):**
 Gemini AI dziala jako "silnik w tle" wspomagajacy:
 
 1. **Skaner kodow kreskowych** - AI enrichment (opis, tagi, wskazania)
-2. **Reczne dodawanie** - przycisk "AI" przy nazwie leku
+2. **Reczne dodawanie** - automatyczne AI przy zapisie (uproszczony formularz)
 
 **Flow skanera:**
 
@@ -244,11 +244,27 @@ EAN → RPL API → snapshot daty → ...
                 Zapis do bazy
 ```
 
-**Flow recznego dodawania:**
+**Flow recznego dodawania (v2.1 - uproszczony):**
 
 ```
-Nazwa leku → [AI] → Gemini → opis + wskazania + tagi
+Nazwa leku + data waznosci (opcjonalnie)
+                ↓
+        [Zapisz lek]
+                ↓
+    Dialog przetwarzania AI
+                ↓
+    Gemini → opis + wskazania + tagi
+                ↓
+    Zapis do bazy (lub blad jesli nierozpoznano)
 ```
+
+**Zmiany w v2.1:**
+
+- Uproszczony formularz: tylko nazwa + opcjonalna data waznosci
+- Usunieto osobny przycisk "AI" - funkcjonalnosc przeniesiona do "Zapisz lek"
+- Ikona sekcji: kaskadowa (olowek + AI sparkles) jak w skanerze
+- Dialog przetwarzania AI podczas zapisu (jak w skanerze)
+- Blad jesli AI nie rozpozna leku (nie zapisujemy)
 
 **Usuniete w v2.0:**
 
@@ -261,7 +277,7 @@ Nazwa leku → [AI] → Gemini → opis + wskazania + tagi
 - `apps/web/src/lib/prompts.ts` - prompt z instrukcja EAN (v0.003)
 - `apps/mobile/lib/services/gemini_service.dart` - serwis Gemini (v0.003)
 - `apps/mobile/lib/services/gemini_name_lookup_service.dart` - lookup po nazwie
-- `apps/mobile/lib/screens/add_medicine_screen.dart` - AI enrichment w skanerze
+- `apps/mobile/lib/screens/add_medicine_screen.dart` - uproszczony formularz z AI
 
 ---
 
@@ -331,4 +347,4 @@ Nazwa leku → [AI] → Gemini → opis + wskazania + tagi
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-11 (v2.3 Build Fix in MedicineCard)
+> 📅 **Ostatnia aktualizacja:** 2026-01-11 (Gemini AI v2.1 - uproszczony formularz reczny)
