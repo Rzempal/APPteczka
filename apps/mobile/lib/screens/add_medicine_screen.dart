@@ -15,7 +15,6 @@ import '../widgets/barcode_scanner.dart';
 import '../widgets/karton_icons.dart';
 import '../widgets/batch_date_input_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
-import '../widgets/tag_selector_widget.dart';
 import '../theme/app_theme.dart';
 import '../utils/tag_normalization.dart';
 
@@ -38,12 +37,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   // Formularz ręczny
   final _formKey = GlobalKey<FormState>();
   final _nazwaController = TextEditingController();
-  final _opisController = TextEditingController();
-  final _wskazaniaController = TextEditingController();
-  List<String> _selectedTags = []; // Zamiana z TextFormField na selektor
   DateTime? _terminWaznosci;
   bool _isSaving = false;
-  bool _isLookingUp = false; // AI name lookup
 
   // Import z pliku
   bool _isImporting = false;
@@ -57,8 +52,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   @override
   void dispose() {
     _nazwaController.dispose();
-    _opisController.dispose();
-    _wskazaniaController.dispose();
     super.dispose();
   }
 
@@ -130,19 +123,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 const SizedBox(height: 12),
 
                 // 2. Dodaj ręcznie (z AI)
-                _buildExpandableSection(
-                  icon: LucideIcons.pencil,
-                  title: 'Dodaj ręcznie',
-                  subtitle: 'Wprowadź dane leku samodzielnie',
-                  isExpanded: _manualExpanded,
-                  onToggle: () =>
-                      setState(() => _manualExpanded = !_manualExpanded),
-                  child: _buildManualForm(theme, isDark),
-                  isDark: isDark,
-                  iconColor: isDark
-                      ? AppColors.aiAccentDark
-                      : AppColors.aiAccentLight,
-                ),
+                _buildManualEntrySection(theme, isDark),
 
                 const SizedBox(height: 12),
 
@@ -353,6 +334,97 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
   }
 
+  /// Buduje sekcję ręcznego dodawania z ikoną kaskadową (pencil + AI)
+  Widget _buildManualEntrySection(ThemeData theme, bool isDark) {
+    final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
+
+    return Container(
+      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Header z ikoną kaskadową
+          InkWell(
+            onTap: () => setState(() => _manualExpanded = !_manualExpanded),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Ikona kaskadowa: pencil (zielony) + AI sparkles
+                  SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Icon(
+                          LucideIcons.pencil,
+                          color: theme.colorScheme.primary,
+                          size: 24,
+                        ),
+                        Positioned(
+                          right: -4,
+                          bottom: -4,
+                          child: Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.darkBackground
+                                  : AppColors.lightBackground,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(
+                              LucideIcons.sparkles,
+                              color: aiColor,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dodaj ręcznie',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Wpisz nazwę leku - AI uzupełni resztę',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _manualExpanded
+                        ? LucideIcons.chevronUp
+                        : LucideIcons.chevronDown,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Zawartość rozwijana - formularz
+          if (_manualExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: _buildManualForm(theme, isDark),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFileImportSection(ThemeData theme, bool isDark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -378,76 +450,28 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   }
 
   Widget _buildManualForm(ThemeData theme, bool isDark) {
+    final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
+
     return Form(
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Nazwa z przyciskiem Rozpoznaj
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _nazwaController,
-                  decoration: InputDecoration(
-                    labelText: 'Nazwa leku *',
-                    hintText: 'np. Paracetamol 500mg',
-                    prefixIcon: const Icon(LucideIcons.pill),
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Podaj nazwę leku';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Przycisk Rozpoznaj AI
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: SizedBox(
-                  height: 48,
-                  child: FilledButton.icon(
-                    onPressed: _isLookingUp ? null : _lookupByName,
-                    icon: _isLookingUp
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(LucideIcons.sparkles, size: 18),
-                    label: const Text('AI'),
-                    style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // Opis
+          // Nazwa leku
           TextFormField(
-            controller: _opisController,
-            maxLines: 2,
+            controller: _nazwaController,
             decoration: InputDecoration(
-              labelText: 'Opis działania *',
-              hintText: 'Krótki opis działania leku',
-              prefixIcon: const Icon(LucideIcons.fileText),
+              labelText: 'Nazwa leku *',
+              hintText: 'np. Paracetamol 500mg',
+              prefixIcon: const Icon(LucideIcons.pill),
               border: const OutlineInputBorder(),
-              alignLabelWithHint: true,
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
-                return 'Podaj opis leku';
+                return 'Podaj nazwę leku';
+              }
+              if (value.trim().length < 2) {
+                return 'Nazwa leku jest za krótka';
               }
               return null;
             },
@@ -455,28 +479,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
           const SizedBox(height: 16),
 
-          // Wskazania
-          TextFormField(
-            controller: _wskazaniaController,
-            decoration: InputDecoration(
-              labelText: 'Wskazania (oddzielone przecinkami)',
-              hintText: 'ból głowy, gorączka',
-              prefixIcon: const Icon(LucideIcons.clipboardList),
-              border: const OutlineInputBorder(),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Tagi - selektor z listą
-          TagSelectorWidget(
-            selectedTags: _selectedTags,
-            onChanged: (tags) => setState(() => _selectedTags = tags),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Termin ważności
+          // Termin ważności (opcjonalnie)
           NeuInsetContainer(
             borderRadius: 12,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -492,7 +495,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Termin ważności',
+                        'Termin ważności (opcjonalnie)',
                         style: theme.textTheme.bodyMedium,
                       ),
                       Text(
@@ -521,16 +524,19 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
           const SizedBox(height: 16),
 
-          // Przycisk zapisu
+          // Przycisk zapisu z AI
           FilledButton.icon(
             onPressed: _isSaving ? null : _saveMedicine,
             icon: _isSaving
                 ? const SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
-                : const Icon(LucideIcons.save),
+                : Icon(LucideIcons.sparkles, color: aiColor),
             label: const Text('Zapisz lek'),
           ),
         ],
@@ -797,19 +803,39 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   Future<void> _saveMedicine() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final name = _nazwaController.text.trim();
+
     setState(() => _isSaving = true);
 
+    // Pokaz dialog przetwarzania AI
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _AiProcessingDialog(medicineName: name),
+    );
+
     try {
+      // Wywolaj AI aby uzupelnic dane leku
+      final geminiService = GeminiNameLookupService();
+      final result = await geminiService.lookupByName(name);
+
+      // Zamknij dialog przetwarzania
+      if (mounted) Navigator.of(context).pop();
+
+      if (!result.found || result.medicine == null) {
+        // AI nie rozpoznalo - pokaz blad
+        _showError(result.reason ?? 'Nie rozpoznano leku "$name"');
+        return;
+      }
+
+      // AI rozpoznalo - zapisz z uzupelnionymi danymi
+      final aiMedicine = result.medicine!;
       final medicine = Medicine(
         id: const Uuid().v4(),
-        nazwa: _nazwaController.text.trim(),
-        opis: _opisController.text.trim(),
-        wskazania: _wskazaniaController.text
-            .split(',')
-            .map((s) => s.trim())
-            .where((s) => s.isNotEmpty)
-            .toList(),
-        tagi: processTagsForImport(_selectedTags),
+        nazwa: aiMedicine.nazwa ?? name,
+        opis: aiMedicine.opis,
+        wskazania: aiMedicine.wskazania,
+        tagi: processTagsForImport(aiMedicine.tagi),
         terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
         dataDodania: DateTime.now().toIso8601String(),
       );
@@ -821,80 +847,28 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           SnackBar(
             content: Text('Dodano: ${medicine.nazwa}'),
             behavior: SnackBarBehavior.floating,
-          ),
-        );
-
-        // Wyczyść formularz
-        _nazwaController.clear();
-        _opisController.clear();
-        _wskazaniaController.clear();
-        setState(() {
-          _selectedTags = [];
-          _terminWaznosci = null;
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
-  }
-
-  /// Wyszukuje dane leku na podstawie wpisanej nazwy przez AI
-  Future<void> _lookupByName() async {
-    final name = _nazwaController.text.trim();
-    if (name.isEmpty) {
-      _showError('Wpisz nazwę leku');
-      return;
-    }
-
-    if (name.length < 2) {
-      _showError('Nazwa leku jest za krótka');
-      return;
-    }
-
-    setState(() => _isLookingUp = true);
-
-    try {
-      final service = GeminiNameLookupService();
-      final result = await service.lookupByName(name);
-
-      if (!mounted) return;
-
-      if (result.found && result.medicine != null) {
-        final med = result.medicine!;
-
-        // Wypełnij formularz danymi z AI
-        setState(() {
-          // Aktualizuj nazwę jeśli AI poprawiła literówki
-          if (med.nazwa != null && med.nazwa!.isNotEmpty) {
-            _nazwaController.text = med.nazwa!;
-          }
-          _opisController.text = med.opis;
-          _wskazaniaController.text = med.wskazania.join(', ');
-          _selectedTags = processTagsForImport(med.tagi);
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Rozpoznano: ${med.nazwa ?? name}'),
-            behavior: SnackBarBehavior.floating,
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
-      } else {
-        // Nie rozpoznano
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result.reason ?? 'Nie rozpoznano produktu'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+
+        // Wyczysc formularz
+        _nazwaController.clear();
+        setState(() => _terminWaznosci = null);
       }
     } on GeminiException catch (e) {
+      // Zamknij dialog jesli jeszcze otwarty
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
       _showError(e.message);
     } catch (e) {
-      _showError('Błąd rozpoznawania: $e');
+      // Zamknij dialog jesli jeszcze otwarty
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      _showError('Błąd: $e');
     } finally {
-      if (mounted) setState(() => _isLookingUp = false);
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -942,7 +916,7 @@ class _ProcessingProgress {
   double get progress => total > 0 ? current / total : 0;
 }
 
-/// Dialog przetwarzania z progressem
+/// Dialog przetwarzania z progressem (dla skanera)
 class _ProcessingDialog extends StatelessWidget {
   final ValueNotifier<_ProcessingProgress> progress;
 
@@ -995,6 +969,52 @@ class _ProcessingDialog extends StatelessWidget {
               ],
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+/// Dialog przetwarzania AI (dla recznego dodawania)
+class _AiProcessingDialog extends StatelessWidget {
+  final String medicineName;
+
+  const _AiProcessingDialog({required this.medicineName});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
+
+    return Dialog(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(LucideIcons.sparkles, size: 48, color: aiColor),
+            const SizedBox(height: 16),
+            Text(
+              'AI rozpoznaje lek...',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              medicineName,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            LinearProgressIndicator(
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(aiColor),
+            ),
+          ],
         ),
       ),
     );
