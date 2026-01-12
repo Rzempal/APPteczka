@@ -586,12 +586,14 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
 
     if (selection != null) {
+      // WAZNE: Ustaw tekst kontrolera PRZED setState z _isVerifiedInRpl = true
+      // W przeciwnym razie onTextChanged zresetuje weryfikacje
+      _nazwaController.text = details.fullName;
+
       setState(() {
         _selectedRplDetails = selection.drugDetails;
         _selectedPackage = selection.selectedPackage;
         _isVerifiedInRpl = true;
-        // Aktualizuj nazwę w polu tekstowym
-        _nazwaController.text = details.fullName;
       });
     }
   }
