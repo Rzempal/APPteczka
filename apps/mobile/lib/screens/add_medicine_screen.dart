@@ -28,14 +28,33 @@ class PendingDrug {
   final RplDrugDetails drugDetails;
   final RplPackage selectedPackage;
   final DateTime addedAt;
+  // Kopia nazwy z momentu tworzenia - zabezpieczenie przed utratą danych
+  final String _cachedName;
+  final String _cachedPower;
 
   PendingDrug({
     required this.drugDetails,
     required this.selectedPackage,
     DateTime? addedAt,
-  }) : addedAt = addedAt ?? DateTime.now();
+  })  : addedAt = addedAt ?? DateTime.now(),
+        _cachedName = drugDetails.name,
+        _cachedPower = drugDetails.power;
 
-  String get displayName => drugDetails.fullName;
+  /// Nazwa leku z fallbackiem do cache
+  String get displayName {
+    if (drugDetails.fullName.isNotEmpty) {
+      return drugDetails.fullName;
+    }
+    // Fallback do zbuforowanej nazwy
+    if (_cachedName.isNotEmpty) {
+      if (_cachedPower.isNotEmpty) {
+        return '$_cachedName $_cachedPower';
+      }
+      return _cachedName;
+    }
+    return 'Nieznany lek (id: ${drugDetails.id})';
+  }
+
   String get packaging => selectedPackage.packaging;
   String get gtin => selectedPackage.gtin;
 }
@@ -729,10 +748,23 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           'Package selected: ${selection.selectedPackage.packaging} (GTIN: ${selection.selectedPackage.gtin})',
         );
 
+        // DEBUG: Loguj szczegóły selection.drugDetails przed tworzeniem PendingDrug
+        _log.fine(
+          'selection.drugDetails: name="${selection.drugDetails.name}", '
+          'power="${selection.drugDetails.power}", '
+          'fullName="${selection.drugDetails.fullName}", id=${selection.drugDetails.id}',
+        );
+
         // BATCH MODE: Dodaj do listy oczekujących
         final pendingDrug = PendingDrug(
           drugDetails: selection.drugDetails,
           selectedPackage: selection.selectedPackage,
+        );
+
+        // DEBUG: Weryfikuj że PendingDrug ma poprawne dane
+        _log.fine(
+          'PendingDrug created: displayName="${pendingDrug.displayName}", '
+          'drugDetails.name="${pendingDrug.drugDetails.name}"',
         );
 
         setState(() {
@@ -1109,6 +1141,18 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     if (_pendingDrugs.isEmpty) return;
 
     _log.info('Starting batch save of ${_pendingDrugs.length} medicines');
+
+    // DEBUG: Loguj szczegóły wszystkich leków przed zapisem
+    for (int i = 0; i < _pendingDrugs.length; i++) {
+      final pd = _pendingDrugs[i];
+      _log.fine(
+        'Pending[$i]: name="${pd.drugDetails.name}", '
+        'power="${pd.drugDetails.power}", '
+        'fullName="${pd.drugDetails.fullName}", '
+        'id=${pd.drugDetails.id}',
+      );
+    }
+
     setState(() => _isSaving = true);
 
     // Pokaz dialog przetwarzania
@@ -1132,8 +1176,27 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           final rpl = pendingDrug.drugDetails;
           final pkg = pendingDrug.selectedPackage;
 
+          // Pobierz nazwę leku z fallbackami
+          final drugName = rpl.fullName.isNotEmpty
+              ? rpl.fullName
+              : rpl.name.isNotEmpty
+                  ? rpl.name
+                  : pendingDrug.displayName;
+
+          _log.fine(
+            'Processing drug: name="$drugName" '
+            '(rpl.fullName="${rpl.fullName}", rpl.name="${rpl.name}", '
+            'displayName="${pendingDrug.displayName}")',
+          );
+
+          // Walidacja - pomijaj leki bez nazwy
+          if (drugName.isEmpty) {
+            _log.warning('Skipping drug with empty name, id=${rpl.id}');
+            continue;
+          }
+
           // AI uzupełnia opis, wskazania, tagi
-          final aiResult = await geminiService.lookupByName(rpl.fullName);
+          final aiResult = await geminiService.lookupByName(drugName);
           final aiMedicine = aiResult.found ? aiResult.medicine : null;
 
           // Generuj tagi z RPL
@@ -1141,7 +1204,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
           final medicine = Medicine(
             id: const Uuid().v4(),
-            nazwa: rpl.fullName,
+            nazwa: drugName,
             opis: aiMedicine?.opis ?? rpl.form,
             wskazania: aiMedicine?.wskazania ?? [],
             tagi: [
