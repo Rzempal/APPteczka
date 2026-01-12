@@ -50,7 +50,7 @@ Jesteś asystentem pomagającym użytkownikowi katalogować produkty (np. leki).
 
 ## 🌐 Backend (Next.js / TypeScript)
 
-Implementacja serwerowa obsługująca komunikację z `v1beta/models/gemini-1.5-flash:generateContent`.
+Implementacja serwerowa obsługująca komunikację z `v1beta/models/gemini-3-flash-preview:generateContent`.
 
 ### Metoda pomocnicza: Wyodrębnianie JSON
 
@@ -104,7 +104,7 @@ import google.generativeai as genai
 import os
 
 genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-3-flash-preview')
 
 def lookup_product(name: str):
     prompt = f"Rozpoznaj produkt: {name}. Odpowiedz TYLKO w formacie JSON."
@@ -124,6 +124,6 @@ def lookup_product(name: str):
 ## 💡 Best Practices (Dobre Praktyki)
 
 1. **Temperature = 0.1**: Dla zadań ekstrakcji danych (JSON) zawsze ustawiaj niską temperaturę. Zmniejsza to ryzyko "halucynacji" i zmian w strukturze pola.
-2. **Flash vs Pro**: Do OCR i prostych lookupów model `gemini-1.5-flash` jest znacznie szybszy i tańszy/posiada większe limity darmowe niż `1.5-pro`.
+2. **Flash vs Pro**: Do OCR i prostych lookupów model `gemini-3-flash-preview` jest znacznie szybszy i tańszy/posiada większe limity darmowe niż `3-pro-preview`.
 3. **Mime-Types**: Przy wysyłaniu obrazów zawsze jawnie określaj `mimeType` (image/jpeg, image/png), aby skrócić czas procesowania po stronie Google.
 4. **Rate Limiting**: Darmowy tier Gemini ma limity (np. 15 zapytań na minutę). Warto zaimplementować prosty kolejkator w aplikacji.
