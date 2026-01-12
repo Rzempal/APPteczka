@@ -60,7 +60,8 @@ function Update-DeployLog {
         [int64]$VersionCode,
         [string]$ApkName,
         [array]$Commits,
-        [string]$Status
+        [string]$Status,
+        [string]$Duration
     )
     
     $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\1_PRYWATNE_PROJEKTY_\LOG_APTECZKA\log.md"
@@ -75,6 +76,8 @@ function Update-DeployLog {
         default { "[ERR] Blad" }
     }
     
+    $durationLine = if ($Duration) { "- **Czas deploymentu:** $Duration" } else { "" }
+    
     $commitLines = ""
     foreach ($c in $Commits) {
         $commitLines += "- ``$c```n"
@@ -85,6 +88,7 @@ function Update-DeployLog {
 - **APK:** ``$ApkName``
 - **versionCode:** $VersionCode
 - **Status:** $statusIcon
+$durationLine
 
 **Ostatnie zmiany:**
 $commitLines
@@ -126,7 +130,20 @@ $commitLines
 
 # === Start Skryptu ===
 
-Print-Info "=== Deploy APK Script v11 (ASCII) ==="
+$startTime = [System.Diagnostics.Stopwatch]::StartNew()
+
+# Background job to update window title with live timer
+$titleJob = Start-Job -ScriptBlock {
+    $sw = $args[0]
+    while ($true) {
+        $elapsed = $sw.Elapsed
+        $timeStr = "$($elapsed.Minutes.ToString('00')):$($elapsed.Seconds.ToString('00'))"
+        $host.UI.RawUI.WindowTitle = "APPteczka Deploy | Czas: $timeStr"
+        Start-Sleep -Seconds 1
+    }
+} -ArgumentList $startTime
+
+Print-Info "=== Deploy APK Script v12 (Live Timer) ==="
 Load-Env
 
 $DEPLOY_HOST = if ($env:DEPLOY_HOST) { $env:DEPLOY_HOST } else { "" }
@@ -187,11 +204,11 @@ else {
     $VERSION_JSON_NAME = "version.json"
 }
 
-# Get last 3 commit messages
+# Get last 4 commit messages
 $LAST_COMMITS = @()
 try {
     Push-Location $PROJECT_ROOT
-    $LAST_COMMITS = git log -3 --pretty=format:"%h %s" 2>$null
+    $LAST_COMMITS = git log -4 --pretty=format:"%h %s" 2>$null
     Pop-Location
 }
 catch {
@@ -348,7 +365,15 @@ if (-not $SkipUpload) {
         else {
             Print-Error "[4/4] Blad uploadu (ExitCode: $LASTEXITCODE). Sprawdz logi w releases/winscp_log.xml"
             $DEPLOY_STATUS = "error"
-            Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS
+            
+            # Stop timer and calculate final duration
+            $startTime.Stop()
+            $finalElapsed = $startTime.Elapsed
+            $finalDurationStr = "$($finalElapsed.Minutes.ToString('00')):$($finalElapsed.Seconds.ToString('00'))"
+            Stop-Job $titleJob
+            Remove-Job $titleJob
+            
+            Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
             Write-Host "Nacisnij Enter aby zamknac..."
             $null = Read-Host
             exit $LASTEXITCODE
@@ -364,10 +389,18 @@ else {
     $DEPLOY_STATUS = "skipped"
 }
 
+# Stop timer and calculate final duration
+$startTime.Stop()
+$finalElapsed = $startTime.Elapsed
+$finalDurationStr = "$($finalElapsed.Minutes.ToString('00')):$($finalElapsed.Seconds.ToString('00'))"
+Stop-Job $titleJob
+Remove-Job $titleJob
+
 Print-Success "=== Deployment Zakonczony (Wersja $VERSION_NAME) ==="
+Print-Success "Calkowity czas: $finalDurationStr"
 
 # Update deploy log
-Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS
+Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
 
 Write-Host ""
 exit 0

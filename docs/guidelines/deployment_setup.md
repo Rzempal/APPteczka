@@ -35,23 +35,20 @@ DEPLOY_REMOTE_PATH=/domains/michalrapala.app/public_html/releases/
 DEPLOY_PUBLIC_URL=http://michalrapala.app/releases
 ```
 
-## 3. Uruchomienie
+## 4. **Dodatkowe funkcje skryptu**
 
-Po konfiguracji, uruchom skrypt z PowerShella:
+Skrypt `deploy_apk.ps1` (v12) oferuje automatyzację procesów pomocniczych:
 
-```powershell
-.\scripts\deploy_apk.ps1
-```
-
-Skrypt automatycznie:
-
-1. Zbuduje nową wersję APK.
-2. Skopiuje ją do folderu `releases/`.
-3. Zaktualizuje plik `version.json` lokalnie.
-4. Połączy się z serwerem i wyśle oba pliki.
+- **Kanały deploymentu**: Możesz użyć parametru `-Channel internal` lub `-Channel production` (domyślny). Zmienia to nazewnictwo plików i docelowe ścieżki na serwerze.
+- **Żywy stoper**: Tytuł okna terminala jest aktualizowany co sekundę, pokazując czas trwania aktualnego deploymentu.
+- **Logowanie zmian**: Skrypt automatycznie dopisuje informację o nowej wersji do pliku `log.md` (Obsidian), zawierając:
+  - Ostatnie 4 commity z Git.
+  - Czas trwania całego procesu.
+  - Status uploadu.
+- **Pominięcie builda/uploadu**: Użyj `-SkipBuild` lub `-SkipUpload`, aby przeprowadzić tylko wybrane części procesu.
 
 ## Rozwiązywanie problemów
 
 - **Błąd "Nie znaleziono WinSCP"**: Dodaj do `.env` zmienną `WINSCP_PATH=C:\Ścieżka\Do\WinSCP.com`.
-- **Błąd połączenia**: Sprawdź log `releases/winscp_log.xml` który powstaje po próbie uploadu.
+- **Błąd połączenia**: Sprawdź log `releases/winscp_log.xml`, który powstaje po próbie uploadu.
 - **Host key verification**: Skrypt ustawiony jest na automatyczną akceptację kluczy (`-hostkey="*"`). Jeśli to nie działa, połącz się raz ręcznie przez WinSCP GUI i zaakceptuj klucz.
