@@ -198,22 +198,26 @@ class RplDrugInfo {
 
     return RplDrugInfo(
       id: json['id'] as int?,
-      name: json['medicinalProductName'] as String? ??
+      name:
+          json['medicinalProductName'] as String? ??
           json['name'] as String? ??
           'Nieznana nazwa',
-      power: json['medicinalProductPower'] as String? ??
+      power:
+          json['medicinalProductPower'] as String? ??
           json['power'] as String? ??
           '',
-      form: json['pharmaceuticalFormName'] as String? ??
+      form:
+          json['pharmaceuticalFormName'] as String? ??
           json['pharmaceuticalForm'] as String? ??
           '',
-      activeSubstance: json['activeSubstanceName'] as String? ??
+      activeSubstance:
+          json['activeSubstanceName'] as String? ??
           json['activeSubstance'] as String? ??
           '',
       marketingAuthorisationHolder:
           json['subjectMedicinalProductName'] as String? ??
-              json['marketingAuthorisationHolder'] as String? ??
-              '',
+          json['marketingAuthorisationHolder'] as String? ??
+          '',
       atcCode: json['atcCode'] as String?,
       accessibilityCategory: json['accessibilityCategory'] as String?,
       packaging: packaging,
@@ -360,10 +364,14 @@ class RplService {
 
     try {
       final response = await http
-          .get(endpoint, headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
-          })
+          .get(
+            endpoint,
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent':
+                  'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+            },
+          )
           .timeout(_timeout);
 
       _log.fine('GET details by ID response status: ${response.statusCode}');
@@ -373,7 +381,8 @@ class RplService {
         // Przekazujemy id z parametru - API nie zawsze zwraca id w response
         final result = RplDrugDetails.fromJson(data, knownId: id);
         _log.info(
-            'Fetched details by ID: ${result.fullName}, packages: ${result.packages.length}');
+          'Fetched details by ID: ${result.fullName}, packages: ${result.packages.length}',
+        );
         return result;
       } else {
         _log.warning('GET details by ID error: ${response.statusCode}');
@@ -407,16 +416,16 @@ class RplService {
 
     // Proba 1: GET z parametrem eanGtin (glowna metoda - dziala!)
     var result = await _tryFetchByGtinGet(normalizedEan);
-    if (result == null) {
-      // Proba 2: POST do search/public (fallback)
-      result = await _tryFetchByGtinPost(normalizedEan);
-    }
+    result ??= await _tryFetchByGtinPost(normalizedEan);
 
     if (result != null) {
       // Pobierz szczegoly (accessibilityCategory, packaging, activeSubstance)
       // Przekaz normalizedEan do dopasowania opakowania po GTIN
       if (result.id != null) {
-        final details = await _fetchDetails(result.id!, targetEan: normalizedEan);
+        final details = await _fetchDetails(
+          result.id!,
+          targetEan: normalizedEan,
+        );
         if (details != null) {
           result = result.copyWith(
             accessibilityCategory: details.accessibilityCategory,
@@ -444,10 +453,14 @@ class RplService {
 
     try {
       final response = await http
-          .get(endpoint, headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
-          })
+          .get(
+            endpoint,
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent':
+                  'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+            },
+          )
           .timeout(_timeout);
 
       _log.fine('GET details response status: ${response.statusCode}');
@@ -456,7 +469,8 @@ class RplService {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final result = RplDrugInfo.fromJson(data, targetEan: targetEan);
         _log.info(
-            'Fetched details: accessibilityCategory=${result.accessibilityCategory}, packaging=${result.packaging}');
+          'Fetched details: accessibilityCategory=${result.accessibilityCategory}, packaging=${result.packaging}',
+        );
         return result;
       } else {
         _log.warning('GET details error: ${response.statusCode}');
@@ -495,10 +509,14 @@ class RplService {
 
     try {
       final response = await http
-          .get(endpoint, headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
-          })
+          .get(
+            endpoint,
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent':
+                  'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+            },
+          )
           .timeout(_timeout);
 
       _log.fine('GET eanGtin response status: ${response.statusCode}');
@@ -509,8 +527,9 @@ class RplService {
 
         if (content != null && content.isNotEmpty) {
           // API filtruje po eanGtin po stronie serwera - bierzemy pierwszy wynik
-          final result =
-              RplDrugInfo.fromJson(content[0] as Map<String, dynamic>);
+          final result = RplDrugInfo.fromJson(
+            content[0] as Map<String, dynamic>,
+          );
           _log.info('Found drug via GET: ${result.fullName}');
           return result;
         }
@@ -531,8 +550,8 @@ class RplService {
       'page': 0,
       'size': 10,
       'searchValues': [
-        {'name': 'gtin', 'value': ean}
-      ]
+        {'name': 'gtin', 'value': ean},
+      ],
     };
 
     try {
@@ -542,9 +561,11 @@ class RplService {
             headers: {
               'Content-Type': 'application/json; charset=UTF-8',
               'Accept': 'application/json',
-              'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+              'User-Agent':
+                  'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
               'Origin': 'https://rejestrymedyczne.ezdrowie.gov.pl',
-              'Referer': 'https://rejestrymedyczne.ezdrowie.gov.pl/rpl/search/public',
+              'Referer':
+                  'https://rejestrymedyczne.ezdrowie.gov.pl/rpl/search/public',
             },
             body: jsonEncode(payload),
           )
@@ -562,8 +583,7 @@ class RplService {
           final content = data['content'];
           if (content is List && content.isNotEmpty) {
             // API filtruje po gtin po stronie serwera - bierzemy pierwszy wynik
-            result =
-                RplDrugInfo.fromJson(content[0] as Map<String, dynamic>);
+            result = RplDrugInfo.fromJson(content[0] as Map<String, dynamic>);
           }
         }
 
@@ -578,10 +598,7 @@ class RplService {
       }
     } on SocketException catch (e) {
       _log.severe('Network error', e);
-      throw RplException(
-        'Brak polaczenia z internetem.',
-        'NETWORK_ERROR',
-      );
+      throw RplException('Brak polaczenia z internetem.', 'NETWORK_ERROR');
     } catch (e) {
       _log.warning('POST search error: $e');
     }

@@ -585,7 +585,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
   /// Handler po wybraniu leku z autocomplete RPL
   Future<void> _onRplMedicineSelected(RplSearchResult result) async {
-    _log.info('RPL selection started: ${result.displayLabel} (id: ${result.id})');
+    _log.info(
+      'RPL selection started: ${result.displayLabel} (id: ${result.id})',
+    );
 
     // Ustaw flagę PRZED async operacjami - blokuje onTextChanged callbacks
     setState(() => _isProcessingRplSelection = true);
@@ -601,7 +603,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         return;
       }
 
-      _log.fine('Drug details fetched: ${details.fullName}, packages: ${details.packages.length}');
+      _log.fine(
+        'Drug details fetched: ${details.fullName}, packages: ${details.packages.length}',
+      );
 
       // Pokaż selector opakowań (jeśli więcej niż 1)
       if (!mounted) return;
@@ -612,7 +616,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       );
 
       if (selection != null) {
-        _log.info('Package selected: ${selection.selectedPackage.packaging} (GTIN: ${selection.selectedPackage.gtin})');
+        _log.info(
+          'Package selected: ${selection.selectedPackage.packaging} (GTIN: ${selection.selectedPackage.gtin})',
+        );
 
         // Ustaw tekst kontrolera - flaga _isProcessingRplSelection blokuje onTextChanged
         _nazwaController.text = details.fullName;
@@ -757,12 +763,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 nazwa: drug.drugInfo.fullName,
                 opis: med.opis,
                 wskazania: med.wskazania,
-                tagi: [
+                tagi: <dynamic>{
                   ...drug
                       .toMedicine('')
                       .tagi, // tagi z RPL (Rp/OTC, forma, substancje)
                   ...processTagsForImport(med.tagi), // tagi z AI
-                ].toSet().toList(), // usun duplikaty
+                }.toList(), // usun duplikaty
                 packages: drug.expiryDate != null
                     ? [
                         MedicinePackage(
@@ -987,10 +993,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           nazwa: rpl.fullName,
           opis: aiMedicine?.opis ?? rpl.form,
           wskazania: aiMedicine?.wskazania ?? [],
-          tagi: [
+          tagi: <dynamic>{
             ...rplTags,
             ...processTagsForImport(aiMedicine?.tagi ?? []),
-          ].toSet().toList(), // usun duplikaty
+          }.toList(), // usun duplikaty
           terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
           dataDodania: DateTime.now().toIso8601String(),
           leafletUrl: rpl.leafletUrl,
@@ -1021,8 +1027,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           final rplResults = await _rplService.searchMedicine(correctedName);
           if (rplResults.isNotEmpty) {
             // Znaleziono w RPL - pobierz szczegoly
-            final details =
-                await _rplService.fetchDetailsById(rplResults.first.id);
+            final details = await _rplService.fetchDetailsById(
+              rplResults.first.id,
+            );
             if (details != null) {
               rplDetails = details;
               // Auto-wybor opakowania jesli tylko jedno
@@ -1053,18 +1060,19 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         }
 
         // Utworz lek z danymi AI + opcjonalnie RPL
-        final rplTags =
-            rplDetails != null ? _generateTagsFromRpl(rplDetails, rplPackage) : <String>[];
+        final rplTags = rplDetails != null
+            ? _generateTagsFromRpl(rplDetails, rplPackage)
+            : <String>[];
 
         medicine = Medicine(
           id: const Uuid().v4(),
           nazwa: rplDetails?.fullName ?? correctedName,
           opis: aiMedicine.opis,
           wskazania: aiMedicine.wskazania,
-          tagi: [
+          tagi: <dynamic>{
             ...rplTags,
             ...processTagsForImport(aiMedicine.tagi),
-          ].toSet().toList(),
+          }.toList(),
           terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
           dataDodania: DateTime.now().toIso8601String(),
           leafletUrl: rplDetails?.leafletUrl,
@@ -1118,7 +1126,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     final tags = <String>{};
 
     // Status recepty
-    final category = pkg?.accessibilityCategory?.toUpperCase() ??
+    final category =
+        pkg?.accessibilityCategory?.toUpperCase() ??
         rpl.accessibilityCategory?.toUpperCase();
     if (category == 'OTC') {
       tags.add('bez recepty');

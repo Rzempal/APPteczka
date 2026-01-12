@@ -1553,7 +1553,7 @@ class _MedicineCardState extends State<MedicineCard>
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        value: selectedMonth,
+                        initialValue: selectedMonth,
                         decoration: const InputDecoration(
                           labelText: 'Miesiąc',
                           border: OutlineInputBorder(),
@@ -1573,7 +1573,7 @@ class _MedicineCardState extends State<MedicineCard>
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        value: selectedYear,
+                        initialValue: selectedYear,
                         decoration: const InputDecoration(
                           labelText: 'Rok',
                           border: OutlineInputBorder(),
@@ -1665,7 +1665,7 @@ class _MedicineCardState extends State<MedicineCard>
             children: [
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: selectedMonth,
+                  initialValue: selectedMonth,
                   decoration: const InputDecoration(
                     labelText: 'Miesiąc',
                     border: OutlineInputBorder(),
@@ -1684,7 +1684,7 @@ class _MedicineCardState extends State<MedicineCard>
               const SizedBox(width: 12),
               Expanded(
                 child: DropdownButtonFormField<int>(
-                  value: selectedYear,
+                  initialValue: selectedYear,
                   decoration: const InputDecoration(
                     labelText: 'Rok',
                     border: OutlineInputBorder(),
