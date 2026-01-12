@@ -60,6 +60,8 @@ class RplPackageSelectorSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    // Zachowaj kontekst bottom sheeta do Navigator.pop
+    final sheetContext = context;
 
     return Container(
       margin: EdgeInsets.only(bottom: bottomPadding),
@@ -116,7 +118,7 @@ class RplPackageSelectorSheet extends StatelessWidget {
                       ),
                       IconButton(
                         icon: const Icon(LucideIcons.x),
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => Navigator.of(sheetContext).pop(),
                       ),
                     ],
                   ),
@@ -143,11 +145,9 @@ class RplPackageSelectorSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: drugDetails.packages.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 4),
-                // WAZNE: Nie nadpisuj 'context' - uzywamy context z build()
-                // dla Navigator.pop() aby wynik wrocil do showModalBottomSheet
                 itemBuilder: (_, index) {
                   final package = drugDetails.packages[index];
-                  return _buildPackageTile(context, package, isDark);
+                  return _buildPackageTile(sheetContext, package, isDark);
                 },
               ),
             ),
@@ -160,11 +160,11 @@ class RplPackageSelectorSheet extends StatelessWidget {
   }
 
   Widget _buildPackageTile(
-    BuildContext context,
+    BuildContext sheetContext,
     RplPackage package,
     bool isDark,
   ) {
-    final theme = Theme.of(context);
+    final theme = Theme.of(sheetContext);
     final isRx = package.accessibilityCategory?.toUpperCase() == 'RP' ||
         package.accessibilityCategory?.toUpperCase() == 'RPZ';
 
@@ -174,8 +174,7 @@ class RplPackageSelectorSheet extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            Navigator.pop(
-              context,
+            Navigator.of(sheetContext).pop(
               PackageSelectionResult(
                 drugDetails: drugDetails,
                 selectedPackage: package,
