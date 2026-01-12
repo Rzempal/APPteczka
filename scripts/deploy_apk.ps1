@@ -62,7 +62,8 @@ function Update-DeployLog {
         [string]$ApkName,
         [array]$Commits,
         [string]$Status,
-        [string]$Duration
+        [string]$Duration,
+        [PSCustomObject]$CleanupInfo
     )
     
     $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\1_PRYWATNE_PROJEKTY_\LOG_APTECZKA\log.md"
@@ -84,12 +85,24 @@ function Update-DeployLog {
         $commitLines += "- ``$c```n"
     }
     
+    $cleanupLine = ""
+    if ($CleanupInfo) {
+        if ($CleanupInfo.Success) {
+            $rem = $CleanupInfo.RemainingFiles -join ", "
+            $cleanupLine = "- **Cleanup:** OK (Usunieto: $($CleanupInfo.DeletedCount)). Pozostalo: $rem"
+        }
+        else {
+            $cleanupLine = "- **Cleanup:** [FAIL] $($CleanupInfo.Error)"
+        }
+    }
+
     $newEntry = @"
 ## $timestamp | $Channel | v$VersionName
 - **APK:** ``$ApkName``
 - **versionCode:** $VersionCode
 - **Status:** $statusIcon
 $durationLine
+$cleanupLine
 
 **Ostatnie zmiany:**
 $commitLines
@@ -144,6 +157,14 @@ function Cleanup-RemoteApks {
     $lsScript = Join-Path $env:TEMP "winscp_ls_$([guid]::NewGuid()).txt"
     $rmScript = Join-Path $env:TEMP "winscp_rm_$([guid]::NewGuid()).txt"
     
+    $result = [PSCustomObject]@{
+        Success        = $false
+        DeletedCount   = 0
+        DeletedFiles   = @()
+        RemainingFiles = @()
+        Error          = $null
+    }
+
     try {
         $OpenCmd | Out-File $lsScript -Encoding UTF8
         "ls ""$RemotePath""" | Out-File $lsScript -Append -Encoding UTF8
@@ -153,13 +174,18 @@ function Cleanup-RemoteApks {
         
         if (Test-Path $xmlLog) {
             [xml]$xml = Get-Content $xmlLog
-            $files = $xml.session.ls.file | Where-Object { $_.type -eq "file" -and $_.filename -like $Pattern }
+            $allMatchingFiles = $xml.session.ls.file | Where-Object { $_.type -eq "file" -and $_.filename -like $Pattern }
             
             # Sort descending by filename (contains timestamp)
-            $sortedFiles = $files | Sort-Object -Property filename -Descending
+            $sortedFiles = $allMatchingFiles | Sort-Object -Property filename -Descending
+            $result.RemainingFiles = $sortedFiles.filename
             
             if ($sortedFiles.Count -gt $KeepCount) {
                 $toDelete = $sortedFiles[$KeepCount..($sortedFiles.Count - 1)]
+                $result.DeletedCount = $toDelete.Count
+                $result.DeletedFiles = $toDelete.filename
+                $result.RemainingFiles = $sortedFiles[0..($KeepCount - 1)].filename
+
                 Print-Info ("Znaleziono {0} starych APK do usuniecia (Kanal: $Pattern)." -f $toDelete.Count)
                 
                 $OpenCmd | Out-File $rmScript -Encoding UTF8
@@ -172,20 +198,24 @@ function Cleanup-RemoteApks {
                 
                 & $WinSCP /script="$rmScript" /loglevel=0 | Out-Null
                 Print-Success "Sprzatanie zakonczone sukcesem."
+                $result.Success = $true
             }
             else {
                 Print-Info "Brak starych APK do usuniecia dla wzorca $Pattern."
+                $result.Success = $true
             }
         }
     }
     catch {
         Print-Warn "Pominieto sprzatanie z powodu bledu: $_"
+        $result.Error = $_.ToString()
     }
     finally {
         if (Test-Path $lsScript) { Remove-Item $lsScript -ErrorAction SilentlyContinue }
         if (Test-Path $xmlLog) { Remove-Item $xmlLog -ErrorAction SilentlyContinue }
         if (Test-Path $rmScript) { Remove-Item $rmScript -ErrorAction SilentlyContinue }
     }
+    return $result
 }
 
 # === Start Skryptu ===
@@ -207,7 +237,7 @@ $timerPs = [powershell]::Create().AddScript({
 $timerPs.Runspace = $rs
 $timerAsync = $timerPs.BeginInvoke()
 
-Print-Info "=== Deploy APK Script v12.3 (Live Timer Fix) ==="
+Print-Info "=== Deploy APK Script v12.4 (Cleanup Log Fix) ==="
 Load-Env
 
 $DEPLOY_HOST = if ($env:DEPLOY_HOST) { $env:DEPLOY_HOST } else { "" }
@@ -428,7 +458,7 @@ if (-not $SkipUpload) {
 
             # 5. Cleanup
             $APK_PATTERN = if ($Channel -eq "internal") { "karton-dev_*.apk" } else { "karton-z-lekami_*.apk" }
-            Cleanup-RemoteApks -WinSCP $winScp -OpenCmd $openCmd -RemotePath $UPLOAD_REMOTE_PATH -Pattern $APK_PATTERN -KeepCount $RETENTION_COUNT
+            $CLEANUP_RESULT = Cleanup-RemoteApks -WinSCP $winScp -OpenCmd $openCmd -RemotePath $UPLOAD_REMOTE_PATH -Pattern $APK_PATTERN -KeepCount $RETENTION_COUNT
         }
         else {
             Print-Error "[4/4] Blad uploadu (ExitCode: $LASTEXITCODE). Sprawdz logi w releases/winscp_log.xml"
@@ -440,7 +470,7 @@ if (-not $SkipUpload) {
             $finalDurationStr = "$($finalElapsed.Minutes.ToString('00')):$($finalElapsed.Seconds.ToString('00'))"
             if ($timerPs) { $timerPs.Dispose(); $rs.Close(); $rs.Dispose() }
             
-            Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
+            Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr -CleanupInfo $null
             Write-Host "Nacisnij Enter aby zamknac..."
             $null = Read-Host
             exit $LASTEXITCODE
@@ -466,7 +496,7 @@ Print-Success "=== Deployment Zakonczony (Wersja $VERSION_NAME) ==="
 Print-Success "Calkowity czas: $finalDurationStr"
 
 # Update deploy log
-Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
+Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr -CleanupInfo $CLEANUP_RESULT
 
 Write-Host ""
 exit 0
