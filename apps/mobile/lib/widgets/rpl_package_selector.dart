@@ -21,10 +21,12 @@ class PackageSelectionResult {
 /// Bottom sheet do wyboru opakowania leku z RPL
 class RplPackageSelectorSheet extends StatelessWidget {
   final RplDrugDetails drugDetails;
+  final BuildContext sheetContext; // Kontekst bottom sheeta do Navigator.pop
 
   const RplPackageSelectorSheet({
     super.key,
     required this.drugDetails,
+    required this.sheetContext,
   });
 
   /// Pokazuje bottom sheet do wyboru opakowania
@@ -51,7 +53,11 @@ class RplPackageSelectorSheet extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => RplPackageSelectorSheet(drugDetails: drugDetails),
+      useRootNavigator: true, // Uzyj root navigator aby uniknac konfliktow
+      builder: (sheetContext) => RplPackageSelectorSheet(
+        drugDetails: drugDetails,
+        sheetContext: sheetContext, // Przekaz kontekst bottom sheeta
+      ),
     );
   }
 
@@ -60,8 +66,6 @@ class RplPackageSelectorSheet extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
-    // Zachowaj kontekst bottom sheeta do Navigator.pop
-    final sheetContext = context;
 
     return Container(
       margin: EdgeInsets.only(bottom: bottomPadding),
