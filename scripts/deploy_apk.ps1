@@ -143,7 +143,7 @@ $titleJob = Start-Job -ScriptBlock {
     }
 } -ArgumentList $startTime
 
-Print-Info "=== Deploy APK Script v12 (Live Timer) ==="
+Print-Info "=== Deploy APK Script v12.1 (Live Timer) ==="
 Load-Env
 
 $DEPLOY_HOST = if ($env:DEPLOY_HOST) { $env:DEPLOY_HOST } else { "" }
