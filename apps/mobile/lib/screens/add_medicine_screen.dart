@@ -23,6 +23,23 @@ import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
 import '../utils/tag_normalization.dart';
 
+/// Lek oczekujący na zapis (Batch Mode)
+class PendingDrug {
+  final RplDrugDetails drugDetails;
+  final RplPackage selectedPackage;
+  final DateTime addedAt;
+
+  PendingDrug({
+    required this.drugDetails,
+    required this.selectedPackage,
+    DateTime? addedAt,
+  }) : addedAt = addedAt ?? DateTime.now();
+
+  String get displayName => drugDetails.fullName;
+  String get packaging => selectedPackage.packaging;
+  String get gtin => selectedPackage.gtin;
+}
+
 /// Ekran dodawania leków - wszystkie metody importu
 class AddMedicineScreen extends StatefulWidget {
   final StorageService storageService;
@@ -44,17 +61,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   // Formularz ręczny
   final _formKey = GlobalKey<FormState>();
   final _nazwaController = TextEditingController();
-  DateTime? _terminWaznosci;
   bool _isSaving = false;
 
-  // Weryfikacja RPL
+  // Batch Mode - lista kolejkowanych leków
   final RplService _rplService = RplService();
-  RplDrugDetails? _selectedRplDetails;
-  RplPackage? _selectedPackage;
-  bool _isVerifiedInRpl = false;
+  final List<PendingDrug> _pendingDrugs = [];
 
   // Flaga blokująca callbacks podczas async wyboru opakowania
-  // Zapobiega race condition między zamknięciem modala a onTextChanged
   bool _isProcessingRplSelection = false;
 
   // Import z pliku
@@ -362,7 +375,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         children: [
           // Header z ikoną kaskadową
           InkWell(
-            onTap: () => setState(() => _manualExpanded = !_manualExpanded),
+            onTap: () => _toggleManualSection(),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -474,11 +487,11 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Nazwa leku z autocomplete RPL
+          // Pole wyszukiwania (tylko do wyszukiwania, bez walidacji)
           RplAutocomplete(
             controller: _nazwaController,
-            labelText: 'Nazwa leku *',
-            hintText: 'np. Paracetamol',
+            labelText: 'Wyszukaj lek',
+            hintText: 'np. Paracetamol, Apap...',
             onSelected: _onRplMedicineSelected,
             onTextChanged: (text) {
               // Ignoruj zmiany podczas async wyboru opakowania (race condition fix)
@@ -486,84 +499,23 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 _log.fine('onTextChanged ignored - RPL selection in progress');
                 return;
               }
-
-              // Resetuj weryfikację RPL gdy użytkownik zmienia tekst
-              if (_isVerifiedInRpl) {
-                _log.fine('Resetting RPL verification - user changed text');
-                setState(() {
-                  _isVerifiedInRpl = false;
-                  _selectedRplDetails = null;
-                  _selectedPackage = null;
-                });
-              }
             },
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Podaj nazwę leku';
-              }
-              if (value.trim().length < 2) {
-                return 'Nazwa leku jest za krótka';
-              }
-              return null;
-            },
+            // Brak walidatora - pole służy tylko do wyszukiwania
           ),
 
-          // Status weryfikacji RPL
-          if (_isVerifiedInRpl && _selectedRplDetails != null) ...[
-            const SizedBox(height: 8),
-            _buildRplVerificationBadge(theme, isDark),
+          const SizedBox(height: 16),
+
+          // Lista oczekujących leków (Batch Mode)
+          if (_pendingDrugs.isNotEmpty) ...[
+            _buildPendingDrugsList(theme, isDark),
+            const SizedBox(height: 16),
           ],
 
-          const SizedBox(height: 16),
-
-          // Termin ważności (opcjonalnie)
-          NeuInsetContainer(
-            borderRadius: 12,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: [
-                Icon(
-                  LucideIcons.calendar,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Termin ważności (opcjonalnie)',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      Text(
-                        _terminWaznosci != null
-                            ? '${_terminWaznosci!.day.toString().padLeft(2, '0')}.${_terminWaznosci!.month.toString().padLeft(2, '0')}.${_terminWaznosci!.year}'
-                            : 'Nie ustawiono',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (_terminWaznosci != null)
-                  IconButton(
-                    icon: const Icon(LucideIcons.x),
-                    onPressed: () => setState(() => _terminWaznosci = null),
-                  ),
-                IconButton(
-                  icon: const Icon(LucideIcons.calendarDays),
-                  onPressed: _selectDate,
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Przycisk zapisu z AI
+          // Przycisk zapisu - aktywny tylko gdy są leki na liście
           FilledButton.icon(
-            onPressed: _isSaving ? null : _saveMedicine,
+            onPressed: _pendingDrugs.isEmpty || _isSaving
+                ? null
+                : _saveBatchMedicines,
             icon: _isSaving
                 ? const SizedBox(
                     width: 20,
@@ -574,7 +526,163 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     ),
                   )
                 : Icon(LucideIcons.sparkles, color: aiColor),
-            label: const Text('Zapisz lek'),
+            label: Text(
+              _pendingDrugs.isEmpty
+                  ? 'Wybierz leki z listy'
+                  : 'Zapisz ${_pendingDrugs.length} lek${_pendingDrugs.length == 1
+                        ? ''
+                        : _pendingDrugs.length < 5
+                        ? 'i'
+                        : 'ów'}',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Buduje listę oczekujących leków (karty z Badge RPL)
+  Widget _buildPendingDrugsList(ThemeData theme, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header z liczbą leków i przyciskiem czyszczenia
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Dodano (${_pendingDrugs.length})',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (_pendingDrugs.length > 1)
+              TextButton.icon(
+                onPressed: _clearPendingDrugs,
+                icon: Icon(
+                  LucideIcons.trash2,
+                  size: 16,
+                  color: theme.colorScheme.error,
+                ),
+                label: Text(
+                  'Wyczyść',
+                  style: TextStyle(color: theme.colorScheme.error),
+                ),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // Lista kart leków
+        ...List.generate(_pendingDrugs.length, (index) {
+          final drug = _pendingDrugs[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _buildPendingDrugCard(drug, index, theme, isDark),
+          );
+        }),
+      ],
+    );
+  }
+
+  /// Karta pojedynczego leku w liście oczekujących
+  Widget _buildPendingDrugCard(
+    PendingDrug drug,
+    int index,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final timeStr =
+        '${drug.addedAt.hour.toString().padLeft(2, '0')}:${drug.addedAt.minute.toString().padLeft(2, '0')}';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.green.withAlpha(isDark ? 30 : 15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green.withAlpha(80)),
+      ),
+      child: Row(
+        children: [
+          // Ikona weryfikacji RPL
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.green.withAlpha(isDark ? 50 : 30),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              LucideIcons.shieldCheck,
+              size: 20,
+              color: Colors.green,
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Info o leku
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  drug.displayName,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Icon(
+                      LucideIcons.package,
+                      size: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        drug.packaging,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Icon(
+                      LucideIcons.clock,
+                      size: 12,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Dodano: $timeStr',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Przycisk usunięcia
+          IconButton(
+            icon: Icon(LucideIcons.x, size: 18, color: theme.colorScheme.error),
+            onPressed: () => _removePendingDrug(index),
+            tooltip: 'Usuń z listy',
+            visualDensity: VisualDensity.compact,
           ),
         ],
       ),
@@ -583,7 +691,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
   // ==================== HANDLERS RPL ====================
 
-  /// Handler po wybraniu leku z autocomplete RPL
+  /// Handler po wybraniu leku z autocomplete RPL (Batch Mode)
+  /// Dodaje lek do listy _pendingDrugs i czyści pole wyszukiwania
   Future<void> _onRplMedicineSelected(RplSearchResult result) async {
     _log.info(
       'RPL selection started: ${result.displayLabel} (id: ${result.id})',
@@ -620,15 +729,24 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           'Package selected: ${selection.selectedPackage.packaging} (GTIN: ${selection.selectedPackage.gtin})',
         );
 
-        // Ustaw tekst kontrolera - flaga _isProcessingRplSelection blokuje onTextChanged
-        _nazwaController.text = details.fullName;
-        _log.fine('Controller text set to: ${details.fullName}');
+        // BATCH MODE: Dodaj do listy oczekujących
+        final pendingDrug = PendingDrug(
+          drugDetails: selection.drugDetails,
+          selectedPackage: selection.selectedPackage,
+        );
 
         setState(() {
-          _selectedRplDetails = selection.drugDetails;
-          _selectedPackage = selection.selectedPackage;
-          _isVerifiedInRpl = true;
+          _pendingDrugs.add(pendingDrug);
         });
+
+        // Wyczyść pole wyszukiwania - gotowe na kolejny lek
+        _nazwaController.clear();
+        _log.info(
+          'Drug added to pending list. Total pending: ${_pendingDrugs.length}',
+        );
+
+        // Haptic feedback
+        HapticFeedback.lightImpact();
       } else {
         _log.fine('Package selection cancelled by user');
       }
@@ -641,64 +759,107 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     }
   }
 
-  /// Badge z informacją o weryfikacji w RPL
-  Widget _buildRplVerificationBadge(ThemeData theme, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.green.withAlpha(isDark ? 40 : 20),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.green.withAlpha(100)),
-      ),
-      child: Row(
-        children: [
-          const Icon(LucideIcons.shieldCheck, size: 18, color: Colors.green),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Zweryfikowano w RPL',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: Colors.green,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (_selectedPackage != null) ...[
-                  Text(
-                    '${_selectedPackage!.packaging} • EAN: ${_selectedPackage!.gtin}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ],
-            ),
+  /// Usuwa lek z listy oczekujących
+  void _removePendingDrug(int index) {
+    _log.info('Removing pending drug at index $index');
+    setState(() {
+      _pendingDrugs.removeAt(index);
+    });
+    HapticFeedback.lightImpact();
+  }
+
+  /// Przełącza rozwinięcie sekcji ręcznego dodawania
+  /// Z ochroną przed utratą niezapisanych leków
+  Future<void> _toggleManualSection() async {
+    // Jeśli rozwijamy - po prostu rozwiń
+    if (!_manualExpanded) {
+      setState(() => _manualExpanded = true);
+      return;
+    }
+
+    // Jeśli zwijamy i są niezapisane leki - ostrzeż
+    if (_pendingDrugs.isNotEmpty) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Porzucić zmiany?'),
+          content: Text(
+            'Na liście ${_pendingDrugs.length == 1 ? 'znajduje się' : 'znajdują się'} '
+            '${_pendingDrugs.length} niezapisany${_pendingDrugs.length == 1 ? '' : 'ch'} '
+            'lek${_pendingDrugs.length == 1
+                ? ''
+                : _pendingDrugs.length < 5
+                ? 'i'
+                : 'ów'}. '
+            'Zwinięcie sekcji spowoduje ich utratę.',
           ),
-          // Przycisk zmiany opakowania (jeśli więcej niż 1)
-          if (_selectedRplDetails != null &&
-              _selectedRplDetails!.packages.length > 1)
-            IconButton(
-              icon: const Icon(LucideIcons.repeat, size: 16),
-              onPressed: () async {
-                final selection = await RplPackageSelectorSheet.show(
-                  context: context,
-                  drugDetails: _selectedRplDetails!,
-                );
-                if (selection != null && mounted) {
-                  setState(() {
-                    _selectedPackage = selection.selectedPackage;
-                  });
-                }
-              },
-              tooltip: 'Zmień opakowanie',
-              visualDensity: VisualDensity.compact,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Wróć do edycji'),
             ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Porzuć i zwiń'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+
+      // Użytkownik potwierdził - wyczyść i zwiń
+      setState(() {
+        _pendingDrugs.clear();
+        _nazwaController.clear();
+        _manualExpanded = false;
+      });
+      _log.info(
+        'User confirmed discarding ${_pendingDrugs.length} pending drugs',
+      );
+      return;
+    }
+
+    // Brak niezapisanych leków - po prostu zwiń
+    setState(() => _manualExpanded = false);
+  }
+
+  /// Czyści całą listę oczekujących (z potwierdzeniem)
+  Future<void> _clearPendingDrugs() async {
+    if (_pendingDrugs.isEmpty) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Wyczyścić listę?'),
+        content: Text(
+          'Czy na pewno chcesz usunąć ${_pendingDrugs.length} lek(ów) z listy?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Wyczyść'),
+          ),
         ],
       ),
     );
+
+    if (confirmed == true) {
+      setState(() {
+        _pendingDrugs.clear();
+      });
+      _log.info('Pending drugs list cleared');
+    }
   }
 
   // ==================== HANDLERS ====================
@@ -943,140 +1104,65 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
   }
 
-  Future<void> _selectDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate:
-          _terminWaznosci ?? DateTime.now().add(const Duration(days: 365)),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
-    );
+  /// Zapisuje wszystkie leki z listy oczekujących (Batch Mode)
+  Future<void> _saveBatchMedicines() async {
+    if (_pendingDrugs.isEmpty) return;
 
-    if (picked != null) {
-      setState(() => _terminWaznosci = picked);
-    }
-  }
-
-  Future<void> _saveMedicine() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final name = _nazwaController.text.trim();
-
+    _log.info('Starting batch save of ${_pendingDrugs.length} medicines');
     setState(() => _isSaving = true);
 
-    // Pokaz dialog przetwarzania AI
+    // Pokaz dialog przetwarzania
+    final progressNotifier = ValueNotifier<_ProcessingProgress>(
+      _ProcessingProgress(current: 0, total: _pendingDrugs.length, stage: 'AI'),
+    );
+
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => _AiProcessingDialog(medicineName: name),
+      builder: (ctx) => _ProcessingDialog(progress: progressNotifier),
     );
 
+    final geminiService = GeminiNameLookupService();
+    final savedMedicines = <Medicine>[];
+
     try {
-      final geminiService = GeminiNameLookupService();
-      Medicine medicine;
+      // Przetwarzaj każdy lek z listy
+      for (final pendingDrug in _pendingDrugs) {
+        try {
+          final rpl = pendingDrug.drugDetails;
+          final pkg = pendingDrug.selectedPackage;
 
-      if (_isVerifiedInRpl && _selectedRplDetails != null) {
-        // === SCIEZKA 1: Zweryfikowano w RPL ===
-        // Dane podstawowe z RPL, AI uzupelnia opis/wskazania/tagi
-        final rpl = _selectedRplDetails!;
-        final pkg = _selectedPackage;
+          // AI uzupełnia opis, wskazania, tagi
+          final aiResult = await geminiService.lookupByName(rpl.fullName);
+          final aiMedicine = aiResult.found ? aiResult.medicine : null;
 
-        // AI uzupelnia opis, wskazania, tagi
-        final aiResult = await geminiService.lookupByName(rpl.fullName);
-        final aiMedicine = aiResult.found ? aiResult.medicine : null;
+          // Generuj tagi z RPL
+          final rplTags = _generateTagsFromRpl(rpl, pkg);
 
-        // Generuj tagi z RPL
-        final rplTags = _generateTagsFromRpl(rpl, pkg);
+          final medicine = Medicine(
+            id: const Uuid().v4(),
+            nazwa: rpl.fullName,
+            opis: aiMedicine?.opis ?? rpl.form,
+            wskazania: aiMedicine?.wskazania ?? [],
+            tagi: [
+              ...rplTags,
+              ...processTagsForImport(aiMedicine?.tagi ?? []),
+            ].toSet().toList(),
+            // Brak daty ważności - będzie ustawiona na końcu przez BatchDateInputSheet
+            packages: [],
+            dataDodania: DateTime.now().toIso8601String(),
+            leafletUrl: rpl.leafletUrl,
+          );
 
-        medicine = Medicine(
-          id: const Uuid().v4(),
-          nazwa: rpl.fullName,
-          opis: aiMedicine?.opis ?? rpl.form,
-          wskazania: aiMedicine?.wskazania ?? [],
-          tagi: <dynamic>{
-            ...rplTags,
-            ...processTagsForImport(aiMedicine?.tagi ?? []),
-          }.toList(), // usun duplikaty
-          terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
-          dataDodania: DateTime.now().toIso8601String(),
-          leafletUrl: rpl.leafletUrl,
-        );
-      } else {
-        // === SCIEZKA 2: Brak weryfikacji RPL - fallback do AI ===
-        // Prio 1: AI poprawia nazwe i szukamy w RPL
-        // Prio 2: Tylko AI (jak wczesniej)
-
-        final aiResult = await geminiService.lookupByName(name);
-
-        if (!aiResult.found || aiResult.medicine == null) {
-          // Zamknij dialog przetwarzania
-          if (mounted) Navigator.of(context).pop();
-          _showError(aiResult.reason ?? 'Nie rozpoznano leku "$name"');
-          return;
+          await widget.storageService.saveMedicine(medicine);
+          savedMedicines.add(medicine);
+          _log.fine('Saved medicine: ${medicine.nazwa}');
+        } catch (e) {
+          _log.warning('Error saving medicine ${pendingDrug.displayName}: $e');
+          // Kontynuuj z pozostałymi lekami
         }
 
-        final aiMedicine = aiResult.medicine!;
-        final correctedName = aiMedicine.nazwa ?? name;
-
-        // Proba znalezienia w RPL po poprawionej nazwie
-        RplDrugDetails? rplDetails;
-        RplPackage? rplPackage;
-
-        if (correctedName != name) {
-          // AI poprawilo nazwe - szukaj w RPL
-          final rplResults = await _rplService.searchMedicine(correctedName);
-          if (rplResults.isNotEmpty) {
-            // Znaleziono w RPL - pobierz szczegoly
-            final details = await _rplService.fetchDetailsById(
-              rplResults.first.id,
-            );
-            if (details != null) {
-              rplDetails = details;
-              // Auto-wybor opakowania jesli tylko jedno
-              if (details.packages.length == 1) {
-                rplPackage = details.packages.first;
-              } else if (details.packages.isNotEmpty && mounted) {
-                // Zamknij dialog AI
-                Navigator.of(context).pop();
-                // Pokaz selector opakowan
-                final selection = await RplPackageSelectorSheet.show(
-                  context: context,
-                  drugDetails: details,
-                );
-                if (selection != null) {
-                  rplPackage = selection.selectedPackage;
-                }
-                // Pokaz dialog AI ponownie
-                if (mounted) {
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (ctx) => _AiProcessingDialog(medicineName: name),
-                  );
-                }
-              }
-            }
-          }
-        }
-
-        // Utworz lek z danymi AI + opcjonalnie RPL
-        final rplTags = rplDetails != null
-            ? _generateTagsFromRpl(rplDetails, rplPackage)
-            : <String>[];
-
-        medicine = Medicine(
-          id: const Uuid().v4(),
-          nazwa: rplDetails?.fullName ?? correctedName,
-          opis: aiMedicine.opis,
-          wskazania: aiMedicine.wskazania,
-          tagi: <dynamic>{
-            ...rplTags,
-            ...processTagsForImport(aiMedicine.tagi),
-          }.toList(),
-          terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
-          dataDodania: DateTime.now().toIso8601String(),
-          leafletUrl: rplDetails?.leafletUrl,
-        );
+        progressNotifier.value = progressNotifier.value.increment();
       }
 
       // Zamknij dialog przetwarzania
@@ -1084,38 +1170,45 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         Navigator.of(context).pop();
       }
 
-      await widget.storageService.saveMedicine(medicine);
+      if (savedMedicines.isEmpty) {
+        _showError('Nie udało się zapisać żadnego leku');
+        return;
+      }
+
+      // Wyczyść listę oczekujących i pole wyszukiwania
+      setState(() {
+        _pendingDrugs.clear();
+        _nazwaController.clear();
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Dodano: ${medicine.nazwa}'),
+            content: Text('Zapisano ${savedMedicines.length} lek(ów)'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
 
-        // Wyczysc formularz
-        _nazwaController.clear();
-        setState(() {
-          _terminWaznosci = null;
-          _isVerifiedInRpl = false;
-          _selectedRplDetails = null;
-          _selectedPackage = null;
-        });
+        // Pokaż dialog do ustawienia dat ważności (format MM/YYYY)
+        BatchDateInputSheet.showIfNeeded(
+          context: context,
+          medicines: savedMedicines,
+          storageService: widget.storageService,
+          onComplete: () {
+            _log.info('Batch date input completed');
+          },
+        );
+
+        // Zwiń sekcję po zapisie
+        setState(() => _manualExpanded = false);
       }
-    } on GeminiException catch (e) {
-      // Zamknij dialog jesli jeszcze otwarty
-      if (mounted && Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-      _showError(e.message);
     } catch (e) {
-      // Zamknij dialog jesli jeszcze otwarty
+      // Zamknij dialog jeśli jeszcze otwarty
       if (mounted && Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
       }
-      _showError('Błąd: $e');
+      _showError('Błąd zapisu: $e');
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
