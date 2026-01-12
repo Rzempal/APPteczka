@@ -143,7 +143,9 @@ class RplPackageSelectorSheet extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: drugDetails.packages.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 4),
-                itemBuilder: (context, index) {
+                // WAZNE: Nie nadpisuj 'context' - uzywamy context z build()
+                // dla Navigator.pop() aby wynik wrocil do showModalBottomSheet
+                itemBuilder: (_, index) {
                   final package = drugDetails.packages[index];
                   return _buildPackageTile(context, package, isDark);
                 },
