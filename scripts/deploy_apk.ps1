@@ -151,7 +151,10 @@ function Cleanup-RemoteApks {
         [int]$KeepCount
     )
     
-    Print-Warn "Sprzatanie starych APK (Limit: $KeepCount)..."
+    # Ensure RemotePath ends with / for consistency
+    if (-not $RemotePath.EndsWith("/")) { $RemotePath += "/" }
+    
+    Print-Warn "Sprzatanie starych APK (Limit: $KeepCount, Sciezka: $RemotePath, Wzorzec: $Pattern)..."
     
     $xmlLog = Join-Path $env:TEMP "winscp_ls_$([guid]::NewGuid()).xml"
     $lsScript = Join-Path $env:TEMP "winscp_ls_$([guid]::NewGuid()).txt"
@@ -166,6 +169,7 @@ function Cleanup-RemoteApks {
     }
 
     try {
+        # Create ls script
         $OpenCmd | Out-File $lsScript -Encoding UTF8
         "ls ""$RemotePath""" | Out-File $lsScript -Append -Encoding UTF8
         "exit" | Out-File $lsScript -Append -Encoding UTF8
@@ -174,19 +178,32 @@ function Cleanup-RemoteApks {
         
         if (Test-Path $xmlLog) {
             [xml]$xml = Get-Content $xmlLog
-            $allMatchingFiles = $xml.session.ls.file | Where-Object { $_.type -eq "file" -and $_.filename -like $Pattern }
+            
+            # Use XPath to find all file elements, regardless of depth or structure
+            $fileNodes = $xml.SelectNodes("//file")
+            Print-Info "Debug: Znaleziono $($fileNodes.Count) wszystkich elementow w katalogu."
+            
+            # Filter and convert to an array of objects
+            $allMatchingFiles = @()
+            foreach ($node in $fileNodes) {
+                if ($node.type -eq "file" -and $node.filename -like $Pattern) {
+                    $allMatchingFiles += $node
+                }
+            }
+            
+            Print-Info "Debug: Dopasowano $($allMatchingFiles.Count) plikow do wzorca $Pattern."
             
             # Sort descending by filename (contains timestamp)
             $sortedFiles = $allMatchingFiles | Sort-Object -Property filename -Descending
-            $result.RemainingFiles = $sortedFiles.filename
+            $result.RemainingFiles = @($sortedFiles.filename)
             
             if ($sortedFiles.Count -gt $KeepCount) {
                 $toDelete = $sortedFiles[$KeepCount..($sortedFiles.Count - 1)]
                 $result.DeletedCount = $toDelete.Count
-                $result.DeletedFiles = $toDelete.filename
-                $result.RemainingFiles = $sortedFiles[0..($KeepCount - 1)].filename
+                $result.DeletedFiles = @($toDelete.filename)
+                $result.RemainingFiles = @($sortedFiles[0..($KeepCount - 1)].filename)
 
-                Print-Info ("Znaleziono {0} starych APK do usuniecia (Kanal: $Pattern)." -f $toDelete.Count)
+                Print-Info ("Znaleziono {0} starych APK do usuniecia." -f $toDelete.Count)
                 
                 $OpenCmd | Out-File $rmScript -Encoding UTF8
                 foreach ($f in $toDelete) {
@@ -201,9 +218,12 @@ function Cleanup-RemoteApks {
                 $result.Success = $true
             }
             else {
-                Print-Info "Brak starych APK do usuniecia dla wzorca $Pattern."
+                Print-Info "Brak starych APK do usuniecia."
                 $result.Success = $true
             }
+        }
+        else {
+            $result.Error = "Nie udalo sie utworzyc logu XML z WinSCP."
         }
     }
     catch {
@@ -237,7 +257,7 @@ $timerPs = [powershell]::Create().AddScript({
 $timerPs.Runspace = $rs
 $timerAsync = $timerPs.BeginInvoke()
 
-Print-Info "=== Deploy APK Script v12.4 (Cleanup Log Fix) ==="
+Print-Info "=== Deploy APK Script v12.5 (Cleanup Fix) ==="
 Load-Env
 
 $DEPLOY_HOST = if ($env:DEPLOY_HOST) { $env:DEPLOY_HOST } else { "" }
@@ -302,7 +322,11 @@ else {
 $LAST_COMMITS = @()
 try {
     Push-Location $PROJECT_ROOT
-    $LAST_COMMITS = git log -4 --pretty=format:"%h %s" 2>$null
+    # Force UTF-8 for git output
+    $oldOutputEncoding = [Console]::OutputEncoding
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $LAST_COMMITS = git -c "i18n.logOutputEncoding=utf-8" log -4 --pretty=format:"%h %s" 2>$null
+    [Console]::OutputEncoding = $oldOutputEncoding
     Pop-Location
 }
 catch {

@@ -1,0 +1,7 @@
+Analyzing add_medicine_screen.dart...                           
+
+warning - Unused import: '../services/gemini_service.dart' - apps\mobile\lib\screens\add_medicine_screen.dart:12:8 - unused_import
+   info - Unnecessary constructor invocation - apps\mobile\lib\screens\add_medicine_screen.dart:1147:19 - prefer_collection_literals
+warning - The declaration '_AiProcessingDialog' isn't referenced - apps\mobile\lib\screens\add_medicine_screen.dart:1375:7 - unused_element
+
+3 issues found. (ran in 57.8s)
