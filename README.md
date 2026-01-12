@@ -105,6 +105,7 @@ Szczegóły: [docs/road_map.md](docs/road_map.md)
 | Dokument | Opis |
 |----------|------|
 | [Architektura](docs/architecture.md) | Stack, przepływ danych |
+| [Proces dodawania](docs/drug_addition_process.md) | Skaner i AI krok po kroku |
 | [Road Map](docs/road_map.md) | Plan rozwoju projektu |
 | [Model Danych](docs/data_model.md) | Encje, schematy |
 | [Release Guide](docs/release.md) | Deployment APK i OTA |

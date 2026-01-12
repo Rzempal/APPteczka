@@ -9,6 +9,7 @@
 | Dokument | Opis |
 |----------|------|
 | [Architektura](architecture.md) | Przegląd systemu, stack, warstwy (ten plik) |
+| [Proces dodawania](drug_addition_process.md) | Skaner i AI krok po kroku |
 | [Model Danych](data_model.md) | Encje, schema JSON/YAML |
 | [Bezpieczeństwo](security.md) | Lokalne dane, disclaimer medyczny |
 | [Road Map](road_map.md) | Plan rozwoju projektu |

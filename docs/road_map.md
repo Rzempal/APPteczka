@@ -210,6 +210,9 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
                               Dialog reczny (fallback)
 ```
 
+> [!TIP]
+> Szczegółowy opis tego procesu znajdziesz w dokumencie: [Proces dodawania leków](drug_addition_process.md)
+
 **Zrodlo danych:** `rejestrymedyczne.ezdrowie.gov.pl` (oficjalne API rzadowe)
 
 **Pliki:**

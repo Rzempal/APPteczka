@@ -1,6 +1,6 @@
 # 📊 Model Danych – Pudełko na leki
 
-> **Powiązane:** [Architektura](architecture.md) | [Bezpieczeństwo](security.md)
+> **Powiązane:** [Architektura](architecture.md) | [Proces dodawania](drug_addition_process.md) | [Bezpieczeństwo](security.md)
 
 ---
 

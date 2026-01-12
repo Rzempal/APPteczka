@@ -11,7 +11,7 @@ Dokumentacja Master Listy tagów używanych w aplikacji APPteczka / Karton z lek
 Tagi służą do kategoryzacji leków, umożliwiając:
 
 - **Filtrowanie** - szybkie wyszukiwanie leków po cechach
-- **Auto-tagowanie** - Gemini AI automatycznie przypisuje tagi podczas skanowania
+- **Auto-tagowanie** - Gemini AI automatycznie przypisuje tagi podczas skanowania (zobacz: [Proces dodawania](drug_addition_process.md))
 - **Organizację** - grupowanie leków w sensowne kategorie
 
 ---
