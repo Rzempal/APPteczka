@@ -189,6 +189,7 @@
 **Data:** 2026-01-10
 
 **Implementacja:**
+
 - Ciagale skanowanie kodow EAN aparatem (mobile_scanner)
 - Wyszukiwanie lekow w Rejestrze Produktow Leczniczych (API CeZ)
 - Batch processing: snapshot daty → OCR na koncu
@@ -196,6 +197,7 @@
 - Haptic feedback i animacje sukcesu
 
 **Flow (v1.4.0 - batch mode):**
+
 ```
 EAN → RPL API → snapshot daty → kolejny lek → ...
                                               ↓
@@ -211,6 +213,7 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 **Zrodlo danych:** `rejestrymedyczne.ezdrowie.gov.pl` (oficjalne API rzadowe)
 
 **Pliki:**
+
 - `lib/widgets/barcode_scanner.dart` - widget skanera (v1.5.0)
 - `lib/services/rpl_service.dart` - serwis API RPL (v2.1.0)
 - `lib/screens/add_medicine_screen.dart` - batch handler + AI enrichment
@@ -223,10 +226,12 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 
 **Architektura (v2.0):**
 Gemini AI dziala jako "silnik w tle" wspomagajacy:
+
 1. **Skaner kodow kreskowych** - AI enrichment (opis, tagi, wskazania)
 2. **Reczne dodawanie** - przycisk "AI" przy nazwie leku
 
 **Flow skanera:**
+
 ```
 EAN → RPL API → snapshot daty → ...
                                 ↓
@@ -240,16 +245,19 @@ EAN → RPL API → snapshot daty → ...
 ```
 
 **Flow recznego dodawania:**
+
 ```
 Nazwa leku → [AI] → Gemini → opis + wskazania + tagi
 ```
 
 **Usuniete w v2.0:**
+
 - Widget GeminiScanner (skanowanie zdjec opakowan)
 - Tryb "2 zdjecia" (dual photo mode)
 - Sekcja "Gemini AI Vision" z ekranu dodawania
 
 **Pliki:**
+
 - `apps/web/src/lib/prompts.ts` - prompt z instrukcja EAN (v0.003)
 - `apps/mobile/lib/services/gemini_service.dart` - serwis Gemini (v0.003)
 - `apps/mobile/lib/services/gemini_name_lookup_service.dart` - lookup po nazwie
@@ -262,6 +270,7 @@ Nazwa leku → [AI] → Gemini → opis + wskazania + tagi
 **Data:** 2026-01-10
 
 **Zmiany v2.0:**
+
 - Usunięto przełącznik widoku (lista/kafelki) - tylko jeden tryb
 - Usunięto bottomSheet ze szczegółami leku
 - MedicineCard v2.0 z wbudowanymi wszystkimi funkcjami:
@@ -276,6 +285,7 @@ Nazwa leku → [AI] → Gemini → opis + wskazania + tagi
 - Inline edycja notatki (bez dialogu)
 
 **Zmiany v2.1 (UX refinements):**
+
 - Nagłówek w expanded mode: kliknięcie zwija do compact
 - Long press na nazwie leku: context menu (edytuj, kopiuj, ulotka, usuń)
 - Przycisk "Więcej" zmienia się na "Mniej" z odwróconą ikoną
@@ -286,13 +296,21 @@ Nazwa leku → [AI] → Gemini → opis + wskazania + tagi
 - Przycisk "Edytuj" na dole karty zmieniony na "Zwiń"
 
 **Zmiany v2.2 (bug fixes):**
+
 - Powiększone ikony edycji (padding 10, size 20) - łatwiejsze trafienie palcem
 - Usunięta zielona ramka z TextField w notatce (focusedBorder: none)
 - Dodany padding (left/right: 4) do sekcji "Więcej" - cienie nie są podcinane
 - Zmieniona kolejność sekcji: Etykiety, Tagi, Dodano, Usuń lek
 
 **Pliki:**
-- `lib/widgets/medicine_card.dart` - v2.2 z akordeonem
+**Zmiany v2.3 (build fix):**
+
+- Naprawiono błąd kompilacji (extra closing parenthesis) blokujący APK deployment
+- Zsynchronizowano animację tap-to-expand z dekoracją neumorficzną
+
+**Pliki:**
+
+- `lib/widgets/medicine_card.dart` - v2.3 z fixem animacji
 - `lib/screens/home_screen.dart` - uproszczona logika widoku
 
 ---
@@ -307,9 +325,10 @@ Nazwa leku → [AI] → Gemini → opis + wskazania + tagi
 **Idea:** Na podstawie zeskanowanego leku sugerowac typowy okres waznosci (np. 2-3 lata dla tabletek).
 
 **Korzyści:**
+
 - Szybsze wprowadzanie dat gdy OCR zawiedzie
 - Przypomnienia o weryfikacji daty
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-11 (Gemini AI Vision - rozpoznawanie kodow kreskowych)
+> 📅 **Ostatnia aktualizacja:** 2026-01-11 (v2.3 Build Fix in MedicineCard)

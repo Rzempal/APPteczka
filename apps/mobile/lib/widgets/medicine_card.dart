@@ -161,7 +161,6 @@ class _MedicineCardState extends State<MedicineCard>
         child: AnimatedBuilder(
           animation: _controller,
           builder: (context, child) {
-            // Synchronized animation: scale + decoration use same controller
             final t = _controller.value;
             final scale = 1.0 - (t * (1.0 - NeuDecoration.tapScale));
 
@@ -179,29 +178,26 @@ class _MedicineCardState extends State<MedicineCard>
 
             return Transform.scale(
               scale: scale,
-              child: Container(
-                decoration: decoration,
-                child: child,
-              ),
+              child: Container(decoration: decoration, child: child),
             );
           },
           child: Padding(
-              padding: EdgeInsets.all(widget.isCompact ? 12 : 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Nagłówek: [Nazwa + Etykiety] | [Chevron]
-                  _buildHeader(theme, isDark, medicineLabels, statusColor, statusIcon),
-
-                  // Compact: opis + status
-                  if (widget.isCompact)
-                    _buildCompactContent(theme, statusColor, statusIcon),
-
-                  // Expanded: pełna treść
-                  if (!widget.isCompact)
-                    _buildExpandedContent(theme, isDark, statusColor),
-                ],
-              ),
+            padding: EdgeInsets.all(widget.isCompact ? 12 : 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(
+                  theme,
+                  isDark,
+                  medicineLabels,
+                  statusColor,
+                  statusIcon,
+                ),
+                if (widget.isCompact)
+                  _buildCompactContent(theme, statusColor, statusIcon),
+                if (!widget.isCompact)
+                  _buildExpandedContent(theme, isDark, statusColor),
+              ],
             ),
           ),
         ),
@@ -255,7 +251,9 @@ class _MedicineCardState extends State<MedicineCard>
                   ),
                 // Etykiety tylko w compact mode
                 if (widget.isCompact) ...[
-                  ...medicineLabels.take(3).map((label) => _buildBadge(label, isDark)),
+                  ...medicineLabels
+                      .take(3)
+                      .map((label) => _buildBadge(label, isDark)),
                   if (medicineLabels.length > 3)
                     _buildBadgeCount(medicineLabels.length - 3, isDark),
                 ],
@@ -288,7 +286,11 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildCompactContent(ThemeData theme, Color statusColor, IconData statusIcon) {
+  Widget _buildCompactContent(
+    ThemeData theme,
+    Color statusColor,
+    IconData statusIcon,
+  ) {
     return Column(
       children: [
         const SizedBox(height: 8),
@@ -332,7 +334,11 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildExpandedContent(ThemeData theme, bool isDark, Color statusColor) {
+  Widget _buildExpandedContent(
+    ThemeData theme,
+    bool isDark,
+    Color statusColor,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -363,10 +369,12 @@ class _MedicineCardState extends State<MedicineCard>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: _medicine.wskazania
-                  .map((w) => Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: Text('• $w', style: theme.textTheme.bodySmall),
-                      ))
+                  .map(
+                    (w) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text('• $w', style: theme.textTheme.bodySmall),
+                    ),
+                  )
                   .toList(),
             ),
           ),
@@ -429,7 +437,10 @@ class _MedicineCardState extends State<MedicineCard>
                 onTap: onEdit,
                 child: Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 12,
+                  ),
                   child: Icon(
                     LucideIcons.squarePen,
                     size: 20,
@@ -444,8 +455,13 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildLeafletSection(BuildContext context, ThemeData theme, bool isDark) {
-    final hasLeaflet = _medicine.leafletUrl != null && _medicine.leafletUrl!.isNotEmpty;
+  Widget _buildLeafletSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final hasLeaflet =
+        _medicine.leafletUrl != null && _medicine.leafletUrl!.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,11 +479,18 @@ class _MedicineCardState extends State<MedicineCard>
             children: [
               NeuButton(
                 onPressed: () => _showPdfViewer(context),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(LucideIcons.fileText, size: 14, color: AppColors.valid),
+                    Icon(
+                      LucideIcons.fileText,
+                      size: 14,
+                      color: AppColors.valid,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Pokaż PDF',
@@ -484,8 +507,15 @@ class _MedicineCardState extends State<MedicineCard>
                 onTap: _detachLeaflet,
                 child: Container(
                   padding: const EdgeInsets.all(8),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-                  child: Icon(LucideIcons.pinOff, size: 16, color: AppColors.expired),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Icon(
+                    LucideIcons.pinOff,
+                    size: 16,
+                    color: AppColors.expired,
+                  ),
                 ),
               ),
             ],
@@ -548,7 +578,9 @@ class _MedicineCardState extends State<MedicineCard>
             width: double.infinity,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isDark ? Colors.transparent : theme.colorScheme.surfaceContainerHighest,
+              color: isDark
+                  ? Colors.transparent
+                  : theme.colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: isDark ? Colors.grey.shade700 : Colors.grey.shade400,
@@ -587,8 +619,15 @@ class _MedicineCardState extends State<MedicineCard>
                         onTap: _saveNote,
                         child: Container(
                           padding: const EdgeInsets.all(10),
-                          decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                          child: Icon(LucideIcons.check, size: 20, color: AppColors.primary),
+                          decoration: NeuDecoration.flatSmall(
+                            isDark: isDark,
+                            radius: 12,
+                          ),
+                          child: Icon(
+                            LucideIcons.check,
+                            size: 20,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ],
@@ -651,7 +690,13 @@ class _MedicineCardState extends State<MedicineCard>
             final pkgColor = _getStatusColor(pkgStatus);
             return Padding(
               padding: const EdgeInsets.only(bottom: 6),
-              child: _buildPackageRow(context, theme, isDark, package, pkgColor),
+              child: _buildPackageRow(
+                context,
+                theme,
+                isDark,
+                package,
+                pkgColor,
+              ),
             );
           }),
 
@@ -664,11 +709,18 @@ class _MedicineCardState extends State<MedicineCard>
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(LucideIcons.packagePlus, size: 14, color: theme.colorScheme.onSurface),
+                Icon(
+                  LucideIcons.packagePlus,
+                  size: 14,
+                  color: theme.colorScheme.onSurface,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'Dodaj opakowanie',
-                  style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12),
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -678,7 +730,11 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildEmptyPackageState(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildEmptyPackageState(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return GestureDetector(
       onTap: () => _showAddPackageDialog(context),
       child: Container(
@@ -687,7 +743,11 @@ class _MedicineCardState extends State<MedicineCard>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(LucideIcons.calendarPlus, size: 14, color: theme.colorScheme.onSurfaceVariant),
+            Icon(
+              LucideIcons.calendarPlus,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
             const SizedBox(width: 6),
             Text(
               'Ustaw termin ważności',
@@ -720,7 +780,10 @@ class _MedicineCardState extends State<MedicineCard>
             GestureDetector(
               onTap: () => _showEditPackageDateDialog(context, package),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: packageColor,
                   borderRadius: BorderRadius.circular(10),
@@ -728,7 +791,11 @@ class _MedicineCardState extends State<MedicineCard>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(_getStatusIcon(pkgStatus), size: 12, color: Colors.white),
+                    Icon(
+                      _getStatusIcon(pkgStatus),
+                      size: 12,
+                      color: Colors.white,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       package.displayDate,
@@ -749,7 +816,11 @@ class _MedicineCardState extends State<MedicineCard>
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(LucideIcons.calendarCog, size: 20, color: theme.colorScheme.onSurface),
+                child: Icon(
+                  LucideIcons.calendarCog,
+                  size: 20,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ),
             const SizedBox(width: 4),
@@ -759,7 +830,11 @@ class _MedicineCardState extends State<MedicineCard>
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(LucideIcons.blocks, size: 20, color: theme.colorScheme.onSurface),
+                child: Icon(
+                  LucideIcons.blocks,
+                  size: 20,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ),
             const Spacer(),
@@ -769,8 +844,15 @@ class _MedicineCardState extends State<MedicineCard>
                 onTap: () => _deletePackage(package),
                 child: Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                  child: Icon(LucideIcons.trash2, size: 20, color: AppColors.expired),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 12,
+                  ),
+                  child: Icon(
+                    LucideIcons.trash2,
+                    size: 20,
+                    color: AppColors.expired,
+                  ),
                 ),
               ),
           ],
@@ -794,7 +876,11 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildSupplyCalculatorSection(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildSupplyCalculatorSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     final totalPieces = _medicine.totalPieceCount;
     final supplyEndDate = _medicine.calculateSupplyEndDate();
     final canCalculate = totalPieces > 0;
@@ -835,11 +921,18 @@ class _MedicineCardState extends State<MedicineCard>
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(LucideIcons.pillBottle, size: 14, color: theme.colorScheme.onSurface),
+                  Icon(
+                    LucideIcons.pillBottle,
+                    size: 14,
+                    color: theme.colorScheme.onSurface,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     'Ustaw dzienne zużycie',
-                    style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 12),
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -885,7 +978,9 @@ class _MedicineCardState extends State<MedicineCard>
                 Icon(
                   LucideIcons.calendarOff,
                   size: 14,
-                  color: daysRemaining <= 7 ? AppColors.expired : AppColors.primary,
+                  color: daysRemaining <= 7
+                      ? AppColors.expired
+                      : AppColors.primary,
                 ),
                 const SizedBox(width: 6),
                 Text.rich(
@@ -921,7 +1016,11 @@ class _MedicineCardState extends State<MedicineCard>
           child: Container(
             padding: const EdgeInsets.all(6),
             decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-            child: Icon(LucideIcons.calendarPlus, size: 16, color: AppColors.primary),
+            child: Icon(
+              LucideIcons.calendarPlus,
+              size: 16,
+              color: AppColors.primary,
+            ),
           ),
         ),
       ],
@@ -944,7 +1043,9 @@ class _MedicineCardState extends State<MedicineCard>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  _isMoreExpanded ? LucideIcons.chevronsDownUp : LucideIcons.chevronsUpDown,
+                  _isMoreExpanded
+                      ? LucideIcons.chevronsDownUp
+                      : LucideIcons.chevronsUpDown,
                   size: 16,
                   color: theme.colorScheme.onSurface,
                 ),
@@ -965,8 +1066,9 @@ class _MedicineCardState extends State<MedicineCard>
         // Rozwinięta zawartość z paddingiem dla cieni
         AnimatedCrossFade(
           duration: const Duration(milliseconds: 200),
-          crossFadeState:
-              _isMoreExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+          crossFadeState: _isMoreExpanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
           firstChild: const SizedBox.shrink(),
           secondChild: Padding(
             padding: const EdgeInsets.only(top: 12, left: 4, right: 4),
@@ -1077,7 +1179,11 @@ class _MedicineCardState extends State<MedicineCard>
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(LucideIcons.squarePen, size: 20, color: theme.colorScheme.onSurface),
+                child: Icon(
+                  LucideIcons.squarePen,
+                  size: 20,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
             ),
           ],
@@ -1107,7 +1213,11 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildLabelsSection(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildLabelsSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1154,7 +1264,11 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildDeleteSection(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildDeleteSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1192,12 +1306,19 @@ class _MedicineCardState extends State<MedicineCard>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(LucideIcons.lightbulb, size: 14, color: AppColors.expiringSoon),
+              Icon(
+                LucideIcons.lightbulb,
+                size: 14,
+                color: AppColors.expiringSoon,
+              ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   'Aby usunąć jedno opakowanie, przejdź do sekcji "Termin ważności"',
-                  style: TextStyle(fontSize: 11, color: theme.colorScheme.onSurface),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],
@@ -1207,7 +1328,11 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildActionButtons(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -1217,7 +1342,11 @@ class _MedicineCardState extends State<MedicineCard>
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(LucideIcons.chevronUp, size: 18, color: theme.colorScheme.onSurface),
+              Icon(
+                LucideIcons.chevronUp,
+                size: 18,
+                color: theme.colorScheme.onSurface,
+              ),
               const SizedBox(width: 6),
               Text(
                 'Zwiń',
@@ -1272,7 +1401,9 @@ class _MedicineCardState extends State<MedicineCard>
   }
 
   Future<void> _showEditWskazaniaDialog(BuildContext context) async {
-    final controller = TextEditingController(text: _medicine.wskazania.join(', '));
+    final controller = TextEditingController(
+      text: _medicine.wskazania.join(', '),
+    );
     final result = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1313,7 +1444,9 @@ class _MedicineCardState extends State<MedicineCard>
 
   Future<void> _showEditCustomTagsDialog(BuildContext context) async {
     final categorizedTags = tagCategories.values.expand((e) => e).toSet();
-    final customTags = _medicine.tagi.where((t) => !categorizedTags.contains(t)).toList();
+    final customTags = _medicine.tagi
+        .where((t) => !categorizedTags.contains(t))
+        .toList();
     final controller = TextEditingController(text: customTags.join(', '));
 
     final result = await showDialog<String>(
@@ -1327,8 +1460,8 @@ class _MedicineCardState extends State<MedicineCard>
             Text(
               'Tagi spoza listy kontrolowanej. Oddziel przecinkami.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -1355,14 +1488,18 @@ class _MedicineCardState extends State<MedicineCard>
     );
 
     if (result != null) {
-      final systemTags = _medicine.tagi.where((t) => categorizedTags.contains(t)).toList();
+      final systemTags = _medicine.tagi
+          .where((t) => categorizedTags.contains(t))
+          .toList();
       final newCustomTags = result
           .split(',')
           .map((s) => s.trim().toLowerCase())
           .where((s) => s.isNotEmpty)
           .toList();
 
-      final updatedMedicine = _medicine.copyWith(tagi: [...systemTags, ...newCustomTags]);
+      final updatedMedicine = _medicine.copyWith(
+        tagi: [...systemTags, ...newCustomTags],
+      );
       await widget.storageService?.saveMedicine(updatedMedicine);
       setState(() => _medicine = updatedMedicine);
       widget.onMedicineUpdated?.call();
@@ -1376,7 +1513,9 @@ class _MedicineCardState extends State<MedicineCard>
     bool useSameDate = false;
     bool useSameQuantity = false;
 
-    final firstPackage = _medicine.packages.isNotEmpty ? _medicine.sortedPackages.first : null;
+    final firstPackage = _medicine.packages.isNotEmpty
+        ? _medicine.sortedPackages.first
+        : null;
     final hasQuantity = firstPackage?.remainingDescription != null;
 
     final result = await showDialog<Map<String, dynamic>?>(
@@ -1389,16 +1528,22 @@ class _MedicineCardState extends State<MedicineCard>
             children: [
               if (_medicine.packages.isNotEmpty) ...[
                 CheckboxListTile(
-                  title: Text('Taka sama data (${_medicine.sortedPackages.first.displayDate})'),
+                  title: Text(
+                    'Taka sama data (${_medicine.sortedPackages.first.displayDate})',
+                  ),
                   value: useSameDate,
-                  onChanged: (v) => setDialogState(() => useSameDate = v ?? false),
+                  onChanged: (v) =>
+                      setDialogState(() => useSameDate = v ?? false),
                   contentPadding: EdgeInsets.zero,
                 ),
                 if (hasQuantity)
                   CheckboxListTile(
-                    title: Text('Taka sama ilość (${firstPackage!.remainingDescription})'),
+                    title: Text(
+                      'Taka sama ilość (${firstPackage!.remainingDescription})',
+                    ),
                     value: useSameQuantity,
-                    onChanged: (v) => setDialogState(() => useSameQuantity = v ?? false),
+                    onChanged: (v) =>
+                        setDialogState(() => useSameQuantity = v ?? false),
                     contentPadding: EdgeInsets.zero,
                   ),
                 const SizedBox(height: 12),
@@ -1414,12 +1559,15 @@ class _MedicineCardState extends State<MedicineCard>
                           border: OutlineInputBorder(),
                         ),
                         items: List.generate(12, (i) => i + 1)
-                            .map((m) => DropdownMenuItem(
-                                  value: m,
-                                  child: Text(m.toString().padLeft(2, '0')),
-                                ))
+                            .map(
+                              (m) => DropdownMenuItem(
+                                value: m,
+                                child: Text(m.toString().padLeft(2, '0')),
+                              ),
+                            )
                             .toList(),
-                        onChanged: (v) => setDialogState(() => selectedMonth = v!),
+                        onChanged: (v) =>
+                            setDialogState(() => selectedMonth = v!),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1431,9 +1579,15 @@ class _MedicineCardState extends State<MedicineCard>
                           border: OutlineInputBorder(),
                         ),
                         items: List.generate(15, (i) => currentYear + i)
-                            .map((y) => DropdownMenuItem(value: y, child: Text(y.toString())))
+                            .map(
+                              (y) => DropdownMenuItem(
+                                value: y,
+                                child: Text(y.toString()),
+                              ),
+                            )
                             .toList(),
-                        onChanged: (v) => setDialogState(() => selectedYear = v!),
+                        onChanged: (v) =>
+                            setDialogState(() => selectedYear = v!),
                       ),
                     ),
                   ],
@@ -1449,12 +1603,16 @@ class _MedicineCardState extends State<MedicineCard>
               onPressed: () {
                 DateTime date;
                 if (useSameDate && _medicine.packages.isNotEmpty) {
-                  date = _medicine.sortedPackages.first.dateTime ??
+                  date =
+                      _medicine.sortedPackages.first.dateTime ??
                       DateTime(selectedYear, selectedMonth + 1, 0);
                 } else {
                   date = DateTime(selectedYear, selectedMonth + 1, 0);
                 }
-                Navigator.pop(context, {'date': date, 'useSameQuantity': useSameQuantity});
+                Navigator.pop(context, {
+                  'date': date,
+                  'useSameQuantity': useSameQuantity,
+                });
               },
               child: const Text('Dodaj'),
             ),
@@ -1475,7 +1633,9 @@ class _MedicineCardState extends State<MedicineCard>
           percentRemaining: firstPackage.percentRemaining,
         );
       } else {
-        newPackage = MedicinePackage(expiryDate: date.toIso8601String().split('T')[0]);
+        newPackage = MedicinePackage(
+          expiryDate: date.toIso8601String().split('T')[0],
+        );
       }
 
       final updatedPackages = [..._medicine.packages, newPackage];
@@ -1490,7 +1650,8 @@ class _MedicineCardState extends State<MedicineCard>
     BuildContext context,
     MedicinePackage package,
   ) async {
-    DateTime currentDate = package.dateTime ?? DateTime.now().add(const Duration(days: 365));
+    DateTime currentDate =
+        package.dateTime ?? DateTime.now().add(const Duration(days: 365));
     int selectedMonth = currentDate.month;
     int selectedYear = currentDate.year;
     final currentYear = DateTime.now().year;
@@ -1510,10 +1671,12 @@ class _MedicineCardState extends State<MedicineCard>
                     border: OutlineInputBorder(),
                   ),
                   items: List.generate(12, (i) => i + 1)
-                      .map((m) => DropdownMenuItem(
-                            value: m,
-                            child: Text(m.toString().padLeft(2, '0')),
-                          ))
+                      .map(
+                        (m) => DropdownMenuItem(
+                          value: m,
+                          child: Text(m.toString().padLeft(2, '0')),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) => setDialogState(() => selectedMonth = v!),
                 ),
@@ -1527,7 +1690,12 @@ class _MedicineCardState extends State<MedicineCard>
                     border: OutlineInputBorder(),
                   ),
                   items: List.generate(15, (i) => currentYear + i)
-                      .map((y) => DropdownMenuItem(value: y, child: Text(y.toString())))
+                      .map(
+                        (y) => DropdownMenuItem(
+                          value: y,
+                          child: Text(y.toString()),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) => setDialogState(() => selectedYear = v!),
                 ),
@@ -1552,9 +1720,12 @@ class _MedicineCardState extends State<MedicineCard>
     );
 
     if (result != null) {
-      final updatedPackage = package.copyWith(expiryDate: result.toIso8601String().split('T')[0]);
-      final updatedPackages =
-          _medicine.packages.map((p) => p.id == package.id ? updatedPackage : p).toList();
+      final updatedPackage = package.copyWith(
+        expiryDate: result.toIso8601String().split('T')[0],
+      );
+      final updatedPackages = _medicine.packages
+          .map((p) => p.id == package.id ? updatedPackage : p)
+          .toList();
       final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
       await widget.storageService?.saveMedicine(updatedMedicine);
       setState(() => _medicine = updatedMedicine);
@@ -1570,11 +1741,14 @@ class _MedicineCardState extends State<MedicineCard>
     int valueMode = package.pieceCount != null
         ? 1
         : package.percentRemaining != null
-            ? 2
-            : 0;
-    final pieceController = TextEditingController(text: package.pieceCount?.toString() ?? '');
-    final percentController =
-        TextEditingController(text: package.percentRemaining?.toString() ?? '');
+        ? 2
+        : 0;
+    final pieceController = TextEditingController(
+      text: package.pieceCount?.toString() ?? '',
+    );
+    final percentController = TextEditingController(
+      text: package.percentRemaining?.toString() ?? '',
+    );
 
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -1588,8 +1762,8 @@ class _MedicineCardState extends State<MedicineCard>
               Text(
                 'Status opakowania',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -1614,8 +1788,8 @@ class _MedicineCardState extends State<MedicineCard>
               Text(
                 'Ilość (opcjonalne)',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -1672,9 +1846,12 @@ class _MedicineCardState extends State<MedicineCard>
               onPressed: () {
                 Navigator.pop(context, {
                   'isOpen': isOpen,
-                  'pieceCount': valueMode == 1 ? int.tryParse(pieceController.text) : null,
-                  'percentRemaining':
-                      valueMode == 2 ? int.tryParse(percentController.text) : null,
+                  'pieceCount': valueMode == 1
+                      ? int.tryParse(pieceController.text)
+                      : null,
+                  'percentRemaining': valueMode == 2
+                      ? int.tryParse(percentController.text)
+                      : null,
                 });
               },
               child: const Text('Zapisz'),
@@ -1692,8 +1869,9 @@ class _MedicineCardState extends State<MedicineCard>
         pieceCount: result['pieceCount'] as int?,
         percentRemaining: result['percentRemaining'] as int?,
       );
-      final updatedPackages =
-          _medicine.packages.map((p) => p.id == package.id ? updatedPackage : p).toList();
+      final updatedPackages = _medicine.packages
+          .map((p) => p.id == package.id ? updatedPackage : p)
+          .toList();
       final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
       await widget.storageService?.saveMedicine(updatedMedicine);
       setState(() => _medicine = updatedMedicine);
@@ -1706,7 +1884,9 @@ class _MedicineCardState extends State<MedicineCard>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Usuń opakowanie?'),
-        content: Text('Czy na pewno chcesz usunąć opakowanie z datą ${package.displayDate}?'),
+        content: Text(
+          'Czy na pewno chcesz usunąć opakowanie z datą ${package.displayDate}?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1722,7 +1902,9 @@ class _MedicineCardState extends State<MedicineCard>
     );
 
     if (confirm == true) {
-      final updatedPackages = _medicine.packages.where((p) => p.id != package.id).toList();
+      final updatedPackages = _medicine.packages
+          .where((p) => p.id != package.id)
+          .toList();
       final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
       await widget.storageService?.saveMedicine(updatedMedicine);
       setState(() => _medicine = updatedMedicine);
@@ -1731,7 +1913,9 @@ class _MedicineCardState extends State<MedicineCard>
   }
 
   Future<void> _showSetDailyIntakeDialog(BuildContext context) async {
-    final controller = TextEditingController(text: _medicine.dailyIntake?.toString() ?? '');
+    final controller = TextEditingController(
+      text: _medicine.dailyIntake?.toString() ?? '',
+    );
 
     final result = await showDialog<int>(
       context: context,
@@ -1804,7 +1988,9 @@ class _MedicineCardState extends State<MedicineCard>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
         child: DraggableScrollableSheet(
           initialChildSize: 0.6,
           minChildSize: 0.4,
@@ -1867,7 +2053,11 @@ class _MedicineCardState extends State<MedicineCard>
 
   // ==================== HELPERS ====================
 
-  BoxDecoration _getPressedDecoration(bool isDark, LinearGradient gradient, Color statusColor) {
+  BoxDecoration _getPressedDecoration(
+    bool isDark,
+    LinearGradient gradient,
+    Color statusColor,
+  ) {
     // Matching shadow structure for smooth BoxDecoration.lerp() interpolation.
     // Same number of shadows as statusCard, but all transparent.
     if (!isDark) {
@@ -1878,12 +2068,18 @@ class _MedicineCardState extends State<MedicineCard>
         boxShadow: const [
           BoxShadow(
             color: Colors.transparent,
-            offset: Offset(NeuDecoration.shadowDistance, NeuDecoration.shadowDistance),
+            offset: Offset(
+              NeuDecoration.shadowDistance,
+              NeuDecoration.shadowDistance,
+            ),
             blurRadius: NeuDecoration.shadowBlur,
           ),
           BoxShadow(
             color: Colors.transparent,
-            offset: Offset(-NeuDecoration.shadowDistanceSm, -NeuDecoration.shadowDistanceSm),
+            offset: Offset(
+              -NeuDecoration.shadowDistanceSm,
+              -NeuDecoration.shadowDistanceSm,
+            ),
             blurRadius: NeuDecoration.shadowBlurSm,
           ),
         ],
@@ -1995,15 +2191,21 @@ class _MedicineCardState extends State<MedicineCard>
   LinearGradient _getGradient(ExpiryStatus status, bool isDark) {
     switch (status) {
       case ExpiryStatus.expired:
-        return isDark ? AppColors.darkGradientExpired : AppColors.lightGradientExpired;
+        return isDark
+            ? AppColors.darkGradientExpired
+            : AppColors.lightGradientExpired;
       case ExpiryStatus.expiringSoon:
         return isDark
             ? AppColors.darkGradientValid
-            : const LinearGradient(colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)]);
+            : const LinearGradient(
+                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
+              );
       case ExpiryStatus.valid:
         return isDark
             ? AppColors.darkGradientValid
-            : const LinearGradient(colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)]);
+            : const LinearGradient(
+                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
+              );
       case ExpiryStatus.unknown:
         return LinearGradient(
           begin: Alignment.topLeft,
