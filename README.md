@@ -105,10 +105,11 @@ Szczegóły: [docs/road_map.md](docs/road_map.md)
 | Dokument | Opis |
 |----------|------|
 | [Architektura](docs/architecture.md) | Stack, przepływ danych |
+| [Konfiguracja Deploymentu](docs/guidelines/deployment_setup.md) | Setup WinSCP i APK cleanup |
+| [Release Guide](docs/guidelines/release.md) | Strategia wersjonowania |
 | [Proces dodawania](docs/drug_addition_process.md) | Skaner i AI krok po kroku |
 | [Road Map](docs/road_map.md) | Plan rozwoju projektu |
 | [Model Danych](docs/data_model.md) | Encje, schematy |
-| [Release Guide](docs/release.md) | Deployment APK i OTA |
 | [Bezpieczeństwo](docs/security.md) | Lokalne dane, disclaimer |
 
 ---
@@ -135,4 +136,4 @@ MIT License
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-02
+> 📅 **Ostatnia aktualizacja:** 2026-01-12

@@ -9,6 +9,8 @@
 | Dokument | Opis |
 |----------|------|
 | [Architektura](architecture.md) | Przegląd systemu, stack, warstwy (ten plik) |
+| [Konfiguracja Deploymentu](guidelines/deployment_setup.md) | Setup WinSCP i APK cleanup |
+| [Release Guide](guidelines/release.md) | Strategia wersjonowania |
 | [Proces dodawania](drug_addition_process.md) | Skaner i AI krok po kroku |
 | [Model Danych](data_model.md) | Encje, schema JSON/YAML |
 | [Bezpieczeństwo](security.md) | Lokalne dane, disclaimer medyczny |
@@ -174,5 +176,5 @@ Gotowe prompty: `docs/prompts/`
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-27
+> 📅 **Ostatnia aktualizacja:** 2026-01-12
 > 🏷️ **Wersja:** 1.1.0

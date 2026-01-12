@@ -1,4 +1,8 @@
-# Instrukcja Konfiguracji Deploymentu
+# 📚 Instrukcja Konfiguracji Deploymentu
+  
+> **Powiązane:** [Architektura](../architecture.md) | [Release Guide](release.md) | [Model Danych](../data_model.md)
+
+---
 
 Aby skrypt `scripts/deploy_apk.ps1` mógł automatycznie wysyłać pliki na serwer, wykonaj poniższe kroki.
 
@@ -55,3 +59,7 @@ Skrypt `deploy_apk.ps1` (v12.3) oferuje automatyzację procesów pomocniczych:
 - **Błąd "Nie znaleziono WinSCP"**: Dodaj do `.env` zmienną `WINSCP_PATH=C:\Ścieżka\Do\WinSCP.com`.
 - **Błąd połączenia**: Sprawdź log `releases/winscp_log.xml`, który powstaje po próbie uploadu.
 - **Host key verification**: Skrypt ustawiony jest na automatyczną akceptację kluczy (`-hostkey="*"`). Jeśli to nie działa, połącz się raz ręcznie przez WinSCP GUI i zaakceptuj klucz.
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-12

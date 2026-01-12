@@ -380,4 +380,24 @@ Wpisana nazwa
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-12 (Gemini AI v2.2 - weryfikacja RPL przy recznym dodawaniu)
+---
+
+### Automatyzacja Deploymentu (v12.4)
+
+**Data:** 2026-01-12
+
+**Implementacja:**
+
+- Automatyczny upload APK na serwer Hostido (WinSCP)
+- Żywy stoper (Elapsed Time) w tytule okna terminala
+- Strategia czyszczenia: retencja 3 ostatnich wersji APK (per kanał)
+- Zaawansowane logowanie w `log.md`: 4 commity, czas deploymentu, status cleanupu
+
+**Pliki:**
+
+- `scripts/deploy_apk.ps1` - v12.4 (cleaner + timer fix)
+- `docs/guidelines/deployment_setup.md` - instrukcja konfiguracji
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-12 (Automatyzacja Deploymentu v12.4)
