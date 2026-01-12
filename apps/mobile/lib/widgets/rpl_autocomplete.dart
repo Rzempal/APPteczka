@@ -1,10 +1,13 @@
-// rpl_autocomplete.dart - Autocomplete dla wyszukiwania leków w RPL
+// rpl_autocomplete.dart v2.1.0 - Autocomplete dla wyszukiwania leków w RPL
 // Widget z debounce i dropdown z wynikami
+// v2.1.0 - Fix race condition przy wyborze opakowania (zwiększony timeout + logging)
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/rpl_service.dart';
+import '../services/app_logger.dart';
 import '../theme/app_theme.dart';
 
 /// Callback po wybraniu leku z RPL
@@ -49,6 +52,8 @@ class RplAutocomplete extends StatefulWidget {
 }
 
 class _RplAutocompleteState extends State<RplAutocomplete> {
+  static final Logger _log = AppLogger.getLogger('RplAutocomplete');
+
   late TextEditingController _controller;
   final RplService _rplService = RplService();
   final LayerLink _layerLink = LayerLink();
@@ -58,8 +63,10 @@ class _RplAutocompleteState extends State<RplAutocomplete> {
   List<RplSearchResult> _results = [];
   bool _isLoading = false;
   Timer? _debounce;
-  bool _isSelecting =
-      false; // Flaga zapobiegająca ponownemu wyszukiwaniu po wyborze
+
+  // Flaga zapobiegająca ponownemu wyszukiwaniu po wyborze
+  // Timeout 2000ms jako backup - główna ochrona jest w parent widget
+  bool _isSelecting = false;
 
   @override
   void initState() {
@@ -94,9 +101,13 @@ class _RplAutocompleteState extends State<RplAutocomplete> {
   }
 
   void _onTextChanged() {
-    if (_isSelecting) return;
+    if (_isSelecting) {
+      _log.fine('_onTextChanged ignored - _isSelecting is true');
+      return;
+    }
 
     final text = _controller.text.trim();
+    _log.fine('Text changed: "$text" (length: ${text.length})');
     widget.onTextChanged?.call(text);
 
     // Debounce - czekaj 300ms przed wyszukiwaniem
@@ -255,14 +266,23 @@ class _RplAutocompleteState extends State<RplAutocomplete> {
   }
 
   void _selectResult(RplSearchResult result) {
+    _log.info('Result selected: ${result.displayLabel} (id: ${result.id})');
     _isSelecting = true;
     _controller.text = result.displayLabel;
     _removeOverlay();
     setState(() => _results = []);
+
+    _log.fine('Invoking onSelected callback');
     widget.onSelected?.call(result);
-    // Reset flagi po krótkim opóźnieniu
-    Future.delayed(const Duration(milliseconds: 100), () {
-      _isSelecting = false;
+
+    // Reset flagi po dłuższym opóźnieniu (2s) jako backup protection
+    // Główna ochrona przed race condition jest w parent widget (_isProcessingRplSelection)
+    // Ten timeout jest dodatkowym zabezpieczeniem na wypadek błędów w parent
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (_isSelecting) {
+        _log.fine('Resetting _isSelecting flag after timeout');
+        _isSelecting = false;
+      }
     });
   }
 

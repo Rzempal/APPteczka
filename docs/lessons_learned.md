@@ -361,4 +361,66 @@ Przy tworzeniu przycisków w kontenerach neumorficznych:
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-08
+---
+
+## 9. Race condition przy async UI z modalami (Flutter)
+
+**Data:** 2026-01-12
+**Kontekst:** Wybór opakowania leku z modala bottom sheet czyścił pole tekstowe autocomplete
+
+### ❌ Błąd
+
+Flaga `_isSelecting` w autocomplete trwała tylko 100ms, podczas gdy async operacja (fetch API + wybór przez użytkownika w modalu) trwała znacznie dłużej. Po zamknięciu modala, callback `onTextChanged` był wywoływany gdy flaga już była `false`.
+
+```dart
+// ❌ Błędnie - timeout 100ms za krótki
+void _selectResult(RplSearchResult result) {
+  _isSelecting = true;
+  widget.onSelected?.call(result); // async operacja trwa dłużej!
+  Future.delayed(const Duration(milliseconds: 100), () {
+    _isSelecting = false; // ← Za wcześnie!
+  });
+}
+```
+
+### ✅ Poprawne rozwiązanie
+
+1. **Główna ochrona:** Flaga w parent widget kontrolowana przez cykl życia async operacji (try/finally)
+2. **Backup protection:** Dłuższy timeout (2000ms) w child widget
+3. **Zapobieganie przeciekaniu zdarzeń:** `Future.microtask` przed `Navigator.pop`
+
+```dart
+// ✅ Poprawnie - flaga kontrolowana przez async lifecycle
+Future<void> _onRplMedicineSelected(RplSearchResult result) async {
+  setState(() => _isProcessingRplSelection = true);
+
+  try {
+    final details = await fetchDetails();
+    final selection = await showModal();
+    // ...przetwarzanie
+  } finally {
+    if (mounted) {
+      setState(() => _isProcessingRplSelection = false);
+    }
+  }
+}
+
+// W callback:
+onTextChanged: (text) {
+  if (_isProcessingRplSelection) return; // Ignoruj podczas async
+  // ...normalna logika
+}
+```
+
+### Zasada ogólna
+
+Przy async UI flows z modalami:
+
+1. **Nigdy nie używaj stałego timeout** dla flag synchronizacji - czas operacji jest nieprzewidywalny
+2. **Kontroluj flagi przez async lifecycle** - ustaw na początku, resetuj w `finally`
+3. **Dodaj logging** do kluczowych punktów flow dla łatwiejszego debugowania
+4. **Użyj `Future.microtask`** przed `Navigator.pop` aby zapobiec przeciekaniu zdarzeń tap
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-12
