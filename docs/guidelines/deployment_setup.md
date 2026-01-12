@@ -37,7 +37,7 @@ DEPLOY_PUBLIC_URL=http://michalrapala.app/releases
 
 ## 4. **Dodatkowe funkcje skryptu**
 
-Skrypt `deploy_apk.ps1` (v12) oferuje automatyzację procesów pomocniczych:
+Skrypt `deploy_apk.ps1` (v12.3) oferuje automatyzację procesów pomocniczych:
 
 - **Kanały deploymentu**: Możesz użyć parametru `-Channel internal` lub `-Channel production` (domyślny). Zmienia to nazewnictwo plików i docelowe ścieżki na serwerze.
 - **Żywy stoper**: Tytuł okna terminala jest aktualizowany co sekundę, pokazując czas trwania aktualnego deploymentu.

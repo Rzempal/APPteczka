@@ -192,18 +192,22 @@ function Cleanup-RemoteApks {
 
 $startTime = [System.Diagnostics.Stopwatch]::StartNew()
 
-# Background job to update window title with live timer
-$titleJob = Start-Job -ScriptBlock {
-    $sw = $args[0]
-    while ($true) {
-        $elapsed = $sw.Elapsed
-        $timeStr = "$($elapsed.Minutes.ToString('00')):$($elapsed.Seconds.ToString('00'))"
-        $host.UI.RawUI.WindowTitle = "APPteczka Deploy | Czas: $timeStr"
-        Start-Sleep -Seconds 1
-    }
-} -ArgumentList $startTime
+# Background Timer (Runspace) to update window title
+$rs = [runspacefactory]::CreateRunspace()
+$rs.Open()
+$timerPs = [powershell]::Create().AddScript({
+        param($startTime)
+        while ($true) {
+            $elapsed = $startTime.Elapsed
+            $timeStr = "$($elapsed.Minutes.ToString('00')):$($elapsed.Seconds.ToString('00'))"
+            [Console]::Title = "APPteczka Deploy | Czas: $timeStr"
+            [System.Threading.Thread]::Sleep(1000)
+        }
+    }).AddArgument($startTime)
+$timerPs.Runspace = $rs
+$timerAsync = $timerPs.BeginInvoke()
 
-Print-Info "=== Deploy APK Script v12.1 (Live Timer) ==="
+Print-Info "=== Deploy APK Script v12.3 (Live Timer Fix) ==="
 Load-Env
 
 $DEPLOY_HOST = if ($env:DEPLOY_HOST) { $env:DEPLOY_HOST } else { "" }
@@ -434,8 +438,7 @@ if (-not $SkipUpload) {
             $startTime.Stop()
             $finalElapsed = $startTime.Elapsed
             $finalDurationStr = "$($finalElapsed.Minutes.ToString('00')):$($finalElapsed.Seconds.ToString('00'))"
-            Stop-Job $titleJob
-            Remove-Job $titleJob
+            if ($timerPs) { $timerPs.Dispose(); $rs.Close(); $rs.Dispose() }
             
             Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
             Write-Host "Nacisnij Enter aby zamknac..."
@@ -457,8 +460,7 @@ else {
 $startTime.Stop()
 $finalElapsed = $startTime.Elapsed
 $finalDurationStr = "$($finalElapsed.Minutes.ToString('00')):$($finalElapsed.Seconds.ToString('00'))"
-Stop-Job $titleJob
-Remove-Job $titleJob
+if ($timerPs) { $timerPs.Dispose(); $rs.Close(); $rs.Dispose() }
 
 Print-Success "=== Deployment Zakonczony (Wersja $VERSION_NAME) ==="
 Print-Success "Calkowity czas: $finalDurationStr"
