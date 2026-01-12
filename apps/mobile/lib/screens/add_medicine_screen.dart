@@ -924,7 +924,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 nazwa: drug.drugInfo.fullName,
                 opis: med.opis,
                 wskazania: med.wskazania,
-                tagi: <dynamic>{
+                tagi: <String>{
                   ...drug
                       .toMedicine('')
                       .tagi, // tagi z RPL (Rp/OTC, forma, substancje)
