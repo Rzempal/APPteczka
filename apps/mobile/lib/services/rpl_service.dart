@@ -93,8 +93,13 @@ class RplDrugDetails {
     this.leafletUrl,
   });
 
-  factory RplDrugDetails.fromJson(Map<String, dynamic> json) {
-    final id = json['id'] as int;
+  /// Parsuje JSON z API RPL
+  /// [knownId] - id z URL (API nie zawsze zwraca id w response body)
+  factory RplDrugDetails.fromJson(Map<String, dynamic> json, {int? knownId}) {
+    final id = json['id'] as int? ?? knownId;
+    if (id == null) {
+      throw FormatException('Missing id field in RplDrugDetails response');
+    }
     final packagesRaw = json['packages'] as List<dynamic>? ?? [];
     final packages = packagesRaw
         .map((p) => RplPackage.fromJson(p as Map<String, dynamic>))
@@ -365,7 +370,8 @@ class RplService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final result = RplDrugDetails.fromJson(data);
+        // Przekazujemy id z parametru - API nie zawsze zwraca id w response
+        final result = RplDrugDetails.fromJson(data, knownId: id);
         _log.info(
             'Fetched details by ID: ${result.fullName}, packages: ${result.packages.length}');
         return result;
