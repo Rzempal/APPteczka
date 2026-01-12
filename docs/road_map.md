@@ -247,19 +247,46 @@ EAN → RPL API → snapshot daty → ...
                 Zapis do bazy
 ```
 
-**Flow recznego dodawania (v2.1 - uproszczony):**
+**Flow recznego dodawania (v2.2 - weryfikacja RPL):**
 
 ```
-Nazwa leku + data waznosci (opcjonalnie)
+Nazwa leku (autocomplete RPL)
+                ↓
+    Lista wynikow z RPL (dropdown)
+                ↓
+    Wybor leku → pobierz szczegoly
+                ↓
+    Wybor opakowania (jesli >1) → GTIN
                 ↓
         [Zapisz lek]
                 ↓
-    Dialog przetwarzania AI
-                ↓
     Gemini → opis + wskazania + tagi
                 ↓
-    Zapis do bazy (lub blad jesli nierozpoznano)
+    Polaczenie danych RPL + AI → zapis
 ```
+
+**Fallback (gdy brak w RPL):**
+
+```
+Wpisana nazwa
+                ↓
+        [Zapisz lek]
+                ↓
+    AI poprawia nazwe → szukaj w RPL
+                ↓
+    Znaleziono? → wybor opakowania
+                ↓
+    Nie znaleziono? → tylko dane AI
+```
+
+**Zmiany w v2.2:**
+
+- Autocomplete RPL podczas wpisywania nazwy (debounce 300ms)
+- Lista wynikow: nazwa + moc + postac farmaceutyczna
+- Pobieranie szczegolow po wyborze (packages z GTIN)
+- Bottom sheet do wyboru opakowania (jesli wiecej niz 1)
+- Badge weryfikacji RPL z informacja o opakowaniu i EAN
+- Fallback: AI poprawia nazwe → retry szukania w RPL → tylko AI
 
 **Zmiany w v2.1:**
 
@@ -280,7 +307,10 @@ Nazwa leku + data waznosci (opcjonalnie)
 - `apps/web/src/lib/prompts.ts` - prompt z instrukcja EAN (v0.003)
 - `apps/mobile/lib/services/gemini_service.dart` - serwis Gemini (v0.003)
 - `apps/mobile/lib/services/gemini_name_lookup_service.dart` - lookup po nazwie
-- `apps/mobile/lib/screens/add_medicine_screen.dart` - uproszczony formularz z AI
+- `apps/mobile/lib/services/rpl_service.dart` - serwis API RPL (v2.2.0)
+- `apps/mobile/lib/widgets/rpl_autocomplete.dart` - autocomplete z RPL
+- `apps/mobile/lib/widgets/rpl_package_selector.dart` - selector opakowan
+- `apps/mobile/lib/screens/add_medicine_screen.dart` - formularz z weryfikacja RPL
 
 ---
 
@@ -350,4 +380,4 @@ Nazwa leku + data waznosci (opcjonalnie)
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-11 (Gemini AI v2.1 - uproszczony formularz reczny)
+> 📅 **Ostatnia aktualizacja:** 2026-01-12 (Gemini AI v2.2 - weryfikacja RPL przy recznym dodawaniu)

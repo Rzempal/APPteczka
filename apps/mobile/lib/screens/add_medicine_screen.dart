@@ -11,9 +11,12 @@ import '../services/storage_service.dart';
 import '../services/gemini_service.dart';
 import '../services/gemini_name_lookup_service.dart';
 import '../services/date_ocr_service.dart';
+import '../services/rpl_service.dart';
 import '../widgets/barcode_scanner.dart';
 import '../widgets/karton_icons.dart';
 import '../widgets/batch_date_input_sheet.dart';
+import '../widgets/rpl_autocomplete.dart';
+import '../widgets/rpl_package_selector.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
 import '../utils/tag_normalization.dart';
@@ -39,6 +42,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   final _nazwaController = TextEditingController();
   DateTime? _terminWaznosci;
   bool _isSaving = false;
+
+  // Weryfikacja RPL
+  final RplService _rplService = RplService();
+  RplDrugDetails? _selectedRplDetails;
+  RplPackage? _selectedPackage;
+  bool _isVerifiedInRpl = false;
 
   // Import z pliku
   bool _isImporting = false;
@@ -457,15 +466,22 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Nazwa leku
-          TextFormField(
+          // Nazwa leku z autocomplete RPL
+          RplAutocomplete(
             controller: _nazwaController,
-            decoration: InputDecoration(
-              labelText: 'Nazwa leku *',
-              hintText: 'np. Paracetamol 500mg',
-              prefixIcon: const Icon(LucideIcons.pill),
-              border: const OutlineInputBorder(),
-            ),
+            labelText: 'Nazwa leku *',
+            hintText: 'np. Paracetamol',
+            onSelected: _onRplMedicineSelected,
+            onTextChanged: (text) {
+              // Resetuj weryfikację RPL gdy użytkownik zmienia tekst
+              if (_isVerifiedInRpl) {
+                setState(() {
+                  _isVerifiedInRpl = false;
+                  _selectedRplDetails = null;
+                  _selectedPackage = null;
+                });
+              }
+            },
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
                 return 'Podaj nazwę leku';
@@ -476,6 +492,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               return null;
             },
           ),
+
+          // Status weryfikacji RPL
+          if (_isVerifiedInRpl && _selectedRplDetails != null) ...[
+            const SizedBox(height: 8),
+            _buildRplVerificationBadge(theme, isDark),
+          ],
 
           const SizedBox(height: 16),
 
@@ -539,6 +561,96 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 : Icon(LucideIcons.sparkles, color: aiColor),
             label: const Text('Zapisz lek'),
           ),
+        ],
+      ),
+    );
+  }
+
+  // ==================== HANDLERS RPL ====================
+
+  /// Handler po wybraniu leku z autocomplete RPL
+  Future<void> _onRplMedicineSelected(RplSearchResult result) async {
+    // Pobierz szczegóły leku (z listą opakowań)
+    final details = await _rplService.fetchDetailsById(result.id);
+
+    if (details == null) {
+      _showError('Nie udało się pobrać szczegółów leku z RPL');
+      return;
+    }
+
+    // Pokaż selector opakowań (jeśli więcej niż 1)
+    if (!mounted) return;
+    final selection = await RplPackageSelectorSheet.show(
+      context: context,
+      drugDetails: details,
+    );
+
+    if (selection != null) {
+      setState(() {
+        _selectedRplDetails = selection.drugDetails;
+        _selectedPackage = selection.selectedPackage;
+        _isVerifiedInRpl = true;
+        // Aktualizuj nazwę w polu tekstowym
+        _nazwaController.text = details.fullName;
+      });
+    }
+  }
+
+  /// Badge z informacją o weryfikacji w RPL
+  Widget _buildRplVerificationBadge(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.green.withAlpha(isDark ? 40 : 20),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.green.withAlpha(100)),
+      ),
+      child: Row(
+        children: [
+          const Icon(LucideIcons.shieldCheck, size: 18, color: Colors.green),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Zweryfikowano w RPL',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (_selectedPackage != null) ...[
+                  Text(
+                    '${_selectedPackage!.packaging} • EAN: ${_selectedPackage!.gtin}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          // Przycisk zmiany opakowania (jeśli więcej niż 1)
+          if (_selectedRplDetails != null &&
+              _selectedRplDetails!.packages.length > 1)
+            IconButton(
+              icon: const Icon(LucideIcons.repeat, size: 16),
+              onPressed: () async {
+                final selection = await RplPackageSelectorSheet.show(
+                  context: context,
+                  drugDetails: _selectedRplDetails!,
+                );
+                if (selection != null && mounted) {
+                  setState(() {
+                    _selectedPackage = selection.selectedPackage;
+                  });
+                }
+              },
+              tooltip: 'Zmień opakowanie',
+              visualDensity: VisualDensity.compact,
+            ),
         ],
       ),
     );
@@ -815,30 +927,115 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
 
     try {
-      // Wywolaj AI aby uzupelnic dane leku
       final geminiService = GeminiNameLookupService();
-      final result = await geminiService.lookupByName(name);
+      Medicine medicine;
 
-      // Zamknij dialog przetwarzania
-      if (mounted) Navigator.of(context).pop();
+      if (_isVerifiedInRpl && _selectedRplDetails != null) {
+        // === SCIEZKA 1: Zweryfikowano w RPL ===
+        // Dane podstawowe z RPL, AI uzupelnia opis/wskazania/tagi
+        final rpl = _selectedRplDetails!;
+        final pkg = _selectedPackage;
 
-      if (!result.found || result.medicine == null) {
-        // AI nie rozpoznalo - pokaz blad
-        _showError(result.reason ?? 'Nie rozpoznano leku "$name"');
-        return;
+        // AI uzupelnia opis, wskazania, tagi
+        final aiResult = await geminiService.lookupByName(rpl.fullName);
+        final aiMedicine = aiResult.found ? aiResult.medicine : null;
+
+        // Generuj tagi z RPL
+        final rplTags = _generateTagsFromRpl(rpl, pkg);
+
+        medicine = Medicine(
+          id: const Uuid().v4(),
+          nazwa: rpl.fullName,
+          opis: aiMedicine?.opis ?? rpl.form,
+          wskazania: aiMedicine?.wskazania ?? [],
+          tagi: [
+            ...rplTags,
+            ...processTagsForImport(aiMedicine?.tagi ?? []),
+          ].toSet().toList(), // usun duplikaty
+          terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
+          dataDodania: DateTime.now().toIso8601String(),
+          leafletUrl: rpl.leafletUrl,
+        );
+      } else {
+        // === SCIEZKA 2: Brak weryfikacji RPL - fallback do AI ===
+        // Prio 1: AI poprawia nazwe i szukamy w RPL
+        // Prio 2: Tylko AI (jak wczesniej)
+
+        final aiResult = await geminiService.lookupByName(name);
+
+        if (!aiResult.found || aiResult.medicine == null) {
+          // Zamknij dialog przetwarzania
+          if (mounted) Navigator.of(context).pop();
+          _showError(aiResult.reason ?? 'Nie rozpoznano leku "$name"');
+          return;
+        }
+
+        final aiMedicine = aiResult.medicine!;
+        final correctedName = aiMedicine.nazwa ?? name;
+
+        // Proba znalezienia w RPL po poprawionej nazwie
+        RplDrugDetails? rplDetails;
+        RplPackage? rplPackage;
+
+        if (correctedName != name) {
+          // AI poprawilo nazwe - szukaj w RPL
+          final rplResults = await _rplService.searchMedicine(correctedName);
+          if (rplResults.isNotEmpty) {
+            // Znaleziono w RPL - pobierz szczegoly
+            final details =
+                await _rplService.fetchDetailsById(rplResults.first.id);
+            if (details != null) {
+              rplDetails = details;
+              // Auto-wybor opakowania jesli tylko jedno
+              if (details.packages.length == 1) {
+                rplPackage = details.packages.first;
+              } else if (details.packages.isNotEmpty && mounted) {
+                // Zamknij dialog AI
+                Navigator.of(context).pop();
+                // Pokaz selector opakowan
+                final selection = await RplPackageSelectorSheet.show(
+                  context: context,
+                  drugDetails: details,
+                );
+                if (selection != null) {
+                  rplPackage = selection.selectedPackage;
+                }
+                // Pokaz dialog AI ponownie
+                if (mounted) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (ctx) => _AiProcessingDialog(medicineName: name),
+                  );
+                }
+              }
+            }
+          }
+        }
+
+        // Utworz lek z danymi AI + opcjonalnie RPL
+        final rplTags =
+            rplDetails != null ? _generateTagsFromRpl(rplDetails, rplPackage) : <String>[];
+
+        medicine = Medicine(
+          id: const Uuid().v4(),
+          nazwa: rplDetails?.fullName ?? correctedName,
+          opis: aiMedicine.opis,
+          wskazania: aiMedicine.wskazania,
+          tagi: [
+            ...rplTags,
+            ...processTagsForImport(aiMedicine.tagi),
+          ].toSet().toList(),
+          terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
+          dataDodania: DateTime.now().toIso8601String(),
+          leafletUrl: rplDetails?.leafletUrl,
+        );
       }
 
-      // AI rozpoznalo - zapisz z uzupelnionymi danymi
-      final aiMedicine = result.medicine!;
-      final medicine = Medicine(
-        id: const Uuid().v4(),
-        nazwa: aiMedicine.nazwa ?? name,
-        opis: aiMedicine.opis,
-        wskazania: aiMedicine.wskazania,
-        tagi: processTagsForImport(aiMedicine.tagi),
-        terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
-        dataDodania: DateTime.now().toIso8601String(),
-      );
+      // Zamknij dialog przetwarzania
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
 
       await widget.storageService.saveMedicine(medicine);
 
@@ -853,7 +1050,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
         // Wyczysc formularz
         _nazwaController.clear();
-        setState(() => _terminWaznosci = null);
+        setState(() {
+          _terminWaznosci = null;
+          _isVerifiedInRpl = false;
+          _selectedRplDetails = null;
+          _selectedPackage = null;
+        });
       }
     } on GeminiException catch (e) {
       // Zamknij dialog jesli jeszcze otwarty
@@ -870,6 +1072,59 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  /// Generuje tagi na podstawie danych z RPL
+  List<String> _generateTagsFromRpl(RplDrugDetails rpl, RplPackage? pkg) {
+    final tags = <String>{};
+
+    // Status recepty
+    final category = pkg?.accessibilityCategory?.toUpperCase() ??
+        rpl.accessibilityCategory?.toUpperCase();
+    if (category == 'OTC') {
+      tags.add('bez recepty');
+    } else if (category == 'RP' || category == 'RPZ') {
+      tags.add('na receptę');
+    }
+
+    // Postac farmaceutyczna
+    if (rpl.form.isNotEmpty) {
+      final formLower = rpl.form.toLowerCase();
+      if (formLower.contains('tabletk')) {
+        tags.add('tabletki');
+      } else if (formLower.contains('kaps')) {
+        tags.add('kapsułki');
+      } else if (formLower.contains('syrop')) {
+        tags.add('syrop');
+      } else if (formLower.contains('masc') || formLower.contains('krem')) {
+        tags.add('maść');
+      } else if (formLower.contains('zastrzyk') ||
+          formLower.contains('iniekcj')) {
+        tags.add('zastrzyki');
+      } else if (formLower.contains('krople')) {
+        tags.add('krople');
+      } else if (formLower.contains('aerozol') || formLower.contains('spray')) {
+        tags.add('aerozol');
+      } else if (formLower.contains('czopk')) {
+        tags.add('czopki');
+      } else if (formLower.contains('plast')) {
+        tags.add('plastry');
+      } else if (formLower.contains('zawies') ||
+          formLower.contains('proszek')) {
+        tags.add('proszek/zawiesina');
+      }
+    }
+
+    // Substancje czynne
+    if (rpl.activeSubstance.isNotEmpty) {
+      final substances = rpl.activeSubstance
+          .split(RegExp(r'\s*\+\s*'))
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty);
+      tags.addAll(substances);
+    }
+
+    return tags.toList();
   }
 
   void _showError(String message) {

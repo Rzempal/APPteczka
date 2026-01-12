@@ -46,23 +46,41 @@ To najszybszy sposób na dodanie wielu leków naraz.
 
 ---
 
-## 2️⃣ Ścieżka: Dodaj ręcznie (Wspomagane AI)
+## 2️⃣ Ścieżka: Dodaj ręcznie (RPL + AI)
 
 Gdy nie masz pudełka lub kod jest zniszczony.
 
-### Krok 1: Wpisanie nazwy
+### Krok 1: Wpisanie nazwy z autocomplete RPL
 
-* **Użytkownik:** Wpisuje np. "Ibuprom" i opcjonalnie wybiera datę z kalendarza.
-* **Użytkownik:** Klika "Zapisz".
+* **Użytkownik:** Zaczyna wpisywać nazwę leku (np. "Para...").
+* **Aplikacja:** Po wpisaniu min. 3 znaków, aplikacja wysyła zapytanie do **Rejestru Produktów Leczniczych (RPL)**.
+* **API RPL:** Zwraca listę pasujących leków: nazwa + postać farmaceutyczna (np. "Paracetamol 500mg - tabletki").
+* **Użytkownik:** Wybiera odpowiedni lek z listy dropdown.
 
-### Krok 2: Analiza AI (Lookup)
+### Krok 2: Wybór opakowania (GTIN)
 
-* **AI (Gemini):** Aplikacja wysyła nazwę do Gemini.
-* **AI (Gemini):** AI przeszukuje swoją wiedzę i przygotowuje gotową kartę leku: opis działania, na co pomaga (np. "przeciwzapalny") i odpowiednie tagi.
+* **Aplikacja:** Pobiera szczegóły wybranego leku z RPL (lista opakowań).
+* **Użytkownik:** Jeśli dostępnych jest więcej opakowań, wybiera odpowiednie (np. "28 tabl." lub "56 tabl.").
+* **Aplikacja:** Zapisuje **numer GTIN (EAN)** wybranego opakowania do walidacji.
 
-### Krok 3: Walidacja i zapis
+### Krok 3: Uzupełnienie przez AI
 
-* **Aplikacja:** Sprawdza, czy AI rozpoznało lek. Jeśli tak – automatycznie uzupełnia całą kartę i zapisuje ją na telefonie.
+* **AI (Gemini):** Aplikacja wysyła nazwę leku do Gemini.
+* **AI (Gemini):** AI uzupełnia **opis działania**, **wskazania** i **tagi** (np. "ból głowy", "gorączka").
+* **Aplikacja:** Łączy dane oficjalne z RPL (nazwa, postać, substancja czynna, Rp/OTC) z danymi AI (opis, tagi).
+
+### Krok 4: Zapis
+
+* **Aplikacja:** Zapisuje kompletną kartę leku z:
+  - Danymi urzędowymi z RPL (nazwa, producent, link do ulotki)
+  - Opisem i tagami od AI
+  - Opcjonalną datą ważności
+
+### Fallback (gdy brak w RPL)
+
+Jeśli użytkownik nie wybierze leku z listy RPL:
+1. **Prio 1:** AI poprawia/normalizuje wpisaną nazwę → aplikacja szuka poprawionej nazwy w RPL.
+2. **Prio 2:** Jeśli nadal brak w RPL → AI sam uzupełnia wszystkie dane (jak wcześniej).
 
 ---
 
