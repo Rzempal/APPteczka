@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:uuid/uuid.dart';
 import 'package:file_picker/file_picker.dart';
@@ -12,6 +13,7 @@ import '../services/gemini_service.dart';
 import '../services/gemini_name_lookup_service.dart';
 import '../services/date_ocr_service.dart';
 import '../services/rpl_service.dart';
+import '../services/app_logger.dart';
 import '../widgets/barcode_scanner.dart';
 import '../widgets/karton_icons.dart';
 import '../widgets/batch_date_input_sheet.dart';
@@ -37,6 +39,8 @@ class AddMedicineScreen extends StatefulWidget {
 }
 
 class _AddMedicineScreenState extends State<AddMedicineScreen> {
+  static final Logger _log = AppLogger.getLogger('AddMedicineScreen');
+
   // Formularz ręczny
   final _formKey = GlobalKey<FormState>();
   final _nazwaController = TextEditingController();
@@ -48,6 +52,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   RplDrugDetails? _selectedRplDetails;
   RplPackage? _selectedPackage;
   bool _isVerifiedInRpl = false;
+
+  // Flaga blokująca callbacks podczas async wyboru opakowania
+  // Zapobiega race condition między zamknięciem modala a onTextChanged
+  bool _isProcessingRplSelection = false;
 
   // Import z pliku
   bool _isImporting = false;
@@ -473,8 +481,15 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             hintText: 'np. Paracetamol',
             onSelected: _onRplMedicineSelected,
             onTextChanged: (text) {
+              // Ignoruj zmiany podczas async wyboru opakowania (race condition fix)
+              if (_isProcessingRplSelection) {
+                _log.fine('onTextChanged ignored - RPL selection in progress');
+                return;
+              }
+
               // Resetuj weryfikację RPL gdy użytkownik zmienia tekst
               if (_isVerifiedInRpl) {
+                _log.fine('Resetting RPL verification - user changed text');
                 setState(() {
                   _isVerifiedInRpl = false;
                   _selectedRplDetails = null;
@@ -570,31 +585,53 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
   /// Handler po wybraniu leku z autocomplete RPL
   Future<void> _onRplMedicineSelected(RplSearchResult result) async {
-    // Pobierz szczegóły leku (z listą opakowań)
-    final details = await _rplService.fetchDetailsById(result.id);
+    _log.info('RPL selection started: ${result.displayLabel} (id: ${result.id})');
 
-    if (details == null) {
-      _showError('Nie udało się pobrać szczegółów leku z RPL');
-      return;
-    }
+    // Ustaw flagę PRZED async operacjami - blokuje onTextChanged callbacks
+    setState(() => _isProcessingRplSelection = true);
 
-    // Pokaż selector opakowań (jeśli więcej niż 1)
-    if (!mounted) return;
-    final selection = await RplPackageSelectorSheet.show(
-      context: context,
-      drugDetails: details,
-    );
+    try {
+      // Pobierz szczegóły leku (z listą opakowań)
+      _log.fine('Fetching drug details for id: ${result.id}');
+      final details = await _rplService.fetchDetailsById(result.id);
 
-    if (selection != null) {
-      // WAZNE: Ustaw tekst kontrolera PRZED setState z _isVerifiedInRpl = true
-      // W przeciwnym razie onTextChanged zresetuje weryfikacje
-      _nazwaController.text = details.fullName;
+      if (details == null) {
+        _log.warning('Failed to fetch drug details for id: ${result.id}');
+        _showError('Nie udało się pobrać szczegółów leku z RPL');
+        return;
+      }
 
-      setState(() {
-        _selectedRplDetails = selection.drugDetails;
-        _selectedPackage = selection.selectedPackage;
-        _isVerifiedInRpl = true;
-      });
+      _log.fine('Drug details fetched: ${details.fullName}, packages: ${details.packages.length}');
+
+      // Pokaż selector opakowań (jeśli więcej niż 1)
+      if (!mounted) return;
+      _log.fine('Showing package selector sheet');
+      final selection = await RplPackageSelectorSheet.show(
+        context: context,
+        drugDetails: details,
+      );
+
+      if (selection != null) {
+        _log.info('Package selected: ${selection.selectedPackage.packaging} (GTIN: ${selection.selectedPackage.gtin})');
+
+        // Ustaw tekst kontrolera - flaga _isProcessingRplSelection blokuje onTextChanged
+        _nazwaController.text = details.fullName;
+        _log.fine('Controller text set to: ${details.fullName}');
+
+        setState(() {
+          _selectedRplDetails = selection.drugDetails;
+          _selectedPackage = selection.selectedPackage;
+          _isVerifiedInRpl = true;
+        });
+      } else {
+        _log.fine('Package selection cancelled by user');
+      }
+    } finally {
+      // ZAWSZE resetuj flagę - nawet przy błędach
+      if (mounted) {
+        setState(() => _isProcessingRplSelection = false);
+        _log.fine('RPL selection processing completed');
+      }
     }
   }
 

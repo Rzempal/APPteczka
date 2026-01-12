@@ -1,11 +1,16 @@
-// rpl_package_selector.dart - Bottom sheet do wyboru opakowania leku z RPL
+// rpl_package_selector.dart v1.1.0 - Bottom sheet do wyboru opakowania leku z RPL
 // Pokazuje listę opakowań z GTIN do wyboru
+// v1.1.0 - Fix przeciekania zdarzeń tap przy zamykaniu modala + logging
 
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/rpl_service.dart';
+import '../services/app_logger.dart';
 import '../theme/app_theme.dart';
 import 'neumorphic/neumorphic.dart';
+
+final Logger _log = AppLogger.getLogger('RplPackageSelectorSheet');
 
 /// Wynik wyboru opakowania
 class PackageSelectionResult {
@@ -35,8 +40,11 @@ class RplPackageSelectorSheet extends StatelessWidget {
     required BuildContext context,
     required RplDrugDetails drugDetails,
   }) async {
+    _log.fine('show() called for: ${drugDetails.fullName}, packages: ${drugDetails.packages.length}');
+
     // Jeśli tylko jedno opakowanie - zwróć od razu bez pokazywania dialogu
     if (drugDetails.packages.length == 1) {
+      _log.fine('Auto-selecting single package: ${drugDetails.packages.first.packaging}');
       return PackageSelectionResult(
         drugDetails: drugDetails,
         selectedPackage: drugDetails.packages.first,
@@ -45,8 +53,11 @@ class RplPackageSelectorSheet extends StatelessWidget {
 
     // Jeśli brak opakowań - zwróć null
     if (drugDetails.packages.isEmpty) {
+      _log.warning('No packages available for: ${drugDetails.fullName}');
       return null;
     }
+
+    _log.fine('Showing package selector sheet with ${drugDetails.packages.length} options');
 
     // Pokaż bottom sheet z listą opakowań
     return showModalBottomSheet<PackageSelectionResult>(
@@ -178,12 +189,17 @@ class RplPackageSelectorSheet extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            Navigator.of(sheetContext).pop(
-              PackageSelectionResult(
-                drugDetails: drugDetails,
-                selectedPackage: package,
-              ),
-            );
+            _log.info('Package selected: ${package.packaging} (GTIN: ${package.gtin})');
+            // Użyj Future.microtask aby dać czas na zakończenie animacji tap
+            // Zapobiega przeciekaniu zdarzeń do warstwy pod modalem
+            Future.microtask(() {
+              Navigator.of(sheetContext).pop(
+                PackageSelectionResult(
+                  drugDetails: drugDetails,
+                  selectedPackage: package,
+                ),
+              );
+            });
           },
           borderRadius: BorderRadius.circular(12),
           child: Container(
