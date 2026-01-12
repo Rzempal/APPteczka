@@ -1,4 +1,4 @@
-// rpl_service.dart v2.1.0 - Rejestr Produktow Leczniczych API
+// rpl_service.dart v2.2.0 - Rejestr Produktow Leczniczych API
 // Serwis do wyszukiwania lekow po nazwie i kodzie EAN/GTIN
 
 import 'dart:convert';
@@ -32,6 +32,109 @@ class RplSearchResult {
       postac: json['pharmaceuticalFormName'] as String? ?? '',
       ulotkaUrl:
           'https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/$id/leaflet',
+    );
+  }
+
+  /// Pelna nazwa leku z dawka (np. "Paracetamol 500mg")
+  String get fullName {
+    if (moc.isNotEmpty) {
+      return '$nazwa $moc';
+    }
+    return nazwa;
+  }
+
+  /// Wyswietlana etykieta: nazwa + postac
+  String get displayLabel => '$nazwa $moc'.trim();
+  String get displaySubtitle => postac;
+}
+
+/// Opakowanie leku z RPL (packaging + GTIN)
+class RplPackage {
+  final String packaging;
+  final String gtin;
+  final String? accessibilityCategory; // "OTC", "Rp", "Rpz"
+
+  RplPackage({
+    required this.packaging,
+    required this.gtin,
+    this.accessibilityCategory,
+  });
+
+  factory RplPackage.fromJson(Map<String, dynamic> json) {
+    return RplPackage(
+      packaging: json['packaging'] as String? ?? '',
+      gtin: json['gtin'] as String? ?? '',
+      accessibilityCategory: json['accessibilityCategory'] as String?,
+    );
+  }
+}
+
+/// Szczegoly leku z RPL (z packages)
+class RplDrugDetails {
+  final int id;
+  final String name;
+  final String power;
+  final String form;
+  final String activeSubstance;
+  final String marketingAuthorisationHolder;
+  final String? accessibilityCategory;
+  final List<RplPackage> packages;
+  final String? leafletUrl;
+
+  RplDrugDetails({
+    required this.id,
+    required this.name,
+    required this.power,
+    required this.form,
+    required this.activeSubstance,
+    required this.marketingAuthorisationHolder,
+    this.accessibilityCategory,
+    required this.packages,
+    this.leafletUrl,
+  });
+
+  factory RplDrugDetails.fromJson(Map<String, dynamic> json) {
+    final id = json['id'] as int;
+    final packagesRaw = json['packages'] as List<dynamic>? ?? [];
+    final packages = packagesRaw
+        .map((p) => RplPackage.fromJson(p as Map<String, dynamic>))
+        .toList();
+
+    return RplDrugDetails(
+      id: id,
+      name: json['medicinalProductName'] as String? ?? '',
+      power: json['medicinalProductPower'] as String? ?? '',
+      form: json['pharmaceuticalFormName'] as String? ?? '',
+      activeSubstance: json['activeSubstanceName'] as String? ?? '',
+      marketingAuthorisationHolder:
+          json['subjectMedicinalProductName'] as String? ?? '',
+      accessibilityCategory: json['accessibilityCategory'] as String?,
+      packages: packages,
+      leafletUrl:
+          'https://rejestry.ezdrowie.gov.pl/api/rpl/medicinal-products/$id/leaflet',
+    );
+  }
+
+  /// Pelna nazwa leku z dawka
+  String get fullName {
+    if (power.isNotEmpty) {
+      return '$name $power';
+    }
+    return name;
+  }
+
+  /// Konwertuje do RplDrugInfo (dla kompatybilnosci)
+  RplDrugInfo toRplDrugInfo({RplPackage? selectedPackage}) {
+    return RplDrugInfo(
+      id: id,
+      name: name,
+      power: power,
+      form: form,
+      activeSubstance: activeSubstance,
+      marketingAuthorisationHolder: marketingAuthorisationHolder,
+      accessibilityCategory:
+          selectedPackage?.accessibilityCategory ?? accessibilityCategory,
+      packaging: selectedPackage?.packaging ?? packages.firstOrNull?.packaging,
     );
   }
 }
@@ -241,6 +344,39 @@ class RplService {
       _log.warning('Search error: $e');
       return [];
     }
+  }
+
+  // ==================== POBIERANIE SZCZEGOŁÓW PO ID ====================
+
+  /// Pobiera szczegolowe informacje o leku po ID (publiczna metoda)
+  /// Zwraca pelne dane leku wlacznie z lista opakowan (packages)
+  Future<RplDrugDetails?> fetchDetailsById(int id) async {
+    final endpoint = Uri.parse('$_baseUrl/search/public/details/$id');
+
+    try {
+      final response = await http
+          .get(endpoint, headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+          })
+          .timeout(_timeout);
+
+      _log.fine('GET details by ID response status: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final result = RplDrugDetails.fromJson(data);
+        _log.info(
+            'Fetched details by ID: ${result.fullName}, packages: ${result.packages.length}');
+        return result;
+      } else {
+        _log.warning('GET details by ID error: ${response.statusCode}');
+      }
+    } catch (e) {
+      _log.warning('GET details by ID error: $e');
+    }
+
+    return null;
   }
 
   // ==================== WYSZUKIWANIE PO EAN/GTIN ====================
