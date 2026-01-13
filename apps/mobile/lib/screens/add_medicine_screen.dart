@@ -1215,8 +1215,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               ...rplTags,
               ...processTagsForImport(aiMedicine?.tagi ?? []),
             ].toSet().toList(),
-            // Brak daty ważności - będzie ustawiona na końcu przez BatchDateInputSheet
-            packages: [],
+            // Opakowanie z pieceCount z RPL - data będzie ustawiona przez BatchDateInputSheet
+            packages: [
+              MedicinePackage(
+                expiryDate: '',
+                pieceCount: _parsePackaging(pkg.packaging),
+              ),
+            ],
             dataDodania: DateTime.now().toIso8601String(),
             leafletUrl: rpl.leafletUrl,
           );
@@ -1333,6 +1338,37 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     }
 
     return tags.toList();
+  }
+
+  /// Parsuje packaging na ilość sztuk
+  /// Np. "28 tabl. (2 x 14)" -> 28, "1 butelka 120 ml" -> 120
+  /// Skopiowane z barcode_scanner.dart dla spójności
+  int? _parsePackaging(String? packaging) {
+    if (packaging == null || packaging.isEmpty) return null;
+
+    final lower = packaging.toLowerCase();
+
+    // Wzorzec 1: "28 tabl.", "30 kaps.", "10 amp."
+    final countMatch = RegExp(
+      r'^(\d+)\s*(tabl|kaps|amp|sasz|czop|plast)',
+    ).firstMatch(lower);
+    if (countMatch != null) {
+      return int.tryParse(countMatch.group(1)!);
+    }
+
+    // Wzorzec 2: "1 butelka 120 ml", "1 tuba 30 g"
+    final volumeMatch = RegExp(r'(\d+)\s*(ml|g)\b').firstMatch(lower);
+    if (volumeMatch != null) {
+      return int.tryParse(volumeMatch.group(1)!);
+    }
+
+    // Wzorzec 3: pierwsza liczba
+    final firstNumber = RegExp(r'(\d+)').firstMatch(lower);
+    if (firstNumber != null) {
+      return int.tryParse(firstNumber.group(1)!);
+    }
+
+    return null;
   }
 
   void _showError(String message) {
