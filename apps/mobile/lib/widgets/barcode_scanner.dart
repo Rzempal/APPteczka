@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/medicine.dart';
 import '../services/rpl_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/gs1_parser.dart';
 import 'neumorphic/neumorphic.dart';
 
 /// Zeskanowany lek z kodem EAN i opcjonalna data waznosci
@@ -652,10 +653,99 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       if (code == null) continue;
 
       if (_mode == ScannerMode.ean) {
-        await _processEan(code);
+        // Probuj sparsowac jako GS1 Data Matrix (QR/2D)
+        final gs1Data = Gs1Parser.parse(code);
+        if (gs1Data != null && gs1Data.isValid) {
+          // Kod 2D z EAN (i potencjalnie data waznosci)
+          await _processGs1(gs1Data);
+        } else {
+          // Zwykly kod EAN-13/EAN-8
+          await _processEan(code);
+        }
       }
       // W trybie daty nie uzywamy skanera kodow - uzywamy OCR zdjecia
       break;
+    }
+  }
+
+  /// Przetwarza kod GS1 Data Matrix (QR/2D) z wbudowana data waznosci
+  Future<void> _processGs1(Gs1Data gs1Data) async {
+    final ean = gs1Data.ean!;
+
+    // Sprawdz czy juz zeskanowano
+    if (_scannedEans.contains(ean)) {
+      _showError('Juz zeskanowano ten kod');
+      return;
+    }
+
+    setState(() {
+      _isProcessing = true;
+      _lastError = null;
+    });
+
+    try {
+      final drugInfo = await _rplService.fetchDrugByEan(ean);
+
+      if (drugInfo == null) {
+        _showError(
+          'Nie znaleziono leku w bazie RPL.\nKod: $ean\nMozesz dodac lek reczenie.',
+        );
+        return;
+      }
+
+      // Sukces - haptic feedback
+      HapticFeedback.mediumImpact();
+
+      final drug = ScannedDrug(
+        ean: ean,
+        drugInfo: drugInfo,
+        expiryDate: gs1Data.expiryDate, // Data z kodu 2D!
+      );
+      _scannedEans.add(ean);
+
+      // Komunikat z nazwa, iloscia sztuk i data
+      String message = drugInfo.fullName;
+      if (drug.pieceCount != null) {
+        message += '\n${drug.pieceCount} szt.';
+      }
+      if (gs1Data.hasExpiryDate) {
+        message += '\n📅 ${_formatDate(gs1Data.expiryDate!)}';
+      }
+
+      setState(() {
+        _showSuccess = true;
+        _successMessage = message;
+      });
+
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      if (!mounted) return;
+
+      setState(() {
+        _showSuccess = false;
+        _successMessage = null;
+      });
+
+      // Jesli mamy date z kodu - POMINIJ krok zdjecia!
+      if (gs1Data.hasExpiryDate) {
+        _scannedDrugs.add(drug);
+        // Zostajemy w trybie EAN - gotowi na kolejny kod
+        setState(() {});
+      } else {
+        // Brak daty w kodzie - standardowy flow ze zdjeciem
+        setState(() {
+          _currentDrug = drug;
+          _mode = ScannerMode.expiryDate;
+        });
+      }
+    } on RplException catch (e) {
+      _showError(e.message);
+    } catch (e) {
+      _showError('Błąd: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
     }
   }
 

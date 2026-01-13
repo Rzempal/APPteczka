@@ -16,7 +16,7 @@ $ErrorActionPreference = "Stop"
 $PROJECT_ROOT = Split-Path -Parent $PSScriptRoot
 $MOBILE_DIR = Join-Path $PROJECT_ROOT "apps\mobile"
 $RELEASES_DIR = Join-Path $PROJECT_ROOT "releases"
-$RETENTION_COUNT = 3
+
 
 function Print-Info($msg) { Write-Host $msg -ForegroundColor Cyan }
 function Print-Success($msg) { Write-Host $msg -ForegroundColor Green }
@@ -62,8 +62,7 @@ function Update-DeployLog {
         [string]$ApkName,
         [array]$Commits,
         [string]$Status,
-        [string]$Duration,
-        [PSCustomObject]$CleanupInfo
+        [string]$Duration
     )
     
     $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\1_PRYWATNE_PROJEKTY_\LOG_APTECZKA\log.md"
@@ -84,17 +83,6 @@ function Update-DeployLog {
     foreach ($c in $Commits) {
         $commitLines += "- ``$c```n"
     }
-    
-    $cleanupLine = ""
-    if ($CleanupInfo) {
-        if ($CleanupInfo.Success) {
-            $rem = $CleanupInfo.RemainingFiles -join ", "
-            $cleanupLine = "- **Cleanup:** OK (Usunieto: $($CleanupInfo.DeletedCount)). Pozostalo: $rem"
-        }
-        else {
-            $cleanupLine = "- **Cleanup:** [FAIL] $($CleanupInfo.Error)"
-        }
-    }
 
     $newEntry = @"
 ## $timestamp | $Channel | v$VersionName
@@ -102,7 +90,6 @@ function Update-DeployLog {
 - **versionCode:** $VersionCode
 - **Status:** $statusIcon
 $durationLine
-$cleanupLine
 
 **Ostatnie zmiany:**
 $commitLines
@@ -514,7 +501,7 @@ if (-not $SkipUpload) {
             $finalDurationStr = "$($finalElapsed.Minutes.ToString('00')):$($finalElapsed.Seconds.ToString('00'))"
             if ($timerPs) { $timerPs.Dispose(); $rs.Close(); $rs.Dispose() }
             
-            Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr -CleanupInfo $null
+            Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
             Write-Host "Nacisnij Enter aby zamknac..."
             $null = Read-Host
             exit $LASTEXITCODE
@@ -540,7 +527,7 @@ Print-Success "=== Deployment Zakonczony (Wersja $VERSION_NAME) ==="
 Print-Success "Calkowity czas: $finalDurationStr"
 
 # Update deploy log
-Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr -CleanupInfo $CLEANUP_RESULT
+Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
 
 Write-Host ""
 exit 0

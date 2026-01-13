@@ -217,9 +217,39 @@ EAN → RPL API → snapshot daty → kolejny lek → ...
 
 **Pliki:**
 
-- `lib/widgets/barcode_scanner.dart` - widget skanera (v1.5.0)
-- `lib/services/rpl_service.dart` - serwis API RPL (v2.1.0)
+- `lib/widgets/barcode_scanner.dart` - widget skanera (v1.6.0)
+- `lib/utils/gs1_parser.dart` - parser GS1 Data Matrix
+- `lib/services/rpl_service.dart` - serwis API RPL (v2.3.0)
 - `lib/screens/add_medicine_screen.dart` - batch handler + AI enrichment
+
+---
+
+### Skaner kodów QR/Data Matrix (v1.6.0)
+
+**Data:** 2026-01-13
+
+**Implementacja:**
+
+- Automatyczne rozpoznawanie kodów GS1 Data Matrix (2D) z opakowań leków
+- Parser GS1 wyciągający: GTIN → EAN, datę ważności (AI 17), serię (AI 10), numer seryjny (AI 21)
+- Pominięcie kroku "zdjęcie daty" gdy data odczytana z kodu 2D
+- Obsługa formatów: z nawiasami `(01)...`, surowe `01...`, z separatorem GS
+
+**Flow (v1.6.0 - Data Matrix):**
+
+```
+Data Matrix → GS1 Parser → EAN + Data
+                              ↓
+                   RPL API → sukces + data z kodu
+                              ↓
+                   Pomiń zdjęcie → kolejny lek
+```
+
+**Pliki:**
+
+- `lib/utils/gs1_parser.dart` - parser GS1 (AI 01/17/10/21)
+- `lib/widgets/barcode_scanner.dart` - integracja GS1 (v1.6.0)
+- `test/gs1_parser_test.dart` - 11 unit testów
 
 ---
 
@@ -418,4 +448,4 @@ Wpisana nazwa
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-13 (Bug Reporter Improvements v12.5)
+> 📅 **Ostatnia aktualizacja:** 2026-01-13 (Skaner QR/Data Matrix v1.6.0)
