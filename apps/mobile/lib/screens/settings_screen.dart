@@ -1437,9 +1437,6 @@ class _SettingsScreenState extends State<SettingsScreen>
                     children: [
                       // Zgłoś problem
                       _buildAdvancedBugReport(theme, isDark),
-                      const SizedBox(height: 12),
-                      // Strefa niebezpieczna
-                      _buildAdvancedDangerZone(theme, isDark),
                     ],
                   ),
                 ),
@@ -1526,65 +1523,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  Widget _buildAdvancedDangerZone(ThemeData theme, bool isDark) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.expired.withAlpha(100), width: 1),
-        borderRadius: BorderRadius.circular(10),
-        color: AppColors.expired.withAlpha(isDark ? 15 : 10),
-      ),
-      padding: const EdgeInsets.all(10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                LucideIcons.triangleAlert,
-                color: AppColors.expired,
-                size: 18,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Strefa niebezpieczna',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.expired,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Nieodwracalne akcje - upewnij się, że masz kopię zapasową przed ich wykonaniem.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: _medicineCount > 0 ? _showDeleteAllDialog : null,
-              icon: Icon(
-                LucideIcons.trash2,
-                color: AppColors.expired,
-                size: 14,
-              ),
-              label: Text(
-                'Usuń wszystkie leki',
-                style: TextStyle(color: AppColors.expired),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.expired.withAlpha(150)),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _getPolishPlural(int count) {
     if (count == 1) return 'lek';
     if (count >= 2 && count <= 4) return 'leki';
@@ -1634,52 +1572,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     } finally {
       if (mounted) {
         setState(() => _isExporting = false);
-      }
-    }
-  }
-
-  Future<void> _showDeleteAllDialog() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(LucideIcons.triangleAlert, color: AppColors.expired),
-            const SizedBox(width: 12),
-            const Text('Usuń wszystkie leki?'),
-          ],
-        ),
-        content: const Text(
-          'Ta operacja jest nieodwracalna. Wszystkie leki zostaną trwale usunięte z apteczki.\n\nUpewnij się, że masz kopię zapasową!',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.expired),
-            child: const Text('Usuń wszystko'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      final medicines = widget.storageService.getMedicines();
-      for (final m in medicines) {
-        await widget.storageService.deleteMedicine(m.id);
-      }
-      setState(() => _medicineCount = 0);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Usunięto wszystkie leki z apteczki'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       }
     }
   }

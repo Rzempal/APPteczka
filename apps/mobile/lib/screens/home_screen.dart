@@ -204,17 +204,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             final medicine = _filteredMedicines[index];
                             final swipeEnabled =
                                 widget.storageService.swipeGesturesEnabled;
-                            final isExpanded = _expandedMedicineId == medicine.id;
+                            final isExpanded =
+                                _expandedMedicineId == medicine.id;
 
                             final card = MedicineCard(
                               medicine: medicine,
                               labels: _allLabels,
                               storageService: widget.storageService,
                               isCompact: !isExpanded,
-                              isDuplicate: hasDuplicates(
-                                medicine,
-                                _medicines,
-                              ),
+                              isDuplicate: hasDuplicates(medicine, _medicines),
                               onExpand: () {
                                 setState(() {
                                   // Toggle - kliknięcie na rozwiniętą kartę zwija ją
@@ -226,7 +224,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 });
                               },
                               onEdit: () => _editMedicine(medicine),
-                              onDelete: () => _deleteMedicineWithConfirm(medicine),
+                              onDelete: () =>
+                                  _deleteMedicineWithConfirm(medicine),
                               onTagTap: (tag) => _filterByTag(tag),
                               onLabelTap: (labelId) => _filterByLabel(labelId),
                               onMedicineUpdated: _loadMedicines,
@@ -249,9 +248,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   size: 32,
                                   color: isDark
                                       ? AppColors.primary
-                                      : Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
+                                      : Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                               // Swipe w lewo → etykiety
@@ -264,14 +261,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   size: 32,
                                   color: isDark
                                       ? AppColors.primary
-                                      : Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
+                                      : Theme.of(context).colorScheme.primary,
                                 ),
                               ),
                               confirmDismiss: (direction) async {
-                                if (direction ==
-                                    DismissDirection.endToStart) {
+                                if (direction == DismissDirection.endToStart) {
                                   // Swipe w lewo → edycja etykiet
                                   _showLabelsSheet(medicine);
                                 } else {
@@ -919,6 +913,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const Divider(height: 24),
 
+              // Usuń wszystkie leki - Strefa niebezpieczna
+              ListTile(
+                leading: Icon(LucideIcons.trash2, color: AppColors.expired),
+                title: Text(
+                  'Usuń wszystkie leki z apteczki',
+                  style: TextStyle(color: AppColors.expired),
+                ),
+                subtitle: Text(
+                  'Strefa niebezpieczna - Nieodwracalna akcja',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.expired.withAlpha(180),
+                  ),
+                ),
+                trailing: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showDeleteAllMedicinesDialog();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: NeuDecoration.flatSmall(
+                      isDark: isDark,
+                      radius: 8,
+                    ),
+                    child: Text(
+                      'Usuń wszystkie leki',
+                      style: TextStyle(
+                        color: AppColors.expired,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const Divider(height: 24),
+
               const SizedBox(height: 24),
 
               // Disclaimer
@@ -1052,6 +1087,66 @@ class _HomeScreenState extends State<HomeScreen> {
             content: Text('Błąd generowania PDF: $e'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.expired,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Dialog potwierdzenia usunięcia wszystkich leków
+  Future<void> _showDeleteAllMedicinesDialog() async {
+    final medicines = widget.storageService.getMedicines();
+    if (medicines.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Apteczka jest już pusta'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(LucideIcons.triangleAlert, color: AppColors.expired),
+            const SizedBox(width: 12),
+            const Text('Usuń wszystkie leki?'),
+          ],
+        ),
+        content: const Text(
+          'Ta operacja jest nieodwracalna. Wszystkie leki zostaną trwale usunięte z apteczki.\n\nUpewnij się, że masz kopię zapasową!',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.expired),
+            child: const Text('Usuń wszystko'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      final allMedicines = widget.storageService.getMedicines();
+      for (final m in allMedicines) {
+        await widget.storageService.deleteMedicine(m.id);
+      }
+      _loadMedicines();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Usunięto wszystkie leki z apteczki'),
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
