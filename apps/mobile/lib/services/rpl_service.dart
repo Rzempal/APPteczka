@@ -96,7 +96,12 @@ class RplDrugDetails {
 
   /// Parsuje JSON z API RPL
   /// [knownId] - id z URL (API nie zawsze zwraca id w response body)
-  factory RplDrugDetails.fromJson(Map<String, dynamic> json, {int? knownId}) {
+  /// [knownName] - nazwa z wyszukiwania (fallback gdy API nie zwraca nazwy)
+  factory RplDrugDetails.fromJson(
+    Map<String, dynamic> json, {
+    int? knownId,
+    String? knownName,
+  }) {
     final id = json['id'] as int? ?? knownId;
     if (id == null) {
       throw FormatException('Missing id field in RplDrugDetails response');
@@ -106,19 +111,23 @@ class RplDrugDetails {
         .map((p) => RplPackage.fromJson(p as Map<String, dynamic>))
         .toList();
 
-    // Fallback dla nazwy - API może zwracać różne pola
-    final name = json['medicinalProductName'] as String? ??
+    // Fallback dla nazwy - API może zwracać różne pola, ostatecznie knownName
+    final name =
+        json['medicinalProductName'] as String? ??
         json['name'] as String? ??
         json['productName'] as String? ??
+        knownName ??
         '';
 
     // Fallback dla mocy
-    final power = json['medicinalProductPower'] as String? ??
+    final power =
+        json['medicinalProductPower'] as String? ??
         json['power'] as String? ??
         '';
 
     // Fallback dla postaci
-    final form = json['pharmaceuticalFormName'] as String? ??
+    final form =
+        json['pharmaceuticalFormName'] as String? ??
         json['pharmaceuticalForm'] as String? ??
         json['form'] as String? ??
         '';
@@ -128,13 +137,14 @@ class RplDrugDetails {
       name: name,
       power: power,
       form: form,
-      activeSubstance: json['activeSubstanceName'] as String? ??
+      activeSubstance:
+          json['activeSubstanceName'] as String? ??
           json['activeSubstance'] as String? ??
           '',
       marketingAuthorisationHolder:
           json['subjectMedicinalProductName'] as String? ??
-              json['marketingAuthorisationHolder'] as String? ??
-              '',
+          json['marketingAuthorisationHolder'] as String? ??
+          '',
       accessibilityCategory: json['accessibilityCategory'] as String?,
       packages: packages,
       leafletUrl:
@@ -381,7 +391,8 @@ class RplService {
 
   /// Pobiera szczegolowe informacje o leku po ID (publiczna metoda)
   /// Zwraca pelne dane leku wlacznie z lista opakowan (packages)
-  Future<RplDrugDetails?> fetchDetailsById(int id) async {
+  /// [knownName] - nazwa z wyszukiwania (fallback gdy API nie zwraca nazwy)
+  Future<RplDrugDetails?> fetchDetailsById(int id, {String? knownName}) async {
     final endpoint = Uri.parse('$_baseUrl/search/public/details/$id');
 
     try {
@@ -410,8 +421,12 @@ class RplService {
           'keys=${data.keys.take(10).toList()}',
         );
 
-        // Przekazujemy id z parametru - API nie zawsze zwraca id w response
-        final result = RplDrugDetails.fromJson(data, knownId: id);
+        // Przekazujemy id i knownName z parametru - API nie zawsze zwraca te pola
+        final result = RplDrugDetails.fromJson(
+          data,
+          knownId: id,
+          knownName: knownName,
+        );
 
         // DEBUG: Weryfikuj sparsowane dane
         _log.fine(

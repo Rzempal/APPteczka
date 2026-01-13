@@ -423,4 +423,45 @@ Przy async UI flows z modalami:
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-12
+## 10. Utrata kontekstu przez warstwowe wywołania API
+
+**Data:** 2026-01-13  
+**Kontekst:** Ręczne dodawanie leku - "Nieznany lek" zamiast wybranej nazwy
+
+### ❌ Błąd
+
+Wyszukiwanie zwracało poprawną nazwę leku (`RplSearchResult.nazwa`), ale przy pobieraniu szczegółów (`fetchDetailsById`) API `/details/{id}` zwracało dane bez pola nazwy. Nazwa była tracona między warstwami.
+
+```dart
+// ❌ Błędnie - nazwa z wyszukiwania jest tracona
+final details = await _rplService.fetchDetailsById(result.id);
+// details.name == '' gdy API nie zwraca nazwy
+```
+
+### ✅ Poprawne rozwiązanie
+
+Przekazuj znane dane jako fallback przez warstwy API:
+
+```dart
+// ✅ Poprawnie - zachowaj nazwę z wyszukiwania jako fallback
+final details = await _rplService.fetchDetailsById(
+  result.id,
+  knownName: result.nazwa,  // fallback gdy API nie zwraca nazwy
+);
+```
+
+### Zasada ogólna
+
+Przy warstwowych wywołaniach API (search → details → packages):
+
+1. **Przekazuj znany kontekst** - dane z poprzednich warstw mogą być niedostępne w kolejnych
+2. **Dodaj parametry fallback** - `knownName`, `knownId` jako zabezpieczenie
+3. **Używaj kaskadowych fallbacków** w parserach JSON:
+
+   ```dart
+   final name = json['primaryField'] ?? json['alternativeField'] ?? knownName ?? '';
+   ```
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-13

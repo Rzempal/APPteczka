@@ -36,9 +36,9 @@ class PendingDrug {
     required this.drugDetails,
     required this.selectedPackage,
     DateTime? addedAt,
-  })  : addedAt = addedAt ?? DateTime.now(),
-        _cachedName = drugDetails.name,
-        _cachedPower = drugDetails.power;
+  }) : addedAt = addedAt ?? DateTime.now(),
+       _cachedName = drugDetails.name,
+       _cachedPower = drugDetails.power;
 
   /// Nazwa leku z fallbackiem do cache
   String get displayName {
@@ -722,8 +722,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     try {
       // Pobierz szczegóły leku (z listą opakowań)
+      // Przekazujemy result.nazwa jako fallback gdy API details nie zwraca nazwy
       _log.fine('Fetching drug details for id: ${result.id}');
-      final details = await _rplService.fetchDetailsById(result.id);
+      final details = await _rplService.fetchDetailsById(
+        result.id,
+        knownName: result.nazwa,
+      );
 
       if (details == null) {
         _log.warning('Failed to fetch drug details for id: ${result.id}');
@@ -1180,8 +1184,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           final drugName = rpl.fullName.isNotEmpty
               ? rpl.fullName
               : rpl.name.isNotEmpty
-                  ? rpl.name
-                  : pendingDrug.displayName;
+              ? rpl.name
+              : pendingDrug.displayName;
 
           _log.fine(
             'Processing drug: name="$drugName" '
