@@ -1,5 +1,6 @@
-// rpl_service.dart v2.2.0 - Rejestr Produktow Leczniczych API
+// rpl_service.dart v2.3.0 - Rejestr Produktow Leczniczych API
 // Serwis do wyszukiwania lekow po nazwie i kodzie EAN/GTIN
+// v2.3.0 - Fallbacki dla nazw pól API + diagnostyczne logi
 
 import 'dart:convert';
 import 'dart:io';
@@ -105,14 +106,35 @@ class RplDrugDetails {
         .map((p) => RplPackage.fromJson(p as Map<String, dynamic>))
         .toList();
 
+    // Fallback dla nazwy - API może zwracać różne pola
+    final name = json['medicinalProductName'] as String? ??
+        json['name'] as String? ??
+        json['productName'] as String? ??
+        '';
+
+    // Fallback dla mocy
+    final power = json['medicinalProductPower'] as String? ??
+        json['power'] as String? ??
+        '';
+
+    // Fallback dla postaci
+    final form = json['pharmaceuticalFormName'] as String? ??
+        json['pharmaceuticalForm'] as String? ??
+        json['form'] as String? ??
+        '';
+
     return RplDrugDetails(
       id: id,
-      name: json['medicinalProductName'] as String? ?? '',
-      power: json['medicinalProductPower'] as String? ?? '',
-      form: json['pharmaceuticalFormName'] as String? ?? '',
-      activeSubstance: json['activeSubstanceName'] as String? ?? '',
+      name: name,
+      power: power,
+      form: form,
+      activeSubstance: json['activeSubstanceName'] as String? ??
+          json['activeSubstance'] as String? ??
+          '',
       marketingAuthorisationHolder:
-          json['subjectMedicinalProductName'] as String? ?? '',
+          json['subjectMedicinalProductName'] as String? ??
+              json['marketingAuthorisationHolder'] as String? ??
+              '',
       accessibilityCategory: json['accessibilityCategory'] as String?,
       packages: packages,
       leafletUrl:
@@ -378,8 +400,25 @@ class RplService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+        // DEBUG: Loguj surowe dane API dla diagnozy
+        _log.fine(
+          'RAW API response for id=$id: '
+          'medicinalProductName="${data['medicinalProductName']}", '
+          'name="${data['name']}", '
+          'medicinalProductPower="${data['medicinalProductPower']}", '
+          'keys=${data.keys.take(10).toList()}',
+        );
+
         // Przekazujemy id z parametru - API nie zawsze zwraca id w response
         final result = RplDrugDetails.fromJson(data, knownId: id);
+
+        // DEBUG: Weryfikuj sparsowane dane
+        _log.fine(
+          'Parsed RplDrugDetails: name="${result.name}", '
+          'power="${result.power}", fullName="${result.fullName}"',
+        );
+
         _log.info(
           'Fetched details by ID: ${result.fullName}, packages: ${result.packages.length}',
         );
