@@ -5,10 +5,10 @@
 param(
     [switch]$SkipBuild,
     [switch]$SkipUpload = $true,
-    [ValidateSet("internal", "production")]
     [string]$Channel = "production"
 )
 
+$SCRIPT_VERSION = "v12.6"
 $ErrorActionPreference = "Stop"
 
 # === Konfiguracja ===
@@ -179,15 +179,35 @@ function Cleanup-RemoteApks {
         if (Test-Path $xmlLog) {
             [xml]$xml = Get-Content $xmlLog
             
-            # Use XPath to find all file elements, regardless of depth or structure
+            # Use XPath to find all file elements
+            # WinSCP XML: <file><filename value="foo.apk" /><type value="-" /></file>
             $fileNodes = $xml.SelectNodes("//file")
-            Print-Info "Debug: Znaleziono $($fileNodes.Count) wszystkich elementow w katalogu."
+            Print-Info "Debug: Znaleziono $($fileNodes.Count) wszystkich elementow w katalogu (XML Nodes)."
             
-            # Filter and convert to an array of objects
+            # v12.6 - Fix: Robust XML parsing for WinSCP log
             $allMatchingFiles = @()
+            $debugCount = 0
+            
             foreach ($node in $fileNodes) {
-                if ($node.type -eq "file" -and $node.filename -like $Pattern) {
-                    $allMatchingFiles += $node
+                # Robustly get values, handling potential differences if raw text was returned
+                # WinSCP typically puts data in 'value' attribute
+                $name = if ($node.filename.value) { $node.filename.value } else { $node.filename }
+                $type = if ($node.type.value) { $node.type.value } else { $node.type }
+                
+                # Debug logs for first few items
+                if ($debugCount -lt 5) {
+                    Print-Info "Debug: Node Check - Name='$name' Type='$type' RawType='$($node.type)'"
+                    $debugCount++
+                }
+
+                # WinSCP uses type="-" for files, "d" for directories
+                # We strictly check for type "-" and name matching the pattern
+                if ($type -eq "-" -and $name -like $Pattern) {
+                    # Store a custom object with the resolved name to avoid re-parsing
+                    $allMatchingFiles += [PSCustomObject]@{
+                        filename     = $name
+                        OriginalNode = $node
+                    }
                 }
             }
             
