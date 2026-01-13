@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // =============================================================================
 // KONFIGURACJA EMAIL - RESEND (domena resztatokod.pl zweryfikowana 2026-01-08)
 // =============================================================================
-const BUG_REPORT_EMAIL = process.env.BUG_REPORT_EMAIL || 'michal.rapala@resztatokod.pl';
+const BUG_REPORT_EMAIL = process.env.BUG_REPORT_EMAIL || 'feedback@resztatokod.pl';
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM = process.env.RESEND_FROM || 'Karton <karton@resztatokod.pl>';
 
