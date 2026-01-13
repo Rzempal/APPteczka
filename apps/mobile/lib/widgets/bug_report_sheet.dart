@@ -49,17 +49,15 @@ class _BugReportSheetState extends State<BugReportSheet> {
   ReportCategory _selectedCategory = ReportCategory.bug;
   bool _includeLogs = true;
   bool _includeScreenshot = true;
-  bool _screenshotAttached = false;
   bool _isSending = false;
-  Uint8List? _galleryScreenshot; // Obraz wybrany z galerii
+  final List<Uint8List> _attachedImages =
+      []; // Lista obrazów (screenshot + galeria)
   String _appVersion = ''; // Wersja aplikacji
 
   @override
   void initState() {
     super.initState();
     _selectedCategory = widget.initialCategory ?? ReportCategory.bug;
-    // If screenshot is passed, don't auto-attach - user needs to click button
-    _screenshotAttached = false;
     // Pobierz wersję aplikacji
     _loadAppVersion();
   }
@@ -90,27 +88,56 @@ class _BugReportSheetState extends State<BugReportSheet> {
 
   /// Wybór obrazu z galerii urządzenia
   Future<void> _pickFromGallery() async {
+    if (_attachedImages.length >= 5) {
+      _showLimitError();
+      return;
+    }
+
     try {
       final picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
+      final List<XFile> images = await picker.pickMultiImage(
         maxWidth: 1080,
         maxHeight: 1080,
         imageQuality: 85,
       );
-      if (image != null) {
-        final bytes = await image.readAsBytes();
-        setState(() {
-          _galleryScreenshot = bytes;
-          _screenshotAttached = true;
-        });
+
+      if (images.isNotEmpty) {
+        for (final image in images) {
+          if (_attachedImages.length < 5) {
+            final bytes = await image.readAsBytes();
+            setState(() {
+              _attachedImages.add(bytes);
+            });
+          }
+        }
       }
     } catch (e) {
       BugReportService.instance.log('Gallery pick error: $e');
     }
   }
 
+  void _showLimitError() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Możesz dodać maksymalnie 5 zdjęć.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Future<void> _sendReport() async {
+    if (_textController.text.trim().isEmpty &&
+        _topicController.text.trim().isEmpty &&
+        _attachedImages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Dodaj opis lub zdjęcie, aby wysłać raport.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isSending = true);
 
     final result = await BugReportService.instance.sendReport(
@@ -122,9 +149,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
           ? _emailController.text.trim()
           : null,
       includeLogs: _includeLogs,
-      screenshot: (_screenshotAttached && _includeScreenshot)
-          ? (_galleryScreenshot ?? widget.screenshot)
-          : null,
+      screenshots: _includeScreenshot ? _attachedImages : null,
     );
 
     if (!mounted) return;
@@ -352,19 +377,93 @@ class _BugReportSheetState extends State<BugReportSheet> {
 
               // Screenshot attachment section
               const Divider(height: 24),
-              if (!_screenshotAttached) ...[
-                // Two CTA buttons: app screenshot and gallery
+
+              // Attached images preview
+              if (_attachedImages.isNotEmpty) ...[
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _attachedImages.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.memory(
+                                _attachedImages[index],
+                                width: 100,
+                                height: 100,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: () => setState(() {
+                                  _attachedImages.removeAt(index);
+                                }),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.black54,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    LucideIcons.x,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _includeScreenshot,
+                      onChanged: (v) =>
+                          setState(() => _includeScreenshot = v ?? true),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        'Dołącz ${_attachedImages.length} zdj${_attachedImages.length == 1
+                            ? 'ęcie'
+                            : _attachedImages.length < 5
+                            ? 'ęcia'
+                            : 'ęć'}',
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // CTA buttons for adding images
+              if (_attachedImages.length < 5)
                 Row(
                   children: [
                     if (widget.screenshot != null)
                       Expanded(
                         child: NeuButton(
                           icon: LucideIcons.crop,
-                          label: 'Zrób screenshot',
-                          onPressed: () => setState(() {
-                            _screenshotAttached = true;
-                            _galleryScreenshot = null; // Clear gallery image
-                          }),
+                          label: 'Screenshot',
+                          onPressed: () {
+                            setState(() {
+                              _attachedImages.insert(0, widget.screenshot!);
+                            });
+                          },
                         ),
                       ),
                     if (widget.screenshot != null) const SizedBox(width: 8),
@@ -377,45 +476,6 @@ class _BugReportSheetState extends State<BugReportSheet> {
                     ),
                   ],
                 ),
-              ] else ...[
-                // Screenshot preview with checkbox (shown after attachment)
-                Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.memory(
-                        _galleryScreenshot ?? widget.screenshot!,
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Checkbox(
-                      value: _includeScreenshot,
-                      onChanged: (v) =>
-                          setState(() => _includeScreenshot = v ?? true),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        _galleryScreenshot != null
-                            ? 'Dołącz obraz'
-                            : 'Dołącz screenshot',
-                      ),
-                    ),
-                    // Change button to pick different image
-                    IconButton(
-                      icon: const Icon(LucideIcons.refreshCw, size: 18),
-                      onPressed: () => setState(() {
-                        _screenshotAttached = false;
-                        _galleryScreenshot = null;
-                      }),
-                      tooltip: 'Zmień',
-                    ),
-                  ],
-                ),
-              ],
 
               // Logs section
               const Divider(height: 24),

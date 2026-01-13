@@ -112,10 +112,12 @@ class BugReportService {
     ReportCategory category = ReportCategory.bug,
     String? replyEmail,
     bool includeLogs = true,
-    Uint8List? screenshot,
+    List<Uint8List>? screenshots,
   }) async {
     try {
-      _log.info('Sending bug report (category=${category.name})');
+      _log.info(
+        'Sending bug report (category=${category.name}, photos=${screenshots?.length ?? 0})',
+      );
 
       final appVersion = await getAppVersion();
       final deviceInfo = await getDeviceInfo();
@@ -155,9 +157,9 @@ class BugReportService {
         }
       }
 
-      if (screenshot != null) {
-        body['screenshot'] = base64Encode(screenshot);
-        _log.fine('Including screenshot (${screenshot.length}B)');
+      if (screenshots != null && screenshots.isNotEmpty) {
+        body['screenshots'] = screenshots.map((s) => base64Encode(s)).toList();
+        _log.fine('Including ${screenshots.length} screenshots');
       }
 
       final response = await http.post(

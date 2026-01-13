@@ -400,4 +400,22 @@ Wpisana nazwa
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-12 (Automatyzacja Deploymentu v12.4)
+### Bug Reporter Improvements (v12.5)
+
+**Data:** 2026-01-13
+
+**Implementacja:**
+
+- Zwiekszenie limitu zdjęć z 1 do 5 (galeria + screenshot)
+- Nowy podgląd miniatur z możliwością usuwania
+- Obsługa wielu załączników w backendzie (Resend API)
+
+**Pliki:**
+
+- `lib/widgets/bug_report_sheet.dart` - nowy UI miniatur
+- `lib/services/bug_report_service.dart` - obsługa wielu zdjęć
+- `apps/web/src/app/api/bug-report/route.ts` - batch processing załączników
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-13 (Bug Reporter Improvements v12.5)

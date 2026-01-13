@@ -14,7 +14,8 @@ interface BugReportRequest {
     log?: string;
     text?: string;
     topic?: string;
-    screenshot?: string; // base64
+    screenshot?: string; // base64 (backward compatibility)
+    screenshots?: string[]; // base64 array
     appVersion?: string;
     deviceInfo?: string;
     errorMessage?: string;
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
         }
 
         const body: BugReportRequest = await request.json();
-        const { log, text, topic, screenshot, appVersion, deviceInfo, errorMessage, category, channel, replyEmail } = body;
+        const { log, text, topic, screenshot, screenshots, appVersion, deviceInfo, errorMessage, category, channel, replyEmail } = body;
 
         // Walidacja - musi być coś do wysłania
         if (!log && !text && !screenshot) {
@@ -108,7 +109,12 @@ export async function POST(request: NextRequest) {
     </div>
     ` : ''}
 
-    ${screenshot ? '<p style="color: #666; font-style: italic;">📷 Screenshot dołączony jako załącznik</p>' : ''}
+    ${(screenshot || (screenshots && screenshots.length > 0)) ? `
+    <div class="section">
+        <div class="label">Załączniki wizualne:</div>
+        <p style="color: #666; font-style: italic;">📷 ${screenshot ? '1 screenshot' : ''}${(screenshot && screenshots && screenshots.length > 0) ? ' + ' : ''}${screenshots ? `${screenshots.length} zdjęć` : ''} dołączone jako załączniki</p>
+    </div>
+    ` : ''}
 
     <div class="ai-prompt">
         <div class="copy-hint">PROMPT DLA CLAUDE/GEMINI (Szybkie rozwiązanie):</div>
@@ -140,10 +146,21 @@ ${log ? log : 'Brak logów.'}</pre>
             });
         }
 
+        // Backward compatibility for single 'screenshot'
         if (screenshot) {
             attachments.push({
                 filename: `karton_screenshot_${timestamp.replace(/[:.]/g, '-')}.png`,
                 content: screenshot, // już jest base64
+            });
+        }
+
+        // Multiple screenshots
+        if (screenshots && screenshots.length > 0) {
+            screenshots.forEach((s, index) => {
+                attachments.push({
+                    filename: `karton_photo_${index + 1}_${timestamp.replace(/[:.]/g, '-')}.png`,
+                    content: s,
+                });
             });
         }
 
