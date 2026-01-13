@@ -107,15 +107,17 @@ class _BatchDateInputSheetState extends State<BatchDateInputSheet> {
                       children: [
                         Text(
                           'Uzupełnij daty ważności',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Text(
                           '${widget.medicines.length} leków bez daty',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ],
                     ),
@@ -202,9 +204,9 @@ class _BatchDateInputSheetState extends State<BatchDateInputSheet> {
               children: [
                 Text(
                   medicine.nazwa ?? 'Nieznany lek',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -233,7 +235,9 @@ class _BatchDateInputSheetState extends State<BatchDateInputSheet> {
                 Icon(
                   hasDate ? LucideIcons.calendarCheck : LucideIcons.calendar,
                   size: 16,
-                  color: hasDate ? AppColors.valid : Theme.of(context).colorScheme.onSurface,
+                  color: hasDate
+                      ? AppColors.valid
+                      : Theme.of(context).colorScheme.onSurface,
                 ),
                 const SizedBox(width: 8),
                 Text(
@@ -256,23 +260,22 @@ class _BatchDateInputSheetState extends State<BatchDateInputSheet> {
   }
 
   Future<void> _selectDate(String medicineId) async {
+    // Pobierz aktualną datę jeśli była ustawiona
+    final currentDate = _dates[medicineId];
     final now = DateTime.now();
-    
-    // Pokazujemy date picker z wyborem miesiąca/roku
-    final picked = await showDatePicker(
+
+    // Pokaż custom dialog z dropdownami MM/YYYY
+    final result = await showDialog<DateTime>(
       context: context,
-      initialDate: now.add(const Duration(days: 365)),
-      firstDate: now.subtract(const Duration(days: 365)),
-      lastDate: now.add(const Duration(days: 365 * 10)),
-      initialDatePickerMode: DatePickerMode.year,
-      helpText: 'Wybierz datę ważności',
+      builder: (context) => _MonthYearPickerDialog(
+        initialMonth: currentDate?.month ?? now.month,
+        initialYear: currentDate?.year ?? now.year + 1,
+      ),
     );
 
-    if (picked != null) {
-      // Ustaw na ostatni dzień miesiąca
-      final lastDayOfMonth = DateTime(picked.year, picked.month + 1, 0);
+    if (result != null) {
       setState(() {
-        _dates[medicineId] = lastDayOfMonth;
+        _dates[medicineId] = result;
       });
     }
   }
@@ -290,9 +293,19 @@ class _BatchDateInputSheetState extends State<BatchDateInputSheet> {
       for (final medicine in widget.medicines) {
         final date = _dates[medicine.id];
         if (date != null) {
-          final updatedMedicine = medicine.copyWith(
-            terminWaznosci: date.toIso8601String(),
-          );
+          // Aktualizuj packages zamiast legacy terminWaznosci
+          // Zachowaj pieceCount z pierwszego package jeśli istnieje
+          final dateStr = date.toIso8601String().split('T')[0];
+          final existingPieceCount = medicine.packages.isNotEmpty
+              ? medicine.packages.first.pieceCount
+              : null;
+          final updatedPackages = [
+            MedicinePackage(
+              expiryDate: dateStr,
+              pieceCount: existingPieceCount,
+            ),
+          ];
+          final updatedMedicine = medicine.copyWith(packages: updatedPackages);
           await widget.storageService.saveMedicine(updatedMedicine);
           updated++;
         }
@@ -315,5 +328,142 @@ class _BatchDateInputSheetState extends State<BatchDateInputSheet> {
         setState(() => _isSaving = false);
       }
     }
+  }
+}
+
+/// Dialog z dropdownami MM/YYYY do wyboru daty ważności
+class _MonthYearPickerDialog extends StatefulWidget {
+  final int initialMonth;
+  final int initialYear;
+
+  const _MonthYearPickerDialog({
+    required this.initialMonth,
+    required this.initialYear,
+  });
+
+  @override
+  State<_MonthYearPickerDialog> createState() => _MonthYearPickerDialogState();
+}
+
+class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
+  late int _selectedMonth;
+  late int _selectedYear;
+
+  // Zakres lat: od teraz do +10 lat
+  late final List<int> _years;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMonth = widget.initialMonth;
+    _selectedYear = widget.initialYear;
+
+    final currentYear = DateTime.now().year;
+    _years = List.generate(11, (i) => currentYear + i);
+
+    // Upewnij się że initial year jest w zakresie
+    if (!_years.contains(_selectedYear)) {
+      _selectedYear = _years.first;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edytuj termin ważności'),
+      content: Row(
+        children: [
+          // Dropdown miesiąc
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Miesiąc',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                DropdownButtonFormField<int>(
+                  value: _selectedMonth,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items: List.generate(12, (i) => i + 1).map((month) {
+                    return DropdownMenuItem(
+                      value: month,
+                      child: Text(month.toString().padLeft(2, '0')),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedMonth = value);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Dropdown rok
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Rok',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                DropdownButtonFormField<int>(
+                  value: _selectedYear,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                  items: _years.map((year) {
+                    return DropdownMenuItem(
+                      value: year,
+                      child: Text(year.toString()),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedYear = value);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('Anuluj', style: TextStyle(color: AppColors.primary)),
+        ),
+        FilledButton(
+          onPressed: () {
+            // Zwróć ostatni dzień wybranego miesiąca
+            final lastDay = DateTime(_selectedYear, _selectedMonth + 1, 0);
+            Navigator.of(context).pop(lastDay);
+          },
+          child: const Text('Zapisz'),
+        ),
+      ],
+    );
   }
 }
