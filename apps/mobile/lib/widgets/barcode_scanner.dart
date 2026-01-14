@@ -339,7 +339,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(LucideIcons.camera, color: theme.colorScheme.primary),
+          Icon(LucideIcons.scanLine, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
           Text(
             'Uruchom skaner',

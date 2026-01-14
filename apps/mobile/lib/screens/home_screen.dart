@@ -913,15 +913,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const Divider(height: 24),
 
-              // Usuń wszystkie leki - Strefa niebezpieczna
+              // Wyczyść apteczkę - Strefa niebezpieczna
               ListTile(
-                leading: Icon(LucideIcons.trash2, color: AppColors.expired),
+                leading: Icon(LucideIcons.paintbrush, color: AppColors.expired),
                 title: Text(
-                  'Usuń wszystkie leki z apteczki',
+                  'Wyczyść apteczkę',
                   style: TextStyle(color: AppColors.expired),
                 ),
                 subtitle: Text(
-                  'Strefa niebezpieczna - Nieodwracalna akcja',
+                  'Nieodwracalna akcja',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.expired.withAlpha(180),
                   ),
@@ -932,21 +932,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     _showDeleteAllMedicinesDialog();
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.all(10),
                     decoration: NeuDecoration.flatSmall(
                       isDark: isDark,
                       radius: 8,
                     ),
-                    child: Text(
-                      'Usuń wszystkie leki',
-                      style: TextStyle(
-                        color: AppColors.expired,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    child: Icon(
+                      LucideIcons.trash2,
+                      color: AppColors.expired,
+                      size: 20,
                     ),
                   ),
                 ),

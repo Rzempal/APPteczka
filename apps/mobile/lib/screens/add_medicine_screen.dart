@@ -313,7 +313,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       clipBehavior: Clip.none,
                       children: [
                         Icon(
-                          LucideIcons.barcode,
+                          LucideIcons.scanQrCode,
                           color: theme.colorScheme.primary,
                           size: 24,
                         ),
@@ -344,13 +344,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Skaner kodów kreskowych',
+                          'Zeskanuj lek',
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          'Dodaj lek skanując kod kreskowy i datę ważności swoim aparatem',
+                          'Dodaj lek skanując kod i datę ważności',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
