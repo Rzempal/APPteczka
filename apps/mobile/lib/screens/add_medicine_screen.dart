@@ -1211,10 +1211,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             nazwa: drugName,
             opis: aiMedicine?.opis ?? rpl.form,
             wskazania: aiMedicine?.wskazania ?? [],
-            tagi: [
+            tagi: <dynamic>{
               ...rplTags,
               ...processTagsForImport(aiMedicine?.tagi ?? []),
-            ].toSet().toList(),
+            }.toList(),
             // Opakowanie z pieceCount z RPL - data będzie ustawiona przez BatchDateInputSheet
             packages: [
               MedicinePackage(

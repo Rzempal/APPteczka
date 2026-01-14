@@ -387,7 +387,7 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
                 ),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<int>(
-                  value: _selectedMonth,
+                  initialValue: _selectedMonth,
                   decoration: const InputDecoration(
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(
@@ -425,7 +425,7 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
                 ),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<int>(
-                  value: _selectedYear,
+                  initialValue: _selectedYear,
                   decoration: const InputDecoration(
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(
