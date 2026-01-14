@@ -453,28 +453,72 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildLeafletSection(
+  /// Combined Wskazania + Ulotka section
+  Widget _buildWskazaniaSection(
     BuildContext context,
     ThemeData theme,
     bool isDark,
   ) {
     final hasLeaflet =
         _medicine.leafletUrl != null && _medicine.leafletUrl!.isNotEmpty;
+    final hasWskazania = _medicine.wskazania.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Ulotka',
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        // Header with Edit button
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                'Wskazania',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _showEditWskazaniaDialog(context),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                child: Icon(
+                  LucideIcons.squarePen,
+                  size: 20,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 6),
-        if (hasLeaflet)
-          Row(
-            children: [
+
+        // Bullet points
+        if (hasWskazania)
+          ...(_medicine.wskazania
+              .map(
+                (w) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text('• $w', style: theme.textTheme.bodySmall),
+                ),
+              )
+              .toList())
+        else
+          Text(
+            'Brak wskazań',
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontStyle: FontStyle.italic,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+
+        // CTA area: Ulotka + Unpin
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            if (hasLeaflet) ...[
               NeuButton(
                 onPressed: () => _showPdfViewer(context),
                 padding: const EdgeInsets.symmetric(
@@ -491,7 +535,7 @@ class _MedicineCardState extends State<MedicineCard>
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Pokaż PDF',
+                      'Pokaż ulotkę',
                       style: TextStyle(
                         color: theme.colorScheme.onSurface,
                         fontSize: 12,
@@ -516,31 +560,34 @@ class _MedicineCardState extends State<MedicineCard>
                   ),
                 ),
               ),
-            ],
-          )
-        else
-          NeuButton(
-            onPressed: () => _showLeafletSearch(context),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.fileSearch,
-                  size: 14,
-                  color: theme.colorScheme.onSurface,
+            ] else
+              NeuButton(
+                onPressed: () => _showLeafletSearch(context),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  'Znajdź ulotkę',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 12,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.fileSearch,
+                      size: 14,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Znajdź ulotkę',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+          ],
+        ),
       ],
     );
   }
