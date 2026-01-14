@@ -8,69 +8,68 @@ Aplikacja mobilna do zarządzania domową apteczką z integracją AI. Kataloguj 
 
 ---
 
-## ✨ Funkcje (MVP)
+## ✨ Funkcje
 
-- ✅ Import leków z JSON (przez prompt AI)
-- ✅ **Gemini AI OCR** – automatyczne rozpoznawanie leków ze zdjęć
 - ✅ **Skaner kodów kreskowych EAN** – ciągłe skanowanie z API Rejestru Produktów Leczniczych
+- ✅ **Skaner QR/Data Matrix (GS1)** – automatyczne odczytywanie daty ważności z kodu 2D
+- ✅ **Gemini AI OCR** – automatyczne rozpoznawanie leków ze zdjęć
 - ✅ Filtrowanie po tagach, objawach, terminie ważności
 - ✅ Wyszukiwanie tekstowe
 - ✅ Edycja terminów ważności z alertami
-- ✅ Generator promptu OCR (rozpoznawanie leków ze zdjęcia)
-- ✅ Kopiowanie listy leków do schowka
 - ✅ Eksport apteczki do JSON i PDF
-- ✅ Sortowanie leków (A-Z, termin ważności)
 - ✅ Wykrywanie duplikatów leków
-- ✅ 3-tabowa nawigacja (Apteczka, Dodaj leki, Kopia zapasowa)
-- ✅ Design neumorficzny z animacjami scroll
+- ✅ Design neumorficzny z animacjami
 - ✅ **Aktualizacje OTA** – automatyczne sprawdzanie i instalacja nowych wersji APK
-- ✅ 100% offline – dane lokalne w przeglądarce
+- ✅ 100% offline – dane lokalne na urządzeniu
 
 ---
 
 ## 🚀 Quick Start
 
+### Mobile (Flutter) – główna aplikacja
+
 ```bash
-# Klonuj repozytorium
-git clone https://github.com/[user]/APPteczka.git
-cd APPteczka
-
-# Instalacja zależności
-npm install
-
-# Uruchom serwer deweloperski
-npm run dev
+cd apps/mobile
+flutter pub get
+flutter run
 ```
 
-Otwórz <http://localhost:3000>
+### Web (Landing + API) – development
+
+```bash
+cd apps/web
+npm install
+npm run dev
+```
 
 ---
 
 ## 📁 Struktura projektu
 
 ```
-Pudełko-na-leki/
-├── src/
-│   ├── app/              # Next.js App Router
-│   ├── components/       # Komponenty React
-│   └── lib/              # Typy, walidacja, storage
-├── docs/                 # Dokumentacja
-│   ├── architecture.md   # Architektura systemu
-│   ├── roadmap.md        # Plan rozwoju
-│   ├── database.md       # Model danych
-│   ├── search_logic.md   # Logika wyszukiwania
-│   ├── conventions.md    # Konwencje kodu
-│   └── guidelines/       # Poradniki
-└── public/               # Statyczne zasoby
+APPteczka/
+├── apps/
+│   ├── mobile/              # Flutter (główna aplikacja)
+│   │   ├── lib/             # Kod Dart (screens, widgets, services)
+│   │   ├── android/         # Konfiguracja Android
+│   │   ├── ios/             # Konfiguracja iOS
+│   │   └── pubspec.yaml     # Zależności Flutter
+│   └── web/                 # Next.js (Landing Page + API)
+│       ├── src/app/         # App Router
+│       └── src/app/api/     # API Routes (Gemini proxy)
+├── docs/                    # Dokumentacja projektu
+├── scripts/                 # Skrypty deploymentu (APK)
+├── releases/                # Zbudowane pliki APK
+└── packages/                # Wspólne schematy (opcjonalne)
 ```
 
 ---
 
-## 📋 Road Map
+## 📋 Roadmap
 
 | Faza | Nazwa | Status |
-|------|-------|--------|
-| 0-3 | MVP Web + Mobile + Gemini API | ✅ Ukończona |
+| --- | --- | --- |
+| 0-3 | MVP Mobile + Gemini API | ✅ Ukończona |
 | 4 | Web → Landing Page + API | ✅ Ukończona |
 | 5 | Google Play Store Release | 📋 Planowana |
 | 6 | Backend + Sync | 🔮 Przyszłość |
@@ -81,45 +80,45 @@ Szczegóły: [docs/roadmap.md](docs/roadmap.md)
 
 ## 🛠️ Stack technologiczny
 
-| Warstwa | Technologia |
-|---------|-------------|
-| Framework | Next.js 16 (App Router) |
-| UI | React 19 + Tailwind CSS 4 |
-| Walidacja | Zod |
-| Przechowywanie | localStorage (offline-first) |
-| Język | TypeScript |
-
-### Mobile (Flutter)
+### Mobile (główna platforma)
 
 | Warstwa | Technologia |
-|---------|-------------|
+| --- | --- |
 | Framework | Flutter (Dart) |
-| UI | Material Design 3 |
-| Baza danych | Hive (NoSQL) |
-| Platformy | Android / iOS / Web |
+| UI | Material Design 3 + Neumorphism |
+| Baza danych | Hive (NoSQL, offline) |
+| Skaner | mobile_scanner + GS1 parser |
+| Platformy | Android (iOS w przyszłości) |
+
+### Backend (API Proxy)
+
+| Warstwa | Technologia |
+| --- | --- |
+| Framework | Next.js 16 (App Router) |
+| Hosting | Vercel |
+| AI | Gemini API (OCR, enrichment) |
+| Cel | Landing Page + API dla mobile |
 
 ---
 
 ## 📚 Dokumentacja
 
 | Dokument | Opis |
-|----------|------|
+| --- | --- |
 | [Architektura](docs/architecture.md) | Stack, przepływ danych |
 | [Baza Danych](docs/database.md) | Encje, schematy |
 | [Konwencje](docs/conventions.md) | Standardy kodu |
 | [Bezpieczeństwo](docs/security.md) | Lokalne dane, disclaimer |
 | [Roadmap](docs/roadmap.md) | Plan rozwoju projektu |
 | [Wdrożenie](docs/deployment.md) | Setup WinSCP i APK lifecycle |
-| [Testowanie](docs/testing.md) | Strategia testów |
-| [Logging](docs/logging.md) | System logowania |
 | [Contributing](docs/contributing.md) | Przewodnik dokumentacji |
 
 ---
 
 ## 🔒 Bezpieczeństwo
 
-- Dane przechowywane **lokalnie** w przeglądarce (localStorage)
-- Brak wysyłania danych na serwer
+- Dane przechowywane **lokalnie** na urządzeniu (Hive)
+- API proxy chroni klucz Gemini
 - Brak kont użytkowników (w MVP)
 - Jasny disclaimer medyczny
 
@@ -133,7 +132,7 @@ MIT License
 
 ## 🔗 Linki
 
-- 🌐 **Wersja produkcyjna:** [pudelkonaleki.michalrapala.app](https://pudelkonaleki.michalrapala.app)
+- 🌐 **Landing Page:** [kartonzlekami.resztatokod.pl](https://kartonzlekami.resztatokod.pl)
 - 📦 **Repozytorium:** [GitHub](https://github.com/Rzempal/APPteczka)
 
 ---
