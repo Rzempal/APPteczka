@@ -2,8 +2,10 @@
 description: Proceed GitHub commit
 ---
 
-**COMMIT:** `#N [opis zmian po polsku]`
+# **COMMIT:** '#N *description of changes in Polish*'
 
-- gdzie N → kontynuacja numeracji z poprzedniego
-- sprawdz numer ostatniego commitu
-**Push**
+- without Polish special characters:ą=a,ć=c, etc.]
+- where N - continuation of numbering of commits (number of commits+1)
+- Check `git rev-list --count main` commit number
+
+# **Push**

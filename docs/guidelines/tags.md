@@ -1,8 +1,6 @@
-# System Tagów
+# 🏷️ System Tagów
 
-Dokumentacja Master Listy tagów używanych w aplikacji APPteczka / Karton z lekami.
-
-> **Ostatnia aktualizacja:** 2026-01-10
+> **Powiązane:** [Baza Danych](../database.md) | [Proces Dodawania](drug_addition_process.md) | [Architektura](../architecture.md)
 
 ---
 
@@ -169,3 +167,7 @@ Tagi spoza Master Listy są wyświetlane w sekcji "Moje":
 - Są to niestandardowe tagi dodane przez użytkownika
 - Nie są usuwane automatycznie
 - Można je zarządzać w: Zarządzaj → Moje tagi
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-14

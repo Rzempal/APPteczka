@@ -56,15 +56,15 @@ Przed kodem przedstaw:
 
 ## Zarządzanie Dokumentacją
 
-> 📚 Pełny przewodnik: **[docs/documentation_guide.md](../docs/documentation_guide.md)**
+> 📚 Pełny przewodnik: **[docs/contributing.md](../docs/contributing.md)**
 
 ### Checklist przed Commit
 
 ```markdown
 - [ ] Czy zmiana wpływa na architekturę? → `architecture.md`
-- [ ] Czy zmiana dotyczy modelu danych? → `data_model.md`
+- [ ] Czy zmiana dotyczy modelu danych? → `database.md`
 - [ ] Czy zmiana dotyczy wyszukiwania? → `search_logic.md`
-- [ ] Czy ukończono zadanie z road mapy? → `road_map.md`
+- [ ] Czy ukończono zadanie z roadmapy? → `roadmap.md`
 - [ ] Czy dodano nowy plik doc? → `README.md`
 - [ ] Czy cross-linki są aktualne?
 ```
@@ -127,7 +127,7 @@ Przed kodem przedstaw:
 
 ### Zasady pisania kodu
 
-Szczegóły: **[docs/standards.md](../docs/standards.md)**
+Szczegóły: **[docs/conventions.md](../docs/conventions.md)**
 
 ### Zasady Recenzji Kodu (styl Linusa)
 
@@ -136,8 +136,8 @@ Szczegóły: **[docs/standards.md](../docs/standards.md)**
 - **Kierunek poprawy**: np. „Usuń przypadek szczególny”, „Te 10 linii można skrócić do 3”, „Struktura danych jest błędna – powinna być…”.  
 - Komunikacja bezpośrednia, ostra, bez upiększania – zawsze merytoryczna.
 
-Szczegóły: **[docs/code_review_Linus.md](../docs/code_review_Linus.md)**
+Szczegóły: **[docs/code-review.md](../docs/code-review.md)**
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2025-12-22
+> 📅 **Ostatnia aktualizacja:** 2026-01-14

@@ -1,6 +1,6 @@
-# 🛡️ Disclaimers & Klasyfikacja Aplikacji
+# 🛡️ Disclaimers
 
-> **Powiązane:** [Security](security.md) | [Google Play Policy](road_map.md)
+> **Powiązane:** [Bezpieczeństwo](security.md) | [Roadmap](roadmap.md)
 
 ---
 
@@ -70,4 +70,4 @@ Modele AI (Gemini) otrzymują ścisłe instrukcje systemowe (`system instruction
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-07
+> 📅 **Ostatnia aktualizacja:** 2026-01-14

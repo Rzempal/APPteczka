@@ -1,6 +1,4 @@
-# 💊 Proces dodawania leków – Jak to działa?
-
-> **Powiązane:** [Architektura](architecture.md) | [Model Danych](data_model.md) | [Road Map](road_map.md) | [Tagi](tags.md)
+> **Powiązane:** [Architektura](../architecture.md) | [Baza Danych](../database.md) | [Roadmap](../roadmap.md) | [Tagi](tags.md)
 
 ---
 
@@ -72,13 +70,14 @@ Gdy nie masz pudełka lub kod jest zniszczony.
 ### Krok 4: Zapis
 
 * **Aplikacja:** Zapisuje kompletną kartę leku z:
-  - Danymi urzędowymi z RPL (nazwa, producent, link do ulotki)
-  - Opisem i tagami od AI
-  - Opcjonalną datą ważności
+  * Danymi urzędowymi z RPL (nazwa, producent, link do ulotki)
+  * Opisem i tagami od AI
+  * Opcjonalną datą ważności
 
 ### Fallback (gdy brak w RPL)
 
 Jeśli użytkownik nie wybierze leku z listy RPL:
+
 1. **Prio 1:** AI poprawia/normalizuje wpisaną nazwę → aplikacja szuka poprawionej nazwy w RPL.
 2. **Prio 2:** Jeśli nadal brak w RPL → AI sam uzupełnia wszystkie dane (jak wcześniej).
 

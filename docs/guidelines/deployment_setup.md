@@ -1,6 +1,6 @@
-# 📚 Instrukcja Konfiguracji Deploymentu
-  
-> **Powiązane:** [Architektura](../architecture.md) | [Release Guide](release.md) | [Model Danych](../data_model.md)
+# 🚀 Konfiguracja Deploymentu
+
+> **Powiązane:** [Architektura](../architecture.md) | [Release Guide](release.md) | [Baza Danych](../database.md)
 
 ---
 

@@ -1,6 +1,6 @@
-# 🔐 Bezpieczeństwo – Pudełko na leki
+# 🔐 Bezpieczeństwo
 
-> **Powiązane:** [Architektura](architecture.md) | [Model Danych](data_model.md)
+> **Powiązane:** [Architektura](architecture.md) | [Baza Danych](database.md) | [Disclaimers](disclaimers.md)
 
 ---
 
@@ -132,6 +132,12 @@ Aplikacja wyświetla disclaimer w kluczowych miejscach:
 | **Dane** | Aplikacja nie przekazuje żadnych danych użytkownika do serwisu płatności. |
 | **Płatność** | Proces płatności odbywa się poza aplikacją – brak ryzyka wycieku danych karty z poziomu aplikacji. |
 
+| Aspekt | Bezpieczeństwo |
+|--------|----------------|
+| **Izolacja** | Link otwiera się w **zewnętrznej przeglądarce**, w pełnej izolacji od danych aplikacji (Sandbox). |
+| **Dane** | Aplikacja nie przekazuje żadnych danych użytkownika do serwisu płatności. |
+| **Płatność** | Proces płatności odbywa się poza aplikacją – brak ryzyka wycieku danych karty z poziomu aplikacji. |
+
 ### Kalkulator Zapasów
 
 | Aspekt | Bezpieczeństwo |
@@ -142,7 +148,7 @@ Aplikacja wyświetla disclaimer w kluczowych miejscach:
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-07
+> 📅 **Ostatnia aktualizacja:** 2026-01-14
 
 ---
 
@@ -152,7 +158,8 @@ Wypełnienie formularza "Bezpieczeństwo danych" w Google Play Console.
 
 ### Deklaracja Główna
 
-* **Does your app collect or share any of the required user data types?** → **Yes**
+- **Does your app collect or share any of the required user data types?** → **Yes**
+
 - **Is all of the user data collected by your app encrypted in transit?** → **Yes** (HTTPS)
 - **Do you provide a way for users to request that their data be deleted?** → **No** (Nie dotyczy - brak konta i brak gromadzenia danych na serwerze).
 

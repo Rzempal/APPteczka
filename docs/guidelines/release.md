@@ -1,6 +1,6 @@
-# Release & Deployment Guide
+# 🚀 Release Guide
 
-Instrukcja tworzenia i wdrażania nowych wersji aplikacji APPteczka.
+> **Powiązane:** [Wdrożenie](../deployment.md) | [Architektura](../architecture.md) | [Roadmap](../roadmap.md)
 
 ## Szybki Start
 
@@ -152,3 +152,7 @@ Aplikacja automatycznie sprawdza nowe wersje z:
 - `versionCode` porównywane jako int
 - Automatyczne sprawdzanie przy starcie
 - Badge "Aktualizacja" na stronie głównej
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-14

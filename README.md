@@ -56,11 +56,11 @@ Pudełko-na-leki/
 │   └── lib/              # Typy, walidacja, storage
 ├── docs/                 # Dokumentacja
 │   ├── architecture.md   # Architektura systemu
-│   ├── road_map.md       # Plan rozwoju
-│   ├── data_model.md     # Model danych
-│   ├── tags.md           # System tagów
-│   ├── schema/           # Schematy JSON/YAML
-│   └── prompts/          # Prompty dla AI
+│   ├── roadmap.md        # Plan rozwoju
+│   ├── database.md       # Model danych
+│   ├── search_logic.md   # Logika wyszukiwania
+│   ├── conventions.md    # Konwencje kodu
+│   └── guidelines/       # Poradniki
 └── public/               # Statyczne zasoby
 ```
 
@@ -75,7 +75,7 @@ Pudełko-na-leki/
 | 5 | Google Play Store Release | 📋 Planowana |
 | 6 | Backend + Sync | 🔮 Przyszłość |
 
-Szczegóły: [docs/road_map.md](docs/road_map.md)
+Szczegóły: [docs/roadmap.md](docs/roadmap.md)
 
 ---
 
@@ -105,12 +105,14 @@ Szczegóły: [docs/road_map.md](docs/road_map.md)
 | Dokument | Opis |
 |----------|------|
 | [Architektura](docs/architecture.md) | Stack, przepływ danych |
-| [Konfiguracja Deploymentu](docs/guidelines/deployment_setup.md) | Setup WinSCP i APK cleanup |
-| [Release Guide](docs/guidelines/release.md) | Strategia wersjonowania |
-| [Proces dodawania](docs/drug_addition_process.md) | Skaner i AI krok po kroku |
-| [Road Map](docs/road_map.md) | Plan rozwoju projektu |
-| [Model Danych](docs/data_model.md) | Encje, schematy |
+| [Baza Danych](docs/database.md) | Encje, schematy |
+| [Konwencje](docs/conventions.md) | Standardy kodu |
 | [Bezpieczeństwo](docs/security.md) | Lokalne dane, disclaimer |
+| [Roadmap](docs/roadmap.md) | Plan rozwoju projektu |
+| [Wdrożenie](docs/deployment.md) | Setup WinSCP i APK lifecycle |
+| [Testowanie](docs/testing.md) | Strategia testów |
+| [Logging](docs/logging.md) | System logowania |
+| [Contributing](docs/contributing.md) | Przewodnik dokumentacji |
 
 ---
 
@@ -136,4 +138,4 @@ MIT License
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-12
+> 📅 **Ostatnia aktualizacja:** 2026-01-14

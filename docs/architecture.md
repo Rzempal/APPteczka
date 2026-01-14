@@ -1,6 +1,6 @@
-# 🏛️ Architektura – Pudełko na leki
+# 🏛️ Architektura
 
-> **Powiązane:** [Road Map](road_map.md) | [Model Danych](data_model.md) | [Bezpieczeństwo](security.md)
+> **Powiązane:** [Roadmap](roadmap.md) | [Baza Danych](database.md) | [Bezpieczeństwo](security.md) | [Konwencje](conventions.md)
 
 ---
 
@@ -9,12 +9,12 @@
 | Dokument | Opis |
 |----------|------|
 | [Architektura](architecture.md) | Przegląd systemu, stack, warstwy (ten plik) |
-| [Konfiguracja Deploymentu](guidelines/deployment_setup.md) | Setup WinSCP i APK cleanup |
+| [Wdrożenie](deployment.md) | Konfiguracja WinSCP i APK cleanup |
 | [Release Guide](guidelines/release.md) | Strategia wersjonowania |
-| [Proces dodawania](drug_addition_process.md) | Skaner i AI krok po kroku |
-| [Model Danych](data_model.md) | Encje, schema JSON/YAML |
+| [Proces dodawania](guidelines/drug_addition_process.md) | Skaner i AI krok po kroku |
+| [Baza Danych](database.md) | Encje, schema JSON/YAML |
 | [Bezpieczeństwo](security.md) | Lokalne dane, disclaimer medyczny |
-| [Road Map](road_map.md) | Plan rozwoju projektu |
+| [Roadmap](roadmap.md) | Plan rozwoju projektu |
 
 ---
 
@@ -121,7 +121,7 @@ APPteczka/
 
 ## Model Danych
 
-> Szczegóły: **[data_model.md](data_model.md)**
+> Szczegóły: **[database.md](database.md)**
 
 ### Główna encja: Lek
 
@@ -176,5 +176,5 @@ Gotowe prompty: `docs/prompts/`
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-12
+> 📅 **Ostatnia aktualizacja:** 2026-01-14
 > 🏷️ **Wersja:** 1.1.0
