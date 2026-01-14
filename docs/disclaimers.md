@@ -4,9 +4,9 @@
 
 ---
 
-## 1. Dlaczego "Karton" NIE jest Aplikacją Medyczną?
+## 1. Dlaczego "Karton z lekami" NIE jest Aplikacją Medyczną?
 
-Zgodnie z wytycznymi Google Play (Health Apps vs Medical Apps) oraz EU MDR (Medical Device Regulation), aplikacja **"Karton"** kwalifikuje się jako narzędzie typu **Health Management / Inventory Tool**, a nie **Medical Device**.
+Zgodnie z wytycznymi Google Play (Health Apps vs Medical Apps) oraz EU MDR (Medical Device Regulation), aplikacja **"Karton z lekami"** kwalifikuje się jako narzędzie typu **Health Management / Inventory Tool**, a nie **Medical Device**.
 
 ### Kluczowe Różnice
 

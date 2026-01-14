@@ -1,6 +1,6 @@
 # 📏 Konwencje
 
-> **Powiązane:** [Architektura](architecture.md) | [Baza Danych](database.md) | [Contributing](contributing.md)
+> **Powiązane:** [Architektura](architecture.md) | [Baza Danych](database.md) | [Contributing](contributing.md) | [Design](design.md)
 
 ---
 

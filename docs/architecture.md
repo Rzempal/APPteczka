@@ -10,6 +10,7 @@
 |----------|------|
 | [Architektura](architecture.md) | Przegląd systemu, stack, warstwy (ten plik) |
 | [Wdrożenie](deployment.md) | Konfiguracja WinSCP i APK cleanup |
+| [Design System](design.md) | Style, kolory, komponenty |
 | [Release Guide](guidelines/release.md) | Strategia wersjonowania |
 | [Proces dodawania](guidelines/drug_addition_process.md) | Skaner i AI krok po kroku |
 | [Baza Danych](database.md) | Encje, schema JSON/YAML |

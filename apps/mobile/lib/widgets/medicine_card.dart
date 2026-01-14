@@ -14,7 +14,7 @@ import 'leaflet_search_sheet.dart';
 import 'filters_sheet.dart' show tagCategories;
 
 /// Karta leku - styl neumorficzny z akordeonem
-/// v2.3 - wskaznik weryfikacji po kodzie kreskowym w sekcji Dodano
+/// v2.4 - layout refactor: merged Wskazania+Ulotka, right-aligned CTAs, separators
 class MedicineCard extends StatefulWidget {
   final Medicine medicine;
   final List<UserLabel> labels;
@@ -226,13 +226,29 @@ class _MedicineCardState extends State<MedicineCard>
               runSpacing: 8,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                // Nazwa leku z natywnym zaznaczaniem tekstu (Android context menu)
-                SelectableText(
-                  _medicine.nazwa ?? 'Nieznany lek',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.onSurface,
-                    fontSize: widget.isCompact ? 15 : 18,
+                // Nazwa leku - tap zwija kartę, long press kopiuje
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: widget.isCompact ? null : widget.onExpand,
+                  onLongPress: () {
+                    Clipboard.setData(
+                      ClipboardData(text: _medicine.nazwa ?? ''),
+                    );
+                    HapticFeedback.mediumImpact();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Skopiowano nazwę leku'),
+                        duration: Duration(seconds: 1),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    _medicine.nazwa ?? 'Nieznany lek',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                      fontSize: widget.isCompact ? 15 : 18,
+                    ),
                   ),
                 ),
                 // Ikona duplikatu
@@ -358,31 +374,9 @@ class _MedicineCardState extends State<MedicineCard>
           ),
         ),
 
-        // === WSKAZANIA ===
-        if (_medicine.wskazania.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          _buildSection(
-            theme,
-            isDark,
-            title: 'Wskazania',
-            onEdit: () => _showEditWskazaniaDialog(context),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: _medicine.wskazania
-                  .map(
-                    (w) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Text('• $w', style: theme.textTheme.bodySmall),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ),
-        ],
-
-        // === ULOTKA ===
+        // === WSKAZANIA (z ulotkę w CTA area) ===
         const SizedBox(height: 16),
-        _buildLeafletSection(context, theme, isDark),
+        _buildWskazaniaSection(context, theme, isDark),
 
         // === NOTATKA ===
         const SizedBox(height: 16),
@@ -399,6 +393,10 @@ class _MedicineCardState extends State<MedicineCard>
         // === WIĘCEJ (akordeon) ===
         const SizedBox(height: 16),
         _buildMoreSection(context, theme, isDark),
+
+        // === SEPARATOR PRZED ZWIŃ ===
+        const SizedBox(height: 16),
+        Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
 
         // === PRZYCISKI AKCJI ===
         const SizedBox(height: 16),
@@ -913,30 +911,41 @@ class _MedicineCardState extends State<MedicineCard>
             ),
           )
         else if (supplyEndDate == null)
-          GestureDetector(
-            onTap: () => _showSetDailyIntakeDialog(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.pillBottle,
-                    size: 14,
-                    color: theme.colorScheme.onSurface,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              GestureDetector(
+                onTap: () => _showSetDailyIntakeDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Ustaw dzienne zużycie',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: 12,
-                    ),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.pillBottle,
+                        size: 14,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Ustaw dzienne zużycie',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+            ],
           )
         else
           _buildSupplyResult(context, theme, isDark, supplyEndDate),
@@ -1031,37 +1040,51 @@ class _MedicineCardState extends State<MedicineCard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Przycisk "Więcej" / "Mniej"
-        GestureDetector(
-          onTap: () => setState(() => _isMoreExpanded = !_isMoreExpanded),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: _isMoreExpanded
-                ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
-                : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _isMoreExpanded
-                      ? LucideIcons.chevronsDownUp
-                      : LucideIcons.chevronsUpDown,
-                  size: 16,
-                  color: theme.colorScheme.onSurface,
+        // Przycisk "Więcej" / "Mniej" (wyrównany do prawej)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            GestureDetector(
+              onTap: () => setState(() => _isMoreExpanded = !_isMoreExpanded),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  _isMoreExpanded ? 'Mniej' : 'Więcej',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
+                decoration: _isMoreExpanded
+                    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
+                    : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isMoreExpanded
+                          ? LucideIcons.chevronsDownUp
+                          : LucideIcons.chevronsUpDown,
+                      size: 16,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _isMoreExpanded ? 'Mniej' : 'Więcej',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
+
+        // Separator po Więcej (gdy rozwinięte)
+        if (_isMoreExpanded) ...[
+          const SizedBox(height: 8),
+          Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
+        ],
 
         // Rozwinięta zawartość z paddingiem dla cieni
         AnimatedCrossFade(

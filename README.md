@@ -108,6 +108,7 @@ Szczegóły: [docs/roadmap.md](docs/roadmap.md)
 | [Architektura](docs/architecture.md) | Stack, przepływ danych |
 | [Baza Danych](docs/database.md) | Encje, schematy |
 | [Konwencje](docs/conventions.md) | Standardy kodu |
+| [Design System](docs/design.md) | Paleta kolorów, typografia, komponenty UI |
 | [Bezpieczeństwo](docs/security.md) | Lokalne dane, disclaimer |
 | [Roadmap](docs/roadmap.md) | Plan rozwoju projektu |
 | [Wdrożenie](docs/deployment.md) | Setup WinSCP i APK lifecycle |

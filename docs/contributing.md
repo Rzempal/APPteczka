@@ -56,6 +56,7 @@ Każdy dokument zaczyna się od:
 | 📏 | Konwencje |
 | 🗺️ | Roadmap |
 | 🛡️ | Disclaimers |
+| 🎨 | Design |
 | 🧠 | Lessons Learned |
 | 📝 | Logging |
 
@@ -104,6 +105,7 @@ Na końcu każdego dokumentu:
 | Zmiana uwierzytelniania | `security.md` |
 | Ukończenie zadania | `roadmap.md` |
 | Nowa konwencja | `conventions.md` |
+| Zmiana UI/UX | `design.md` |
 | Zmiana instalacji | `README.md` |
 
 ### Zmiany dokumentacji → Dokumentacja
@@ -126,6 +128,7 @@ docs/
 ├── security.md             # Bezpieczeństwo
 ├── disclaimers.md          # Wyłączenia odpowiedzialności
 ├── conventions.md          # Konwencje kodu
+├── design.md               # Design system
 ├── testing.md              # Strategia testów
 ├── deployment.md           # Wdrożenie i CI/CD
 ├── lessons-learned.md      # Dziennik doświadczeń
@@ -141,6 +144,7 @@ docs/
 ```markdown
 - [ ] Czy zmiana wpływa na architekturę? → `architecture.md`
 - [ ] Czy zmiana dotyczy modelu danych? → `database.md`
+- [ ] Czy zmiana wpływa na UI/UX? → `design.md`
 - [ ] Czy zmiana dotyczy wyszukiwania? → `search_logic.md`
 - [ ] Czy ukończono zadanie z roadmapy? → `roadmap.md`
 - [ ] Czy dodano nowy plik doc? → `README.md`

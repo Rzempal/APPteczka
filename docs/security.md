@@ -7,7 +7,7 @@
 ## ⚠️ Disclaimer Medyczny
 
 > [!CAUTION]
-> **Pudełko na leki NIE jest narzędziem medycznym.**
+> **Karton z lekami NIE jest narzędziem medycznym.**
 >
 > - Nie zastępuje porady lekarza
 > - Nie udziela rekomendacji terapeutycznych
