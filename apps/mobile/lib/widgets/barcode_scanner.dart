@@ -1,5 +1,6 @@
-// barcode_scanner.dart v1.5.0 - Skaner kodow kreskowych EAN z batch processing
+// barcode_scanner.dart v1.6.0 - Skaner kodow kreskowych EAN z batch processing
 // Widget do skanowania lekow z Rejestru Produktow Leczniczych
+// v1.6.0 - OCR fallback dla produktow spoza RPL (suplementy, wyroby medyczne)
 
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -18,19 +19,36 @@ import 'neumorphic/neumorphic.dart';
 /// Zeskanowany lek z kodem EAN i opcjonalna data waznosci
 class ScannedDrug {
   final String ean;
-  final RplDrugInfo drugInfo;
+  final RplDrugInfo? drugInfo; // Nullable - moze nie byc w RPL
   String? expiryDate;
   String? tempImagePath; // Sciezka do snapshotu daty waznosci
+  String? tempProductImagePath; // Sciezka do snapshotu nazwy produktu
+
+  // Dane z OCR (gdy brak w RPL)
+  String? scannedName;
+  String? scannedDescription;
+  List<String>? scannedTags;
 
   ScannedDrug({
     required this.ean,
-    required this.drugInfo,
+    this.drugInfo,
     this.expiryDate,
     this.tempImagePath,
+    this.tempProductImagePath,
+    this.scannedName,
+    this.scannedDescription,
+    this.scannedTags,
   });
 
+  /// Nazwa produktu (z RPL lub OCR)
+  String get displayName =>
+      drugInfo?.fullName ?? scannedName ?? 'Nieznany produkt';
+
+  /// Czy produkt jest z RPL
+  bool get isFromRpl => drugInfo != null;
+
   /// Ilość sztuk z opakowania (cache)
-  int? get pieceCount => _parsePackaging();
+  int? get pieceCount => drugInfo != null ? _parsePackaging() : null;
 
   /// Konwertuje do modelu Medicine
   Medicine toMedicine(String id) {
@@ -38,24 +56,26 @@ class ScannedDrug {
 
     return Medicine(
       id: id,
-      nazwa: drugInfo.fullName,
-      opis: drugInfo.description,
+      nazwa: displayName,
+      opis: scannedDescription ?? drugInfo?.description ?? '',
       wskazania: [],
-      tagi: _generateTags(),
+      tagi: scannedTags ?? (drugInfo != null ? _generateTags() : <String>[]),
       packages: expiryDate != null
           ? [MedicinePackage(expiryDate: expiryDate!, pieceCount: pieceCount)]
           : [],
       dataDodania: DateTime.now().toIso8601String(),
-      leafletUrl: drugInfo.leafletUrl,
+      leafletUrl: drugInfo?.leafletUrl,
     );
   }
 
   /// Generuje tagi na podstawie danych z API RPL
   List<String> _generateTags() {
+    if (drugInfo == null) return [];
+    final info = drugInfo!;
     final tags = <String>{};
 
     // 1. Status recepty (accessibilityCategory)
-    final category = drugInfo.accessibilityCategory?.toUpperCase();
+    final category = info.accessibilityCategory?.toUpperCase();
     if (category != null) {
       if (category == 'OTC') {
         tags.add('bez recepty');
@@ -65,8 +85,8 @@ class ScannedDrug {
     }
 
     // 2. Postac farmaceutyczna
-    if (drugInfo.form.isNotEmpty) {
-      final formLower = drugInfo.form.toLowerCase();
+    if (info.form.isNotEmpty) {
+      final formLower = info.form.toLowerCase();
       if (formLower.contains('tabletk')) {
         tags.add('tabletki');
       } else if (formLower.contains('kaps')) {
@@ -93,8 +113,8 @@ class ScannedDrug {
     }
 
     // 3. Substancje czynne (dzielimy po " + ")
-    if (drugInfo.activeSubstance.isNotEmpty) {
-      final substances = drugInfo.activeSubstance
+    if (info.activeSubstance.isNotEmpty) {
+      final substances = info.activeSubstance
           .split(RegExp(r'\s*\+\s*'))
           .map((s) => s.trim())
           .where((s) => s.isNotEmpty);
@@ -107,7 +127,7 @@ class ScannedDrug {
   /// Parsuje packaging na ilosc sztuk
   /// Np. "28 tabl. (2 x 14)" -> 28, "1 butelka 120 ml" -> 120
   int? _parsePackaging() {
-    final packaging = drugInfo.packaging;
+    final packaging = drugInfo?.packaging;
     if (packaging == null || packaging.isEmpty) return null;
 
     final lower = packaging.toLowerCase();
@@ -140,6 +160,9 @@ class ScannedDrug {
 enum ScannerMode {
   /// Skanowanie kodu EAN
   ean,
+
+  /// Zdjecie nazwy produktu (gdy brak w RPL)
+  productPhoto,
 
   /// Skanowanie daty waznosci (OCR)
   expiryDate,
@@ -275,12 +298,18 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
             : 'Uruchom skaner by rozpocząć';
         subtitle = 'Skieruj aparat na kod kreskowy na opakowaniu';
       }
+    } else if (_mode == ScannerMode.productPhoto) {
+      // Tryb zdjecia nazwy produktu (gdy brak w RPL)
+      icon = LucideIcons.camera;
+      iconColor = Colors.purple;
+      title = 'Produkt nierozpoznany';
+      subtitle = 'Zrob zdjecie nazwy produktu';
     } else {
       // Tryb daty waznosci - pokaz nazwe leku
       icon = LucideIcons.camera;
       iconColor = Colors.orange;
-      title = _currentDrug?.drugInfo.fullName ?? 'Dodaj datę ważności';
-      subtitle = 'Zrób zdjęcie daty ważności lub Pomiń';
+      title = _currentDrug?.displayName ?? 'Dodaj date waznosci';
+      subtitle = 'Zrob zdjecie daty waznosci lub Pomin';
     }
 
     return NeuInsetContainer(
@@ -482,8 +511,32 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 left: 16,
                 child: _buildControlButton(
                   icon: LucideIcons.skipForward,
-                  label: 'Pomiń',
+                  label: 'Pomin',
                   onTap: _skipExpiryDate,
+                ),
+              ),
+
+            // Tryb productPhoto - przycisk zdjecia nazwy (prawy gorny rog)
+            if (_mode == ScannerMode.productPhoto)
+              Positioned(
+                top: 16,
+                right: 16,
+                child: _buildControlButton(
+                  icon: LucideIcons.camera,
+                  label: 'Zrob zdjecie',
+                  onTap: _captureProductPhoto,
+                ),
+              ),
+
+            // Tryb productPhoto - przycisk pomin (lewy dolny rog)
+            if (_mode == ScannerMode.productPhoto)
+              Positioned(
+                bottom: 16,
+                left: 16,
+                child: _buildControlButton(
+                  icon: LucideIcons.skipForward,
+                  label: 'Pomin',
+                  onTap: _skipProductPhoto,
                 ),
               ),
           ],
@@ -564,24 +617,36 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
-          Icon(LucideIcons.pill, size: 16, color: theme.colorScheme.primary),
+          Icon(
+            drug.isFromRpl ? LucideIcons.pill : LucideIcons.box,
+            size: 16,
+            color: drug.isFromRpl ? theme.colorScheme.primary : Colors.purple,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  drug.drugInfo.fullName,
+                  drug.displayName,
                   style: theme.textTheme.bodyMedium,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                // Pokaż ilość sztuk jeśli dostępna
+                // Pokaz ilosc sztuk jesli dostepna lub info o OCR
                 if (pieceCount != null)
                   Text(
                     '$pieceCount szt.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                else if (!drug.isFromRpl)
+                  Text(
+                    'OCR',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.purple,
+                      fontStyle: FontStyle.italic,
                     ),
                   ),
               ],
@@ -765,9 +830,15 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       final drugInfo = await _rplService.fetchDrugByEan(ean);
 
       if (drugInfo == null) {
-        _showError(
-          'Nie znaleziono leku w bazie RPL.\nKod: $ean\nMozesz dodac lek reczenie.',
-        );
+        // Produkt nie znaleziony w RPL - przejdz do trybu zdjecia nazwy
+        HapticFeedback.lightImpact();
+        _scannedEans.add(ean);
+
+        setState(() {
+          _currentDrug = ScannedDrug(ean: ean);
+          _mode = ScannerMode.productPhoto;
+          _isProcessing = false;
+        });
         return;
       }
 
@@ -868,97 +939,135 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     _finishCurrentDrug();
   }
 
-  void _showManualDateInput() {
-    final controller = TextEditingController();
+  /// Robi snapshot nazwy produktu (batch mode - OCR pozniej)
+  Future<void> _captureProductPhoto() async {
+    if (_currentDrug == null) return;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 24,
-          right: 24,
-          top: 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Wprowadź datę ważności',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _currentDrug?.drugInfo.fullName ?? '',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.datetime,
-              decoration: const InputDecoration(
-                labelText: 'Data ważności (MM/YYYY)',
-                hintText: '03/2027',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(LucideIcons.calendar),
-              ),
-              autofocus: true,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _skipExpiryDate();
-                    },
-                    child: const Text('Pomiń'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      final date = _parseManualDate(controller.text);
-                      if (date != null) {
-                        _currentDrug!.expiryDate = date;
-                        Navigator.pop(context);
-                        _finishCurrentDrug();
-                      }
-                    },
-                    child: const Text('Zapisz'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
+    // Snapshot z widoku kamery
+    final snapshotFile = await _takeSnapshot();
+
+    if (snapshotFile != null) {
+      // Zapisz sciezke do snapshotu nazwy - OCR zostanie wykonany przy zakonczeniu
+      _currentDrug!.tempProductImagePath = snapshotFile.path;
+      HapticFeedback.mediumImpact();
+
+      // Animacja "Zapisano"
+      setState(() {
+        _showSuccess = true;
+        _successMessage = 'Zapisano zdjecie nazwy';
+      });
+
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      if (!mounted) return;
+      setState(() {
+        _showSuccess = false;
+        _successMessage = null;
+      });
+    }
+
+    // Przejdz do zdjecia daty waznosci
+    setState(() => _mode = ScannerMode.expiryDate);
   }
 
-  String? _parseManualDate(String input) {
-    // Format: MM/YYYY lub MM-YYYY lub MMYYYY
-    final cleaned = input.replaceAll(RegExp(r'[^0-9]'), '');
-    if (cleaned.length < 6) return null;
-
-    final month = int.tryParse(cleaned.substring(0, 2));
-    final year = int.tryParse(cleaned.substring(2, 6));
-
-    if (month == null || year == null) return null;
-    if (month < 1 || month > 12) return null;
-    if (year < 2020 || year > 2050) return null;
-
-    // Zwroc ostatni dzien miesiaca w formacie ISO
-    final lastDay = DateTime(year, month + 1, 0).day;
-    return '$year-${month.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
+  /// Pomija zdjecie nazwy produktu (batch mode)
+  void _skipProductPhoto() {
+    if (_currentDrug == null) return;
+    // Przejdz do zdjecia daty waznosci (bez snapu nazwy)
+    setState(() => _mode = ScannerMode.expiryDate);
   }
+
+  //   void _showManualDateInput() {
+  //     final controller = TextEditingController();
+
+  //     showModalBottomSheet(
+  //       context: context,
+  //       isScrollControlled: true,
+  //       builder: (context) => Padding(
+  //         padding: EdgeInsets.only(
+  //           bottom: MediaQuery.of(context).viewInsets.bottom,
+  //           left: 24,
+  //           right: 24,
+  //           top: 24,
+  //         ),
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           crossAxisAlignment: CrossAxisAlignment.stretch,
+  //           children: [
+  //             Text(
+  //               'Wprowadź datę ważności',
+  //               style: Theme.of(context).textTheme.titleLarge,
+  //             ),
+  //             const SizedBox(height: 8),
+  //             Text(
+  //               _currentDrug?.displayName ?? '',
+  //               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+  //                 color: Theme.of(context).colorScheme.onSurfaceVariant,
+  //               ),
+  //             ),
+  //             const SizedBox(height: 16),
+  //             TextField(
+  //               controller: controller,
+  //               keyboardType: TextInputType.datetime,
+  //               decoration: const InputDecoration(
+  //                 labelText: 'Data ważności (MM/YYYY)',
+  //                 hintText: '03/2027',
+  //                 border: OutlineInputBorder(),
+  //                 prefixIcon: Icon(LucideIcons.calendar),
+  //               ),
+  //               autofocus: true,
+  //             ),
+  //             const SizedBox(height: 16),
+  //             Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: OutlinedButton(
+  //                     onPressed: () {
+  //                       Navigator.pop(context);
+  //                       _skipExpiryDate();
+  //                     },
+  //                     child: const Text('Pomiń'),
+  //                   ),
+  //                 ),
+  //                 const SizedBox(width: 12),
+  //                 Expanded(
+  //                   child: FilledButton(
+  //                     onPressed: () {
+  //                       final date = _parseManualDate(controller.text);
+  //                       if (date != null) {
+  //                         _currentDrug!.expiryDate = date;
+  //                         Navigator.pop(context);
+  //                         _finishCurrentDrug();
+  //                       }
+  //                     },
+  //                     child: const Text('Zapisz'),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //             const SizedBox(height: 24),
+  //           ],
+  //         ),
+  //       ),
+  //     );
+  //   }
+
+  //   String? _parseManualDate(String input) {
+  //     // Format: MM/YYYY lub MM-YYYY lub MMYYYY
+  //     final cleaned = input.replaceAll(RegExp(r'[^0-9]'), '');
+  //     if (cleaned.length < 6) return null;
+
+  //     final month = int.tryParse(cleaned.substring(0, 2));
+  //     final year = int.tryParse(cleaned.substring(2, 6));
+
+  //     if (month == null || year == null) return null;
+  //     if (month < 1 || month > 12) return null;
+  //     if (year < 2020 || year > 2050) return null;
+
+  //     // Zwroc ostatni dzien miesiaca w formacie ISO
+  //     final lastDay = DateTime(year, month + 1, 0).day;
+  //     return '$year-${month.toString().padLeft(2, '0')}-${lastDay.toString().padLeft(2, '0')}';
+  //   }
 
   void _skipExpiryDate() {
     if (_currentDrug != null) {

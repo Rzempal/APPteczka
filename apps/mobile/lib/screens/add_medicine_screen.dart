@@ -901,13 +901,17 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   // ==================== HANDLERS ====================
 
   /// Handler dla skanera kodów kreskowych (lista leków)
-  /// Batch processing: OCR dat + AI enrichment
+  /// Batch processing: OCR nazw + OCR dat + AI enrichment
   void _handleBarcodeResult(List<ScannedDrug> drugs) async {
     if (drugs.isEmpty) return;
 
+    // Oblicz liczbę etapów (3 dla produktów spoza RPL, 2 dla produktów z RPL)
+    final unknownDrugs = drugs.where((d) => !d.isFromRpl).toList();
+    final totalSteps = drugs.length * 2 + unknownDrugs.length;
+
     // Pokaz dialog przetwarzania
     final progressNotifier = ValueNotifier<_ProcessingProgress>(
-      _ProcessingProgress(current: 0, total: drugs.length * 2, stage: 'OCR'),
+      _ProcessingProgress(current: 0, total: totalSteps, stage: 'OCR'),
     );
 
     showDialog(
@@ -918,11 +922,40 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     final dateOcrService = DateOcrService();
     final geminiService = GeminiNameLookupService();
+    final geminiOcrService = GeminiService(); // Do OCR nazw produktów
     final importedMedicines = <Medicine>[];
     final failedOcrDrugs = <ScannedDrug>[];
 
     try {
+      // === ETAP 0: Batch OCR nazw produktów (dla brak RPL) ===
+      if (unknownDrugs.isNotEmpty) {
+        progressNotifier.value = progressNotifier.value.copyWith(
+          stage: 'Nazwy',
+        );
+        await Future.wait(
+          unknownDrugs.map((drug) async {
+            if (drug.tempProductImagePath != null) {
+              try {
+                final result = await geminiOcrService.scanImage(
+                  File(drug.tempProductImagePath!),
+                );
+                if (result.leki.isNotEmpty) {
+                  final scanned = result.leki.first;
+                  drug.scannedName = scanned.nazwa;
+                  drug.scannedDescription = scanned.opis;
+                  drug.scannedTags = scanned.tagi;
+                }
+              } catch (_) {
+                // OCR nazwy nie powiodło się - produkt zostanie jako "Nieznany"
+              }
+            }
+            progressNotifier.value = progressNotifier.value.increment();
+          }),
+        );
+      }
+
       // === ETAP 1: Batch OCR dat (rownolegle) ===
+      progressNotifier.value = progressNotifier.value.copyWith(stage: 'Daty');
       await Future.wait(
         drugs.map((drug) async {
           if (drug.tempImagePath != null && drug.expiryDate == null) {
@@ -949,15 +982,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       await Future.wait(
         drugs.map((drug) async {
           try {
-            final result = await geminiService.lookupByName(
-              drug.drugInfo.fullName,
-            );
+            final result = await geminiService.lookupByName(drug.displayName);
             if (result.found && result.medicine != null) {
               // Tworzymy Medicine z polaczeniem danych z RPL i AI
               final med = result.medicine!;
               final medicine = Medicine(
                 id: const Uuid().v4(),
-                nazwa: drug.drugInfo.fullName,
+                nazwa: drug.displayName,
                 opis: med.opis,
                 wskazania: med.wskazania,
                 tagi: <String>{
@@ -975,7 +1006,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       ]
                     : [],
                 dataDodania: DateTime.now().toIso8601String(),
-                leafletUrl: drug.drugInfo.leafletUrl,
+                leafletUrl: drug.drugInfo?.leafletUrl,
               );
               await widget.storageService.saveMedicine(medicine);
               importedMedicines.add(medicine);
@@ -1211,7 +1242,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             nazwa: drugName,
             opis: aiMedicine?.opis ?? rpl.form,
             wskazania: aiMedicine?.wskazania ?? [],
-            tagi: <dynamic>{
+            tagi: <String>{
               ...rplTags,
               ...processTagsForImport(aiMedicine?.tagi ?? []),
             }.toList(),
@@ -1475,47 +1506,3 @@ class _ProcessingDialog extends StatelessWidget {
 }
 
 /// Dialog przetwarzania AI (dla recznego dodawania)
-class _AiProcessingDialog extends StatelessWidget {
-  final String medicineName;
-
-  const _AiProcessingDialog({required this.medicineName});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
-
-    return Dialog(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(LucideIcons.sparkles, size: 48, color: aiColor),
-            const SizedBox(height: 16),
-            Text(
-              'AI rozpoznaje lek...',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              medicineName,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            LinearProgressIndicator(
-              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation<Color>(aiColor),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
