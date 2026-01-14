@@ -14,7 +14,7 @@ import 'leaflet_search_sheet.dart';
 import 'filters_sheet.dart' show tagCategories;
 
 /// Karta leku - styl neumorficzny z akordeonem
-/// v2.4 - layout refactor: merged Wskazania+Ulotka, right-aligned CTAs, separators
+/// v2.5 - unified button sizing, delete section shadow fix
 class MedicineCard extends StatefulWidget {
   final Medicine medicine;
   final List<UserLabel> labels;
@@ -522,15 +522,15 @@ class _MedicineCardState extends State<MedicineCard>
               NeuButton(
                 onPressed: () => _showPdfViewer(context),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+                  horizontal: 14,
+                  vertical: 10,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       LucideIcons.fileText,
-                      size: 14,
+                      size: 18,
                       color: AppColors.valid,
                     ),
                     const SizedBox(width: 6),
@@ -548,14 +548,14 @@ class _MedicineCardState extends State<MedicineCard>
               GestureDetector(
                 onTap: _detachLeaflet,
                 child: Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: NeuDecoration.flatSmall(
                     isDark: isDark,
-                    radius: 8,
+                    radius: 12,
                   ),
                   child: Icon(
                     LucideIcons.pinOff,
-                    size: 16,
+                    size: 20,
                     color: AppColors.expired,
                   ),
                 ),
@@ -564,15 +564,15 @@ class _MedicineCardState extends State<MedicineCard>
               NeuButton(
                 onPressed: () => _showLeafletSearch(context),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+                  horizontal: 14,
+                  vertical: 10,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       LucideIcons.fileSearch,
-                      size: 14,
+                      size: 18,
                       color: theme.colorScheme.onSurface,
                     ),
                     const SizedBox(width: 6),
@@ -580,7 +580,7 @@ class _MedicineCardState extends State<MedicineCard>
                       'Znajdź ulotkę',
                       style: TextStyle(
                         color: theme.colorScheme.onSurface,
-                        fontSize: 12,
+                        fontSize: 13,
                       ),
                     ),
                   ],
@@ -749,14 +749,14 @@ class _MedicineCardState extends State<MedicineCard>
         GestureDetector(
           onTap: () => _showAddPackageDialog(context),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   LucideIcons.packagePlus,
-                  size: 14,
+                  size: 18,
                   color: theme.colorScheme.onSurface,
                 ),
                 const SizedBox(width: 6),
@@ -764,7 +764,7 @@ class _MedicineCardState extends State<MedicineCard>
                   'Dodaj opakowanie',
                   style: TextStyle(
                     color: theme.colorScheme.onSurface,
-                    fontSize: 12,
+                    fontSize: 13,
                   ),
                 ),
               ],
@@ -783,14 +783,14 @@ class _MedicineCardState extends State<MedicineCard>
     return GestureDetector(
       onTap: () => _showAddPackageDialog(context),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               LucideIcons.calendarPlus,
-              size: 14,
+              size: 18,
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 6),
@@ -798,7 +798,7 @@ class _MedicineCardState extends State<MedicineCard>
               'Ustaw termin ważności',
               style: TextStyle(
                 color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 12,
+                fontSize: 13,
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -958,41 +958,30 @@ class _MedicineCardState extends State<MedicineCard>
             ),
           )
         else if (supplyEndDate == null)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              GestureDetector(
-                onTap: () => _showSetDailyIntakeDialog(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
+          GestureDetector(
+            onTap: () => _showSetDailyIntakeDialog(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.pillBottle,
+                    size: 18,
+                    color: theme.colorScheme.onSurface,
                   ),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 8,
+                  const SizedBox(width: 6),
+                  Text(
+                    'Ustaw dzienne zużycie',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 13,
+                    ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        LucideIcons.pillBottle,
-                        size: 14,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Ustaw dzienne zużycie',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           )
         else
           _buildSupplyResult(context, theme, isDark, supplyEndDate),
@@ -1070,11 +1059,11 @@ class _MedicineCardState extends State<MedicineCard>
         GestureDetector(
           onTap: () => _addToCalendar(endDate),
           child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            padding: const EdgeInsets.all(10),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
             child: Icon(
               LucideIcons.calendarPlus,
-              size: 16,
+              size: 20,
               color: AppColors.primary,
             ),
           ),
@@ -1095,12 +1084,12 @@ class _MedicineCardState extends State<MedicineCard>
               onTap: () => setState(() => _isMoreExpanded = !_isMoreExpanded),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+                  horizontal: 14,
+                  vertical: 10,
                 ),
                 decoration: _isMoreExpanded
-                    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
-                    : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
+                    : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1108,7 +1097,7 @@ class _MedicineCardState extends State<MedicineCard>
                       _isMoreExpanded
                           ? LucideIcons.chevronsDownUp
                           : LucideIcons.chevronsUpDown,
-                      size: 16,
+                      size: 18,
                       color: theme.colorScheme.onSurface,
                     ),
                     const SizedBox(width: 6),
@@ -1141,7 +1130,7 @@ class _MedicineCardState extends State<MedicineCard>
               : CrossFadeState.showFirst,
           firstChild: const SizedBox.shrink(),
           secondChild: Padding(
-            padding: const EdgeInsets.only(top: 12, left: 4, right: 4),
+            padding: const EdgeInsets.only(top: 12, left: 8, right: 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
