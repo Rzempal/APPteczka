@@ -63,7 +63,7 @@ Przed kodem przedstaw:
 ```markdown
 - [ ] Czy zmiana wpływa na architekturę? → `architecture.md`
 - [ ] Czy zmiana dotyczy modelu danych? → `database.md`
-- [ ] Czy zmiana dotyczy wyszukiwania? → `search_logic.md`
+- [ ] Czy zmiana dotyczy wyszukiwania? → `search-logic.md`
 - [ ] Czy ukończono zadanie z roadmapy? → `roadmap.md`
 - [ ] Czy dodano nowy plik doc? → `README.md`
 - [ ] Czy cross-linki są aktualne?

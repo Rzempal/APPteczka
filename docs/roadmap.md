@@ -125,7 +125,7 @@
 
 | Element | Status |
 |---------|--------|
-| Privacy Policy URL | ✅ [docs/privacy_policy.md](privacy_policy.md) |
+| Privacy Policy URL | ✅ [docs/privacy-policy.md](privacy-policy.md) |
 | Target Age Group (nie dla dzieci <13) | ⬜ |
 | Data Safety Form | ✅ [docs/security.md](security.md) |
 

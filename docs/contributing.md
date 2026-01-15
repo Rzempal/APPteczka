@@ -101,7 +101,7 @@ Na końcu każdego dokumentu:
 |-----------------|------------|
 | Nowy endpoint API | `architecture.md` |
 | Nowy model/encja | `database.md` |
-| Nowy filtr w konfiguratorze | `search_logic.md` |
+| Nowy filtr w konfiguratorze | `search-logic.md` |
 | Zmiana uwierzytelniania | `security.md` |
 | Ukończenie zadania | `roadmap.md` |
 | Nowa konwencja | `conventions.md` |
@@ -124,7 +124,7 @@ Na końcu każdego dokumentu:
 docs/
 ├── architecture.md         # Przegląd systemu, warstwy
 ├── database.md             # ERD, encje, baza danych
-├── search_logic.md         # Logika wyszukiwania
+├── search-logic.md         # Logika wyszukiwania
 ├── security.md             # Bezpieczeństwo
 ├── disclaimers.md          # Wyłączenia odpowiedzialności
 ├── conventions.md          # Konwencje kodu
@@ -145,7 +145,7 @@ docs/
 - [ ] Czy zmiana wpływa na architekturę? → `architecture.md`
 - [ ] Czy zmiana dotyczy modelu danych? → `database.md`
 - [ ] Czy zmiana wpływa na UI/UX? → `design.md`
-- [ ] Czy zmiana dotyczy wyszukiwania? → `search_logic.md`
+- [ ] Czy zmiana dotyczy wyszukiwania? → `search-logic.md`
 - [ ] Czy ukończono zadanie z roadmapy? → `roadmap.md`
 - [ ] Czy dodano nowy plik doc? → `README.md`
 - [ ] Czy cross-linki są aktualne?

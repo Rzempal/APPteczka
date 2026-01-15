@@ -100,7 +100,7 @@ Na końcu każdego dokumentu:
 | --- | --- |
 | Nowy endpoint API | `architecture.md` |
 | Nowy model/encja | `database.md` |
-| Nowy filtr w konfiguratorze | `search_logic.md` |
+| Nowy filtr w konfiguratorze | `search-logic.md` |
 | Zmiana uwierzytelniania | `security.md` |
 | Ukończenie zadania | `roadmap.md` |
 | Nowa konwencja | `conventions.md` |
@@ -122,7 +122,7 @@ Na końcu każdego dokumentu:
 docs/
 ├── architecture.md         # Przegląd systemu, warstwy
 ├── database.md             # ERD, encje, Elasticsearch
-├── search_logic.md         # Guided Selling, konfigurator
+├── search-logic.md         # Guided Selling, konfigurator
 ├── security.md             # GDPR, PCI DSS, OWASP
 ├── conventions.md          # Konwencje kodu
 ├── testing.md              # Strategia TDD, standardy testów
