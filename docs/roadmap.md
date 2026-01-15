@@ -412,20 +412,23 @@ Wpisana nazwa
 
 ---
 
-### Automatyzacja Deploymentu (v12.4)
+### Automatyzacja Deploymentu (v12.7)
 
-**Data:** 2026-01-12
+**Data:** 2026-01-15
 
 **Implementacja:**
 
 - Automatyczny upload APK na serwer Hostido (WinSCP)
 - Żywy stoper (Elapsed Time) w tytule okna terminala
-- Strategia czyszczenia: retencja 3 ostatnich wersji APK (per kanał)
-- Zaawansowane logowanie w `log.md`: 4 commity, czas deploymentu, status cleanupu
+- Usunięto niedziałającą strategię retencji APK (retencja 0, retencja zarządzana ręcznie na serwerze)
+- Dodano VS Code Tasks (`Deploy DEV`, `Deploy Release`) oraz workflowy Antigravity (`/deploy-dev`, `/deploy-release`)
+- Zaawansowane logowanie w `log.md`: 4 commity, czas deploymentu
 
 **Pliki:**
 
-- `scripts/deploy_apk.ps1` - v12.4 (cleaner + timer fix)
+- `scripts/deploy_apk.ps1` - v12.7 (cleanup removal)
+- `.vscode/tasks.json` - integracja z IDE
+- `.agent/workflows/deploy-*.md` - skróty Antigravity
 - `docs/deployment.md` - instrukcja konfiguracji
 
 ---
@@ -448,4 +451,4 @@ Wpisana nazwa
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-14
+> 📅 **Ostatnia aktualizacja:** 2026-01-15

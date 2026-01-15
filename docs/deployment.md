@@ -18,6 +18,11 @@ Ten dokument opisuje proces wdrożenia aplikacji mobilnej (APK) oraz webowej.
 .\scripts\run_deploy_dev.bat
 ```
 
+#### IDE Shortcuts (Antigravity & VS Code)
+
+- **Antigravity Workflows:** wpisz `/deploy-dev` lub `/deploy-release` w czacie.
+- **VS Code Tasks:** `Ctrl+Shift+B` (domyślnie uruchamia `Deploy DEV`).
+
 ---
 
 ## Wdrożenie Mobile (Android)
@@ -72,4 +77,4 @@ Aplikacja webowa jest wdrażana automatycznie po pushu na branch `main` przez in
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-14
+> 📅 **Ostatnia aktualizacja:** 2026-01-15
