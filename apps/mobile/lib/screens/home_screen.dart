@@ -991,7 +991,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-      ),
     ).whenComplete(() {
       if (mounted) setState(() => _isManagementSheetOpen = false);
     });
