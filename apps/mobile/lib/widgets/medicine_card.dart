@@ -1041,14 +1041,14 @@ class _MedicineCardState extends State<MedicineCard>
         GestureDetector(
           onTap: () => _showSetDailyIntakeDialog(context),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   LucideIcons.calendarOff,
-                  size: 14,
+                  size: 18,
                   color: daysRemaining <= 7
                       ? AppColors.expired
                       : AppColors.primary,
