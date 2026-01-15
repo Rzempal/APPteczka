@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
+import 'app_bottom_sheet.dart';
 import 'neumorphic/neumorphic.dart';
 
 /// Bottom sheet do szybkiego uzupełniania dat ważności dla wielu leków
@@ -72,27 +73,21 @@ class _BatchDateInputSheetState extends State<BatchDateInputSheet> {
       expand: false,
       builder: (context, scrollController) => Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(BottomSheetConstants.radius),
+          ),
         ),
         child: Column(
           children: [
             // Handle
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const BottomSheetDragHandle(),
 
             // Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(
+                horizontal: BottomSheetConstants.contentPadding,
+              ),
               child: Row(
                 children: [
                   Icon(

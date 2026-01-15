@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/rpl_service.dart';
 import '../theme/app_theme.dart';
+import 'app_bottom_sheet.dart';
 import 'neumorphic/neumorphic.dart';
 
 /// Bottom sheet do wyszukiwania ulotek w Rejestrze Produktów Leczniczych
@@ -61,32 +62,23 @@ class _LeafletSearchSheetState extends State<LeafletSearchSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark
-        ? AppColors.darkSurface
-        : AppColors.lightSurface;
 
     return Container(
       decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(BottomSheetConstants.radius),
+        ),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(
+        horizontal: BottomSheetConstants.contentPadding,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade400,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
+          const BottomSheetDragHandle(),
 
           // Header
           Row(

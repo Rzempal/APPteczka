@@ -9,6 +9,7 @@ import '../services/pdf_cache_service.dart';
 import '../services/date_ocr_service.dart';
 import '../widgets/label_selector.dart';
 import '../widgets/leaflet_search_sheet.dart';
+import '../widgets/app_bottom_sheet.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import '../widgets/filters_sheet.dart' show tagCategories;
 import '../theme/app_theme.dart';
@@ -87,6 +88,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
   Widget build(BuildContext context) {
     final status = _medicine.expiryStatus;
     final statusColor = _getStatusColor(status);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.7,
@@ -95,29 +97,23 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
       expand: false,
       builder: (context, scrollController) => Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(BottomSheetConstants.radius),
+          ),
         ),
         child: Column(
           children: [
             // Handle
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
+            const BottomSheetDragHandle(),
 
             // Content
             Expanded(
               child: SingleChildScrollView(
                 controller: scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: BottomSheetConstants.contentPadding,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

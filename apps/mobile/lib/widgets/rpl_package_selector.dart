@@ -8,6 +8,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../services/rpl_service.dart';
 import '../services/app_logger.dart';
 import '../theme/app_theme.dart';
+import 'app_bottom_sheet.dart';
 import 'neumorphic/neumorphic.dart';
 
 final Logger _log = AppLogger.getLogger('RplPackageSelectorSheet');
@@ -81,23 +82,17 @@ class RplPackageSelectorSheet extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: bottomPadding),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(BottomSheetConstants.radius),
+        ),
       ),
       child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Handle
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            const BottomSheetDragHandle(),
 
             // Header
             Padding(
