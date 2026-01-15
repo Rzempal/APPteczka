@@ -1351,7 +1351,7 @@ class _MedicineCardState extends State<MedicineCard>
         Row(
           children: [
             NeuButton(
-              onPressed: widget.onDelete,
+              onPressed: () => _showDeleteConfirmationDialog(context),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1372,69 +1372,34 @@ class _MedicineCardState extends State<MedicineCard>
             // Przycisk zmiany nazwy dla niezweryfikowanych leków
             if (!_medicine.isVerifiedByBarcode) ...[
               const SizedBox(width: 12),
-              Expanded(
-                child: NeuButton(
-                  onPressed: () => _showEditNameDialog(context),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        LucideIcons.textCursorInput,
-                        size: 18,
-                        color: theme.colorScheme.primary,
+              NeuButton(
+                onPressed: () => _showEditNameDialog(context),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.textCursorInput,
+                      size: 18,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Zmień nazwę',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Zmień nazwę',
-                        style: TextStyle(
-                          color: theme.colorScheme.primary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ],
-        ),
-        // Warning na końcu
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.expiringSoon.withAlpha(20)
-                : AppColors.expiringSoon.withAlpha(30),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.expiringSoon.withAlpha(50)),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                LucideIcons.lightbulb,
-                size: 14,
-                color: AppColors.expiringSoon,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'Aby usunąć jedno opakowanie, przejdź do sekcji "Termin ważności"',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ],
     );
@@ -1509,6 +1474,66 @@ class _MedicineCardState extends State<MedicineCard>
       await widget.storageService?.saveMedicine(updatedMedicine);
       setState(() => _medicine = updatedMedicine);
       widget.onMedicineUpdated?.call();
+    }
+  }
+
+  Future<void> _showDeleteConfirmationDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Usuń lek'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Czy na pewno chcesz usunąć ${_medicine.nazwa ?? "ten lek"}?'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.expiringSoon.withAlpha(30),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.expiringSoon.withAlpha(50)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    LucideIcons.lightbulb,
+                    size: 16,
+                    color: AppColors.expiringSoon,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Aby usunąć jedno opakowanie, przejdź do sekcji "Termin ważności"',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.expired),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      widget.onDelete?.call();
     }
   }
 
