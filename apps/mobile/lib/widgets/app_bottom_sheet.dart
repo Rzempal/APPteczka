@@ -4,7 +4,7 @@ import '../theme/app_theme.dart';
 /// Stałe dla bottomSheet - spójny design w całej aplikacji
 class BottomSheetConstants {
   static const double radius = 20.0;
-  static const double dragHandleWidth = 40.0;
+  static const double dragHandleWidth = 48.0; // szerszy dla lepszej widoczności
   static const double dragHandleHeight = 4.0;
   static const double dragHandleTopPadding = 12.0;
   static const double contentPadding = 24.0;
@@ -28,9 +28,10 @@ class BottomSheetDragHandle extends StatelessWidget {
           bottom: 16,
         ),
         decoration: BoxDecoration(
+          // Bardziej kontrastowy kolor dla lepszej widoczności
           color: isDark
-              ? AppColors.darkSurfaceLight // #334155
-              : AppColors.lightShadowDark, // #a3b5ad
+              ? AppColors.darkTextMuted.withAlpha(150) // #94a3b8 z alpha
+              : AppColors.lightTextMuted.withAlpha(120), // #4b5563 z alpha
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -69,12 +70,50 @@ class AppBottomSheet {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
 
+        // Kolory dla efektu neumorficznego - bottomSheet "wypływa" z tła
+        final sheetColor = isDark
+            ? AppColors.darkSurfaceLight  // jaśniejszy niż darkSurface
+            : AppColors.lightSurface;     // jaśniejszy niż lightBackground
+        final topGlowColor = isDark
+            ? AppColors.darkSurface.withAlpha(200)
+            : Colors.white.withAlpha(180);
+        final shadowColor = isDark
+            ? Colors.black.withAlpha(60)
+            : AppColors.lightShadowDark.withAlpha(80);
+
         return Container(
           decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            // Gradient od góry - subtelny efekt głębi
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.0, 0.03, 1.0],
+              colors: [
+                topGlowColor,  // jasna krawędź na górze
+                sheetColor,    // główny kolor
+                sheetColor,    // główny kolor
+              ],
+            ),
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(BottomSheetConstants.radius),
             ),
+            // Cienie neumorficzne - efekt "wypływania"
+            boxShadow: [
+              // Górny cień (ciemny) - tworzy głębię
+              BoxShadow(
+                color: shadowColor,
+                offset: const Offset(0, -4),
+                blurRadius: 16,
+                spreadRadius: 0,
+              ),
+              // Wewnętrzna poświata (jasna krawędź)
+              BoxShadow(
+                color: topGlowColor,
+                offset: const Offset(0, -1),
+                blurRadius: 2,
+                spreadRadius: 0,
+              ),
+            ],
           ),
           child: useScrollController
               ? DraggableScrollableSheet(
