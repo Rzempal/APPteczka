@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../theme/app_theme.dart';
+import 'app_bottom_sheet.dart';
 import 'neumorphic/neumorphic.dart';
 import '../utils/duplicate_detection.dart';
 
@@ -254,25 +255,19 @@ class _FiltersSheetState extends State<FiltersSheet> {
         minChildSize: 0.4,
         maxChildSize: 0.95,
         expand: false,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: Theme.of(context).scaffoldBackgroundColor,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Handle
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+        builder: (context, scrollController) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+          return Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(BottomSheetConstants.radius),
               ),
+            ),
+            child: Column(
+              children: [
+                // Handle
+                const BottomSheetDragHandle(),
 
               // Header
               Padding(
@@ -532,9 +527,10 @@ class _FiltersSheetState extends State<FiltersSheet> {
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

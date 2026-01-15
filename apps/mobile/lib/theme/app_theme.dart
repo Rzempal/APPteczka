@@ -175,6 +175,15 @@ class AppTheme {
         ),
       ),
       dividerColor: AppColors.lightShadowDark,
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.lightSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        showDragHandle: false, // Używamy własnego BottomSheetDragHandle
+      ),
     );
   }
 
@@ -248,6 +257,15 @@ class AppTheme {
         ),
       ),
       dividerColor: AppColors.darkShadowDark,
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.darkSurface,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        showDragHandle: false, // Używamy własnego BottomSheetDragHandle
+      ),
     );
   }
 }

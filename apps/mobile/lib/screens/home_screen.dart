@@ -13,6 +13,7 @@ import '../widgets/medicine_card.dart';
 import '../widgets/filters_sheet.dart';
 import '../widgets/label_selector.dart';
 import '../widgets/karton_icons.dart';
+import '../widgets/app_bottom_sheet.dart';
 import '../theme/app_theme.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import 'edit_medicine_screen.dart';
@@ -643,9 +644,6 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
       builder: (context) =>
           _HelpBottomSheetContent(isDark: isDark, theme: theme),
     ).whenComplete(() {
@@ -663,97 +661,93 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.7,
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Icon(
-                    LucideIcons.arrowDownUp,
-                    color: theme.colorScheme.primary,
+      initialChildSize: 0.5,
+      minChildSize: 0.3,
+      maxChildSize: 0.7,
+      builder: (context, scrollController) => SingleChildScrollView(
+        controller: scrollController,
+        padding: const EdgeInsets.symmetric(
+          horizontal: BottomSheetConstants.contentPadding,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Icon(
+                  LucideIcons.arrowDownUp,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Sortuj',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Sortuj',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-              // Sort options
-              ...SortOption.values.map((option) {
-                final isSelected = option == _sortOption;
-                return InkWell(
-                  onTap: () {
-                    setState(() => _sortOption = option);
-                    Navigator.pop(context);
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    decoration: isSelected
-                        ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
-                        : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                    child: Row(
-                      children: [
-                        Icon(
-                          option.icon,
-                          size: 20,
-                          color: isSelected
-                              ? AppColors.primary
-                              : theme.colorScheme.onSurface,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            option.label,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.normal,
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : theme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                        if (isSelected)
-                          Icon(
-                            LucideIcons.check,
-                            size: 18,
-                            color: AppColors.primary,
-                          ),
-                      ],
-                    ),
+            // Sort options
+            ...SortOption.values.map((option) {
+              final isSelected = option == _sortOption;
+              return InkWell(
+                onTap: () {
+                  setState(() => _sortOption = option);
+                  Navigator.pop(context);
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                );
-              }),
-            ],
-          ),
+                  decoration: isSelected
+                      ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
+                      : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        option.icon,
+                        size: 20,
+                        color: isSelected
+                            ? AppColors.primary
+                            : theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          option.label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                            color: isSelected
+                                ? AppColors.primary
+                                : theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ),
+                      if (isSelected)
+                        Icon(
+                          LucideIcons.check,
+                          size: 18,
+                          color: AppColors.primary,
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+            const SizedBox(height: 16),
+          ],
         ),
       ),
     ).whenComplete(() {
@@ -766,21 +760,17 @@ class _HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    showModalBottomSheet(
+    AppBottomSheet.show(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.65,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
+      initialChildSize: 0.65,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) => SingleChildScrollView(
+        controller: scrollController,
+        padding: const EdgeInsets.symmetric(
+          horizontal: BottomSheetConstants.contentPadding,
+        ),
+        child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1151,9 +1141,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) => _LabelManagementSheet(
         storageService: widget.storageService,
         onChanged: () => _loadMedicines(),
@@ -1169,9 +1157,7 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) => _TagManagementSheet(
         storageService: widget.storageService,
         onChanged: () => _loadMedicines(),
@@ -1332,73 +1318,78 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
             final theme = Theme.of(context);
-            return DraggableScrollableSheet(
-              initialChildSize: 0.5,
-              minChildSize: 0.3,
-              maxChildSize: 0.8,
-              expand: false,
-              builder: (context, scrollController) => SingleChildScrollView(
-                controller: scrollController,
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            final isDark = theme.brightness == Brightness.dark;
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(BottomSheetConstants.radius),
+                ),
+              ),
+              child: DraggableScrollableSheet(
+                initialChildSize: 0.5,
+                minChildSize: 0.3,
+                maxChildSize: 0.8,
+                expand: false,
+                builder: (context, scrollController) => Column(
                   children: [
-                    // Handle
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(2),
+                    const BottomSheetDragHandle(),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: BottomSheetConstants.contentPadding,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header
+                            Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.tags,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Etykiety: ${medicine.nazwa ?? "Lek"}',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // LabelSelector z reaktywnym stanem
+                            LabelSelector(
+                              storageService: widget.storageService,
+                              selectedLabelIds: currentLabels,
+                              isOpen: true,
+                              onToggle: () {},
+                              onLabelTap: (_) {},
+                              onChanged: (newLabelIds) async {
+                                // Aktualizuj lokalny stan (reaktywny UI)
+                                setSheetState(() {
+                                  currentLabels = newLabelIds;
+                                });
+                                // Zapisz do storage
+                                await widget.storageService.updateMedicineLabels(
+                                  medicine.id,
+                                  newLabelIds,
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                          ],
                         ),
                       ),
-                    ),
-                    // Header
-                    Row(
-                      children: [
-                        Icon(
-                          LucideIcons.tags,
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Etykiety: ${medicine.nazwa ?? "Lek"}',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // LabelSelector z reaktywnym stanem
-                    LabelSelector(
-                      storageService: widget.storageService,
-                      selectedLabelIds: currentLabels,
-                      isOpen: true,
-                      onToggle: () {},
-                      onLabelTap: (_) {},
-                      onChanged: (newLabelIds) async {
-                        // Aktualizuj lokalny stan (reaktywny UI)
-                        setSheetState(() {
-                          currentLabels = newLabelIds;
-                        });
-                        // Zapisz do storage
-                        await widget.storageService.updateMedicineLabels(
-                          medicine.id,
-                          newLabelIds,
-                        );
-                      },
                     ),
                   ],
                 ),
@@ -1715,18 +1706,31 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.4,
-      maxChildSize: 0.9,
-      expand: false,
-      builder: (context, scrollController) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(BottomSheetConstants.radius),
+        ),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
           children: [
-            // Header z przyciskiem wstecz, tytułem i przyciskiem dodaj
-            Row(
+            const BottomSheetDragHandle(),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: BottomSheetConstants.contentPadding,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header z przyciskiem wstecz, tytułem i przyciskiem dodaj
+                    Row(
               children: [
                 // Przycisk wstecz
                 GestureDetector(
@@ -1927,21 +1931,26 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                     ),
             ),
             // Przycisk "Usuń zaznaczone" (widoczny gdy >= 1 zaznaczona)
-            if (_selectedLabelIds.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: _deleteSelectedLabels,
-                  icon: const Icon(LucideIcons.trash, size: 18),
-                  label: Text('Usuń zaznaczone (${_selectedLabelIds.length})'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
+                    // Przycisk "Usuń zaznaczone" (widoczny gdy >= 1 zaznaczona)
+                    if (_selectedLabelIds.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          onPressed: _deleteSelectedLabels,
+                          icon: const Icon(LucideIcons.trash, size: 18),
+                          label: Text('Usuń zaznaczone (${_selectedLabelIds.length})'),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ],
+            ),
           ],
         ),
       ),
@@ -2237,18 +2246,31 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
     final isDark = theme.brightness == Brightness.dark;
     final sortedTags = _customTags.toList()..sort();
 
-    return DraggableScrollableSheet(
-      initialChildSize: 0.6,
-      minChildSize: 0.4,
-      maxChildSize: 0.9,
-      expand: false,
-      builder: (context, scrollController) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(BottomSheetConstants.radius),
+        ),
+      ),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Column(
           children: [
-            // Header z przyciskiem wstecz
-            Row(
+            const BottomSheetDragHandle(),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: BottomSheetConstants.contentPadding,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header z przyciskiem wstecz
+                    Row(
               children: [
                 // Przycisk wstecz
                 GestureDetector(
@@ -2381,6 +2403,9 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
                         );
                       },
                     ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -2507,41 +2532,35 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
   @override
   Widget build(BuildContext context) {
     final backgroundColor = widget.isDark
-        ? AppColors.darkBackground
-        : AppColors.lightBackground;
+        ? AppColors.darkSurface
+        : AppColors.lightSurface;
 
     return Container(
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(BottomSheetConstants.radius),
+        ),
       ),
       child: DraggableScrollableSheet(
         initialChildSize: 0.5,
         minChildSize: 0.3,
         maxChildSize: 0.85,
         expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Drag handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: widget.theme.colorScheme.onSurfaceVariant.withAlpha(
-                      80,
-                    ),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+        builder: (context, scrollController) => Column(
+          children: [
+            const BottomSheetDragHandle(),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: BottomSheetConstants.contentPadding,
                 ),
-              ),
-              // Header
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header
               Row(
                 children: [
                   Icon(LucideIcons.lightbulb, color: Colors.amber, size: 24),
@@ -2656,8 +2675,12 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
             ],
           ),
+        ),
+      ),
+          ],
         ),
       ),
     );
