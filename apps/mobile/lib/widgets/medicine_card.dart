@@ -466,13 +466,31 @@ class _MedicineCardState extends State<MedicineCard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header (title only)
-        Text(
-          'Wskazania',
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        // Header with edit button (align-right)
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Wskazania',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: () => _showEditWskazaniaDialog(context),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                child: Icon(
+                  LucideIcons.squarePen,
+                  size: 20,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
 
@@ -494,21 +512,6 @@ class _MedicineCardState extends State<MedicineCard>
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-
-        // Edit button (moved here from header)
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => _showEditWskazaniaDialog(context),
-          child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-            child: Icon(
-              LucideIcons.squarePen,
-              size: 20,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-        ),
 
         // CTA area: Ulotka + Unpin (aligned right)
         const SizedBox(height: 12),
@@ -1351,15 +1354,23 @@ class _MedicineCardState extends State<MedicineCard>
     ThemeData theme,
     bool isDark,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // CTA najpierw
-        Row(
-          children: [
-            NeuButton(
-              onPressed: () => _showDeleteConfirmationDialog(context),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          // Usuń lek button (flat style, no NeuButton shadows)
+          GestureDetector(
+            onTap: () => _showDeleteConfirmationDialog(context),
+            child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.expired.withAlpha(isDark ? 25 : 15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.expired.withAlpha(50),
+                  width: 1,
+                ),
+              ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1376,15 +1387,18 @@ class _MedicineCardState extends State<MedicineCard>
                 ],
               ),
             ),
-            // Przycisk zmiany nazwy dla niezweryfikowanych leków
-            if (!_medicine.isVerifiedByBarcode) ...[
-              const SizedBox(width: 12),
-              NeuButton(
-                onPressed: () => _showEditNameDialog(context),
+          ),
+          // Przycisk zmiany nazwy dla niezweryfikowanych leków
+          if (!_medicine.isVerifiedByBarcode) ...[
+            const SizedBox(width: 12),
+            GestureDetector(
+              onTap: () => _showEditNameDialog(context),
+              child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 10,
                 ),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -1405,10 +1419,10 @@ class _MedicineCardState extends State<MedicineCard>
                   ],
                 ),
               ),
-            ],
+            ),
           ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 
