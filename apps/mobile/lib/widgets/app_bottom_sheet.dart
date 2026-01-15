@@ -3,15 +3,17 @@ import '../theme/app_theme.dart';
 
 /// Stałe dla bottomSheet - spójny design w całej aplikacji
 class BottomSheetConstants {
-  static const double radius = 20.0;
-  static const double dragHandleWidth = 48.0; // szerszy dla lepszej widoczności
+  static const double radius = 24.0;
+  static const double innerRadius = 20.0;
+  static const double dragHandleWidth = 48.0;
   static const double dragHandleHeight = 4.0;
   static const double dragHandleTopPadding = 12.0;
   static const double contentPadding = 24.0;
+  static const double framePadding = 12.0; // padding ramki zewnętrznej
 }
 
 /// Reużywalny drag handle dla bottomSheet
-/// Automatycznie dostosowuje kolor do motywu
+/// Znajduje się w zewnętrznej ramce, nad wewnętrznym kontenerem
 class BottomSheetDragHandle extends StatelessWidget {
   const BottomSheetDragHandle({super.key});
 
@@ -25,13 +27,12 @@ class BottomSheetDragHandle extends StatelessWidget {
         height: BottomSheetConstants.dragHandleHeight,
         margin: const EdgeInsets.only(
           top: BottomSheetConstants.dragHandleTopPadding,
-          bottom: 16,
+          bottom: 8,
         ),
         decoration: BoxDecoration(
-          // Bardziej kontrastowy kolor dla lepszej widoczności
           color: isDark
-              ? AppColors.darkTextMuted.withAlpha(150) // #94a3b8 z alpha
-              : AppColors.lightTextMuted.withAlpha(120), // #4b5563 z alpha
+              ? AppColors.darkTextMuted.withAlpha(150)
+              : AppColors.lightTextMuted.withAlpha(100),
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -39,17 +40,69 @@ class BottomSheetDragHandle extends StatelessWidget {
   }
 }
 
+/// Wewnętrzny kontener z efektem neumorficznym (inset)
+/// Tworzy efekt "wgłębienia" dla treści
+class _InnerContentContainer extends StatelessWidget {
+  final Widget child;
+  final bool isDark;
+
+  const _InnerContentContainer({
+    required this.child,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Kolory dla efektu dwutonowego tła
+    final innerBgColor = isDark
+        ? AppColors.darkSurface // ciemniejszy = efekt wgłębienia
+        : Colors.white;         // biały = kontrast z ramką
+
+    final innerShadowDark = isDark
+        ? Colors.black.withAlpha(40)
+        : AppColors.lightShadowDark.withAlpha(60);
+
+    final innerShadowLight = isDark
+        ? AppColors.darkSurfaceLight.withAlpha(30)
+        : Colors.white.withAlpha(200);
+
+    return Container(
+      margin: const EdgeInsets.only(
+        left: BottomSheetConstants.framePadding,
+        right: BottomSheetConstants.framePadding,
+        bottom: BottomSheetConstants.framePadding,
+      ),
+      decoration: BoxDecoration(
+        color: innerBgColor,
+        borderRadius: BorderRadius.circular(BottomSheetConstants.innerRadius),
+        // Efekt inset shadow - neumorficzne "wgłębienie"
+        boxShadow: [
+          // Cień wewnętrzny górny-lewy (ciemny)
+          BoxShadow(
+            color: innerShadowDark,
+            offset: const Offset(2, 2),
+            blurRadius: 6,
+            spreadRadius: -2,
+          ),
+          // Cień wewnętrzny dolny-prawy (jasny) - highlight
+          BoxShadow(
+            color: innerShadowLight,
+            offset: const Offset(-1, -1),
+            blurRadius: 4,
+            spreadRadius: -1,
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
+    );
+  }
+}
+
 /// Helper do wyświetlania ustandaryzowanych bottomSheet
-/// Zapewnia spójny wygląd: zaokrąglone rogi, odpowiednie tło, obsługa klawiatury
+/// Dwuwarstwowa struktura: zewnętrzna ramka + wewnętrzny kontener treści
 class AppBottomSheet {
-  /// Wyświetla prosty bottomSheet z automatycznym stylem
-  ///
-  /// [builder] - funkcja budująca zawartość (otrzymuje scrollController dla DraggableScrollableSheet)
-  /// [initialChildSize] - początkowa wysokość (0.0-1.0), domyślnie 0.5
-  /// [minChildSize] - minimalna wysokość przy przeciąganiu
-  /// [maxChildSize] - maksymalna wysokość przy przeciąganiu
-  /// [isDismissible] - czy można zamknąć przez tap poza sheetem
-  /// [enableDrag] - czy można przeciągać sheet
+  /// Wyświetla bottomSheet z dwuwarstwowym tłem neumorficznym
   static Future<T?> show<T>({
     required BuildContext context,
     required Widget Function(BuildContext context, ScrollController scrollController) builder,
@@ -70,48 +123,26 @@ class AppBottomSheet {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
 
-        // Kolory dla efektu neumorficznego - bottomSheet "wypływa" z tła
-        final sheetColor = isDark
-            ? AppColors.darkSurfaceLight  // jaśniejszy niż darkSurface
-            : AppColors.lightSurface;     // jaśniejszy niż lightBackground
-        final topGlowColor = isDark
-            ? AppColors.darkSurface.withAlpha(200)
-            : Colors.white.withAlpha(180);
-        final shadowColor = isDark
-            ? Colors.black.withAlpha(60)
-            : AppColors.lightShadowDark.withAlpha(80);
+        // Kolor zewnętrznej ramki (frame)
+        final frameColor = isDark
+            ? AppColors.darkSurfaceLight
+            : AppColors.lightSurface;
 
         return Container(
+          // Zewnętrzna ramka
           decoration: BoxDecoration(
-            // Gradient od góry - subtelny efekt głębi
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              stops: const [0.0, 0.03, 1.0],
-              colors: [
-                topGlowColor,  // jasna krawędź na górze
-                sheetColor,    // główny kolor
-                sheetColor,    // główny kolor
-              ],
-            ),
+            color: frameColor,
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(BottomSheetConstants.radius),
             ),
-            // Cienie neumorficzne - efekt "wypływania"
+            // Subtelny cień dla całego bottomSheet
             boxShadow: [
-              // Górny cień (ciemny) - tworzy głębię
               BoxShadow(
-                color: shadowColor,
+                color: isDark
+                    ? Colors.black.withAlpha(80)
+                    : AppColors.lightShadowDark.withAlpha(60),
                 offset: const Offset(0, -4),
-                blurRadius: 16,
-                spreadRadius: 0,
-              ),
-              // Wewnętrzna poświata (jasna krawędź)
-              BoxShadow(
-                color: topGlowColor,
-                offset: const Offset(0, -1),
-                blurRadius: 2,
-                spreadRadius: 0,
+                blurRadius: 20,
               ),
             ],
           ),
@@ -123,9 +154,14 @@ class AppBottomSheet {
                   expand: false,
                   builder: (context, scrollController) => Column(
                     children: [
+                      // Drag handle w zewnętrznej ramce
                       const BottomSheetDragHandle(),
+                      // Wewnętrzny kontener z treścią
                       Expanded(
-                        child: builder(context, scrollController),
+                        child: _InnerContentContainer(
+                          isDark: isDark,
+                          child: builder(context, scrollController),
+                        ),
                       ),
                     ],
                   ),
@@ -134,7 +170,10 @@ class AppBottomSheet {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const BottomSheetDragHandle(),
-                    builder(context, ScrollController()),
+                    _InnerContentContainer(
+                      isDark: isDark,
+                      child: builder(context, ScrollController()),
+                    ),
                   ],
                 ),
         );
@@ -142,8 +181,7 @@ class AppBottomSheet {
     );
   }
 
-  /// Wyświetla bottomSheet z prostą listą opcji (jak na screenshotach)
-  /// Idealny do menu kontekstowych, sortowania, itp.
+  /// Wyświetla bottomSheet z prostą listą opcji
   static Future<T?> showOptions<T>({
     required BuildContext context,
     required List<BottomSheetOption<T>> options,
@@ -161,7 +199,8 @@ class AppBottomSheet {
         return SingleChildScrollView(
           controller: scrollController,
           padding: const EdgeInsets.symmetric(
-            horizontal: BottomSheetConstants.contentPadding,
+            horizontal: BottomSheetConstants.contentPadding - BottomSheetConstants.framePadding,
+            vertical: 16,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -169,40 +208,31 @@ class AppBottomSheet {
             children: [
               // Opcjonalny nagłówek
               if (title != null) ...[
-                Row(
-                  children: [
-                    if (titleIcon != null) ...[
-                      Icon(titleIcon, color: theme.colorScheme.primary),
-                      const SizedBox(width: 12),
-                    ],
-                    Text(
-                      title,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Row(
+                    children: [
+                      if (titleIcon != null) ...[
+                        Icon(titleIcon, color: theme.colorScheme.primary),
+                        const SizedBox(width: 12),
+                      ],
+                      Text(
+                        title,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 16),
               ],
-              // Lista opcji
+              // Lista opcji - bez pełnych separatorów
               ...options.asMap().entries.map((entry) {
-                final index = entry.key;
                 final option = entry.value;
-                final isLast = index == options.length - 1;
-
-                return Column(
-                  children: [
-                    _OptionTile<T>(option: option),
-                    if (!isLast)
-                      Divider(
-                        height: 1,
-                        color: theme.dividerColor.withAlpha(80),
-                      ),
-                  ],
-                );
+                return _OptionTile<T>(option: option);
               }),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
             ],
           ),
         );
@@ -232,7 +262,7 @@ class BottomSheetOption<T> {
   });
 }
 
-/// Widget dla pojedynczej opcji
+/// Widget dla pojedynczej opcji - bez pełnych linii separatorów
 class _OptionTile<T> extends StatelessWidget {
   final BottomSheetOption<T> option;
 
@@ -255,9 +285,9 @@ class _OptionTile<T> extends StatelessWidget {
           Navigator.pop(context, option.value);
         }
       },
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         child: Row(
           children: [
             Icon(option.icon, color: color, size: 22),
