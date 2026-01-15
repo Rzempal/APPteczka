@@ -2401,6 +2401,7 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
                         );
                       },
                     ),
+                    ),
                   ],
                 ),
               ),
