@@ -1731,62 +1731,62 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                   children: [
                     // Header z przyciskiem wstecz, tytułem i przyciskiem dodaj
                     Row(
-              children: [
-                // Przycisk wstecz
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: NeuDecoration.flatSmall(
-                      isDark: isDark,
-                      radius: 8,
+                      children: [
+                        // Przycisk wstecz
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: NeuDecoration.flatSmall(
+                              isDark: isDark,
+                              radius: 8,
+                            ),
+                            child: Icon(
+                              LucideIcons.arrowLeft,
+                              size: 20,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(LucideIcons.tags, color: theme.colorScheme.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Zarządzaj etykietami',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        // Przycisk dodaj etykietę
+                        GestureDetector(
+                          onTap: _createLabel,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: NeuDecoration.flatSmall(
+                              isDark: isDark,
+                              radius: 8,
+                            ),
+                            child: Icon(
+                              LucideIcons.plus,
+                              size: 20,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Icon(
-                      LucideIcons.arrowLeft,
-                      size: 20,
-                      color: theme.colorScheme.primary,
+                    const SizedBox(height: 8),
+                    Text(
+                      'Przeciągnij etykietę aby zmienić kolejność. Zaznacz aby usunąć wiele.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Icon(LucideIcons.tags, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Zarządzaj etykietami',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                // Przycisk dodaj etykietę
-                GestureDetector(
-                  onTap: _createLabel,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: NeuDecoration.flatSmall(
-                      isDark: isDark,
-                      radius: 8,
-                    ),
-                    child: Icon(
-                      LucideIcons.plus,
-                      size: 20,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Przeciągnij etykietę aby zmienić kolejność. Zaznacz aby usunąć wiele.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _labels.isEmpty
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: _labels.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -1929,8 +1929,7 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                         );
                       },
                     ),
-            ),
-            // Przycisk "Usuń zaznaczone" (widoczny gdy >= 1 zaznaczona)
+                    ),
                     // Przycisk "Usuń zaznaczone" (widoczny gdy >= 1 zaznaczona)
                     if (_selectedLabelIds.isNotEmpty) ...[
                       const SizedBox(height: 16),
@@ -2271,46 +2270,46 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
                   children: [
                     // Header z przyciskiem wstecz
                     Row(
-              children: [
-                // Przycisk wstecz
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: NeuDecoration.flatSmall(
-                      isDark: isDark,
-                      radius: 8,
+                      children: [
+                        // Przycisk wstecz
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: NeuDecoration.flatSmall(
+                              isDark: isDark,
+                              radius: 8,
+                            ),
+                            child: Icon(
+                              LucideIcons.arrowLeft,
+                              size: 20,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(LucideIcons.hash, color: theme.colorScheme.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Moje tagi',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    child: Icon(
-                      LucideIcons.arrowLeft,
-                      size: 20,
-                      color: theme.colorScheme.primary,
+                    const SizedBox(height: 8),
+                    Text(
+                      'Edytuj lub usuń własne tagi z apteczki.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Icon(LucideIcons.hash, color: theme.colorScheme.primary),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Moje tagi',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Edytuj lub usuń własne tagi z apteczki.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: sortedTags.isEmpty
+                    const SizedBox(height: 16),
+                    Expanded(
+                      child: sortedTags.isEmpty
                   ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -2531,9 +2530,8 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = widget.isDark
-        ? AppColors.darkSurface
-        : AppColors.lightSurface;
+    final backgroundColor =
+        widget.isDark ? AppColors.darkSurface : AppColors.lightSurface;
 
     return Container(
       decoration: BoxDecoration(
@@ -2561,125 +2559,123 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header
-              Row(
-                children: [
-                  Icon(LucideIcons.lightbulb, color: Colors.amber, size: 24),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Podpowiedzi',
-                    style: widget.theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // === Gesty na karcie leku ===
-              _buildSection(
-                icon: LucideIcons.hand,
-                title: 'Gesty na karcie leku',
-                items: [
-                  'Przytrzymanie → pokaż szczegóły',
-                  'Dotknięcie → rozwija kartę w widoku listy',
-                  'Włącz w ustawieniach gesty przeciągania dla szybkiej edycji etykiet i notatek',
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // === Ciekawe funkcje (rozwijane) ===
-              GestureDetector(
-                onTap: () =>
-                    setState(() => _isFeaturesExpanded = !_isFeaturesExpanded),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: NeuDecoration.flat(
-                    isDark: widget.isDark,
-                    radius: 16,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        LucideIcons.sparkles,
-                        color: widget.theme.colorScheme.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Ciekawe funkcje',
-                          style: widget.theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+                    Row(
+                      children: [
+                        Icon(LucideIcons.lightbulb,
+                            color: Colors.amber, size: 24),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Podpowiedzi',
+                          style: widget.theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                      AnimatedRotation(
-                        duration: const Duration(milliseconds: 200),
-                        turns: _isFeaturesExpanded ? 0.5 : 0,
-                        child: Icon(
-                          LucideIcons.chevronDown,
-                          color: widget.theme.colorScheme.onSurfaceVariant,
-                          size: 20,
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    // === Gesty na karcie leku ===
+                    _buildSection(
+                      icon: LucideIcons.hand,
+                      title: 'Gesty na karcie leku',
+                      items: [
+                        'Przytrzymanie → pokaż szczegóły',
+                        'Dotknięcie → rozwija kartę w widoku listy',
+                        'Włącz w ustawieniach gesty przeciągania dla szybkiej edycji etykiet i notatek',
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    // === Ciekawe funkcje (rozwijane) ===
+                    GestureDetector(
+                      onTap: () => setState(
+                          () => _isFeaturesExpanded = !_isFeaturesExpanded),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: NeuDecoration.flat(
+                          isDark: widget.isDark,
+                          radius: 16,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              LucideIcons.sparkles,
+                              color: widget.theme.colorScheme.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Ciekawe funkcje',
+                                style:
+                                    widget.theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            AnimatedRotation(
+                              duration: const Duration(milliseconds: 200),
+                              turns: _isFeaturesExpanded ? 0.5 : 0,
+                              child: Icon(
+                                LucideIcons.chevronDown,
+                                color: widget.theme.colorScheme.onSurfaceVariant,
+                                size: 20,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    // Rozwinięta zawartość
+                    AnimatedCrossFade(
+                      duration: const Duration(milliseconds: 200),
+                      crossFadeState: _isFeaturesExpanded
+                          ? CrossFadeState.showSecond
+                          : CrossFadeState.showFirst,
+                      firstChild: const SizedBox.shrink(),
+                      secondChild: Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: Column(
+                          children: [
+                            _buildFeatureItem(
+                              icon: LucideIcons.calculator,
+                              title: 'Kalkulator zapasu leku',
+                              description: 'Sprawdź do kiedy starczy ci leków',
+                              path: 'Szczegóły leku → Termin ważności',
+                            ),
+                            const Divider(height: 24),
+                            _buildFeatureItem(
+                              icon: LucideIcons.copy,
+                              title: 'Wykrywanie duplikatów',
+                              description:
+                                  'Specjalna ikona pokaże się na karcie leku.\nMożesz też przefiltrować listę po duplikatach.',
+                              path: 'Filtry → Termin ważności',
+                            ),
+                            const Divider(height: 24),
+                            _buildFeatureItem(
+                              icon: LucideIcons.boxes,
+                              title: 'Eksportuj listy',
+                              description:
+                                  'Wyeksportuj do PDF w formie tabelki gotowej do wydruku.\nSkopiuj do schowka wypisane po przecinku.',
+                              path: 'Zarządzaj apteczką',
+                            ),
+                            const Divider(height: 24),
+                            _buildFeatureItem(
+                              icon: LucideIcons.search,
+                              title: 'Szukaj w ulotce',
+                              description: 'Wyszukaj i przypnij ulotkę leku',
+                              path: 'Karta leku → Ulotka → Podepnij ulotkę',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
               ),
-
-              // Rozwinięta zawartość
-              AnimatedCrossFade(
-                duration: const Duration(milliseconds: 200),
-                crossFadeState: _isFeaturesExpanded
-                    ? CrossFadeState.showSecond
-                    : CrossFadeState.showFirst,
-                firstChild: const SizedBox.shrink(),
-                secondChild: Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Column(
-                    children: [
-                      _buildFeatureItem(
-                        icon: LucideIcons.calculator,
-                        title: 'Kalkulator zapasu leku',
-                        description: 'Sprawdź do kiedy starczy ci leków',
-                        path: 'Szczegóły leku → Termin ważności',
-                      ),
-                      const Divider(height: 24),
-                      _buildFeatureItem(
-                        icon: LucideIcons.copy,
-                        title: 'Wykrywanie duplikatów',
-                        description:
-                            'Specjalna ikona pokaże się na karcie leku.\nMożesz też przefiltrować listę po duplikatach.',
-                        path: 'Filtry → Termin ważności',
-                      ),
-                      const Divider(height: 24),
-                      _buildFeatureItem(
-                        icon: LucideIcons.boxes,
-                        title: 'Eksportuj listy',
-                        description:
-                            'Wyeksportuj do PDF w formie tabelki gotowej do wydruku.\nSkopiuj do schowka wypisane po przecinku.',
-                        path: 'Zarządzaj apteczką',
-                      ),
-                      const Divider(height: 24),
-                      _buildFeatureItem(
-                        icon: LucideIcons.search,
-                        title: 'Szukaj w ulotce',
-                        description: 'Wyszukaj i przypnij ulotkę leku',
-                        path: 'Karta leku → Ulotka → Podepnij ulotkę',
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
+            ),
           ],
         ),
       ),

@@ -268,51 +268,50 @@ class _FiltersSheetState extends State<FiltersSheet> {
               children: [
                 // Handle
                 const BottomSheetDragHandle(),
-
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          LucideIcons.funnel,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Filtry',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                    // Clear filters - red icon
-                    if (_state.hasActiveFilters)
-                      IconButton(
-                        onPressed: _clearFilters,
-                        icon: Icon(
-                          LucideIcons.funnelX,
-                          color: AppColors.expired,
-                        ),
-                        tooltip: 'Wyczyść filtry',
-                      ),
-                  ],
-                ),
-              ),
-
-              const Divider(),
-
-              // Scrollable content
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: scrollController,
+                // Header
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      Row(
+                        children: [
+                          Icon(
+                            LucideIcons.funnel,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Filtry',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      // Clear filters - red icon
+                      if (_state.hasActiveFilters)
+                        IconButton(
+                          onPressed: _clearFilters,
+                          icon: Icon(
+                            LucideIcons.funnelX,
+                            color: AppColors.expired,
+                          ),
+                          tooltip: 'Wyczyść filtry',
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(),
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                       const SizedBox(height: 16),
 
                       // ========== MOJE ETYKIETY ==========
