@@ -8,7 +8,7 @@ param(
     [string]$Channel = "production"
 )
 
-$SCRIPT_VERSION = "v12.6"
+$SCRIPT_VERSION = "v12.7"
 $ErrorActionPreference = "Stop"
 
 # === Konfiguracja ===
@@ -129,121 +129,6 @@ $commitLines
     Print-Success "Log zapisany: $LOG_PATH"
 }
 
-function Cleanup-RemoteApks {
-    param(
-        [string]$WinSCP,
-        [string]$OpenCmd,
-        [string]$RemotePath,
-        [string]$Pattern,
-        [int]$KeepCount
-    )
-    
-    # Ensure RemotePath ends with / for consistency
-    if (-not $RemotePath.EndsWith("/")) { $RemotePath += "/" }
-    
-    Print-Warn "Sprzatanie starych APK (Limit: $KeepCount, Sciezka: $RemotePath, Wzorzec: $Pattern)..."
-    
-    $xmlLog = Join-Path $env:TEMP "winscp_ls_$([guid]::NewGuid()).xml"
-    $lsScript = Join-Path $env:TEMP "winscp_ls_$([guid]::NewGuid()).txt"
-    $rmScript = Join-Path $env:TEMP "winscp_rm_$([guid]::NewGuid()).txt"
-    
-    $result = [PSCustomObject]@{
-        Success        = $false
-        DeletedCount   = 0
-        DeletedFiles   = @()
-        RemainingFiles = @()
-        Error          = $null
-    }
-
-    try {
-        # Create ls script
-        $OpenCmd | Out-File $lsScript -Encoding UTF8
-        "ls ""$RemotePath""" | Out-File $lsScript -Append -Encoding UTF8
-        "exit" | Out-File $lsScript -Append -Encoding UTF8
-        
-        & $WinSCP /script="$lsScript" /xmllog="$xmlLog" /loglevel=0 | Out-Null
-        
-        if (Test-Path $xmlLog) {
-            [xml]$xml = Get-Content $xmlLog
-            
-            # Use XPath to find all file elements
-            # WinSCP XML: <file><filename value="foo.apk" /><type value="-" /></file>
-            $fileNodes = $xml.SelectNodes("//file")
-            Print-Info "Debug: Znaleziono $($fileNodes.Count) wszystkich elementow w katalogu (XML Nodes)."
-            
-            # v12.6 - Fix: Robust XML parsing for WinSCP log
-            $allMatchingFiles = @()
-            $debugCount = 0
-            
-            foreach ($node in $fileNodes) {
-                # Robustly get values, handling potential differences if raw text was returned
-                # WinSCP typically puts data in 'value' attribute
-                $name = if ($node.filename.value) { $node.filename.value } else { $node.filename }
-                $type = if ($node.type.value) { $node.type.value } else { $node.type }
-                
-                # Debug logs for first few items
-                if ($debugCount -lt 5) {
-                    Print-Info "Debug: Node Check - Name='$name' Type='$type' RawType='$($node.type)'"
-                    $debugCount++
-                }
-
-                # WinSCP uses type="-" for files, "d" for directories
-                # We strictly check for type "-" and name matching the pattern
-                if ($type -eq "-" -and $name -like $Pattern) {
-                    # Store a custom object with the resolved name to avoid re-parsing
-                    $allMatchingFiles += [PSCustomObject]@{
-                        filename     = $name
-                        OriginalNode = $node
-                    }
-                }
-            }
-            
-            Print-Info "Debug: Dopasowano $($allMatchingFiles.Count) plikow do wzorca $Pattern."
-            
-            # Sort descending by filename (contains timestamp)
-            $sortedFiles = $allMatchingFiles | Sort-Object -Property filename -Descending
-            $result.RemainingFiles = @($sortedFiles.filename)
-            
-            if ($sortedFiles.Count -gt $KeepCount) {
-                $toDelete = $sortedFiles[$KeepCount..($sortedFiles.Count - 1)]
-                $result.DeletedCount = $toDelete.Count
-                $result.DeletedFiles = @($toDelete.filename)
-                $result.RemainingFiles = @($sortedFiles[0..($KeepCount - 1)].filename)
-
-                Print-Info ("Znaleziono {0} starych APK do usuniecia." -f $toDelete.Count)
-                
-                $OpenCmd | Out-File $rmScript -Encoding UTF8
-                foreach ($f in $toDelete) {
-                    $remoteFile = $RemotePath + $f.filename
-                    Print-Info "  Usuwanie: $($f.filename)"
-                    "rm ""$remoteFile""" | Out-File $rmScript -Append -Encoding UTF8
-                }
-                "exit" | Out-File $rmScript -Append -Encoding UTF8
-                
-                & $WinSCP /script="$rmScript" /loglevel=0 | Out-Null
-                Print-Success "Sprzatanie zakonczone sukcesem."
-                $result.Success = $true
-            }
-            else {
-                Print-Info "Brak starych APK do usuniecia."
-                $result.Success = $true
-            }
-        }
-        else {
-            $result.Error = "Nie udalo sie utworzyc logu XML z WinSCP."
-        }
-    }
-    catch {
-        Print-Warn "Pominieto sprzatanie z powodu bledu: $_"
-        $result.Error = $_.ToString()
-    }
-    finally {
-        if (Test-Path $lsScript) { Remove-Item $lsScript -ErrorAction SilentlyContinue }
-        if (Test-Path $xmlLog) { Remove-Item $xmlLog -ErrorAction SilentlyContinue }
-        if (Test-Path $rmScript) { Remove-Item $rmScript -ErrorAction SilentlyContinue }
-    }
-    return $result
-}
 
 # === Start Skryptu ===
 
@@ -264,7 +149,7 @@ $timerPs = [powershell]::Create().AddScript({
 $timerPs.Runspace = $rs
 $timerAsync = $timerPs.BeginInvoke()
 
-Print-Info "=== Deploy APK Script v12.5 (Cleanup Fix) ==="
+Print-Info "=== Deploy APK Script $SCRIPT_VERSION ==="
 Load-Env
 
 $DEPLOY_HOST = if ($env:DEPLOY_HOST) { $env:DEPLOY_HOST } else { "" }
@@ -487,9 +372,6 @@ if (-not $SkipUpload) {
             Print-Success "[4/4] Upload zakonczony sukcesem!"
             $DEPLOY_STATUS = "ok"
 
-            # 5. Cleanup
-            $APK_PATTERN = if ($Channel -eq "internal") { "karton-dev_*.apk" } else { "karton-z-lekami_*.apk" }
-            $CLEANUP_RESULT = Cleanup-RemoteApks -WinSCP $winScp -OpenCmd $openCmd -RemotePath $UPLOAD_REMOTE_PATH -Pattern $APK_PATTERN -KeepCount $RETENTION_COUNT
         }
         else {
             Print-Error "[4/4] Blad uploadu (ExitCode: $LASTEXITCODE). Sprawdz logi w releases/winscp_log.xml"
