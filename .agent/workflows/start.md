@@ -20,7 +20,7 @@ When the user invokes this skill (e.g., `/start`), they will provide:
 **Example usage:**
 
 ```
-/start Cel: Refaktoryzacja aplikacji. Tasks:
+/start #Cel: Refaktoryzacja aplikacji. ##Tasks:
 - wprowadź zmianę "ABC"
 - zredaguj treść w sekcji "XYZ"
 ```

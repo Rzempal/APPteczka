@@ -2151,7 +2151,7 @@ class _MedicineCardState extends State<MedicineCard>
               autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Ile tabletek dziennie?',
-                hintText: 'np. 2',
+                hintText: 'np. 2 (0 = anuluj)',
                 suffixText: 'szt./dzień',
                 border: OutlineInputBorder(),
               ),
@@ -2174,8 +2174,11 @@ class _MedicineCardState extends State<MedicineCard>
       ),
     );
 
-    if (result != null && result > 0) {
-      final updated = _medicine.copyWith(dailyIntake: result);
+    if (result != null) {
+      // 0 = anuluj kalkulację (user przestał brać tabletki)
+      final updated = _medicine.copyWith(
+        dailyIntake: result == 0 ? null : result,
+      );
       await widget.storageService?.saveMedicine(updated);
       setState(() => _medicine = updated);
       widget.onMedicineUpdated?.call();
