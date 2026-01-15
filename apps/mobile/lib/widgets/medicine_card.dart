@@ -288,9 +288,8 @@ class _MedicineCardState extends State<MedicineCard>
               ),
             )
           else
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               child: Icon(
                 LucideIcons.chevronUp,
                 size: 16,
@@ -1450,33 +1449,31 @@ class _MedicineCardState extends State<MedicineCard>
     ThemeData theme,
     bool isDark,
   ) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        NeuButton(
-          onPressed: widget.onExpand,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                LucideIcons.chevronUp,
-                size: 18,
+    return GestureDetector(
+      onTap: widget.onExpand,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              LucideIcons.chevronUp,
+              size: 18,
+              color: theme.colorScheme.onSurface,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Zwiń',
+              style: TextStyle(
                 color: theme.colorScheme.onSurface,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Zwiń',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurface,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 

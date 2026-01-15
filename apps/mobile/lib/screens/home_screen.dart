@@ -385,7 +385,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    LucideIcons.boxes,
+                    LucideIcons.menu,
                     size: 18,
                     color: theme.colorScheme.primary,
                   ),
@@ -787,7 +787,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Header
               Row(
                 children: [
-                  Icon(LucideIcons.boxes, color: theme.colorScheme.primary),
+                  Icon(LucideIcons.menu, color: theme.colorScheme.primary),
                   const SizedBox(width: 12),
                   Text(
                     'Zarządzaj apteczką',

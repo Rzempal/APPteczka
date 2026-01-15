@@ -300,16 +300,16 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       }
     } else if (_mode == ScannerMode.productPhoto) {
       // Tryb zdjecia nazwy produktu (gdy brak w RPL)
-      icon = LucideIcons.camera;
+      icon = LucideIcons.scanText;
       iconColor = Colors.purple;
       title = 'Produkt nierozpoznany';
-      subtitle = 'Zrob zdjecie nazwy produktu';
+      subtitle = 'Zrób zdjęcie nazwy produktu';
     } else {
       // Tryb daty waznosci - pokaz nazwe leku
       icon = LucideIcons.camera;
       iconColor = Colors.orange;
-      title = _currentDrug?.displayName ?? 'Dodaj date waznosci';
-      subtitle = 'Zrob zdjecie daty waznosci lub Pomin';
+      title = _currentDrug?.displayName ?? 'Dodaj datę ważności';
+      subtitle = 'Zrób zdjęcie daty ważności lub Pomiń';
     }
 
     return NeuInsetContainer(
@@ -451,92 +451,108 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 ),
               ),
 
-            // Blad
+            // Blad (top-center)
             if (_lastError != null && !_isProcessing)
               Positioned(
-                bottom: 16,
-                left: 16,
-                right: 16,
+                top: 16,
+                left: 60,
+                right: 60,
                 child: Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: Colors.red.shade700,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     _lastError!,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
                     textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
 
-            // Przyciski kontrolne
+            // Latarka (top-left)
             Positioned(
-              bottom: 16,
-              right: 16,
-              child: Row(
-                children: [
-                  // Latarka
-                  _buildControlButton(
-                    icon: LucideIcons.flashlight,
-                    onTap: () => _controller?.toggleTorch(),
-                  ),
-                  const SizedBox(width: 8),
-                  // Przelacz kamere
-                  _buildControlButton(
-                    icon: LucideIcons.switchCamera,
-                    onTap: () => _controller?.switchCamera(),
-                  ),
-                ],
+              top: 16,
+              left: 16,
+              child: _buildControlButton(
+                icon: LucideIcons.flashlight,
+                onTap: () => _controller?.toggleTorch(),
               ),
             ),
 
-            // Tryb daty - przycisk zdjecia (prawy gorny rog)
-            if (_mode == ScannerMode.expiryDate)
+            // Przełącz kamerę (top-right)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: _buildControlButton(
+                icon: LucideIcons.switchCamera,
+                onTap: () => _controller?.switchCamera(),
+              ),
+            ),
+
+            // Tryb EAN - przycisk "Brak kodu / kod nieczytelny" (bottom-center)
+            if (_mode == ScannerMode.ean)
               Positioned(
-                top: 16,
-                right: 16,
-                child: _buildControlButton(
-                  icon: LucideIcons.camera,
-                  label: 'Zapisz zdjecie',
-                  onTap: _captureExpiryDatePhoto,
+                bottom: 16,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: _buildControlButton(
+                    icon: LucideIcons.antenna,
+                    label: 'Brak kodu / kod nieczytelny',
+                    onTap: _skipBarcodeScan,
+                  ),
                 ),
               ),
 
-            // Tryb daty - przycisk pomin (lewy dolny rog)
+            // Tryb daty - przycisk Pomiń (bottom-left)
             if (_mode == ScannerMode.expiryDate)
               Positioned(
                 bottom: 16,
                 left: 16,
                 child: _buildControlButton(
-                  icon: LucideIcons.skipForward,
-                  label: 'Pomin',
+                  icon: LucideIcons.arrowBigRightDash,
+                  label: 'Pomiń',
                   onTap: _skipExpiryDate,
                 ),
               ),
 
-            // Tryb productPhoto - przycisk zdjecia nazwy (prawy gorny rog)
-            if (_mode == ScannerMode.productPhoto)
+            // Tryb daty - przycisk Zrób zdjęcie (bottom-right)
+            if (_mode == ScannerMode.expiryDate)
               Positioned(
-                top: 16,
+                bottom: 16,
                 right: 16,
                 child: _buildControlButton(
                   icon: LucideIcons.camera,
-                  label: 'Zrob zdjecie',
-                  onTap: _captureProductPhoto,
+                  label: 'Zrób zdjęcie',
+                  onTap: _captureExpiryDatePhoto,
                 ),
               ),
 
-            // Tryb productPhoto - przycisk pomin (lewy dolny rog)
+            // Tryb productPhoto - przycisk Pomiń (bottom-left)
             if (_mode == ScannerMode.productPhoto)
               Positioned(
                 bottom: 16,
                 left: 16,
                 child: _buildControlButton(
-                  icon: LucideIcons.skipForward,
-                  label: 'Pomin',
+                  icon: LucideIcons.arrowBigRightDash,
+                  label: 'Pomiń',
                   onTap: _skipProductPhoto,
+                ),
+              ),
+
+            // Tryb productPhoto - przycisk Zrób zdjęcie (bottom-right)
+            if (_mode == ScannerMode.productPhoto)
+              Positioned(
+                bottom: 16,
+                right: 16,
+                child: _buildControlButton(
+                  icon: LucideIcons.camera,
+                  label: 'Zrób zdjęcie',
+                  onTap: _captureProductPhoto,
                 ),
               ),
           ],
@@ -968,6 +984,18 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
     // Przejdz do zdjecia daty waznosci
     setState(() => _mode = ScannerMode.expiryDate);
+  }
+
+  /// Wymusza przejście do trybu zdjęcia nazwy gdy kod jest nieczytelny
+  void _skipBarcodeScan() {
+    HapticFeedback.lightImpact();
+    setState(() {
+      _currentDrug = ScannedDrug(
+        ean: 'MANUAL_${DateTime.now().millisecondsSinceEpoch}',
+      );
+      _mode = ScannerMode.productPhoto;
+      _lastError = null;
+    });
   }
 
   /// Pomija zdjecie nazwy produktu (batch mode)
