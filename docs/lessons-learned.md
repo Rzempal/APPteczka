@@ -464,4 +464,56 @@ Przy warstwowych wywołaniach API (search → details → packages):
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-14
+## 11. Błędy nawiasów przy refaktoryzacji zagnieżdżonych widgetów (Flutter)
+
+**Data:** 2026-01-15
+**Kontekst:** Standaryzacja bottomSheet - refaktoryzacja wielu plików z zagnieżdżonymi strukturami
+
+### ❌ Błąd
+
+Przy refaktoryzacji zagnieżdżonych widgetów (DraggableScrollableSheet → Column → Expanded → ternary operator) łatwo o:
+1. **Nadmiarowy nawias** - zostaje po usunięciu warstwy
+2. **Brakujący nawias** - szczególnie przy ternary `? : ` wewnątrz `child:`
+
+```dart
+// ❌ Błędnie - nadmiarowy nawias
+        ),
+      ),  // ← NADMIAROWY - nie pasuje do żadnego otwarcia!
+    ).whenComplete(() {
+
+// ❌ Błędnie - brakujący nawias po ternary
+Expanded(
+  child: isEmpty
+      ? Center(...)
+      : ListView.builder(...),  // ← BRAK zamknięcia Expanded!
+],
+```
+
+### ✅ Poprawne rozwiązanie
+
+1. **Przed refaktoryzacją:** policz pary nawiasów w metodzie
+2. **Po refaktoryzacji:** zweryfikuj że każde `(` ma odpowiadające `)`
+3. **Ternary operators:** zawsze dodaj `)` dla parent widget po obu gałęziach
+
+```dart
+// ✅ Poprawnie - struktura nawiasów
+Expanded(                           // OPEN Expanded
+  child: isEmpty
+      ? Center(...)                 // branch 1
+      : ListView.builder(...),      // branch 2
+),                                  // CLOSE Expanded ← NIE ZAPOMNIJ!
+],                                  // closes children array
+```
+
+### Zasada ogólna
+
+Przy refaktoryzacji zagnieżdżonych widgetów Flutter:
+
+- **Ternary w `child:`** = parent widget musi być zamknięty PO obu gałęziach
+- **Usuwanie warstwy** = usuń ZARÓWNO otwarcie `Widget(` JAK I zamknięcie `),`
+- **IDE nie zawsze pomoże** - błędy składniowe mogą wskazywać na złą linię
+- **Weryfikuj strukturę** przed commit - `flutter analyze` lub IDE
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-15
