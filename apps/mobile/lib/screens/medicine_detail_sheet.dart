@@ -259,13 +259,13 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                             ),
                     ),
 
-                    // Termin ważności - sekcja wielu opakowań
-                    const SizedBox(height: 20),
-                    _buildPackagesSection(context, statusColor),
-
                     // Kalkulator zużycia leku
                     const SizedBox(height: 20),
                     _buildSupplyCalculatorSection(context),
+
+                    // Termin ważności - sekcja wielu opakowań
+                    const SizedBox(height: 20),
+                    _buildPackagesSection(context, statusColor),
 
                     // Data dodania
                     const SizedBox(height: 20),
@@ -429,6 +429,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final totalPieces = _medicine.totalPieceCount;
     final supplyEndDate = _medicine.calculateSupplyEndDate();
+    final theme = Theme.of(context);
 
     // Sprawdź czy można obliczyć
     final canCalculate = totalPieces > 0;
@@ -436,37 +437,51 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header z ikoną calendar-heart
+        // Main Row: Icon + Title - CTA
         Row(
           children: [
-            Icon(LucideIcons.calendarHeart, size: 20, color: AppColors.primary),
-            const SizedBox(width: 8),
+            // Icon + Title (left-aligned)
+            Icon(LucideIcons.calendarHeart, size: 18, color: AppColors.primary),
+            const SizedBox(width: 6),
             Text(
               'Do kiedy wystarczy?',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF6b7280),
               ),
             ),
+            const Spacer(),
+            // Separator
+            Text(
+              '-',
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
+            ),
+            const Spacer(),
+            // CTA buttons (right-aligned)
+            if (!canCalculate)
+              Text(
+                'Uzupełnij ilość sztuk',
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                  fontSize: 12,
+                ),
+              )
+            else if (supplyEndDate == null)
+              _buildSetDailyIntakeButtonCompact(context, isDark)
+            else
+              _buildSupplyResultCompact(context, supplyEndDate, isDark),
           ],
         ),
-        const SizedBox(height: 12),
-
-        if (!canCalculate)
-          // Komunikat: brak danych o ilości sztuk
-          _buildSupplyMissingDataMessage(context)
-        else if (supplyEndDate == null)
-          // Przycisk: ustaw dzienne zużycie
-          _buildSetDailyIntakeButton(context, isDark)
-        else
-          // Wynik: data + liczba dni
-          _buildSupplyResult(context, supplyEndDate, isDark),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
-          'Kalkulacja szacunkowa na podstawie Twoich danych. Nie zastępuje zaleceń lekarza.',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontSize: 11,
+          'Kalkulacja szacunkowa. Nie zastępuje zaleceń lekarza.',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontSize: 10,
             fontStyle: FontStyle.italic,
           ),
         ),
@@ -486,7 +501,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
   }
 
-  /// Przycisk do ustawienia dziennego zużycia
+  /// Przycisk do ustawienia dziennego zużycia (wersja oryginalna)
   Widget _buildSetDailyIntakeButton(BuildContext context, bool isDark) {
     return GestureDetector(
       onTap: () => _showSetDailyIntakeDialog(context),
@@ -515,7 +530,36 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
   }
 
-  /// Wyświetla wynik kalkulacji: "Zabraknie od: DD.MM.YYYY (za X dni)" z CTA
+  /// Przycisk do ustawienia dziennego zużycia (wersja kompaktowa dla Row)
+  Widget _buildSetDailyIntakeButtonCompact(BuildContext context, bool isDark) {
+    return GestureDetector(
+      onTap: () => _showSetDailyIntakeDialog(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.pillBottle,
+              size: 14,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Ustaw zużycie',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Wyświetla wynik kalkulacji (wersja oryginalna)
   Widget _buildSupplyResult(
     BuildContext context,
     DateTime endDate,
@@ -592,6 +636,74 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             child: Icon(
               LucideIcons.calendarPlus,
               size: 20,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Wyświetla wynik kalkulacji (wersja kompaktowa dla Row)
+  Widget _buildSupplyResultCompact(
+    BuildContext context,
+    DateTime endDate,
+    bool isDark,
+  ) {
+    final now = DateTime.now();
+    final daysRemaining = endDate.difference(now).inDays;
+    final formattedDate =
+        '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        GestureDetector(
+          onTap: () => _showSetDailyIntakeDialog(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.calendarOff,
+                  size: 12,
+                  color: daysRemaining <= 7
+                      ? AppColors.expired
+                      : AppColors.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  formattedDate,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: daysRemaining <= 7
+                        ? AppColors.expired
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  ' ($daysRemaining d)',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        GestureDetector(
+          onTap: () => _addToCalendar(endDate),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            child: Icon(
+              LucideIcons.calendarPlus,
+              size: 14,
               color: AppColors.primary,
             ),
           ),

@@ -8,7 +8,7 @@ param(
     [string]$Channel = "production"
 )
 
-$SCRIPT_VERSION = "v12.7"
+$SCRIPT_VERSION = "v12.8"
 $ErrorActionPreference = "Stop"
 
 # === Konfiguracja ===
@@ -367,7 +367,7 @@ if (-not $SkipUpload) {
     "exit" | Out-File $tempScript -Append -Encoding UTF8
 
     try {
-        & $winScp /script="$tempScript" /log="$RELEASES_DIR\winscp_log.xml" /loglevel=0
+        & $winScp /script="$tempScript" /log="$RELEASES_DIR\winscp_log.xml" /loglevel=0 /noninteractive
         if ($LASTEXITCODE -eq 0) {
             Print-Success "[4/4] Upload zakonczony sukcesem!"
             $DEPLOY_STATUS = "ok"

@@ -382,13 +382,13 @@ class _MedicineCardState extends State<MedicineCard>
         const SizedBox(height: 16),
         _buildNoteSection(context, theme, isDark),
 
-        // === TERMIN WAŻNOŚCI ===
-        const SizedBox(height: 16),
-        _buildPackagesSection(context, theme, isDark, statusColor),
-
         // === KALKULATOR ZAPASU ===
         const SizedBox(height: 16),
         _buildSupplyCalculatorSection(context, theme, isDark),
+
+        // === TERMIN WAŻNOŚCI ===
+        const SizedBox(height: 16),
+        _buildPackagesSection(context, theme, isDark, statusColor),
 
         // === WIĘCEJ (akordeon) ===
         const SizedBox(height: 16),
@@ -945,6 +945,7 @@ class _MedicineCardState extends State<MedicineCard>
       children: [
         Row(
           children: [
+            // Icon + Title (left-aligned)
             Icon(LucideIcons.calendarHeart, size: 16, color: AppColors.primary),
             const SizedBox(width: 6),
             Text(
@@ -954,48 +955,62 @@ class _MedicineCardState extends State<MedicineCard>
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        if (!canCalculate)
-          Text(
-            'Uzupełnij ilość sztuk w opakowaniach',
-            style: TextStyle(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontStyle: FontStyle.italic,
-              fontSize: 12,
-            ),
-          )
-        else if (supplyEndDate == null)
-          GestureDetector(
-            onTap: () => _showSetDailyIntakeDialog(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.pillBottle,
-                    size: 18,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Ustaw dzienne zużycie',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
+            const Spacer(),
+            // Separator
+            Text(
+              '-',
+              style: TextStyle(
+                color: theme.colorScheme.onSurfaceVariant,
+                fontSize: 14,
               ),
             ),
-          )
-        else
-          _buildSupplyResult(context, theme, isDark, supplyEndDate),
-
+            const Spacer(),
+            // CTA buttons (right-aligned)
+            if (!canCalculate)
+              Text(
+                'Uzupełnij ilość sztuk',
+                style: TextStyle(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                  fontSize: 11,
+                ),
+              )
+            else if (supplyEndDate == null)
+              GestureDetector(
+                onTap: () => _showSetDailyIntakeDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 8,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.pillBottle,
+                        size: 14,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Ustaw zużycie',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              _buildSupplyResultCompact(context, theme, isDark, supplyEndDate),
+          ],
+        ),
         const SizedBox(height: 4),
         Text(
           'Kalkulacja szacunkowa. Nie zastępuje zaleceń lekarza.',
@@ -1009,7 +1024,7 @@ class _MedicineCardState extends State<MedicineCard>
     );
   }
 
-  Widget _buildSupplyResult(
+  Widget _buildSupplyResultCompact(
     BuildContext context,
     ThemeData theme,
     bool isDark,
@@ -1021,59 +1036,54 @@ class _MedicineCardState extends State<MedicineCard>
         '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         GestureDetector(
           onTap: () => _showSetDailyIntakeDialog(context),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   LucideIcons.calendarOff,
-                  size: 14,
+                  size: 12,
                   color: daysRemaining <= 7
                       ? AppColors.expired
                       : AppColors.primary,
                 ),
-                const SizedBox(width: 6),
-                Text.rich(
-                  TextSpan(
-                    children: [
-                      TextSpan(
-                        text: formattedDate,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: daysRemaining <= 7
-                              ? AppColors.expired
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                      TextSpan(
-                        text: ' (za $daysRemaining dni)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 4),
+                Text(
+                  formattedDate,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: daysRemaining <= 7
+                        ? AppColors.expired
+                        : theme.colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  ' ($daysRemaining d)',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 4),
         GestureDetector(
           onTap: () => _addToCalendar(endDate),
           child: Container(
-            padding: const EdgeInsets.all(10),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+            padding: const EdgeInsets.all(6),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
             child: Icon(
               LucideIcons.calendarPlus,
-              size: 20,
+              size: 14,
               color: AppColors.primary,
             ),
           ),
