@@ -1,12 +1,12 @@
 # 🎨 Neumorphism Style Guide
 
-> **Powiązane:** [DESIGN Standards](../../docs/DESIGN.md) | [Standardy Kodu](../../docs/conventions.md)
+> **Powiązane:** [Design Review](design-review.md) | [Standardy Kodu](conventions.md)
 
 ---
 
 ## 🏛️ Filozofia Stylu
 
-Neumorfizm w tym projekcie nie jest celem samym w sobie, lecz narzędziem do budowania hierarchii. Zgodnie z zasadą **KISS** z `DESIGN.md`, stosujemy go oszczędnie, aby nie zaburzyć czytelności (Accessibility).
+Neumorfizm w tym projekcie nie jest celem samym w sobie, lecz narzędziem do budowania hierarchii. Zgodnie z zasadą **KISS** (patrz [Design Review](design-review.md)), stosujemy go oszczędnie, aby nie zaburzyć czytelności (Accessibility).
 
 ---
 
@@ -25,7 +25,7 @@ Wszystkie dekoracje są wielokrotnością **8px Grid System**.
 
 ### Kolory Semantyczne
 
-Zgodnie z `DESIGN.md`, przyciski akcji używają tokenów `--color-error` oraz `--color-primary`.
+Zgodnie z Design Systemem, przyciski akcji używają tokenów `--color-error` oraz `--color-primary`.
 
 - **`.primaryButton()`**: Stosuje `--color-primary` (Zapisz, Dodaj).
 - **`.destructiveButton()`**: Stosuje `--color-error` (Usuń).

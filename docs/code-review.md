@@ -168,6 +168,11 @@ Podczas przeglądu kodu -- trzy poziomy oceny:
 
 ### Narzędzia dokumentacyjne
 
+### Review Warstwy Wizualnej (UI/UX)
+
+Przegląd zmian wizualnych oraz ocena zgodności z Design Systemem odbywa się według zasad opisanych w:
+**[Design Review](design-review.md)**.
+
 ---
 
 > 📅 **Ostatnia aktualizacja:** 2026-01-14

@@ -110,6 +110,7 @@ Szczegóły: [docs/roadmap.md](docs/roadmap.md)
 | [Konwencje](docs/conventions.md) | Standardy kodu |
 | [Design System](docs/design.md) | Paleta kolorów, typografia, komponenty UI |
 | [Bezpieczeństwo](docs/security.md) | Lokalne dane, disclaimer |
+| [Design Review](docs/design-review.md) | Kryteria oceny UI/UX |
 | [Roadmap](docs/roadmap.md) | Plan rozwoju projektu |
 | [Wdrożenie](docs/deployment.md) | Setup WinSCP i APK lifecycle |
 | [Contributing](docs/contributing.md) | Przewodnik dokumentacji |

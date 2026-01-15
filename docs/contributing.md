@@ -129,6 +129,7 @@ docs/
 ├── disclaimers.md          # Wyłączenia odpowiedzialności
 ├── conventions.md          # Konwencje kodu
 ├── design.md               # Design system
+├── design-review.md        # Kryteria oceny designu
 ├── testing.md              # Strategia testów
 ├── deployment.md           # Wdrożenie i CI/CD
 ├── lessons-learned.md      # Dziennik doświadczeń
