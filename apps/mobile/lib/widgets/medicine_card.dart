@@ -1161,25 +1161,41 @@ class _MedicineCardState extends State<MedicineCard>
                 // Wskaźnik weryfikacji po kodzie kreskowym
                 if (_medicine.isVerifiedByBarcode) ...[
                   const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        LucideIcons.shieldCheck,
-                        size: 16,
-                        color: theme.colorScheme.primary,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.valid.withAlpha(isDark ? 30 : 20),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: AppColors.valid.withAlpha(50),
+                        width: 1,
                       ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Zweryfikowano po kodzie kreskowym',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.w500,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          LucideIcons.shieldCheck,
+                          size: 16,
+                          color: AppColors.valid,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Zweryfikowano w Rejestrze Produktów Leczniczych Dopuszczonych do Obrotu na terytorium Rzeczypospolitej Polskiej',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.valid,
+                              fontWeight: FontWeight.w500,
+                              height: 1.3,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
                 // Monit o konflikcie nazwa/kod (jeśli obecny)
@@ -1332,24 +1348,61 @@ class _MedicineCardState extends State<MedicineCard>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // CTA najpierw
-        NeuButton(
-          onPressed: widget.onDelete,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(LucideIcons.trash2, size: 18, color: AppColors.expired),
-              const SizedBox(width: 8),
-              Text(
-                'Usuń lek z apteczki',
-                style: TextStyle(
-                  color: AppColors.expired,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+        Row(
+          children: [
+            NeuButton(
+              onPressed: widget.onDelete,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(LucideIcons.trash2, size: 18, color: AppColors.expired),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Usuń lek',
+                    style: TextStyle(
+                      color: AppColors.expired,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Przycisk zmiany nazwy dla niezweryfikowanych leków
+            if (!_medicine.isVerifiedByBarcode) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: NeuButton(
+                  onPressed: () => _showEditNameDialog(context),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        LucideIcons.textCursorInput,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Zmień nazwę',
+                        style: TextStyle(
+                          color: theme.colorScheme.primary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
-          ),
+          ],
         ),
         // Warning na końcu
         const SizedBox(height: 10),
@@ -1423,6 +1476,41 @@ class _MedicineCardState extends State<MedicineCard>
   }
 
   // ==================== DIALOGI ====================
+
+  Future<void> _showEditNameDialog(BuildContext context) async {
+    final controller = TextEditingController(text: _medicine.nazwa);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edytuj nazwę leku'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Nazwa leku...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result.isNotEmpty) {
+      final updatedMedicine = _medicine.copyWith(nazwa: result);
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+    }
+  }
 
   Future<void> _showEditDescriptionDialog(BuildContext context) async {
     final controller = TextEditingController(text: _medicine.opis);

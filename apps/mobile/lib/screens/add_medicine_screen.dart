@@ -1007,20 +1007,31 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                     : [],
                 dataDodania: DateTime.now().toIso8601String(),
                 leafletUrl: drug.drugInfo?.leafletUrl,
+                isVerifiedByBarcode: drug.isFromRpl,
               );
               await widget.storageService.saveMedicine(medicine);
               importedMedicines.add(medicine);
             } else {
               // AI nie rozpoznalo - zapisz tylko dane z RPL
               final medicine = drug.toMedicine(const Uuid().v4());
-              await widget.storageService.saveMedicine(medicine);
-              importedMedicines.add(medicine);
+              // Force update isVerifiedByBarcode if it is from RPL
+              final medicineWithVerification = medicine.copyWith(
+                isVerifiedByBarcode: drug.isFromRpl,
+              );
+              await widget.storageService.saveMedicine(
+                medicineWithVerification,
+              );
+              importedMedicines.add(medicineWithVerification);
             }
           } catch (_) {
             // Blad AI - zapisz tylko dane z RPL
             final medicine = drug.toMedicine(const Uuid().v4());
-            await widget.storageService.saveMedicine(medicine);
-            importedMedicines.add(medicine);
+            // Force update isVerifiedByBarcode if it is from RPL
+            final medicineWithVerification = medicine.copyWith(
+              isVerifiedByBarcode: drug.isFromRpl,
+            );
+            await widget.storageService.saveMedicine(medicineWithVerification);
+            importedMedicines.add(medicineWithVerification);
           }
           progressNotifier.value = progressNotifier.value.increment();
         }),
@@ -1255,6 +1266,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             ],
             dataDodania: DateTime.now().toIso8601String(),
             leafletUrl: rpl.leafletUrl,
+            // Manual entry via RPL search is considered verified
+            isVerifiedByBarcode: true,
           );
 
           await widget.storageService.saveMedicine(medicine);
