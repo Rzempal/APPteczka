@@ -945,7 +945,7 @@ class _MedicineCardState extends State<MedicineCard>
       children: [
         Row(
           children: [
-            // Icon + Title (left-aligned)
+            // Icon + Title
             Icon(LucideIcons.calendarHeart, size: 16, color: AppColors.primary),
             const SizedBox(width: 6),
             Text(
@@ -955,7 +955,7 @@ class _MedicineCardState extends State<MedicineCard>
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 12),
             // Separator
             Text(
               '-',
@@ -964,15 +964,15 @@ class _MedicineCardState extends State<MedicineCard>
                 fontSize: 14,
               ),
             ),
-            const Spacer(),
-            // CTA buttons (right-aligned)
+            const SizedBox(width: 12),
+            // CTA buttons
             if (!canCalculate)
               Text(
                 'Uzupełnij ilość sztuk',
                 style: TextStyle(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,
-                  fontSize: 11,
+                  fontSize: 12,
                 ),
               )
             else if (supplyEndDate == null)
@@ -980,27 +980,27 @@ class _MedicineCardState extends State<MedicineCard>
                 onTap: () => _showSetDailyIntakeDialog(context),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
+                    horizontal: 14,
+                    vertical: 10,
                   ),
                   decoration: NeuDecoration.flatSmall(
                     isDark: isDark,
-                    radius: 8,
+                    radius: 12,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         LucideIcons.pillBottle,
-                        size: 14,
+                        size: 18,
                         color: theme.colorScheme.onSurface,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 6),
                       Text(
-                        'Ustaw zużycie',
+                        'Ustaw dzienne zużycie',
                         style: TextStyle(
                           color: theme.colorScheme.onSurface,
-                          fontSize: 11,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -1041,23 +1041,23 @@ class _MedicineCardState extends State<MedicineCard>
         GestureDetector(
           onTap: () => _showSetDailyIntakeDialog(context),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   LucideIcons.calendarOff,
-                  size: 12,
+                  size: 14,
                   color: daysRemaining <= 7
                       ? AppColors.expired
                       : AppColors.primary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 Text(
                   formattedDate,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: daysRemaining <= 7
                         ? AppColors.expired
@@ -1065,9 +1065,9 @@ class _MedicineCardState extends State<MedicineCard>
                   ),
                 ),
                 Text(
-                  ' ($daysRemaining d)',
+                  ' (za $daysRemaining dni)',
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -1075,15 +1075,15 @@ class _MedicineCardState extends State<MedicineCard>
             ),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         GestureDetector(
           onTap: () => _addToCalendar(endDate),
           child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            padding: const EdgeInsets.all(10),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
             child: Icon(
               LucideIcons.calendarPlus,
-              size: 14,
+              size: 20,
               color: AppColors.primary,
             ),
           ),

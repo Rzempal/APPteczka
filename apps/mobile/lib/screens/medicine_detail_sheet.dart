@@ -440,7 +440,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         // Main Row: Icon + Title - CTA
         Row(
           children: [
-            // Icon + Title (left-aligned)
+            // Icon + Title
             Icon(LucideIcons.calendarHeart, size: 18, color: AppColors.primary),
             const SizedBox(width: 6),
             Text(
@@ -450,7 +450,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                 color: const Color(0xFF6b7280),
               ),
             ),
-            const Spacer(),
+            const SizedBox(width: 12),
             // Separator
             Text(
               '-',
@@ -459,8 +459,8 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                 fontSize: 14,
               ),
             ),
-            const Spacer(),
-            // CTA buttons (right-aligned)
+            const SizedBox(width: 12),
+            // CTA buttons
             if (!canCalculate)
               Text(
                 'Uzupełnij ilość sztuk',
@@ -471,9 +471,9 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                 ),
               )
             else if (supplyEndDate == null)
-              _buildSetDailyIntakeButtonCompact(context, isDark)
+              _buildSetDailyIntakeButton(context, isDark)
             else
-              _buildSupplyResultCompact(context, supplyEndDate, isDark),
+              _buildSupplyResultInline(context, supplyEndDate, isDark),
           ],
         ),
         const SizedBox(height: 6),
@@ -506,14 +506,14 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     return GestureDetector(
       onTap: () => _showSetDailyIntakeDialog(context),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               LucideIcons.pillBottle,
-              size: 16,
+              size: 18,
               color: Theme.of(context).colorScheme.onSurface,
             ),
             const SizedBox(width: 8),
@@ -644,8 +644,8 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
   }
 
-  /// Wyświetla wynik kalkulacji (wersja kompaktowa dla Row)
-  Widget _buildSupplyResultCompact(
+  /// Wyświetla wynik kalkulacji (wersja inline dla Row)
+  Widget _buildSupplyResultInline(
     BuildContext context,
     DateTime endDate,
     bool isDark,
@@ -661,23 +661,23 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         GestureDetector(
           onTap: () => _showSetDailyIntakeDialog(context),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   LucideIcons.calendarOff,
-                  size: 12,
+                  size: 14,
                   color: daysRemaining <= 7
                       ? AppColors.expired
                       : AppColors.primary,
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 6),
                 Text(
                   formattedDate,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                     color: daysRemaining <= 7
                         ? AppColors.expired
@@ -685,9 +685,9 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                   ),
                 ),
                 Text(
-                  ' ($daysRemaining d)',
+                  ' (za $daysRemaining dni)',
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -695,15 +695,15 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             ),
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         GestureDetector(
           onTap: () => _addToCalendar(endDate),
           child: Container(
-            padding: const EdgeInsets.all(6),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+            padding: const EdgeInsets.all(10),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
             child: Icon(
               LucideIcons.calendarPlus,
-              size: 14,
+              size: 20,
               color: AppColors.primary,
             ),
           ),
@@ -753,7 +753,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Ile tabletek dziennie?',
-                hintText: 'np. 2',
+                hintText: 'np. 2 (0 = anuluj)',
                 suffixText: 'szt./dzień',
                 border: OutlineInputBorder(),
               ),
@@ -776,9 +776,11 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
       ),
     );
 
-    if (result != null && result > 0) {
-      // Zapisz do Medicine i storage
-      final updated = _medicine.copyWith(dailyIntake: result);
+    if (result != null) {
+      // 0 = anuluj kalkulację (user przestał brać tabletki)
+      final updated = _medicine.copyWith(
+        dailyIntake: result == 0 ? null : result,
+      );
       await widget.storageService.saveMedicine(updated);
       setState(() => _medicine = updated);
     }
