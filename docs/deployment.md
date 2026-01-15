@@ -12,6 +12,12 @@ Ten dokument opisuje proces wdrożenia aplikacji mobilnej (APK) oraz webowej.
 
 - `scripts/deploy_apk.ps1` – Główny skrypt do budowania i wysyłania APK na serwer.
 
+#### Terminal command
+
+```
+.\scripts\run_deploy_dev.bat
+```
+
 ---
 
 ## Wdrożenie Mobile (Android)

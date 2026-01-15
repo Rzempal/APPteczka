@@ -466,18 +466,47 @@ class _MedicineCardState extends State<MedicineCard>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header with edit button (align-right)
+        // Title
+        Text(
+          'Wskazania',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 6),
+
+        // Content row: bullet points + edit button (align-right)
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Wskazania',
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            // Bullet points (expanded)
+            Expanded(
+              child: hasWskazania
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _medicine.wskazania
+                          .map(
+                            (w) => Padding(
+                              padding: const EdgeInsets.only(bottom: 4),
+                              child: Text(
+                                '• $w',
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    )
+                  : Text(
+                      'Brak wskazań',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontStyle: FontStyle.italic,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
             ),
-            const Spacer(),
+            // Edit button (align-right)
+            const SizedBox(width: 8),
             GestureDetector(
               onTap: () => _showEditWskazaniaDialog(context),
               child: Container(
@@ -492,26 +521,6 @@ class _MedicineCardState extends State<MedicineCard>
             ),
           ],
         ),
-        const SizedBox(height: 8),
-
-        // Bullet points
-        if (hasWskazania)
-          ...(_medicine.wskazania
-              .map(
-                (w) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text('• $w', style: theme.textTheme.bodySmall),
-                ),
-              )
-              .toList())
-        else
-          Text(
-            'Brak wskazań',
-            style: theme.textTheme.bodySmall?.copyWith(
-              fontStyle: FontStyle.italic,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
 
         // CTA area: Ulotka + Unpin (aligned right)
         const SizedBox(height: 12),
@@ -1123,114 +1132,124 @@ class _MedicineCardState extends State<MedicineCard>
           Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
         ],
 
-        // Rozwinięta zawartość - bez animacji bocznej
-        if (_isMoreExpanded)
-          Padding(
-            padding: const EdgeInsets.only(
-              top: 12,
-              left: 8,
-              right: 4,
-              bottom: 8,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // === ETYKIETY (najpierw) ===
-                _buildLabelsSection(context, theme, isDark),
-
-                // === TAGI ===
-                const SizedBox(height: 12),
-                _buildTagsSection(context, theme, isDark),
-
-                // === DATA DODANIA + WERYFIKACJA ===
-                const SizedBox(height: 12),
-                Text(
-                  'Dodano',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _formatDate(_medicine.dataDodania),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                // Wskaźnik weryfikacji po kodzie kreskowym
-                if (_medicine.isVerifiedByBarcode) ...[
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
+        // Rozwinięta zawartość - animacja pionowa (expand down)
+        ClipRect(
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: _isMoreExpanded
+                ? Padding(
+                    padding: const EdgeInsets.only(
+                      top: 12,
+                      left: 8,
+                      right: 4,
+                      bottom: 8,
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.valid.withAlpha(isDark ? 30 : 20),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppColors.valid.withAlpha(50),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          LucideIcons.shieldCheck,
-                          size: 16,
-                          color: AppColors.valid,
+                        // === ETYKIETY (najpierw) ===
+                        _buildLabelsSection(context, theme, isDark),
+
+                        // === TAGI ===
+                        const SizedBox(height: 12),
+                        _buildTagsSection(context, theme, isDark),
+
+                        // === DATA DODANIA + WERYFIKACJA ===
+                        const SizedBox(height: 12),
+                        Text(
+                          'Dodano',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Zweryfikowano w Rejestrze Produktów Leczniczych Dopuszczonych do Obrotu na terytorium Rzeczypospolitej Polskiej',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.valid,
-                              fontWeight: FontWeight.w500,
-                              height: 1.3,
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatDate(_medicine.dataDodania),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        // Wskaźnik weryfikacji po kodzie kreskowym
+                        if (_medicine.isVerifiedByBarcode) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.valid.withAlpha(
+                                isDark ? 30 : 20,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: AppColors.valid.withAlpha(50),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  LucideIcons.shieldCheck,
+                                  size: 16,
+                                  color: AppColors.valid,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Zweryfikowano w Rejestrze Produktów Leczniczych Dopuszczonych do Obrotu na terytorium Rzeczypospolitej Polskiej',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.valid,
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
+                        ],
+                        // Monit o konflikcie nazwa/kod (jeśli obecny)
+                        if (_medicine.verificationNote != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                LucideIcons.info,
+                                size: 14,
+                                color: theme.colorScheme.tertiary,
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  _medicine.verificationNote!,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: theme.colorScheme.tertiary,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        // === USUŃ LEK ===
+                        const SizedBox(height: 16),
+                        _buildDeleteSection(context, theme, isDark),
                       ],
                     ),
-                  ),
-                ],
-                // Monit o konflikcie nazwa/kod (jeśli obecny)
-                if (_medicine.verificationNote != null) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        LucideIcons.info,
-                        size: 14,
-                        color: theme.colorScheme.tertiary,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          _medicine.verificationNote!,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: theme.colorScheme.tertiary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-
-                // === USUŃ LEK ===
-                const SizedBox(height: 16),
-                _buildDeleteSection(context, theme, isDark),
-              ],
-            ),
+                  )
+                : const SizedBox.shrink(),
           ),
+        ),
       ],
     );
   }
