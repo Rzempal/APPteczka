@@ -1168,9 +1168,7 @@ class _MedicineCardState extends State<MedicineCard>
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.valid.withAlpha(
-                        isDark ? 30 : 20,
-                      ),
+                      color: AppColors.valid.withAlpha(isDark ? 30 : 20),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: AppColors.valid.withAlpha(50),
@@ -1386,7 +1384,10 @@ class _MedicineCardState extends State<MedicineCard>
             child: GestureDetector(
               onTap: () => _showEditNameDialog(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -1411,9 +1412,9 @@ class _MedicineCardState extends State<MedicineCard>
             ),
           ),
         ],
+      ],
     );
   }
-
 
   Widget _buildActionButtons(
     BuildContext context,
