@@ -4,6 +4,11 @@ description: Task completion workflow with code review checklist and Git commit/
 
 ---
 
+description: Task completion workflow with code review checklist and Git commit/push process. Ensures documentation updates, lessons learned capture, and consistent commit numbering in Polish
+---
+
+---
+
 name: End
 description: Task completion workflow with code review checklist and Git commit/push process. Ensures documentation updates, lessons learned capture, and consistent commit numbering in Polish
 ---
@@ -25,7 +30,7 @@ Your job as LLM is to:
 1. **Guide** the user through the code review checklist
 2. **Verify** documentation needs updating
 3. **Prepare** the commit message with proper numbering
-4. **Execute** the Git commit and push
+4. **Execute** the Git commit and push to `claude/*` branch
 
 ---
 
@@ -36,7 +41,7 @@ Your job as LLM is to:
 **Check against these files:**
 
 - `docs/code-review.md` - follow the code review checklist
-- `lessons-learned.md` - add/update key takeaways from:
+- `docs/lessons-learned.md` - add/update key takeaways from:
   - Completed tasks
   - Resolved technical issues
   - Ideas for process improvement
@@ -45,9 +50,9 @@ Your job as LLM is to:
 
 1. Check if `docs/code-review.md` exists and review its checklist
 2. Ask the user to confirm all code review points are addressed
-3. Check if `lessons-learned.md` exists
+3. Check if `docs/lessons-learned.md` exists
 4. Ask the user what lessons learned should be documented from this session
-5. Update or create `lessons-learned.md` with new insights
+5. Update or create `docs/lessons-learned.md` with new insights
 
 ---
 
@@ -106,11 +111,23 @@ git commit -m "#412 Refaktoryzacja struktury plikow i aktualizacja dokumentacji"
 
 ### Step 4: Git Push
 
+**IMPORTANT:** Claude cannot push directly to `main` (403 error). Must push to designated `claude/*` branch.
+
 **Instructions for LLM:**
 
-1. After successful commit, execute: `git push`
+1. Push to the designated claude branch: `git push -u origin HEAD:claude/<branch-name>`
 2. Confirm push was successful
-3. Summarize what was committed and pushed
+3. Inform user that changes are on `claude/*` branch and need to be merged to `main`
+
+**Example:**
+
+```bash
+# Push current commits to claude branch
+git push -u origin main:claude/feature-branch-name
+
+# If local main is ahead, reset after push
+git fetch origin main && git reset --hard origin/main
+```
 
 ---
 
@@ -122,17 +139,42 @@ After finishing all steps, provide the user with:
 - ✅ Lessons learned documented
 - ✅ Documentation updated (if needed)
 - ✅ Commit #N created with message: "..."
-- ✅ Changes pushed to remote repository
+- ✅ Changes pushed to `claude/*` branch
 
 ---
 
 ## Next Step: Merge to Main
 
-After `/end` workflow, user can merge to main using:
+**User must merge `claude/*` branch to `main`** (Claude cannot push to main directly).
 
-1. **VS Code Task:** `Ctrl+Shift+P` → "Tasks: Run Task" → "Git: PR + Merge to Main"
-2. **Terminal:** `.\scripts\run_merge_pr.bat`
-3. **Claude workflow:** `/merge` (see `.agent/workflows/merge.md`)
+**Option 1 - VS Code Task:**
+
+```
+Ctrl+Shift+P → "Tasks: Run Task" → "Git: PR + Merge to Main"
+```
+
+**Option 2 - Terminal:**
+
+```bash
+.\scripts\run_merge_pr.bat
+```
+
+**Option 3 - Manual merge:**
+
+```bash
+git fetch origin
+git checkout main
+git merge origin/claude/<branch-name>
+git push origin main
+```
+
+**Option 4 - Claude workflow:**
+
+```
+/merge
+```
+
+(see `.agent/workflows/merge.md`)
 
 ---
 
