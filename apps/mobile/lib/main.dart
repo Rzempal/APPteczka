@@ -228,21 +228,11 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
         ],
       ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
+      bottomNavigationBar: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.bottomCenter,
         children: [
-          // ApteczkaToolbar - widoczny tylko gdy jesteśmy w Apteczce
-          ApteczkaToolbar(
-            isVisible: _currentIndex == 1 && _showApteczkaToolbar,
-            hasActiveFilters: _homeKey.currentState?.hasActiveFilters ?? false,
-            onSearch: () => _homeKey.currentState?.activateSearch(),
-            onSort: () => _homeKey.currentState?.showSort(),
-            onFilter: () => _homeKey.currentState?.showFilters(),
-            onClearFilter: () => _homeKey.currentState?.clearFilters(),
-            onMenu: () => _homeKey.currentState?.showManagement(),
-          ),
-          const SizedBox(height: 8),
-          // FloatingNavBar
+          // FloatingNavBar - bazowy element
           FloatingNavBar(
             currentIndex: _currentIndex,
             onTap: (index) {
@@ -278,6 +268,22 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
               const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
             ],
+          ),
+          // ApteczkaToolbar - "wychodzi" spod FloatingNavBar
+          // Pozycjonowany nad navbarem (bottom = wysokość navbara + margines)
+          Positioned(
+            bottom: 72 + 16 + 8, // navbar height + margin + gap
+            left: 0,
+            right: 0,
+            child: ApteczkaToolbar(
+              isVisible: _currentIndex == 1 && _showApteczkaToolbar,
+              hasActiveFilters: _homeKey.currentState?.hasActiveFilters ?? false,
+              onSearch: () => _homeKey.currentState?.activateSearch(),
+              onSort: () => _homeKey.currentState?.showSort(),
+              onFilter: () => _homeKey.currentState?.showFilters(),
+              onClearFilter: () => _homeKey.currentState?.clearFilters(),
+              onMenu: () => _homeKey.currentState?.showManagement(),
+            ),
           ),
         ],
       ),
