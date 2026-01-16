@@ -323,6 +323,10 @@ class _MedicineCardState extends State<MedicineCard> {
       children: [
         const SizedBox(height: 12),
 
+        // === SEPARATOR NAD OPIS ===
+        Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
+        const SizedBox(height: 12),
+
         // === OPIS ===
         _buildSection(
           theme,
@@ -1470,9 +1474,9 @@ class _MedicineCardState extends State<MedicineCard> {
       onTap: widget.onExpand,
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             Icon(
               LucideIcons.chevronUp,
