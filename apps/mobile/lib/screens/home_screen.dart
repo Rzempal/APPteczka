@@ -200,9 +200,12 @@ class HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
+    return GestureDetector(
+      // Zdejmij focus z search bar gdy użytkownik kliknie gdzie indziej
+      onTap: () => _searchFocusNode.unfocus(),
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
           children: [
             // Line 1: Logo + Title
             _buildHeaderLine1(theme, isDark),
@@ -336,6 +339,7 @@ class HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
