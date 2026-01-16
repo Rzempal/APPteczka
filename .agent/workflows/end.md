@@ -77,26 +77,29 @@ Your job as LLM is to:
 
 **Rules:**
 
-- **N** = continuation of numbering from the previous commit
+- **N** = continuation of numbering from the previous commit (parse #XXX from last commit on main)
 - **Description** = changes described in Polish
 - **No Polish special characters**: ą=a, ć=c, ę=e, ł=l, ń=n, ó=o, ś=s, ź=z, ż=z
 
 **Instructions for LLM:**
 
-1. Run: `git rev-list --count main` to get the current commit count
-2. Use N = count + 1 for the new commit number
-3. Generate commit message in Polish without special characters
-4. Show the commit message to user for approval
-5. Execute: `git add .`
-6. Execute: `git commit -m "#N description"`
+1. Fetch and get last commit: `git fetch origin main && git log origin/main --oneline -1`
+2. Parse number from commit message (e.g., `#411 add merge.md` → 411)
+3. Use N = parsed_number + 1 for the new commit number
+4. Generate commit message in Polish without special characters
+5. Show the commit message to user for approval
+6. Execute: `git add .`
+7. Execute: `git commit -m "#N description"`
 
 **Example:**
 
 ```bash
-git rev-list --count main
-# Output: 42
+git fetch origin main
+git log origin/main --oneline -1
+# Output: 58d09e1 #411 add merge.md workflow
+# Parsed: 411, Next: 412
 git add .
-git commit -m "#43 Refaktoryzacja struktury plikow i aktualizacja dokumentacji"
+git commit -m "#412 Refaktoryzacja struktury plikow i aktualizacja dokumentacji"
 ```
 
 ---
@@ -120,6 +123,16 @@ After finishing all steps, provide the user with:
 - ✅ Documentation updated (if needed)
 - ✅ Commit #N created with message: "..."
 - ✅ Changes pushed to remote repository
+
+---
+
+## Next Step: Merge to Main
+
+After `/end` workflow, user can merge to main using:
+
+1. **VS Code Task:** `Ctrl+Shift+P` → "Tasks: Run Task" → "Git: PR + Merge to Main"
+2. **Terminal:** `.\scripts\run_merge_pr.bat`
+3. **Claude workflow:** `/merge` (see `.agent/workflows/merge.md`)
 
 ---
 

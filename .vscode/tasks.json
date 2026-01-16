@@ -25,6 +25,18 @@
                 "panel": "new"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "Git: PR + Merge to Main",
+            "type": "shell",
+            "command": ".\\scripts\\run_merge_pr.bat",
+            "group": "none",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            },
+            "problemMatcher": []
         }
     ]
 }
