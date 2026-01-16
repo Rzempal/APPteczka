@@ -702,25 +702,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.pop(context);
                 },
                 borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 8),
+                child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
+                    horizontal: 8,
                     vertical: 12,
                   ),
-                  decoration: isSelected
-                      ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
-                      : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                   child: Row(
                     children: [
-                      Icon(
-                        option.icon,
-                        size: 20,
-                        color: isSelected
-                            ? AppColors.primary
-                            : theme.colorScheme.onSurface,
-                      ),
-                      const SizedBox(width: 12),
+                      // Tekst po lewej - bez stylu neumorficznego
                       Expanded(
                         child: Text(
                           option.label,
@@ -735,12 +724,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      if (isSelected)
-                        Icon(
-                          LucideIcons.check,
+                      const SizedBox(width: 12),
+                      // Ikona po prawej - w kontenerze .flat/.pressed
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: isSelected
+                            ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
+                            : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                        child: Icon(
+                          option.icon,
                           size: 18,
-                          color: AppColors.primary,
+                          color: isSelected
+                              ? AppColors.primary
+                              : theme.colorScheme.onSurfaceVariant,
                         ),
+                      ),
                     ],
                   ),
                 ),
