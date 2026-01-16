@@ -237,7 +237,7 @@ class HomeScreenState extends State<HomeScreen> {
                       children: [
                         // Główna lista - tryb akordeonowy
                         ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.only(top: 8, bottom: 16),
                           itemCount: _filteredMedicines.length,
                           itemBuilder: (context, index) {
                             final medicine = _filteredMedicines[index];
