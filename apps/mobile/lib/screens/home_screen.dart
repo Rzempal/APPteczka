@@ -322,7 +322,7 @@ class HomeScreenState extends State<HomeScreen> {
                           left: 0,
                           right: 0,
                           top: 0,
-                          height: 40,
+                          height: 60,
                           child: IgnorePointer(
                             child: DecoratedBox(
                               decoration: BoxDecoration(
@@ -334,10 +334,15 @@ class HomeScreenState extends State<HomeScreen> {
                                             ? AppColors.darkBackground
                                             : AppColors.lightBackground)
                                         .withAlpha(0),
+                                    (isDark
+                                            ? AppColors.darkBackground
+                                            : AppColors.lightBackground)
+                                        .withAlpha(128),
                                     isDark
                                         ? AppColors.darkBackground
                                         : AppColors.lightBackground,
                                   ],
+                                  stops: const [0.0, 0.5, 1.0],
                                 ),
                               ),
                             ),
