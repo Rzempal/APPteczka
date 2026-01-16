@@ -54,10 +54,11 @@ class HomeScreen extends StatefulWidget {
   });
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+/// Publiczny State dla HomeScreen - umożliwia dostęp z zewnątrz przez GlobalKey
+class HomeScreenState extends State<HomeScreen> {
   List<Medicine> _medicines = [];
   FilterState _filterState = const FilterState();
   SortOption _sortOption = SortOption.nameAsc;
@@ -94,6 +95,31 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
   }
+
+  // ==================== PUBLICZNE API (dla ApteczkaToolbar) ====================
+
+  /// Czy są aktywne filtry
+  bool get hasActiveFilters => _filterState.hasActiveFilters;
+
+  /// Odświeża listę leków
+  void refresh() => _loadMedicines();
+
+  /// Aktywuje pole wyszukiwania
+  void activateSearch() {
+    _searchFocusNode.requestFocus();
+  }
+
+  /// Otwiera bottomSheet sortowania
+  void showSortBottomSheet() => _showSortBottomSheet();
+
+  /// Otwiera bottomSheet filtrów
+  void showFilters() => _showFilters();
+
+  /// Czyści wszystkie filtry
+  void clearFilters() => _clearFilters();
+
+  /// Otwiera bottomSheet zarządzania apteczką
+  void showFilterManagement() => _showFilterManagement();
 
   void _onUpdateChanged() {
     if (mounted) setState(() {});
