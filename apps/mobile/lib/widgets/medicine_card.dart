@@ -50,9 +50,21 @@ class MedicineCard extends StatefulWidget {
 class _MedicineCardState extends State<MedicineCard> {
   bool _isMoreExpanded = false; // Akordeon "Więcej"
   bool _isLabelsOpen = false;
-  bool _isEditModeActive =
-      false; // Tryb edycji - ukrywa/pokazuje przyciski edycji
+  bool _isEditModeButtonActive =
+      false; // Stan lokalny przycisku trybu edycji
   late Medicine _medicine;
+
+  /// Czy tryb edycji jest aktywny (z ustawień LUB z lokalnego buttona)
+  bool get _isEditModeActive {
+    final alwaysActive = widget.storageService?.editModeAlwaysActive ?? false;
+    return alwaysActive || _isEditModeButtonActive;
+  }
+
+  /// Czy pokazać przycisk "Tryb edycji" (ukryty gdy ustawienie włączone)
+  bool get _showEditModeButton {
+    final alwaysActive = widget.storageService?.editModeAlwaysActive ?? false;
+    return !alwaysActive;
+  }
 
   // Inline note editing
   bool _isEditingNote = false;
@@ -1353,10 +1365,13 @@ class _MedicineCardState extends State<MedicineCard> {
     return Row(
       children: [
         // Usuń lek button (flat style, no shadows)
+        // W trybie edycji pokazuj tylko ikonę, żeby zmieścić inne przyciski
         GestureDetector(
           onTap: () => _showDeleteConfirmationDialog(context),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: _isEditModeActive
+                ? const EdgeInsets.all(10)
+                : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.expired.withAlpha(isDark ? 25 : 15),
               borderRadius: BorderRadius.circular(12),
@@ -1369,15 +1384,17 @@ class _MedicineCardState extends State<MedicineCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(LucideIcons.trash2, size: 18, color: AppColors.expired),
-                const SizedBox(width: 8),
-                Text(
-                  'Usuń lek',
-                  style: TextStyle(
-                    color: AppColors.expired,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                if (!_isEditModeActive) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    'Usuń lek',
+                    style: TextStyle(
+                      color: AppColors.expired,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -1390,69 +1407,56 @@ class _MedicineCardState extends State<MedicineCard> {
             child: GestureDetector(
               onTap: () => _showEditNameDialog(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
+                padding: const EdgeInsets.all(10),
                 decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      LucideIcons.textCursorInput,
-                      size: 18,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Zmień nazwę leku',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                child: Icon(
+                  LucideIcons.textCursorInput,
+                  size: 18,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
           ),
         ],
         const Spacer(),
-        // Przycisk Tryb edycji (zawsze widoczny, align right)
-        Padding(
-          padding: const EdgeInsets.only(right: 4, bottom: 4),
-          child: GestureDetector(
-            onTap: () => setState(() => _isEditModeActive = !_isEditModeActive),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: _isEditModeActive
-                  ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
-                  : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _isEditModeActive
-                        ? LucideIcons.pencilOff
-                        : LucideIcons.pencil,
-                    size: 18,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Tryb edycji',
-                    style: TextStyle(
+        // Przycisk Tryb edycji (ukryty gdy ustawienie "zawsze aktywny" włączone)
+        if (_showEditModeButton)
+          Padding(
+            padding: const EdgeInsets.only(right: 4, bottom: 4),
+            child: GestureDetector(
+              onTap: () => setState(() => _isEditModeButtonActive = !_isEditModeButtonActive),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: _isEditModeButtonActive
+                    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
+                    : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isEditModeButtonActive
+                          ? LucideIcons.pencilOff
+                          : LucideIcons.pencil,
+                      size: 18,
                       color: theme.colorScheme.onSurface,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
                     ),
-                  ),
-                ],
+                    // Tekst tylko gdy tryb edycji nieaktywny (ikona zajmuje mniej miejsca)
+                    if (!_isEditModeButtonActive) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        'Tryb edycji',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
       ],
     );
   }
