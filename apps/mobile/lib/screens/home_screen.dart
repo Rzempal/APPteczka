@@ -43,6 +43,7 @@ class HomeScreen extends StatefulWidget {
   final UpdateService updateService;
   final VoidCallback? onNavigateToSettings;
   final VoidCallback? onNavigateToAdd;
+  final VoidCallback? onFiltersChanged;
 
   const HomeScreen({
     super.key,
@@ -51,6 +52,7 @@ class HomeScreen extends StatefulWidget {
     required this.updateService,
     this.onNavigateToSettings,
     this.onNavigateToAdd,
+    this.onFiltersChanged,
   });
 
   @override
@@ -445,9 +447,14 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 onChanged: (value) {
+                  final wasActive = _filterState.hasActiveFilters;
                   setState(() {
                     _filterState = _filterState.copyWith(searchQuery: value);
                   });
+                  // Powiadom rodzica tylko gdy zmieni się stan aktywności filtrów
+                  if (wasActive != _filterState.hasActiveFilters) {
+                    widget.onFiltersChanged?.call();
+                  }
                 },
                 onSubmitted: (_) {
                   _searchFocusNode.unfocus();
@@ -463,10 +470,14 @@ class HomeScreenState extends State<HomeScreen> {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
                 onPressed: () {
+                  final wasActive = _filterState.hasActiveFilters;
                   _searchController.clear();
                   setState(() {
                     _filterState = _filterState.copyWith(searchQuery: '');
                   });
+                  if (wasActive != _filterState.hasActiveFilters) {
+                    widget.onFiltersChanged?.call();
+                  }
                 },
               ),
             // Submit check button - visible only when focused
@@ -572,11 +583,13 @@ class HomeScreenState extends State<HomeScreen> {
               setState(() {
                 _filterState = newState;
               });
+              widget.onFiltersChanged?.call();
             },
           ),
         )
         .then((_) {
           _loadMedicines();
+          widget.onFiltersChanged?.call();
         })
         .whenComplete(() {
           if (mounted) setState(() => _isFiltersSheetOpen = false);
@@ -588,6 +601,7 @@ class HomeScreenState extends State<HomeScreen> {
       _filterState = const FilterState();
       _searchController.clear();
     });
+    widget.onFiltersChanged?.call();
   }
 
   // ==================== HELP BOTTOM SHEET ====================
@@ -1204,6 +1218,7 @@ class HomeScreenState extends State<HomeScreen> {
       _filterState = _filterState.copyWith(selectedTags: newTags);
       _expandedMedicineId = null; // Zwija kartę po filtracji
     });
+    widget.onFiltersChanged?.call();
   }
 
   /// Filtruje listę po etykiecie
@@ -1214,6 +1229,7 @@ class HomeScreenState extends State<HomeScreen> {
       _filterState = _filterState.copyWith(selectedLabels: newLabels);
       _expandedMedicineId = null; // Zwija kartę po filtracji
     });
+    widget.onFiltersChanged?.call();
   }
 
   String _getPolishPlural(int count) {

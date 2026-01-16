@@ -319,6 +319,7 @@ class _HomeScreenWrapperState extends State<_HomeScreenWrapper> {
       updateService: widget.updateService,
       onNavigateToSettings: widget.onNavigateToSettings,
       onNavigateToAdd: widget.onNavigateToAdd,
+      onFiltersChanged: widget.onFiltersChanged,
     );
   }
 }
