@@ -47,14 +47,11 @@ class MedicineCard extends StatefulWidget {
   State<MedicineCard> createState() => _MedicineCardState();
 }
 
-class _MedicineCardState extends State<MedicineCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
+class _MedicineCardState extends State<MedicineCard> {
   bool _isMoreExpanded = false; // Akordeon "Więcej"
   bool _isLabelsOpen = false;
-  bool _isEditModeActive = false; // Tryb edycji - ukrywa/pokazuje przyciski edycji
+  bool _isEditModeActive =
+      false; // Tryb edycji - ukrywa/pokazuje przyciski edycji
   late Medicine _medicine;
 
   // Inline note editing
@@ -66,15 +63,6 @@ class _MedicineCardState extends State<MedicineCard>
   void initState() {
     super.initState();
     _medicine = widget.medicine;
-    _controller = AnimationController(
-      duration: NeuDecoration.tapDuration,
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: NeuDecoration.tapScale,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
-
     _noteController = TextEditingController(text: _medicine.notatka ?? '');
     _noteFocusNode = FocusNode();
     _noteFocusNode.addListener(_onNoteFocusChange);
@@ -93,7 +81,6 @@ class _MedicineCardState extends State<MedicineCard>
 
   @override
   void dispose() {
-    _controller.dispose();
     _noteController.dispose();
     _noteFocusNode.removeListener(_onNoteFocusChange);
     _noteFocusNode.dispose();
@@ -119,24 +106,6 @@ class _MedicineCardState extends State<MedicineCard>
     setState(() => _isEditingNote = false);
   }
 
-  void _handleTapDown(TapDownDetails details) {
-    if (widget.onExpand != null) {
-      setState(() => _isPressed = true);
-      _controller.forward();
-      HapticFeedback.lightImpact();
-    }
-  }
-
-  void _handleTapUp(TapUpDetails details) {
-    setState(() => _isPressed = false);
-    _controller.reverse();
-  }
-
-  void _handleTapCancel() {
-    setState(() => _isPressed = false);
-    _controller.reverse();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -155,33 +124,15 @@ class _MedicineCardState extends State<MedicineCard>
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: GestureDetector(
-        onTapDown: widget.isCompact ? _handleTapDown : null,
-        onTapUp: widget.isCompact ? _handleTapUp : null,
-        onTapCancel: widget.isCompact ? _handleTapCancel : null,
         onTap: widget.isCompact ? widget.onExpand : null,
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            final t = _controller.value;
-            final scale = 1.0 - (t * (1.0 - NeuDecoration.tapScale));
-
-            final decoration = widget.isCompact
-                ? BoxDecoration.lerp(
-                    NeuDecoration.statusCard(
-                      isDark: isDark,
-                      gradient: gradient,
-                      radius: 20,
-                    ),
-                    _getPressedDecoration(isDark, gradient, statusColor),
-                    t,
-                  )!
-                : NeuDecoration.pressed(isDark: isDark, radius: 20);
-
-            return Transform.scale(
-              scale: scale,
-              child: Container(decoration: decoration, child: child),
-            );
-          },
+        child: Container(
+          decoration: widget.isCompact
+              ? NeuDecoration.statusCard(
+                  isDark: isDark,
+                  gradient: gradient,
+                  radius: 20,
+                )
+              : NeuDecoration.flat(isDark: isDark, radius: 20),
           child: Padding(
             padding: EdgeInsets.all(widget.isCompact ? 12 : 16),
             child: Column(
@@ -514,7 +465,10 @@ class _MedicineCardState extends State<MedicineCard>
                 onTap: () => _showEditWskazaniaDialog(context),
                 child: Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 12,
+                  ),
                   child: Icon(
                     LucideIcons.squarePen,
                     size: 20,
@@ -1291,7 +1245,10 @@ class _MedicineCardState extends State<MedicineCard>
                 onTap: () => _showEditCustomTagsDialog(context),
                 child: Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 12,
+                  ),
                   child: Icon(
                     LucideIcons.squarePen,
                     size: 20,
@@ -1351,9 +1308,14 @@ class _MedicineCardState extends State<MedicineCard>
                 onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
                 child: Container(
                   padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 12,
+                  ),
                   child: Icon(
-                    _isLabelsOpen ? LucideIcons.chevronUp : LucideIcons.squarePen,
+                    _isLabelsOpen
+                        ? LucideIcons.chevronUp
+                        : LucideIcons.squarePen,
                     size: 20,
                     color: theme.colorScheme.onSurface,
                   ),
@@ -1372,15 +1334,12 @@ class _MedicineCardState extends State<MedicineCard>
                 ? () => setState(() => _isLabelsOpen = !_isLabelsOpen)
                 : null,
             onLabelTap: (labelId) => widget.onLabelTap?.call(labelId),
-            onChanged: _isEditModeActive
-                ? (newLabelIds) async {
-                    final updatedMedicine =
-                        _medicine.copyWith(labels: newLabelIds);
-                    await widget.storageService?.saveMedicine(updatedMedicine);
-                    setState(() => _medicine = updatedMedicine);
-                    widget.onMedicineUpdated?.call();
-                  }
-                : null,
+            onChanged: (newLabelIds) async {
+              final updatedMedicine = _medicine.copyWith(labels: newLabelIds);
+              await widget.storageService?.saveMedicine(updatedMedicine);
+              setState(() => _medicine = updatedMedicine);
+              widget.onMedicineUpdated?.call();
+            },
           ),
       ],
     );
@@ -1466,10 +1425,7 @@ class _MedicineCardState extends State<MedicineCard>
           child: GestureDetector(
             onTap: () => setState(() => _isEditModeActive = !_isEditModeActive),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: _isEditModeActive
                   ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
                   : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
@@ -2321,59 +2277,6 @@ class _MedicineCardState extends State<MedicineCard>
   }
 
   // ==================== HELPERS ====================
-
-  BoxDecoration _getPressedDecoration(
-    bool isDark,
-    LinearGradient gradient,
-    Color statusColor,
-  ) {
-    // Matching shadow structure for smooth BoxDecoration.lerp() interpolation.
-    // Same number of shadows as statusCard, but all transparent.
-    if (!isDark) {
-      // Light mode: 2 shadows matching statusCard structure
-      return BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.transparent,
-            offset: Offset(
-              NeuDecoration.shadowDistance,
-              NeuDecoration.shadowDistance,
-            ),
-            blurRadius: NeuDecoration.shadowBlur,
-          ),
-          BoxShadow(
-            color: Colors.transparent,
-            offset: Offset(
-              -NeuDecoration.shadowDistanceSm,
-              -NeuDecoration.shadowDistanceSm,
-            ),
-            blurRadius: NeuDecoration.shadowBlurSm,
-          ),
-        ],
-      );
-    }
-
-    // Dark mode: 2 shadows matching statusCard structure
-    return BoxDecoration(
-      gradient: gradient,
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: Colors.transparent, width: 1),
-      boxShadow: const [
-        BoxShadow(
-          color: Colors.transparent,
-          offset: Offset(0, 8),
-          blurRadius: 32,
-        ),
-        BoxShadow(
-          color: Colors.transparent,
-          offset: Offset(0, 0),
-          blurRadius: 12,
-        ),
-      ],
-    );
-  }
 
   Widget _buildBadge(UserLabel label, bool isDark) {
     final colorInfo = labelColors[label.color]!;

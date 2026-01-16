@@ -243,7 +243,7 @@ if (-not $SkipBuild) {
     
     try {
         # Filtruj komunikaty tree-shaking (informacyjne, nie bledy)
-        flutter build apk --release --flavor $Channel --build-name=$VERSION_NAME --build-number=$VERSION_CODE --dart-define=CHANNEL=$Channel 2>&1 | Where-Object { $_ -notmatch "tree-shaken|Tree-shaking" }
+        cmd /c "flutter build apk --release --flavor $Channel --build-name=$VERSION_NAME --build-number=$VERSION_CODE --dart-define=CHANNEL=$Channel 2>&1" | Where-Object { $_ -notmatch "tree-shaken|Tree-shaking|source value 8 is obsolete" }
         
         if ($LASTEXITCODE -ne 0) {
             Pop-Location
