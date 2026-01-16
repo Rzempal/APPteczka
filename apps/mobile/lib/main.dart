@@ -12,6 +12,7 @@ import 'screens/home_screen.dart';
 import 'screens/add_medicine_screen.dart';
 import 'screens/settings_screen.dart';
 import 'theme/app_theme.dart';
+import 'widgets/apteczka_toolbar.dart';
 import 'widgets/bug_report_sheet.dart';
 import 'widgets/floating_nav_bar.dart';
 import 'widgets/karton_icons.dart';
@@ -182,6 +183,7 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 1; // Domyślnie Apteczka (środkowy tab)
+  bool _showApteczkaToolbar = false; // Stan widoczności toolbara
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
 
   @override
@@ -226,26 +228,57 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
         ],
       ),
-      bottomNavigationBar: FloatingNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          // Odśwież widok po przełączeniu na Apteczkę
-          if (index == 1) {
-            _homeKey.currentState?.refresh();
-          }
-        },
-        items: [
-          const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
-          NavItem(
-            icon: LucideIcons.briefcaseMedical, // fallback
-            iconBuilder: (color, size) =>
-                KartonMonoClosedIcon(size: size, color: color),
-            label: 'Apteczka',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ApteczkaToolbar - widoczny tylko gdy jesteśmy w Apteczce
+          ApteczkaToolbar(
+            isVisible: _currentIndex == 1 && _showApteczkaToolbar,
+            hasActiveFilters: _homeKey.currentState?.hasActiveFilters ?? false,
+            onSearch: () => _homeKey.currentState?.activateSearch(),
+            onSort: () => _homeKey.currentState?.showSort(),
+            onFilter: () => _homeKey.currentState?.showFilters(),
+            onClearFilter: () => _homeKey.currentState?.clearFilters(),
+            onMenu: () => _homeKey.currentState?.showManagement(),
           ),
-          const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+          const SizedBox(height: 8),
+          // FloatingNavBar
+          FloatingNavBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              setState(() {
+                if (index == 1) {
+                  // Apteczka tab
+                  if (_currentIndex != 1) {
+                    // Przechodzimy z innego tabu -> pokaż toolbar
+                    _currentIndex = 1;
+                    _showApteczkaToolbar = true;
+                  } else {
+                    // Już jesteśmy w Apteczce -> toggle toolbar
+                    _showApteczkaToolbar = !_showApteczkaToolbar;
+                  }
+                } else {
+                  // Inne taby -> ukryj toolbar
+                  _currentIndex = index;
+                  _showApteczkaToolbar = false;
+                }
+              });
+              // Odśwież widok po przełączeniu na Apteczkę
+              if (index == 1) {
+                _homeKey.currentState?.refresh();
+              }
+            },
+            items: [
+              const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
+              NavItem(
+                icon: LucideIcons.briefcaseMedical, // fallback
+                iconBuilder: (color, size) =>
+                    KartonMonoClosedIcon(size: size, color: color),
+                label: 'Apteczka',
+              ),
+              const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+            ],
+          ),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -275,18 +308,34 @@ class _HomeScreenWrapper extends StatefulWidget {
 }
 
 class _HomeScreenWrapperState extends State<_HomeScreenWrapper> {
-  Key _refreshKey = UniqueKey();
+  final GlobalKey<HomeScreenState> _homeScreenKey = GlobalKey();
 
   void refresh() {
-    setState(() {
-      _refreshKey = UniqueKey();
-    });
+    _homeScreenKey.currentState?.refresh();
   }
+
+  /// Czy są aktywne filtry
+  bool get hasActiveFilters => _homeScreenKey.currentState?.hasActiveFilters ?? false;
+
+  /// Aktywuje pole wyszukiwania
+  void activateSearch() => _homeScreenKey.currentState?.activateSearch();
+
+  /// Otwiera sortowanie
+  void showSort() => _homeScreenKey.currentState?.showSortBottomSheet();
+
+  /// Otwiera filtry
+  void showFilters() => _homeScreenKey.currentState?.showFilters();
+
+  /// Czyści filtry
+  void clearFilters() => _homeScreenKey.currentState?.clearFilters();
+
+  /// Otwiera zarządzanie apteczką
+  void showManagement() => _homeScreenKey.currentState?.showFilterManagement();
 
   @override
   Widget build(BuildContext context) {
     return HomeScreen(
-      key: _refreshKey,
+      key: _homeScreenKey,
       storageService: widget.storageService,
       themeProvider: widget.themeProvider,
       updateService: widget.updateService,
