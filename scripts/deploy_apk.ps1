@@ -385,8 +385,7 @@ if (-not $SkipUpload) {
             if ($timerPs) { $timerPs.Dispose(); $rs.Close(); $rs.Dispose() }
             
             $summary = Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
-            Write-Host "`n# Deploy Log`n" -ForegroundColor Cyan
-            Write-Host $summary
+            Write-Host "`n$summary" -ForegroundColor Cyan
             Write-Host "---`n"
 
             Write-Host "Nacisnij Enter aby zamknac..."
@@ -416,8 +415,7 @@ Print-Success "Calkowity czas: $finalDurationStr"
 # Update deploy log
 $summary = Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
 
-Write-Host "`n# Deploy Log`n" -ForegroundColor Cyan
-Write-Host $summary
+Write-Host "`n$summary" -ForegroundColor Cyan
 Write-Host "---`n"
 
 Write-Host ""
