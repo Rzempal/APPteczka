@@ -54,6 +54,7 @@ class _MedicineCardState extends State<MedicineCard>
   bool _isPressed = false;
   bool _isMoreExpanded = false; // Akordeon "Więcej"
   bool _isLabelsOpen = false;
+  bool _isEditModeActive = false; // Tryb edycji - ukrywa/pokazuje przyciski edycji
   late Medicine _medicine;
 
   // Inline note editing
@@ -364,7 +365,9 @@ class _MedicineCardState extends State<MedicineCard>
           theme,
           isDark,
           title: 'Opis',
-          onEdit: () => _showEditDescriptionDialog(context),
+          onEdit: _isEditModeActive
+              ? () => _showEditDescriptionDialog(context)
+              : null,
           child: Text(
             _medicine.opis,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -504,20 +507,22 @@ class _MedicineCardState extends State<MedicineCard>
                       ),
                     ),
             ),
-            // Edit button (align-right)
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => _showEditWskazaniaDialog(context),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(
-                  LucideIcons.squarePen,
-                  size: 20,
-                  color: theme.colorScheme.onSurface,
+            // Edit button (align-right) - tylko w trybie edycji
+            if (_isEditModeActive) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _showEditWskazaniaDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                  child: Icon(
+                    LucideIcons.squarePen,
+                    size: 20,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
 
@@ -551,22 +556,25 @@ class _MedicineCardState extends State<MedicineCard>
                   ],
                 ),
               ),
-              const Spacer(),
-              GestureDetector(
-                onTap: _detachLeaflet,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 12,
-                  ),
-                  child: Icon(
-                    LucideIcons.pinOff,
-                    size: 20,
-                    color: AppColors.expired,
+              // Pin-off button - tylko w trybie edycji
+              if (_isEditModeActive) ...[
+                const Spacer(),
+                GestureDetector(
+                  onTap: _detachLeaflet,
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: NeuDecoration.flatSmall(
+                      isDark: isDark,
+                      radius: 12,
+                    ),
+                    child: Icon(
+                      LucideIcons.pinOff,
+                      size: 20,
+                      color: AppColors.expired,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ] else
               NeuButton(
                 onPressed: () => _showLeafletSearch(context),
@@ -1276,19 +1284,22 @@ class _MedicineCardState extends State<MedicineCard>
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => _showEditCustomTagsDialog(context),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(
-                  LucideIcons.squarePen,
-                  size: 20,
-                  color: theme.colorScheme.onSurface,
+            // Edit button - tylko w trybie edycji
+            if (_isEditModeActive) ...[
+              const Spacer(),
+              GestureDetector(
+                onTap: () => _showEditCustomTagsDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                  child: Icon(
+                    LucideIcons.squarePen,
+                    size: 20,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
         const SizedBox(height: 6),
@@ -1333,19 +1344,22 @@ class _MedicineCardState extends State<MedicineCard>
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(
-                  _isLabelsOpen ? LucideIcons.chevronUp : LucideIcons.squarePen,
-                  size: 20,
-                  color: theme.colorScheme.onSurface,
+            // Edit button - tylko w trybie edycji
+            if (_isEditModeActive) ...[
+              const Spacer(),
+              GestureDetector(
+                onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                  child: Icon(
+                    _isLabelsOpen ? LucideIcons.chevronUp : LucideIcons.squarePen,
+                    size: 20,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
-            ),
+            ],
           ],
         ),
         const SizedBox(height: 6),
@@ -1353,15 +1367,20 @@ class _MedicineCardState extends State<MedicineCard>
           LabelSelector(
             storageService: widget.storageService!,
             selectedLabelIds: _medicine.labels,
-            isOpen: _isLabelsOpen,
-            onToggle: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
+            isOpen: _isEditModeActive && _isLabelsOpen,
+            onToggle: _isEditModeActive
+                ? () => setState(() => _isLabelsOpen = !_isLabelsOpen)
+                : null,
             onLabelTap: (labelId) => widget.onLabelTap?.call(labelId),
-            onChanged: (newLabelIds) async {
-              final updatedMedicine = _medicine.copyWith(labels: newLabelIds);
-              await widget.storageService?.saveMedicine(updatedMedicine);
-              setState(() => _medicine = updatedMedicine);
-              widget.onMedicineUpdated?.call();
-            },
+            onChanged: _isEditModeActive
+                ? (newLabelIds) async {
+                    final updatedMedicine =
+                        _medicine.copyWith(labels: newLabelIds);
+                    await widget.storageService?.saveMedicine(updatedMedicine);
+                    setState(() => _medicine = updatedMedicine);
+                    widget.onMedicineUpdated?.call();
+                  }
+                : null,
           ),
       ],
     );
@@ -1404,8 +1423,8 @@ class _MedicineCardState extends State<MedicineCard>
             ),
           ),
         ),
-        // Przycisk zmiany nazwy dla niezweryfikowanych leków (z padding dla cieni)
-        if (!_medicine.isVerifiedByBarcode) ...[
+        // Przycisk zmiany nazwy dla niezweryfikowanych leków (tylko w trybie edycji)
+        if (_isEditModeActive && !_medicine.isVerifiedByBarcode) ...[
           const SizedBox(width: 12),
           Padding(
             padding: const EdgeInsets.only(right: 4, bottom: 4),
@@ -1427,7 +1446,7 @@ class _MedicineCardState extends State<MedicineCard>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Zmień nazwę',
+                      'Zmień nazwę leku',
                       style: TextStyle(
                         color: theme.colorScheme.onSurface,
                         fontSize: 13,
@@ -1440,6 +1459,44 @@ class _MedicineCardState extends State<MedicineCard>
             ),
           ),
         ],
+        const Spacer(),
+        // Przycisk Tryb edycji (zawsze widoczny, align right)
+        Padding(
+          padding: const EdgeInsets.only(right: 4, bottom: 4),
+          child: GestureDetector(
+            onTap: () => setState(() => _isEditModeActive = !_isEditModeActive),
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 10,
+              ),
+              decoration: _isEditModeActive
+                  ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
+                  : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _isEditModeActive
+                        ? LucideIcons.pencilOff
+                        : LucideIcons.pencil,
+                    size: 18,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Tryb edycji',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
