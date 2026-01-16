@@ -124,3 +124,19 @@ Your job as LLM is to:
 5. LLM creates implementation plan
 6. User accepts the plan
 7. LLM implements the tasks following Constraints and using appropriate Tools
+
+---
+
+## After Implementation
+
+**IMPORTANT:** After completing implementation:
+
+- **DO NOT** create commits automatically
+- **DO NOT** push changes
+- **WAIT** for the user to invoke `/end` workflow
+
+The `/end` workflow (see `end.md`) handles:
+- Code review checklist
+- Documentation updates
+- Proper commit numbering (#N format)
+- Git push to `claude/*` branch
