@@ -127,6 +127,7 @@ $commitLines
     
     Set-Content -Path $LOG_PATH -Value $finalContent -Encoding UTF8
     Print-Success "Log zapisany: $LOG_PATH"
+    return $newEntry
 }
 
 
@@ -383,7 +384,11 @@ if (-not $SkipUpload) {
             $finalDurationStr = "$($finalElapsed.Minutes.ToString('00')):$($finalElapsed.Seconds.ToString('00'))"
             if ($timerPs) { $timerPs.Dispose(); $rs.Close(); $rs.Dispose() }
             
-            Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
+            $summary = Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
+            Write-Host "`n# Deploy Log`n" -ForegroundColor Cyan
+            Write-Host $summary
+            Write-Host "---`n"
+
             Write-Host "Nacisnij Enter aby zamknac..."
             $null = Read-Host
             exit $LASTEXITCODE
@@ -409,7 +414,11 @@ Print-Success "=== Deployment Zakonczony (Wersja $VERSION_NAME) ==="
 Print-Success "Calkowity czas: $finalDurationStr"
 
 # Update deploy log
-Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
+$summary = Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
+
+Write-Host "`n# Deploy Log`n" -ForegroundColor Cyan
+Write-Host $summary
+Write-Host "---`n"
 
 Write-Host ""
 exit 0
