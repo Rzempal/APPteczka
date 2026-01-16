@@ -108,7 +108,15 @@ class HomeScreenState extends State<HomeScreen> {
 
   /// Aktywuje pole wyszukiwania
   void activateSearch() {
-    _searchFocusNode.requestFocus();
+    // Najpierw zdejmij focus (jeśli miał), potem przywróć
+    // To zagwarantuje że klawiatura zawsze się podniesie
+    _searchFocusNode.unfocus();
+    // Krótkie opóźnienie aby system zdążył przetworzyć unfocus
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (mounted) {
+        _searchFocusNode.requestFocus();
+      }
+    });
   }
 
   /// Otwiera bottomSheet sortowania
@@ -202,7 +210,8 @@ class HomeScreenState extends State<HomeScreen> {
 
     return GestureDetector(
       // Zdejmij focus z search bar gdy użytkownik kliknie gdzie indziej
-      onTap: () => _searchFocusNode.unfocus(),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         body: SafeArea(
           child: Column(
