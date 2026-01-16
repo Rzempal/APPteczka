@@ -1,8 +1,4 @@
 ---
-description: Project starter template for LLM chats in IDE. Structured workflow with goal definition, task list, context files, clarity checks, conventions, and cost-efficient tool usage. Ensures alignment before implementation.
----
-
----
 
 name: Start
 description: Project starter template for LLM chats in IDE. Structured workflow with goal definition, task list, context files, clarity checks, conventions, and cost-efficient tool usage. Ensures alignment before implementation
