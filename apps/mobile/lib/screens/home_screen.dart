@@ -43,6 +43,7 @@ class HomeScreen extends StatefulWidget {
   final UpdateService updateService;
   final VoidCallback? onNavigateToSettings;
   final VoidCallback? onNavigateToAdd;
+  final VoidCallback? onFiltersChanged;
 
   const HomeScreen({
     super.key,
@@ -51,6 +52,7 @@ class HomeScreen extends StatefulWidget {
     required this.updateService,
     this.onNavigateToSettings,
     this.onNavigateToAdd,
+    this.onFiltersChanged,
   });
 
   @override
@@ -198,18 +200,18 @@ class HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
+    return GestureDetector(
+      // Zdejmij focus z search bar gdy użytkownik kliknie gdzie indziej
+      onTap: () => _searchFocusNode.unfocus(),
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
           children: [
             // Line 1: Logo + Title
             _buildHeaderLine1(theme, isDark),
 
             // Line 2: Search bar
             _buildSearchBar(theme, isDark),
-
-            // Line 3: Counter | View | Sort | Filter
-            _buildToolbar(theme, isDark),
 
             // Lista leków - responsywny grid dla szerokich ekranów
             Expanded(
@@ -337,6 +339,7 @@ class HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -399,111 +402,8 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-          // Przycisk "Zarządzaj" przeniesiony do ApteczkaToolbar (menu)
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSearchBar(ThemeData theme, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        height: 56,
-        decoration: _searchFocusNode.hasFocus
-            ? NeuDecoration.searchBarFocused(isDark: isDark)
-            : NeuDecoration.searchBar(isDark: isDark),
-        child: Row(
-          children: [
-            // Search icon
-            Padding(
-              padding: const EdgeInsets.only(left: 16),
-              child: Icon(
-                LucideIcons.search,
-                size: 20,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-            // Text field
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                focusNode: _searchFocusNode,
-                decoration: InputDecoration(
-                  hintText: 'Szukaj leku...',
-                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  filled: false,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 16,
-                  ),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    _filterState = _filterState.copyWith(searchQuery: value);
-                  });
-                },
-                onSubmitted: (_) {
-                  _searchFocusNode.unfocus();
-                },
-              ),
-            ),
-            // Clear button (when text is present)
-            if (_searchController.text.isNotEmpty)
-              IconButton(
-                icon: Icon(
-                  LucideIcons.x,
-                  size: 18,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                onPressed: () {
-                  _searchController.clear();
-                  setState(() {
-                    _filterState = _filterState.copyWith(searchQuery: '');
-                  });
-                },
-              ),
-            // Submit check button - visible only when focused
-            if (_searchFocusNode.hasFocus)
-              Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () {
-                    _searchFocusNode.unfocus();
-                  },
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: NeuDecoration.flatSmall(
-                      isDark: isDark,
-                      radius: 20,
-                    ),
-                    child: Icon(
-                      LucideIcons.check,
-                      size: 18,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildToolbar(ThemeData theme, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          // Licznik - neumorficzny kontener
+          const Spacer(),
+          // Licznik leków - neumorficzny kontener
           NeuStaticContainer(
             isSmall: true,
             borderRadius: 12,
@@ -549,8 +449,109 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          // Pozostałe przyciski (sort, filter, funnel-x, menu) są w ApteczkaToolbar
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar(ThemeData theme, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        height: 56,
+        decoration: _searchFocusNode.hasFocus
+            ? NeuDecoration.searchBarFocused(isDark: isDark)
+            : NeuDecoration.searchBar(isDark: isDark),
+        child: Row(
+          children: [
+            // Search icon
+            Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: Icon(
+                LucideIcons.search,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            // Text field
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                decoration: InputDecoration(
+                  hintText: 'Szukaj leku...',
+                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 16,
+                  ),
+                ),
+                onChanged: (value) {
+                  final wasActive = _filterState.hasActiveFilters;
+                  setState(() {
+                    _filterState = _filterState.copyWith(searchQuery: value);
+                  });
+                  // Powiadom rodzica tylko gdy zmieni się stan aktywności filtrów
+                  if (wasActive != _filterState.hasActiveFilters) {
+                    widget.onFiltersChanged?.call();
+                  }
+                },
+                onSubmitted: (_) {
+                  _searchFocusNode.unfocus();
+                },
+              ),
+            ),
+            // Clear button (when text is present)
+            if (_searchController.text.isNotEmpty)
+              IconButton(
+                icon: Icon(
+                  LucideIcons.x,
+                  size: 18,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                onPressed: () {
+                  final wasActive = _filterState.hasActiveFilters;
+                  _searchController.clear();
+                  setState(() {
+                    _filterState = _filterState.copyWith(searchQuery: '');
+                  });
+                  if (wasActive != _filterState.hasActiveFilters) {
+                    widget.onFiltersChanged?.call();
+                  }
+                },
+              ),
+            // Submit check button - visible only when focused
+            if (_searchFocusNode.hasFocus)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: GestureDetector(
+                  onTap: () {
+                    _searchFocusNode.unfocus();
+                  },
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: NeuDecoration.flatSmall(
+                      isDark: isDark,
+                      radius: 20,
+                    ),
+                    child: Icon(
+                      LucideIcons.check,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -572,11 +573,13 @@ class HomeScreenState extends State<HomeScreen> {
               setState(() {
                 _filterState = newState;
               });
+              widget.onFiltersChanged?.call();
             },
           ),
         )
         .then((_) {
           _loadMedicines();
+          widget.onFiltersChanged?.call();
         })
         .whenComplete(() {
           if (mounted) setState(() => _isFiltersSheetOpen = false);
@@ -588,6 +591,7 @@ class HomeScreenState extends State<HomeScreen> {
       _filterState = const FilterState();
       _searchController.clear();
     });
+    widget.onFiltersChanged?.call();
   }
 
   // ==================== HELP BOTTOM SHEET ====================
@@ -1204,6 +1208,7 @@ class HomeScreenState extends State<HomeScreen> {
       _filterState = _filterState.copyWith(selectedTags: newTags);
       _expandedMedicineId = null; // Zwija kartę po filtracji
     });
+    widget.onFiltersChanged?.call();
   }
 
   /// Filtruje listę po etykiecie
@@ -1214,6 +1219,7 @@ class HomeScreenState extends State<HomeScreen> {
       _filterState = _filterState.copyWith(selectedLabels: newLabels);
       _expandedMedicineId = null; // Zwija kartę po filtracji
     });
+    widget.onFiltersChanged?.call();
   }
 
   String _getPolishPlural(int count) {
