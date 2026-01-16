@@ -225,7 +225,7 @@ class HomeScreenState extends State<HomeScreen> {
 
               // Gradient pod całą górną sekcją
               Container(
-                height: 24,
+                height: 20,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
