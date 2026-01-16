@@ -271,18 +271,22 @@ class _MainNavigationState extends State<MainNavigation> {
           ),
           // ApteczkaToolbar - "wychodzi" spod FloatingNavBar
           // Pozycjonowany nad navbarem (bottom = wysokość navbara + margines)
+          // IgnorePointer gdy ukryty - żeby nie blokował kliknięć w navbar
           Positioned(
             bottom: 72 + 16 + 8, // navbar height + margin + gap
             left: 0,
             right: 0,
-            child: ApteczkaToolbar(
-              isVisible: _currentIndex == 1 && _showApteczkaToolbar,
-              hasActiveFilters: _homeKey.currentState?.hasActiveFilters ?? false,
-              onSearch: () => _homeKey.currentState?.activateSearch(),
-              onSort: () => _homeKey.currentState?.showSort(),
-              onFilter: () => _homeKey.currentState?.showFilters(),
-              onClearFilter: () => _homeKey.currentState?.clearFilters(),
-              onMenu: () => _homeKey.currentState?.showManagement(),
+            child: IgnorePointer(
+              ignoring: !(_currentIndex == 1 && _showApteczkaToolbar),
+              child: ApteczkaToolbar(
+                isVisible: _currentIndex == 1 && _showApteczkaToolbar,
+                hasActiveFilters: _homeKey.currentState?.hasActiveFilters ?? false,
+                onSearch: () => _homeKey.currentState?.activateSearch(),
+                onSort: () => _homeKey.currentState?.showSort(),
+                onFilter: () => _homeKey.currentState?.showFilters(),
+                onClearFilter: () => _homeKey.currentState?.clearFilters(),
+                onMenu: () => _homeKey.currentState?.showManagement(),
+              ),
             ),
           ),
         ],
