@@ -83,7 +83,7 @@ if ($confirm -ne 'y' -and $confirm -ne 'Y') {
 
 # 9. Utworz PR
 Write-Host "Tworzenie PR..." -ForegroundColor Cyan
-gh pr create --base main --head $currentBranch --title $title --body ""
+gh pr create --base main --head $currentBranch --title "$title" --body " "
 if ($LASTEXITCODE -ne 0) {
     Write-Host "BLAD: Nie udalo sie utworzyc PR!" -ForegroundColor Red
     exit 1
@@ -91,7 +91,7 @@ if ($LASTEXITCODE -ne 0) {
 
 # 10. Merge PR
 Write-Host "Mergowanie PR..." -ForegroundColor Cyan
-gh pr merge --merge --subject $title --delete-branch
+gh pr merge --merge --subject "$title" --delete-branch
 if ($LASTEXITCODE -ne 0) {
     Write-Host "BLAD: Nie udalo sie zmergowac PR!" -ForegroundColor Red
     Write-Host "Moze PR wymaga review? Sprawdz na GitHub." -ForegroundColor Yellow
