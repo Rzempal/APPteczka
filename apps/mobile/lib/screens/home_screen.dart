@@ -235,32 +235,6 @@ class HomeScreenState extends State<HomeScreen> {
                     )
                   : Stack(
                       children: [
-                        // Gradient fade-out na górze
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          top: 0,
-                          height: 40,
-                          child: IgnorePointer(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    (isDark
-                                            ? AppColors.darkBackground
-                                            : AppColors.lightBackground)
-                                        .withAlpha(0),
-                                    isDark
-                                        ? AppColors.darkBackground
-                                        : AppColors.lightBackground,
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
                         // Główna lista - tryb akordeonowy
                         ListView.builder(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -342,6 +316,32 @@ class HomeScreenState extends State<HomeScreen> {
                               child: card,
                             );
                           },
+                        ),
+                        // Gradient fade-out na górze
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          height: 40,
+                          child: IgnorePointer(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    (isDark
+                                            ? AppColors.darkBackground
+                                            : AppColors.lightBackground)
+                                        .withAlpha(0),
+                                    isDark
+                                        ? AppColors.darkBackground
+                                        : AppColors.lightBackground,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                         // Gradient fade-out na dole
                         Positioned(
