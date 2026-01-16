@@ -221,7 +221,22 @@ class HomeScreenState extends State<HomeScreen> {
 
             // Line 2: Search bar
             _buildSearchBar(theme, isDark),
-            const SizedBox(height: 16),
+
+            // Gradient pod całą górną sekcją
+            Container(
+              height: 24,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    isDark ? AppColors.darkBackground : AppColors.lightBackground,
+                    (isDark ? AppColors.darkBackground : AppColors.lightBackground)
+                        .withAlpha(0),
+                  ],
+                ),
+              ),
+            ),
 
             // Lista leków - responsywny grid dla szerokich ekranów
             Expanded(
