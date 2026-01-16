@@ -231,10 +231,9 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
             ],
           ),
-          // ApteczkaToolbar - pozycjonowany w body, niezależny od bottomNavigationBar
-          // bottom = navbar height (72) + navbar margin (16) + gap (8)
+          // ApteczkaToolbar - pozycjonowany w body, nad navbarem
           Positioned(
-            bottom: 72 + 16 + 8,
+            bottom: 16,
             left: 0,
             right: 0,
             child: IgnorePointer(
