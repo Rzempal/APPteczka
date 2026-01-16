@@ -33,11 +33,13 @@ class ApteczkaToolbar extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Pill - minimalna przezroczystość dla efektu glassmorphism
-    final pillColor = isDark
-        ? AppColors.darkSurface.withValues(alpha: 0.95)
-        : AppColors.lightBackground.withValues(alpha: 0.95);
-    final iconColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
+    // Glassmorphism - przezroczyste tło z blur
+    final backgroundColor = isDark
+        ? AppColors.darkSurface.withValues(alpha: 0.85)
+        : AppColors.lightBackground.withValues(alpha: 0.85);
+    final iconColor = isDark
+        ? AppColors.darkTextMuted
+        : AppColors.lightTextMuted;
 
     return AnimatedSlide(
       duration: const Duration(milliseconds: 250),
@@ -50,14 +52,13 @@ class ApteczkaToolbar extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 48),
           height: 56,
-          // Pill z ClipRRect dla blur
           child: ClipRRect(
             borderRadius: BorderRadius.circular(28),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
               child: Container(
                 decoration: BoxDecoration(
-                  color: pillColor,
+                  color: backgroundColor,
                   borderRadius: BorderRadius.circular(28),
                 ),
                 child: Row(
@@ -135,12 +136,15 @@ class _ToolbarButtonState extends State<_ToolbarButton> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown:
-          widget.onTap != null ? (_) => setState(() => _isPressed = true) : null,
-      onTapUp:
-          widget.onTap != null ? (_) => setState(() => _isPressed = false) : null,
-      onTapCancel:
-          widget.onTap != null ? () => setState(() => _isPressed = false) : null,
+      onTapDown: widget.onTap != null
+          ? (_) => setState(() => _isPressed = true)
+          : null,
+      onTapUp: widget.onTap != null
+          ? (_) => setState(() => _isPressed = false)
+          : null,
+      onTapCancel: widget.onTap != null
+          ? () => setState(() => _isPressed = false)
+          : null,
       onTap: widget.onTap != null
           ? () {
               HapticFeedback.lightImpact();
@@ -161,11 +165,7 @@ class _ToolbarButtonState extends State<_ToolbarButton> {
               )
             : null,
         child: Center(
-          child: Icon(
-            widget.icon,
-            size: 22,
-            color: widget.iconColor,
-          ),
+          child: Icon(widget.icon, size: 22, color: widget.iconColor),
         ),
       ),
     );
