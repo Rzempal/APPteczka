@@ -20,6 +20,9 @@ class StorageService {
   /// Notyfikator zmian gestów przeciągania
   final ValueNotifier<bool> swipeGesturesEnabledNotifier = ValueNotifier(true);
 
+  /// Notyfikator zmian trybu edycji zawsze aktywnego
+  final ValueNotifier<bool> editModeAlwaysActiveNotifier = ValueNotifier(false);
+
   /// Inicjalizacja Hive
   Future<void> init() async {
     await Hive.initFlutter();
@@ -30,6 +33,7 @@ class StorageService {
     // Inicjalizacja notyfikatorów wartościami z bazy
     showBugReportFabNotifier.value = showBugReportFab;
     swipeGesturesEnabledNotifier.value = swipeGesturesEnabled;
+    editModeAlwaysActiveNotifier.value = editModeAlwaysActive;
   }
 
   // ==================== SETTINGS ====================
@@ -50,6 +54,15 @@ class StorageService {
   set swipeGesturesEnabled(bool value) {
     _settingsBox.put('swipeGesturesEnabled', value);
     swipeGesturesEnabledNotifier.value = value;
+  }
+
+  /// Czy tryb edycji jest zawsze aktywny (domyślnie false)
+  bool get editModeAlwaysActive =>
+      _settingsBox.get('editModeAlwaysActive', defaultValue: false) as bool;
+
+  set editModeAlwaysActive(bool value) {
+    _settingsBox.put('editModeAlwaysActive', value);
+    editModeAlwaysActiveNotifier.value = value;
   }
 
   /// Czy tooltip pomocy był już pokazany (domyślnie false)

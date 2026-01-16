@@ -105,8 +105,12 @@ class _SettingsScreenState extends State<SettingsScreen>
               _buildThemeSection(context, theme, isDark),
               const SizedBox(height: 24),
 
-              // Gesty (coming soon)
+              // Gesty przeciągania
               _buildGesturesSection(context, theme, isDark),
+              const SizedBox(height: 24),
+
+              // Tryb edycji
+              _buildEditModeSection(context, theme, isDark),
               const SizedBox(height: 24),
 
               // Kopia zapasowa (akordeon)
@@ -798,6 +802,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   }
 
   bool _isGesturesOpen = false;
+  bool _isEditModeOpen = false;
 
   Widget _buildGesturesSection(
     BuildContext context,
@@ -947,6 +952,119 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   style: theme.textTheme.bodySmall,
                                 ),
                               ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEditModeSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        final isEnabled = widget.storageService.editModeAlwaysActive;
+        return Container(
+          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () =>
+                    setLocalState(() => _isEditModeOpen = !_isEditModeOpen),
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isEnabled ? LucideIcons.pencil : LucideIcons.pencilOff,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tryb edycji zawsze aktywny',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              isEnabled ? 'Włączony' : 'Wyłączony',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _isEditModeOpen
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        size: 20,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Zawartość zwijana
+              if (_isEditModeOpen) ...[
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Toggle switch
+                      NeuInsetContainer(
+                        borderRadius: 12,
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Włącz tryb edycji',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Przyciski edycji i usuwania będą zawsze widoczne na karcie leku.',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Switch(
+                              value: isEnabled,
+                              onChanged: (value) {
+                                widget.storageService.editModeAlwaysActive =
+                                    value;
+                                setLocalState(() {});
+                                setState(() {});
+                              },
                             ),
                           ],
                         ),
