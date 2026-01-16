@@ -221,6 +221,7 @@ class HomeScreenState extends State<HomeScreen> {
 
             // Line 2: Search bar
             _buildSearchBar(theme, isDark),
+            const SizedBox(height: 16),
 
             // Lista leków - responsywny grid dla szerokich ekranów
             Expanded(
@@ -234,6 +235,32 @@ class HomeScreenState extends State<HomeScreen> {
                     )
                   : Stack(
                       children: [
+                        // Gradient fade-out na górze
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          height: 40,
+                          child: IgnorePointer(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                  colors: [
+                                    (isDark
+                                            ? AppColors.darkBackground
+                                            : AppColors.lightBackground)
+                                        .withAlpha(0),
+                                    isDark
+                                        ? AppColors.darkBackground
+                                        : AppColors.lightBackground,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                         // Główna lista - tryb akordeonowy
                         ListView.builder(
                           padding: const EdgeInsets.only(bottom: 16),
@@ -676,55 +703,64 @@ class HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 24),
 
             // Sort options
-            ...SortOption.values.map((option) {
+            ...SortOption.values.asMap().entries.expand((entry) {
+              final index = entry.key;
+              final option = entry.value;
               final isSelected = option == _sortOption;
-              return InkWell(
-                onTap: () {
-                  setState(() => _sortOption = option);
-                  Navigator.pop(context);
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      // Tekst po lewej - bez stylu neumorficznego
-                      Expanded(
-                        child: Text(
-                          option.label,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.normal,
-                            color: isSelected
-                                ? AppColors.primary
-                                : theme.colorScheme.onSurface,
+              final widgets = <Widget>[
+                InkWell(
+                  onTap: () {
+                    setState(() => _sortOption = option);
+                    Navigator.pop(context);
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 12,
+                    ),
+                    child: Row(
+                      children: [
+                        // Tekst po lewej - bez stylu neumorficznego
+                        Expanded(
+                          child: Text(
+                            option.label,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : theme.colorScheme.onSurface,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Ikona po prawej - w kontenerze .flat/.pressed
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: isSelected
-                            ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
-                            : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-                        child: Icon(
-                          option.icon,
-                          size: 18,
-                          color: isSelected
-                              ? AppColors.primary
-                              : theme.colorScheme.onSurfaceVariant,
+                        const SizedBox(width: 12),
+                        // Ikona po prawej - w kontenerze .flat/.pressed
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: isSelected
+                              ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
+                              : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                          child: Icon(
+                            option.icon,
+                            size: 18,
+                            color: isSelected
+                                ? AppColors.primary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              );
+              ];
+              // Dodaj Divider po każdej opcji oprócz ostatniej
+              if (index < SortOption.values.length - 1) {
+                widgets.add(const Divider(height: 1));
+              }
+              return widgets;
             }),
             const SizedBox(height: 16),
           ],
@@ -754,21 +790,6 @@ class HomeScreenState extends State<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Row(
-                children: [
-                  Icon(LucideIcons.menu, color: theme.colorScheme.primary),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Zarządzaj apteczką',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
               // Zarządzaj etykietami
               ListTile(
                 leading: Icon(

@@ -55,8 +55,8 @@ class _InnerContentContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     // Kolory dla efektu dwutonowego tła
     final innerBgColor = isDark
-        ? AppColors.darkSurface // ciemniejszy = efekt wgłębienia
-        : Colors.white;         // biały = kontrast z ramką
+        ? const Color(0xFF3f4d62) // jaśniejszy od ramki (0xFF334155)
+        : const Color(0xFFf5f9f7); // delikatnie jaśniejszy od ramki (0xFFedf3ef)
 
     final innerShadowDark = isDark
         ? Colors.black.withAlpha(40)
