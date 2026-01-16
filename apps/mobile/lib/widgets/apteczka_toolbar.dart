@@ -37,9 +37,17 @@ class ApteczkaToolbar extends StatelessWidget {
     final backgroundColor = isDark
         ? AppColors.darkSurface.withValues(alpha: 0.85)
         : AppColors.lightBackground.withValues(alpha: 0.85);
-    final iconColor = isDark
-        ? AppColors.darkTextMuted
-        : AppColors.lightTextMuted;
+
+    // Outline - ciemniejszy od tła
+    final borderColor = isDark
+        ? AppColors.darkShadowDark.withValues(alpha: 0.5)
+        : AppColors.lightShadowDark.withValues(alpha: 0.3);
+
+    // Ikony w kolorze akcentowym (zielony)
+    final iconColor = AppColors.primary;
+    final disabledIconColor = isDark
+        ? AppColors.darkTextMuted.withValues(alpha: 0.3)
+        : AppColors.lightTextMuted.withValues(alpha: 0.3);
 
     return AnimatedSlide(
       duration: const Duration(milliseconds: 250),
@@ -48,7 +56,6 @@ class ApteczkaToolbar extends StatelessWidget {
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 200),
         opacity: isVisible ? 1.0 : 0.0,
-        // Zewnętrzny kontener - przezroczysty (cienie FloatingNavBar widoczne)
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 48),
           height: 56,
@@ -60,6 +67,7 @@ class ApteczkaToolbar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: backgroundColor,
                   borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: borderColor, width: 1),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -70,7 +78,7 @@ class ApteczkaToolbar extends StatelessWidget {
                       onTap: hasActiveFilters ? onClearFilter : null,
                       iconColor: hasActiveFilters
                           ? AppColors.expired
-                          : iconColor.withValues(alpha: 0.3),
+                          : disabledIconColor,
                       isDark: isDark,
                     ),
                     // 2. Filter (funnel)
