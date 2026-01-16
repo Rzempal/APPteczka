@@ -189,91 +189,52 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
+      body: Stack(
         children: [
-          // 0: Dodaj
-          AddMedicineScreen(
-            storageService: widget.storageService,
-            onError: (error) {
-              if (error != null) {
-                FabService.instance.showError(error);
-              } else {
-                FabService.instance.clearError();
-              }
-            },
-          ),
-          // 1: Apteczka (domyślny, środkowy)
-          _HomeScreenWrapper(
-            key: _homeKey,
-            storageService: widget.storageService,
-            themeProvider: widget.themeProvider,
-            updateService: widget.updateService,
-            onNavigateToSettings: () {
-              setState(() {
-                _currentIndex = 2; // Navigate to Ustawienia tab
-              });
-            },
-            onNavigateToAdd: () {
-              setState(() {
-                _currentIndex = 0; // Navigate to Dodaj tab
-              });
-            },
-          ),
-          // 2: Ustawienia
-          SettingsScreen(
-            storageService: widget.storageService,
-            themeProvider: widget.themeProvider,
-            updateService: widget.updateService,
-          ),
-        ],
-      ),
-      bottomNavigationBar: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.bottomCenter,
-        children: [
-          // FloatingNavBar - bazowy element
-          FloatingNavBar(
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                if (index == 1) {
-                  // Apteczka tab
-                  if (_currentIndex != 1) {
-                    // Przechodzimy z innego tabu -> pokaż toolbar
-                    _currentIndex = 1;
-                    _showApteczkaToolbar = true;
+          // Główna zawartość - IndexedStack z ekranami
+          IndexedStack(
+            index: _currentIndex,
+            children: [
+              // 0: Dodaj
+              AddMedicineScreen(
+                storageService: widget.storageService,
+                onError: (error) {
+                  if (error != null) {
+                    FabService.instance.showError(error);
                   } else {
-                    // Już jesteśmy w Apteczce -> toggle toolbar
-                    _showApteczkaToolbar = !_showApteczkaToolbar;
+                    FabService.instance.clearError();
                   }
-                } else {
-                  // Inne taby -> ukryj toolbar
-                  _currentIndex = index;
-                  _showApteczkaToolbar = false;
-                }
-              });
-              // Odśwież widok po przełączeniu na Apteczkę
-              if (index == 1) {
-                _homeKey.currentState?.refresh();
-              }
-            },
-            items: [
-              const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
-              NavItem(
-                icon: LucideIcons.briefcaseMedical, // fallback
-                iconBuilder: (color, size) =>
-                    KartonMonoClosedIcon(size: size, color: color),
-                label: 'Apteczka',
+                },
               ),
-              const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+              // 1: Apteczka (domyślny, środkowy)
+              _HomeScreenWrapper(
+                key: _homeKey,
+                storageService: widget.storageService,
+                themeProvider: widget.themeProvider,
+                updateService: widget.updateService,
+                onNavigateToSettings: () {
+                  setState(() {
+                    _currentIndex = 2; // Navigate to Ustawienia tab
+                  });
+                },
+                onNavigateToAdd: () {
+                  setState(() {
+                    _currentIndex = 0; // Navigate to Dodaj tab
+                  });
+                },
+              ),
+              // 2: Ustawienia
+              SettingsScreen(
+                storageService: widget.storageService,
+                themeProvider: widget.themeProvider,
+                updateService: widget.updateService,
+              ),
             ],
           ),
-          // ApteczkaToolbar - "wychodzi" spod FloatingNavBar
-          // Pozycjonowany nad navbarem (bottom = wysokość navbara + margines)
-          // IgnorePointer gdy ukryty - żeby nie blokował kliknięć w navbar
+          // ApteczkaToolbar - pozycjonowany w body, niezależny od bottomNavigationBar
+          // bottom = navbar height (72) + navbar margin (16) + gap (8)
           Positioned(
-            bottom: 72 + 16 + 8, // navbar height + margin + gap
+            bottom: 72 + 16 + 8,
             left: 0,
             right: 0,
             child: IgnorePointer(
@@ -289,6 +250,42 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
             ),
           ),
+        ],
+      ),
+      bottomNavigationBar: FloatingNavBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            if (index == 1) {
+              // Apteczka tab
+              if (_currentIndex != 1) {
+                // Przechodzimy z innego tabu -> pokaż toolbar
+                _currentIndex = 1;
+                _showApteczkaToolbar = true;
+              } else {
+                // Już jesteśmy w Apteczce -> toggle toolbar
+                _showApteczkaToolbar = !_showApteczkaToolbar;
+              }
+            } else {
+              // Inne taby -> ukryj toolbar
+              _currentIndex = index;
+              _showApteczkaToolbar = false;
+            }
+          });
+          // Odśwież widok po przełączeniu na Apteczkę
+          if (index == 1) {
+            _homeKey.currentState?.refresh();
+          }
+        },
+        items: [
+          const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
+          NavItem(
+            icon: LucideIcons.briefcaseMedical, // fallback
+            iconBuilder: (color, size) =>
+                KartonMonoClosedIcon(size: size, color: color),
+            label: 'Apteczka',
+          ),
+          const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
         ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
