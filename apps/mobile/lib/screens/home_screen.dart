@@ -216,182 +216,191 @@ class HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         body: SafeArea(
           child: Column(
-          children: [
-            // Line 1: Logo + Title
-            _buildHeaderLine1(theme, isDark),
+            children: [
+              // Line 1: Logo + Title
+              _buildHeaderLine1(theme, isDark),
 
-            // Line 2: Search bar
-            _buildSearchBar(theme, isDark),
+              // Line 2: Search bar z gradientem
+              _buildSearchBar(theme, isDark),
 
-            // Gradient pod całą górną sekcją
-            Container(
-              height: 24,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    isDark ? AppColors.darkBackground : AppColors.lightBackground,
-                    (isDark ? AppColors.darkBackground : AppColors.lightBackground)
-                        .withAlpha(0),
-                  ],
+              // Gradient pod całą górną sekcją
+              Container(
+                height: 24,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      isDark
+                          ? AppColors.darkBackground
+                          : AppColors.lightBackground,
+                      (isDark
+                              ? AppColors.darkBackground
+                              : AppColors.lightBackground)
+                          .withAlpha(0),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            // Lista leków - responsywny grid dla szerokich ekranów
-            Expanded(
-              child: _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _filteredMedicines.isEmpty
-                  ? _EmptyState(
-                      onDemoPressed: _addDemoMedicines,
-                      onAddPressed: widget.onNavigateToAdd,
-                      hasFilters: _filterState.hasActiveFilters,
-                    )
-                  : Stack(
-                      children: [
-                        // Główna lista - tryb akordeonowy
-                        ListView.builder(
-                          padding: const EdgeInsets.only(top: 8, bottom: 16),
-                          itemCount: _filteredMedicines.length,
-                          itemBuilder: (context, index) {
-                            final medicine = _filteredMedicines[index];
-                            final swipeEnabled =
-                                widget.storageService.swipeGesturesEnabled;
-                            final isExpanded =
-                                _expandedMedicineId == medicine.id;
+              // Lista leków - responsywny grid dla szerokich ekranów
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _filteredMedicines.isEmpty
+                    ? _EmptyState(
+                        onDemoPressed: _addDemoMedicines,
+                        onAddPressed: widget.onNavigateToAdd,
+                        hasFilters: _filterState.hasActiveFilters,
+                      )
+                    : Stack(
+                        children: [
+                          // Główna lista - tryb akordeonowy
+                          ListView.builder(
+                            padding: const EdgeInsets.only(top: 8, bottom: 16),
+                            itemCount: _filteredMedicines.length,
+                            itemBuilder: (context, index) {
+                              final medicine = _filteredMedicines[index];
+                              final swipeEnabled =
+                                  widget.storageService.swipeGesturesEnabled;
+                              final isExpanded =
+                                  _expandedMedicineId == medicine.id;
 
-                            final card = MedicineCard(
-                              medicine: medicine,
-                              labels: _allLabels,
-                              storageService: widget.storageService,
-                              isCompact: !isExpanded,
-                              isDuplicate: hasDuplicates(medicine, _medicines),
-                              onExpand: () {
-                                setState(() {
-                                  // Toggle - kliknięcie na rozwiniętą kartę zwija ją
-                                  if (_expandedMedicineId == medicine.id) {
-                                    _expandedMedicineId = null;
+                              final card = MedicineCard(
+                                medicine: medicine,
+                                labels: _allLabels,
+                                storageService: widget.storageService,
+                                isCompact: !isExpanded,
+                                isDuplicate: hasDuplicates(
+                                  medicine,
+                                  _medicines,
+                                ),
+                                onExpand: () {
+                                  setState(() {
+                                    // Toggle - kliknięcie na rozwiniętą kartę zwija ją
+                                    if (_expandedMedicineId == medicine.id) {
+                                      _expandedMedicineId = null;
+                                    } else {
+                                      _expandedMedicineId = medicine.id;
+                                    }
+                                  });
+                                },
+                                onEdit: () => _editMedicine(medicine),
+                                onDelete: () =>
+                                    _deleteMedicineWithConfirm(medicine),
+                                onTagTap: (tag) => _filterByTag(tag),
+                                onLabelTap: (labelId) =>
+                                    _filterByLabel(labelId),
+                                onMedicineUpdated: _loadMedicines,
+                              );
+
+                              if (!swipeEnabled) {
+                                return card;
+                              }
+
+                              return Dismissible(
+                                key: Key(medicine.id),
+                                direction: DismissDirection.horizontal,
+                                // Swipe w prawo → notatki
+                                background: Container(
+                                  alignment: Alignment.centerLeft,
+                                  padding: const EdgeInsets.only(left: 32),
+                                  color: Colors.transparent,
+                                  child: Icon(
+                                    LucideIcons.clipboardPenLine,
+                                    size: 32,
+                                    color: isDark
+                                        ? AppColors.primary
+                                        : Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                // Swipe w lewo → etykiety
+                                secondaryBackground: Container(
+                                  alignment: Alignment.centerRight,
+                                  padding: const EdgeInsets.only(right: 32),
+                                  color: Colors.transparent,
+                                  child: Icon(
+                                    LucideIcons.tags,
+                                    size: 32,
+                                    color: isDark
+                                        ? AppColors.primary
+                                        : Theme.of(context).colorScheme.primary,
+                                  ),
+                                ),
+                                confirmDismiss: (direction) async {
+                                  if (direction ==
+                                      DismissDirection.endToStart) {
+                                    // Swipe w lewo → edycja etykiet
+                                    _showLabelsSheet(medicine);
                                   } else {
-                                    _expandedMedicineId = medicine.id;
+                                    // Swipe w prawo → edycja notatki
+                                    _showEditNoteDialog(medicine);
                                   }
-                                });
-                              },
-                              onEdit: () => _editMedicine(medicine),
-                              onDelete: () =>
-                                  _deleteMedicineWithConfirm(medicine),
-                              onTagTap: (tag) => _filterByTag(tag),
-                              onLabelTap: (labelId) => _filterByLabel(labelId),
-                              onMedicineUpdated: _loadMedicines,
-                            );
-
-                            if (!swipeEnabled) {
-                              return card;
-                            }
-
-                            return Dismissible(
-                              key: Key(medicine.id),
-                              direction: DismissDirection.horizontal,
-                              // Swipe w prawo → notatki
-                              background: Container(
-                                alignment: Alignment.centerLeft,
-                                padding: const EdgeInsets.only(left: 32),
-                                color: Colors.transparent,
-                                child: Icon(
-                                  LucideIcons.clipboardPenLine,
-                                  size: 32,
-                                  color: isDark
-                                      ? AppColors.primary
-                                      : Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                              // Swipe w lewo → etykiety
-                              secondaryBackground: Container(
-                                alignment: Alignment.centerRight,
-                                padding: const EdgeInsets.only(right: 32),
-                                color: Colors.transparent,
-                                child: Icon(
-                                  LucideIcons.tags,
-                                  size: 32,
-                                  color: isDark
-                                      ? AppColors.primary
-                                      : Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                              confirmDismiss: (direction) async {
-                                if (direction == DismissDirection.endToStart) {
-                                  // Swipe w lewo → edycja etykiet
-                                  _showLabelsSheet(medicine);
-                                } else {
-                                  // Swipe w prawo → edycja notatki
-                                  _showEditNoteDialog(medicine);
-                                }
-                                return false; // Nie usuwaj karty
-                              },
-                              child: card,
-                            );
-                          },
-                        ),
-                        // Gradient fade-out na górze
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          top: 0,
-                          height: 40,
-                          child: IgnorePointer(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    (isDark
-                                            ? AppColors.darkBackground
-                                            : AppColors.lightBackground)
-                                        .withAlpha(0),
-                                    isDark
-                                        ? AppColors.darkBackground
-                                        : AppColors.lightBackground,
-                                  ],
+                                  return false; // Nie usuwaj karty
+                                },
+                                child: card,
+                              );
+                            },
+                          ),
+                          // Gradient fade-out na górze
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: 0,
+                            height: 40,
+                            child: IgnorePointer(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      (isDark
+                                              ? AppColors.darkBackground
+                                              : AppColors.lightBackground)
+                                          .withAlpha(0),
+                                      isDark
+                                          ? AppColors.darkBackground
+                                          : AppColors.lightBackground,
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        // Gradient fade-out na dole
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: 0,
-                          height: 40,
-                          child: IgnorePointer(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    (isDark
-                                            ? AppColors.darkBackground
-                                            : AppColors.lightBackground)
-                                        .withAlpha(0),
-                                    isDark
-                                        ? AppColors.darkBackground
-                                        : AppColors.lightBackground,
-                                  ],
+                          // Gradient fade-out na dole
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            height: 40,
+                            child: IgnorePointer(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      (isDark
+                                              ? AppColors.darkBackground
+                                              : AppColors.lightBackground)
+                                          .withAlpha(0),
+                                      isDark
+                                          ? AppColors.darkBackground
+                                          : AppColors.lightBackground,
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-            ),
-          ],
+                        ],
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -562,7 +571,9 @@ class HomeScreenState extends State<HomeScreen> {
                     onChanged: (value) {
                       final wasActive = _filterState.hasActiveFilters;
                       setState(() {
-                        _filterState = _filterState.copyWith(searchQuery: value);
+                        _filterState = _filterState.copyWith(
+                          searchQuery: value,
+                        );
                       });
                       // Powiadom rodzica tylko gdy zmieni się stan aktywności filtrów
                       if (wasActive != _filterState.hasActiveFilters) {
@@ -719,10 +730,7 @@ class HomeScreenState extends State<HomeScreen> {
             // Header
             Row(
               children: [
-                Icon(
-                  LucideIcons.arrowDownUp,
-                  color: theme.colorScheme.primary,
-                ),
+                Icon(LucideIcons.arrowDownUp, color: theme.colorScheme.primary),
                 const SizedBox(width: 12),
                 Text(
                   'Sortuj',
@@ -773,8 +781,14 @@ class HomeScreenState extends State<HomeScreen> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: isSelected
-                              ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
-                              : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+                              ? NeuDecoration.pressedSmall(
+                                  isDark: isDark,
+                                  radius: 10,
+                                )
+                              : NeuDecoration.flatSmall(
+                                  isDark: isDark,
+                                  radius: 10,
+                                ),
                           child: Icon(
                             option.icon,
                             size: 18,
@@ -819,211 +833,187 @@ class HomeScreenState extends State<HomeScreen> {
           horizontal: BottomSheetConstants.contentPadding,
         ),
         child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Zarządzaj etykietami
-              ListTile(
-                leading: Icon(
-                  LucideIcons.tags,
-                  color: theme.colorScheme.primary,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Zarządzaj etykietami
+            ListTile(
+              leading: Icon(LucideIcons.tags, color: theme.colorScheme.primary),
+              title: const Text('Etykiety'),
+              subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
+              trailing: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(
+                  LucideIcons.chevronRight,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-                title: const Text('Etykiety'),
-                subtitle: const Text('Dodawaj, edytuj i usuwaj swoje etykiety'),
-                trailing: Container(
-                  padding: const EdgeInsets.all(8),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showLabelManagement();
+              },
+            ),
+
+            const Divider(height: 24),
+
+            // Zarządzaj tagami
+            ListTile(
+              leading: Icon(LucideIcons.hash, color: theme.colorScheme.primary),
+              title: const Text('Tagi'),
+              subtitle: const Text(
+                'Dodawaj, edytuj i usuwaj niestandardowe tagi z apteczki',
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(
+                  LucideIcons.chevronRight,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _showTagManagement();
+              },
+            ),
+
+            const Divider(height: 24),
+
+            // Skopiuj listę leków
+            ListTile(
+              leading: Icon(LucideIcons.list, color: theme.colorScheme.primary),
+              title: const Text('Skopiuj listę leków'),
+              subtitle: const Text(
+                'Zwraca liste leków oddzielonych przecinkami',
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(
+                  LucideIcons.copy,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _copyMedicineList();
+              },
+            ),
+
+            const Divider(height: 24),
+
+            // Tabela do PDF
+            ListTile(
+              leading: Icon(
+                LucideIcons.fileSpreadsheet,
+                color: theme.colorScheme.primary,
+              ),
+              title: const Text('Tabela leków do PDF'),
+              subtitle: const Text(
+                'Podgląd, udostępnianie i drukowanie tabeli',
+              ),
+              trailing: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 8),
+                child: Icon(
+                  LucideIcons.chevronRight,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                _previewPdfExport();
+              },
+            ),
+
+            const Divider(height: 24),
+
+            // Wyczyść apteczkę - Strefa niebezpieczna
+            ListTile(
+              leading: Icon(LucideIcons.paintbrush, color: AppColors.expired),
+              title: Text(
+                'Wyczyść apteczkę',
+                style: TextStyle(color: AppColors.expired),
+              ),
+              subtitle: Text(
+                'Nieodwracalna akcja',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.expired.withAlpha(180),
+                ),
+              ),
+              trailing: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  _showDeleteAllMedicinesDialog();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
                   decoration: NeuDecoration.flatSmall(
                     isDark: isDark,
                     radius: 8,
                   ),
                   child: Icon(
-                    LucideIcons.chevronRight,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showLabelManagement();
-                },
-              ),
-
-              const Divider(height: 24),
-
-              // Zarządzaj tagami
-              ListTile(
-                leading: Icon(
-                  LucideIcons.hash,
-                  color: theme.colorScheme.primary,
-                ),
-                title: const Text('Tagi'),
-                subtitle: const Text(
-                  'Dodawaj, edytuj i usuwaj niestandardowe tagi z apteczki',
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 8,
-                  ),
-                  child: Icon(
-                    LucideIcons.chevronRight,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _showTagManagement();
-                },
-              ),
-
-              const Divider(height: 24),
-
-              // Skopiuj listę leków
-              ListTile(
-                leading: Icon(
-                  LucideIcons.list,
-                  color: theme.colorScheme.primary,
-                ),
-                title: const Text('Skopiuj listę leków'),
-                subtitle: const Text(
-                  'Zwraca liste leków oddzielonych przecinkami',
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 8,
-                  ),
-                  child: Icon(
-                    LucideIcons.copy,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _copyMedicineList();
-                },
-              ),
-
-              const Divider(height: 24),
-
-              // Tabela do PDF
-              ListTile(
-                leading: Icon(
-                  LucideIcons.fileSpreadsheet,
-                  color: theme.colorScheme.primary,
-                ),
-                title: const Text('Tabela leków do PDF'),
-                subtitle: const Text(
-                  'Podgląd, udostępnianie i drukowanie tabeli',
-                ),
-                trailing: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 8,
-                  ),
-                  child: Icon(
-                    LucideIcons.chevronRight,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  _previewPdfExport();
-                },
-              ),
-
-              const Divider(height: 24),
-
-              // Wyczyść apteczkę - Strefa niebezpieczna
-              ListTile(
-                leading: Icon(LucideIcons.paintbrush, color: AppColors.expired),
-                title: Text(
-                  'Wyczyść apteczkę',
-                  style: TextStyle(color: AppColors.expired),
-                ),
-                subtitle: Text(
-                  'Nieodwracalna akcja',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.expired.withAlpha(180),
-                  ),
-                ),
-                trailing: GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                    _showDeleteAllMedicinesDialog();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: NeuDecoration.flatSmall(
-                      isDark: isDark,
-                      radius: 8,
-                    ),
-                    child: Icon(
-                      LucideIcons.trash2,
-                      color: AppColors.expired,
-                      size: 20,
-                    ),
+                    LucideIcons.trash2,
+                    color: AppColors.expired,
+                    size: 20,
                   ),
                 ),
               ),
+            ),
 
-              const Divider(height: 24),
+            const Divider(height: 24),
 
-              const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-              // Disclaimer
-              Container(
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.expiringSoon.withAlpha(30)
-                      : AppColors.expiringSoon.withAlpha(20),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.expiringSoon.withAlpha(100),
-                  ),
+            // Disclaimer
+            Container(
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.expiringSoon.withAlpha(30)
+                    : AppColors.expiringSoon.withAlpha(20),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: AppColors.expiringSoon.withAlpha(100),
                 ),
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      LucideIcons.shieldAlert,
-                      color: AppColors.expiringSoon,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Informacja prawna',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.expiringSoon,
-                            ),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(LucideIcons.shieldAlert, color: AppColors.expiringSoon),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Informacja prawna',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.expiringSoon,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Aplikacja "Karton z lekami" służy wyłącznie do organizacji domowej apteczki. Nie jest to wyrób medyczny. Przed użyciem leku zawsze skonsultuj się z lekarzem lub farmaceutą.',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: isDark
-                                  ? theme.colorScheme.onSurface
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Aplikacja "Karton z lekami" służy wyłącznie do organizacji domowej apteczki. Nie jest to wyrób medyczny. Przed użyciem leku zawsze skonsultuj się z lekarzem lub farmaceutą.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isDark
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.onSurfaceVariant,
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+            ),
 
-              const SizedBox(height: 16),
-            ],
-          ),
+            const SizedBox(height: 16),
+          ],
         ),
+      ),
     ).whenComplete(() {
       if (mounted) setState(() => _isManagementSheetOpen = false);
     });
@@ -1414,10 +1404,11 @@ class HomeScreenState extends State<HomeScreen> {
                                   currentLabels = newLabelIds;
                                 });
                                 // Zapisz do storage
-                                await widget.storageService.updateMedicineLabels(
-                                  medicine.id,
-                                  newLabelIds,
-                                );
+                                await widget.storageService
+                                    .updateMedicineLabels(
+                                      medicine.id,
+                                      newLabelIds,
+                                    );
                               },
                             ),
                             const SizedBox(height: 16),
@@ -1783,7 +1774,10 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(LucideIcons.tags, color: theme.colorScheme.primary),
+                        Icon(
+                          LucideIcons.tags,
+                          color: theme.colorScheme.primary,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -1821,148 +1815,158 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                     const SizedBox(height: 16),
                     Expanded(
                       child: _labels.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            LucideIcons.tag,
-                            size: 48,
-                            color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                              128,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Brak etykiet',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Dodaj etykiety w szczegółach leku',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withAlpha(180),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ReorderableListView.builder(
-                      scrollController: scrollController,
-                      itemCount: _labels.length,
-                      onReorder: _onReorder,
-                      proxyDecorator: (child, index, animation) {
-                        return AnimatedBuilder(
-                          animation: animation,
-                          builder: (context, child) {
-                            final double elevation = Tween<double>(
-                              begin: 0,
-                              end: 6,
-                            ).evaluate(animation);
-                            return Material(
-                              elevation: elevation,
-                              borderRadius: BorderRadius.circular(8),
-                              child: child,
-                            );
-                          },
-                          child: child,
-                        );
-                      },
-                      itemBuilder: (context, index) {
-                        final label = _labels[index];
-                        final colorInfo = labelColors[label.color];
-                        final color = colorInfo != null
-                            ? Color(colorInfo.colorValue)
-                            : Colors.grey;
-                        final isSelected = _selectedLabelIds.contains(label.id);
-                        return Container(
-                          key: ValueKey(label.id),
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: NeuDecoration.flatSmall(
-                            isDark: isDark,
-                            radius: 8,
-                          ),
-                          child: ListTile(
-                            leading: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // Checkbox dla multi-select
-                                Checkbox(
-                                  value: isSelected,
-                                  onChanged: (checked) {
-                                    setState(() {
-                                      if (checked == true) {
-                                        _selectedLabelIds.add(label.id);
-                                      } else {
-                                        _selectedLabelIds.remove(label.id);
-                                      }
-                                    });
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    LucideIcons.tag,
+                                    size: 48,
+                                    color: theme.colorScheme.onSurfaceVariant
+                                        .withAlpha(128),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Brak etykiet',
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Dodaj etykiety w szczegółach leku',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant
+                                          .withAlpha(180),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ReorderableListView.builder(
+                              scrollController: scrollController,
+                              itemCount: _labels.length,
+                              onReorder: _onReorder,
+                              proxyDecorator: (child, index, animation) {
+                                return AnimatedBuilder(
+                                  animation: animation,
+                                  builder: (context, child) {
+                                    final double elevation = Tween<double>(
+                                      begin: 0,
+                                      end: 6,
+                                    ).evaluate(animation);
+                                    return Material(
+                                      elevation: elevation,
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: child,
+                                    );
                                   },
-                                  activeColor: theme.colorScheme.primary,
-                                ),
-                                // Drag handle
-                                ReorderableDragStartListener(
-                                  index: index,
-                                  child: Icon(
-                                    LucideIcons.gripVertical,
-                                    size: 20,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                                  child: child,
+                                );
+                              },
+                              itemBuilder: (context, index) {
+                                final label = _labels[index];
+                                final colorInfo = labelColors[label.color];
+                                final color = colorInfo != null
+                                    ? Color(colorInfo.colorValue)
+                                    : Colors.grey;
+                                final isSelected = _selectedLabelIds.contains(
+                                  label.id,
+                                );
+                                return Container(
+                                  key: ValueKey(label.id),
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  decoration: NeuDecoration.flatSmall(
+                                    isDark: isDark,
+                                    radius: 8,
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                // Color dot
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    shape: BoxShape.circle,
+                                  child: ListTile(
+                                    leading: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        // Checkbox dla multi-select
+                                        Checkbox(
+                                          value: isSelected,
+                                          onChanged: (checked) {
+                                            setState(() {
+                                              if (checked == true) {
+                                                _selectedLabelIds.add(label.id);
+                                              } else {
+                                                _selectedLabelIds.remove(
+                                                  label.id,
+                                                );
+                                              }
+                                            });
+                                          },
+                                          activeColor:
+                                              theme.colorScheme.primary,
+                                        ),
+                                        // Drag handle
+                                        ReorderableDragStartListener(
+                                          index: index,
+                                          child: Icon(
+                                            LucideIcons.gripVertical,
+                                            size: 20,
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        // Color dot
+                                        Container(
+                                          width: 24,
+                                          height: 24,
+                                          decoration: BoxDecoration(
+                                            color: color,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    title: Text(
+                                      label.name,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                    subtitle: Text(
+                                      colorInfo?.name ?? 'Szary',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            LucideIcons.pen,
+                                            size: 18,
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                          onPressed: () => _editLabel(label),
+                                          tooltip: 'Edytuj',
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            LucideIcons.trash,
+                                            size: 18,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: () => _deleteLabel(label),
+                                          tooltip: 'Usuń',
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                );
+                              },
                             ),
-                            title: Text(
-                              label.name,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: Text(
-                              colorInfo?.name ?? 'Szary',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    LucideIcons.pen,
-                                    size: 18,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  onPressed: () => _editLabel(label),
-                                  tooltip: 'Edytuj',
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    LucideIcons.trash,
-                                    size: 18,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: () => _deleteLabel(label),
-                                  tooltip: 'Usuń',
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
                     ),
                     // Przycisk "Usuń zaznaczone" (widoczny gdy >= 1 zaznaczona)
                     if (_selectedLabelIds.isNotEmpty) ...[
@@ -1972,7 +1976,9 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                         child: FilledButton.icon(
                           onPressed: _deleteSelectedLabels,
                           icon: const Icon(LucideIcons.trash, size: 18),
-                          label: Text('Usuń zaznaczone (${_selectedLabelIds.length})'),
+                          label: Text(
+                            'Usuń zaznaczone (${_selectedLabelIds.length})',
+                          ),
                           style: FilledButton.styleFrom(
                             backgroundColor: Colors.red,
                             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -2322,7 +2328,10 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Icon(LucideIcons.hash, color: theme.colorScheme.primary),
+                        Icon(
+                          LucideIcons.hash,
+                          color: theme.colorScheme.primary,
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
@@ -2344,98 +2353,103 @@ class _TagManagementSheetState extends State<_TagManagementSheet> {
                     const SizedBox(height: 16),
                     Expanded(
                       child: sortedTags.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            LucideIcons.hash,
-                            size: 48,
-                            color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                              128,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Brak własnych tagów',
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tagi systemowe są zarządzane przez aplikację',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  : ListView.builder(
-                      controller: scrollController,
-                      itemCount: sortedTags.length,
-                      itemBuilder: (context, index) {
-                        final tag = sortedTags[index];
-                        final medicineCount = _getMedicineCountForTag(tag);
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          decoration: NeuDecoration.flatSmall(
-                            isDark: isDark,
-                            radius: 8,
-                          ),
-                          child: ListTile(
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withAlpha(30),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                LucideIcons.tag,
-                                size: 18,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            title: Text(
-                              tag,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            subtitle: Text(
-                              '$medicineCount ${medicineCount == 1 ? 'lek' : 'leków'}',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    LucideIcons.pen,
-                                    size: 18,
-                                    color: theme.colorScheme.primary,
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    LucideIcons.hash,
+                                    size: 48,
+                                    color: theme.colorScheme.onSurfaceVariant
+                                        .withAlpha(128),
                                   ),
-                                  onPressed: () => _editTag(tag),
-                                  tooltip: 'Edytuj',
-                                ),
-                                IconButton(
-                                  icon: const Icon(
-                                    LucideIcons.trash,
-                                    size: 18,
-                                    color: Colors.red,
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'Brak własnych tagów',
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
-                                  onPressed: () => _deleteTag(tag),
-                                  tooltip: 'Usuń',
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Tagi systemowe są zarządzane przez aplikację',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.builder(
+                              controller: scrollController,
+                              itemCount: sortedTags.length,
+                              itemBuilder: (context, index) {
+                                final tag = sortedTags[index];
+                                final medicineCount = _getMedicineCountForTag(
+                                  tag,
+                                );
+                                return Container(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  decoration: NeuDecoration.flatSmall(
+                                    isDark: isDark,
+                                    radius: 8,
+                                  ),
+                                  child: ListTile(
+                                    leading: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withAlpha(30),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        LucideIcons.tag,
+                                        size: 18,
+                                        color: AppColors.primary,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      tag,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                    ),
+                                    subtitle: Text(
+                                      '$medicineCount ${medicineCount == 1 ? 'lek' : 'leków'}',
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: theme
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                          ),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            LucideIcons.pen,
+                                            size: 18,
+                                            color: theme.colorScheme.primary,
+                                          ),
+                                          onPressed: () => _editTag(tag),
+                                          tooltip: 'Edytuj',
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            LucideIcons.trash,
+                                            size: 18,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: () => _deleteTag(tag),
+                                          tooltip: 'Usuń',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                          ),
-                        );
-                      },
-                    ),
                     ),
                   ],
                 ),
@@ -2565,8 +2579,9 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor =
-        widget.isDark ? AppColors.darkSurface : AppColors.lightSurface;
+    final backgroundColor = widget.isDark
+        ? AppColors.darkSurface
+        : AppColors.lightSurface;
 
     return Container(
       decoration: BoxDecoration(
@@ -2596,8 +2611,11 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                     // Header
                     Row(
                       children: [
-                        Icon(LucideIcons.lightbulb,
-                            color: Colors.amber, size: 24),
+                        Icon(
+                          LucideIcons.lightbulb,
+                          color: Colors.amber,
+                          size: 24,
+                        ),
                         const SizedBox(width: 12),
                         Text(
                           'Podpowiedzi',
@@ -2622,7 +2640,8 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                     // === Ciekawe funkcje (rozwijane) ===
                     GestureDetector(
                       onTap: () => setState(
-                          () => _isFeaturesExpanded = !_isFeaturesExpanded),
+                        () => _isFeaturesExpanded = !_isFeaturesExpanded,
+                      ),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -2643,10 +2662,8 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                             Expanded(
                               child: Text(
                                 'Ciekawe funkcje',
-                                style:
-                                    widget.theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                                style: widget.theme.textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                             ),
                             AnimatedRotation(
@@ -2654,7 +2671,8 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                               turns: _isFeaturesExpanded ? 0.5 : 0,
                               child: Icon(
                                 LucideIcons.chevronDown,
-                                color: widget.theme.colorScheme.onSurfaceVariant,
+                                color:
+                                    widget.theme.colorScheme.onSurfaceVariant,
                                 size: 20,
                               ),
                             ),
