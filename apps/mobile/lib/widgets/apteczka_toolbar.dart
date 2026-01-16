@@ -1,12 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/app_theme.dart';
-import 'neumorphic/neu_decoration.dart';
 
 /// Toolbar dla widoku Apteczka - wyświetlany nad FloatingNavBar
 ///
-/// Zawiera przyciski: search, sort, filter, clear-filter, menu
+/// Styl glassmorphism - lekka przezroczystość z blur.
+/// Kolejność przycisków: clear-filter, filter, search, sort, menu
 class ApteczkaToolbar extends StatelessWidget {
   final VoidCallback onSearch;
   final VoidCallback onSort;
@@ -32,13 +33,10 @@ class ApteczkaToolbar extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Kolory neumorficzne - takie same jak FloatingNavBar
-    final backgroundColor =
-        isDark ? AppColors.darkSurface : AppColors.lightBackground;
-    final shadowLight =
-        isDark ? AppColors.darkShadowLight : AppColors.lightShadowLight;
-    final shadowDark =
-        isDark ? AppColors.darkShadowDark : AppColors.lightShadowDark;
+    // Glassmorphism - przezroczyste tło z blur
+    final backgroundColor = isDark
+        ? AppColors.darkSurface.withValues(alpha: 0.85)
+        : AppColors.lightBackground.withValues(alpha: 0.85);
     final iconColor = isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted;
 
     return AnimatedSlide(
@@ -51,63 +49,59 @@ class ApteczkaToolbar extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 48),
           height: 56,
-          decoration: BoxDecoration(
-            color: backgroundColor,
+          child: ClipRRect(
             borderRadius: BorderRadius.circular(28),
-            boxShadow: [
-              // Cień jasny (top-left)
-              BoxShadow(
-                color: shadowLight,
-                blurRadius: 12,
-                offset: const Offset(-4, -4),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // 1. Clear filter (funnel-x)
+                    _ToolbarButton(
+                      icon: LucideIcons.funnelX,
+                      onTap: hasActiveFilters ? onClearFilter : null,
+                      iconColor: hasActiveFilters
+                          ? AppColors.expired
+                          : iconColor.withValues(alpha: 0.3),
+                      isDark: isDark,
+                    ),
+                    // 2. Filter (funnel)
+                    _ToolbarButton(
+                      icon: LucideIcons.funnel,
+                      onTap: onFilter,
+                      iconColor: iconColor,
+                      isDark: isDark,
+                    ),
+                    // 3. Search
+                    _ToolbarButton(
+                      icon: LucideIcons.search,
+                      onTap: onSearch,
+                      iconColor: iconColor,
+                      isDark: isDark,
+                    ),
+                    // 4. Sort
+                    _ToolbarButton(
+                      icon: LucideIcons.arrowUpDown,
+                      onTap: onSort,
+                      iconColor: iconColor,
+                      isDark: isDark,
+                    ),
+                    // 5. Menu
+                    _ToolbarButton(
+                      icon: LucideIcons.menu,
+                      onTap: onMenu,
+                      iconColor: iconColor,
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
               ),
-              // Cień ciemny (bottom-right)
-              BoxShadow(
-                color: shadowDark.withValues(alpha: 0.4),
-                blurRadius: 12,
-                offset: const Offset(4, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Search
-              _ToolbarButton(
-                icon: LucideIcons.search,
-                onTap: onSearch,
-                iconColor: iconColor,
-                isDark: isDark,
-              ),
-              // Sort
-              _ToolbarButton(
-                icon: LucideIcons.arrowUpDown,
-                onTap: onSort,
-                iconColor: iconColor,
-                isDark: isDark,
-              ),
-              // Filter
-              _ToolbarButton(
-                icon: LucideIcons.funnel,
-                onTap: onFilter,
-                iconColor: iconColor,
-                isDark: isDark,
-              ),
-              // Clear filter
-              _ToolbarButton(
-                icon: LucideIcons.funnelX,
-                onTap: hasActiveFilters ? onClearFilter : null,
-                iconColor: hasActiveFilters ? AppColors.expired : iconColor.withValues(alpha: 0.3),
-                isDark: isDark,
-              ),
-              // Menu
-              _ToolbarButton(
-                icon: LucideIcons.menu,
-                onTap: onMenu,
-                iconColor: iconColor,
-                isDark: isDark,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -139,9 +133,12 @@ class _ToolbarButtonState extends State<_ToolbarButton> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: widget.onTap != null ? (_) => setState(() => _isPressed = true) : null,
-      onTapUp: widget.onTap != null ? (_) => setState(() => _isPressed = false) : null,
-      onTapCancel: widget.onTap != null ? () => setState(() => _isPressed = false) : null,
+      onTapDown:
+          widget.onTap != null ? (_) => setState(() => _isPressed = true) : null,
+      onTapUp:
+          widget.onTap != null ? (_) => setState(() => _isPressed = false) : null,
+      onTapCancel:
+          widget.onTap != null ? () => setState(() => _isPressed = false) : null,
       onTap: widget.onTap != null
           ? () {
               HapticFeedback.lightImpact();
@@ -154,7 +151,12 @@ class _ToolbarButtonState extends State<_ToolbarButton> {
         width: 44,
         height: 44,
         decoration: _isPressed
-            ? NeuDecoration.pressedSmall(isDark: widget.isDark, radius: 22)
+            ? BoxDecoration(
+                color: widget.isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(22),
+              )
             : null,
         child: Center(
           child: Icon(
