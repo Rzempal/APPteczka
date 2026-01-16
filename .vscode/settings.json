@@ -1,4 +1,5 @@
 {
     "dart.flutterSdkPath": "C:\\tools\\flutter",
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "cmake.sourceDirectory": "C:/Users/rzemp/GitHub/APPteczka/apps/mobile/windows"
 }
