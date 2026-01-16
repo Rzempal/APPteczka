@@ -399,35 +399,7 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-          const Spacer(),
-          // Zarządzaj Apteczką - przycisk z ikoną i tekstem
-          GestureDetector(
-            onTap: _showFilterManagement,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: _isManagementSheetOpen
-                  ? NeuDecoration.pressed(isDark: isDark, radius: 12)
-                  : NeuDecoration.flat(isDark: isDark, radius: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.menu,
-                    size: 18,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Zarządzaj',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          // Przycisk "Zarządzaj" przeniesiony do ApteczkaToolbar (menu)
         ],
       ),
     );
@@ -577,36 +549,7 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          const Spacer(),
-          // Sortowanie - bottomSheet
-          NeuIconButton(
-            icon: LucideIcons.arrowDownUp,
-            onPressed: _showSortBottomSheet,
-            isActive: _isSortSheetOpen,
-            tooltip: 'Sortowanie',
-          ),
-          const SizedBox(width: 8),
-          // Filtry
-          NeuIconButtonBadge(
-            count: _filterState.activeFilterCount,
-            showBadge: _filterState.hasActiveFilters,
-            button: NeuIconButton(
-              icon: LucideIcons.funnel,
-              onPressed: _showFilters,
-              isActive: _isFiltersSheetOpen,
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Wyczyść filtry
-          NeuIconButton(
-            icon: LucideIcons.funnelX,
-            onPressed: _filterState.hasActiveFilters ? _clearFilters : null,
-            tooltip: 'Wyczyść filtry',
-            mode: _filterState.hasActiveFilters
-                ? NeuIconButtonMode.visible
-                : NeuIconButtonMode.iconOnly,
-            iconColor: _filterState.hasActiveFilters ? AppColors.expired : null,
-          ),
+          // Pozostałe przyciski (sort, filter, funnel-x, menu) są w ApteczkaToolbar
         ],
       ),
     );

@@ -61,35 +61,6 @@ class PudelkoNaLekiApp extends StatefulWidget {
 }
 
 class _PudelkoNaLekiAppState extends State<PudelkoNaLekiApp> {
-  final GlobalKey _screenshotKey = GlobalKey();
-  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
-
-  /// Przechwytuje screenshot i otwiera sheet zgłoszenia
-  Future<void> _openBugReportWithScreenshot() async {
-    final screenshot = await BugReportService.instance.captureScreenshot(
-      _screenshotKey,
-    );
-    if (!mounted) return;
-
-    // Pobierz aktualny błąd skanera jeśli istnieje
-    final scannerError = FabService.instance.scannerError;
-
-    // Użyj kontekstu z Navigatora
-    final navContext = _navigatorKey.currentContext;
-    if (navContext == null) return;
-
-    BugReportSheet.show(
-      navContext,
-      screenshot: screenshot,
-      error: scannerError,
-    );
-
-    // Wyczyść błąd po otwarciu zgłoszenia
-    if (scannerError != null) {
-      FabService.instance.clearError();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -98,7 +69,6 @@ class _PudelkoNaLekiAppState extends State<PudelkoNaLekiApp> {
         return MaterialApp(
           title: 'Karton z lekami',
           debugShowCheckedModeBanner: false,
-          navigatorKey: _navigatorKey,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: widget.themeProvider.themeMode,
@@ -110,49 +80,6 @@ class _PudelkoNaLekiAppState extends State<PudelkoNaLekiApp> {
           ],
           supportedLocales: const [Locale('pl', 'PL')],
           locale: const Locale('pl', 'PL'),
-          // Builder pozwala na wstawienie widgetów NAD nawigatorem (Overlay)
-          builder: (context, child) {
-            return Stack(
-              children: [
-                // 1. Aplikacja owinięta w RepaintBoundary (dla screenshota CAŁOŚCI)
-                RepaintBoundary(
-                  key: _screenshotKey,
-                  child: child ?? const SizedBox.shrink(),
-                ),
-
-                // 2. FAB Overlay
-                Positioned(
-                  bottom: 16,
-                  right: 16,
-                  child: ListenableBuilder(
-                    // Nasłuchuj zmian w FabService (błędy) oraz StorageService (ustawienia)
-                    listenable: Listenable.merge([
-                      FabService.instance,
-                      widget.storageService.showBugReportFabNotifier,
-                    ]),
-                    builder: (context, _) {
-                      final hasError = FabService.instance.scannerError != null;
-
-                      // Sprawdź warunki widoczności
-                      final showFab =
-                          widget.storageService.showBugReportFab ||
-                          AppConfig.isInternal ||
-                          hasError;
-
-                      if (!showFab) return const SizedBox.shrink();
-
-                      return FloatingActionButton(
-                        onPressed: _openBugReportWithScreenshot,
-                        backgroundColor: AppColors.expired,
-                        elevation: 6,
-                        child: const Icon(LucideIcons.bug, color: Colors.white),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            );
-          },
           home: MainNavigation(
             storageService: widget.storageService,
             themeProvider: widget.themeProvider,
@@ -186,70 +113,110 @@ class _MainNavigationState extends State<MainNavigation> {
   bool _showApteczkaToolbar = false; // Stan widoczności toolbara
   final GlobalKey<_HomeScreenWrapperState> _homeKey = GlobalKey();
 
+  // Klucz do przechwytywania screenshotów dla bug reportu
+  final GlobalKey _screenshotKey = GlobalKey();
+
+  /// Otwiera bug report z przechwyconym screenshotem
+  Future<void> _openBugReportWithScreenshot() async {
+    final screenshot = await BugReportService.instance.captureScreenshot(
+      _screenshotKey,
+    );
+    if (!mounted) return;
+
+    BugReportSheet.show(context, screenshot: screenshot);
+  }
+
+  /// Callback wywoływany gdy zmieni się stan filtrów w HomeScreen
+  void _onFiltersChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          // Główna zawartość - IndexedStack z ekranami
-          IndexedStack(
-            index: _currentIndex,
-            children: [
-              // 0: Dodaj
-              AddMedicineScreen(
-                storageService: widget.storageService,
-                onError: (error) {
-                  if (error != null) {
-                    FabService.instance.showError(error);
-                  } else {
-                    FabService.instance.clearError();
-                  }
+      body: RepaintBoundary(
+        key: _screenshotKey,
+        child: Stack(
+          children: [
+            // Główna zawartość - IndexedStack z ekranami
+            IndexedStack(
+              index: _currentIndex,
+              children: [
+                // 0: Dodaj
+                AddMedicineScreen(
+                  storageService: widget.storageService,
+                  onError: (error) {
+                    if (error != null) {
+                      FabService.instance.showError(error);
+                    } else {
+                      FabService.instance.clearError();
+                    }
+                  },
+                ),
+                // 1: Apteczka (domyślny, środkowy)
+                _HomeScreenWrapper(
+                  key: _homeKey,
+                  storageService: widget.storageService,
+                  themeProvider: widget.themeProvider,
+                  updateService: widget.updateService,
+                  onNavigateToSettings: () {
+                    setState(() {
+                      _currentIndex = 2; // Navigate to Ustawienia tab
+                    });
+                  },
+                  onNavigateToAdd: () {
+                    setState(() {
+                      _currentIndex = 0; // Navigate to Dodaj tab
+                    });
+                  },
+                  onFiltersChanged: _onFiltersChanged,
+                ),
+                // 2: Ustawienia
+                SettingsScreen(
+                  storageService: widget.storageService,
+                  themeProvider: widget.themeProvider,
+                  updateService: widget.updateService,
+                ),
+              ],
+            ),
+            // ApteczkaToolbar - pozycjonowany w body, nad navbarem
+            Positioned(
+              bottom: 16,
+              left: 0,
+              right: 0,
+              child: ListenableBuilder(
+                listenable: Listenable.merge([
+                  FabService.instance,
+                  widget.storageService.showBugReportFabNotifier,
+                ]),
+                builder: (context, _) {
+                  final showBugReportButton = widget.storageService.showBugReportFab ||
+                      AppConfig.isInternal ||
+                      FabService.instance.scannerError != null;
+
+                  return IgnorePointer(
+                    ignoring: !(_currentIndex == 1 && _showApteczkaToolbar),
+                    child: ApteczkaToolbar(
+                      isVisible: _currentIndex == 1 && _showApteczkaToolbar,
+                      hasActiveFilters: _homeKey.currentState?.hasActiveFilters ?? false,
+                      showBugReportButton: showBugReportButton,
+                      onSearch: () => _homeKey.currentState?.activateSearch(),
+                      onSort: () => _homeKey.currentState?.showSort(),
+                      onFilter: () => _homeKey.currentState?.showFilters(),
+                      onClearFilter: () {
+                        _homeKey.currentState?.clearFilters();
+                        // Rebuild toolbar po wyczyszczeniu filtrów
+                        setState(() {});
+                      },
+                      onMenu: () => _homeKey.currentState?.showManagement(),
+                      onBugReport: _openBugReportWithScreenshot,
+                    ),
+                  );
                 },
-              ),
-              // 1: Apteczka (domyślny, środkowy)
-              _HomeScreenWrapper(
-                key: _homeKey,
-                storageService: widget.storageService,
-                themeProvider: widget.themeProvider,
-                updateService: widget.updateService,
-                onNavigateToSettings: () {
-                  setState(() {
-                    _currentIndex = 2; // Navigate to Ustawienia tab
-                  });
-                },
-                onNavigateToAdd: () {
-                  setState(() {
-                    _currentIndex = 0; // Navigate to Dodaj tab
-                  });
-                },
-              ),
-              // 2: Ustawienia
-              SettingsScreen(
-                storageService: widget.storageService,
-                themeProvider: widget.themeProvider,
-                updateService: widget.updateService,
-              ),
-            ],
-          ),
-          // ApteczkaToolbar - pozycjonowany w body, nad navbarem
-          Positioned(
-            bottom: 16,
-            left: 0,
-            right: 0,
-            child: IgnorePointer(
-              ignoring: !(_currentIndex == 1 && _showApteczkaToolbar),
-              child: ApteczkaToolbar(
-                isVisible: _currentIndex == 1 && _showApteczkaToolbar,
-                hasActiveFilters: _homeKey.currentState?.hasActiveFilters ?? false,
-                onSearch: () => _homeKey.currentState?.activateSearch(),
-                onSort: () => _homeKey.currentState?.showSort(),
-                onFilter: () => _homeKey.currentState?.showFilters(),
-                onClearFilter: () => _homeKey.currentState?.clearFilters(),
-                onMenu: () => _homeKey.currentState?.showManagement(),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: FloatingNavBar(
         currentIndex: _currentIndex,
@@ -299,6 +266,7 @@ class _HomeScreenWrapper extends StatefulWidget {
   final UpdateService updateService;
   final VoidCallback onNavigateToSettings;
   final VoidCallback onNavigateToAdd;
+  final VoidCallback? onFiltersChanged;
 
   const _HomeScreenWrapper({
     super.key,
@@ -307,6 +275,7 @@ class _HomeScreenWrapper extends StatefulWidget {
     required this.updateService,
     required this.onNavigateToSettings,
     required this.onNavigateToAdd,
+    this.onFiltersChanged,
   });
 
   @override
@@ -333,7 +302,10 @@ class _HomeScreenWrapperState extends State<_HomeScreenWrapper> {
   void showFilters() => _homeScreenKey.currentState?.showFilters();
 
   /// Czyści filtry
-  void clearFilters() => _homeScreenKey.currentState?.clearFilters();
+  void clearFilters() {
+    _homeScreenKey.currentState?.clearFilters();
+    widget.onFiltersChanged?.call();
+  }
 
   /// Otwiera zarządzanie apteczką
   void showManagement() => _homeScreenKey.currentState?.showFilterManagement();

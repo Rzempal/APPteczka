@@ -7,15 +7,17 @@ import '../theme/app_theme.dart';
 /// Toolbar dla widoku Apteczka - wyświetlany nad FloatingNavBar
 ///
 /// Styl glassmorphism - lekka przezroczystość z blur.
-/// Kolejność przycisków: clear-filter, filter, search, sort, menu
+/// Kolejność przycisków: bug-report, clear-filter, filter, search, sort, menu
 class ApteczkaToolbar extends StatelessWidget {
   final VoidCallback onSearch;
   final VoidCallback onSort;
   final VoidCallback onFilter;
   final VoidCallback? onClearFilter;
   final VoidCallback onMenu;
+  final VoidCallback? onBugReport;
   final bool hasActiveFilters;
   final bool isVisible;
+  final bool showBugReportButton;
 
   const ApteczkaToolbar({
     super.key,
@@ -24,8 +26,10 @@ class ApteczkaToolbar extends StatelessWidget {
     required this.onFilter,
     this.onClearFilter,
     required this.onMenu,
+    this.onBugReport,
     this.hasActiveFilters = false,
     this.isVisible = true,
+    this.showBugReportButton = false,
   });
 
   @override
@@ -45,9 +49,6 @@ class ApteczkaToolbar extends StatelessWidget {
 
     // Ikony w kolorze akcentowym (zielony)
     final iconColor = AppColors.primary;
-    final disabledIconColor = isDark
-        ? AppColors.darkTextMuted.withValues(alpha: 0.3)
-        : AppColors.lightTextMuted.withValues(alpha: 0.3);
 
     return AnimatedSlide(
       duration: const Duration(milliseconds: 250),
@@ -72,37 +73,44 @@ class ApteczkaToolbar extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // 1. Clear filter (funnel-x)
-                    _ToolbarButton(
-                      icon: LucideIcons.funnelX,
-                      onTap: hasActiveFilters ? onClearFilter : null,
-                      iconColor: hasActiveFilters
-                          ? AppColors.expired
-                          : disabledIconColor,
-                      isDark: isDark,
-                    ),
-                    // 2. Filter (funnel)
+                    // 1. Bug report (red accent) - tylko gdy włączony
+                    if (showBugReportButton)
+                      _ToolbarButton(
+                        icon: LucideIcons.bug,
+                        onTap: onBugReport,
+                        iconColor: AppColors.expired,
+                        isDark: isDark,
+                      ),
+                    // 2. Clear filter (funnel-x) - ukryty gdy brak filtrów
+                    if (hasActiveFilters)
+                      _ToolbarButton(
+                        icon: LucideIcons.funnelX,
+                        onTap: onClearFilter,
+                        iconColor: AppColors.expired,
+                        isDark: isDark,
+                      ),
+                    // 3. Filter (funnel)
                     _ToolbarButton(
                       icon: LucideIcons.funnel,
                       onTap: onFilter,
                       iconColor: iconColor,
                       isDark: isDark,
                     ),
-                    // 3. Search
+                    // 4. Search
                     _ToolbarButton(
                       icon: LucideIcons.search,
                       onTap: onSearch,
                       iconColor: iconColor,
                       isDark: isDark,
                     ),
-                    // 4. Sort
+                    // 5. Sort
                     _ToolbarButton(
                       icon: LucideIcons.arrowUpDown,
                       onTap: onSort,
                       iconColor: iconColor,
                       isDark: isDark,
                     ),
-                    // 5. Menu
+                    // 6. Menu
                     _ToolbarButton(
                       icon: LucideIcons.menu,
                       onTap: onMenu,
