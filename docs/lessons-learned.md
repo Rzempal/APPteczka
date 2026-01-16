@@ -11,7 +11,8 @@
 
 ### ❌ Błąd
 
-Użyłem klasy `neu-concave` dla efektu "wciśnięcia" przycisku, co dało ciemny, wklęsły wygląd - nieprawidłowy w kontekście UI.
+Użyłem klasy `neu-concave` dla efektu "wciśnięcia" przycisku, co dało ciemny, wklęsły wygląd -
+nieprawidłowy w kontekście UI.
 
 ### ✅ Poprawne rozwiązanie
 
@@ -23,10 +24,10 @@ neu-tag active
 
 ### Różnica
 
-| Klasa           | Wygląd                        | Zastosowanie                   |
-|-----------------|-------------------------------|--------------------------------|
-| `neu-concave`   | Ciemny, wklęsły (jak input)   | Pola tekstowe, obszary wgłębione |
-| `neu-tag.active`| Zielony akcent, wciśnięty     | Aktywne przyciski, toggle, tagi  |
+| Klasa            | Wygląd                      | Zastosowanie                     |
+| ---------------- | --------------------------- | -------------------------------- |
+| `neu-concave`    | Ciemny, wklęsły (jak input) | Pola tekstowe, obszary wgłębione |
+| `neu-tag.active` | Zielony akcent, wciśnięty   | Aktywne przyciski, toggle, tagi  |
 
 ### Lokalizacja w CSS
 
@@ -34,11 +35,9 @@ neu-tag active
 
 ```css
 .neu-tag.active {
-  background: linear-gradient(145deg, var(--color-accent-light), var(--color-accent));
-  color: white;
-  box-shadow:
-    inset 2px 2px 4px rgba(0, 0, 0, 0.1),
-    inset -2px -2px 4px rgba(255, 255, 255, 0.1);
+	background: linear-gradient(145deg, var(--color-accent-light), var(--color-accent));
+	color: white;
+	box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.1), inset -2px -2px 4px rgba(255, 255, 255, 0.1);
 }
 ```
 
@@ -51,7 +50,8 @@ neu-tag active
 
 ### ❌ Błąd
 
-Przyciski z `box-shadow` neumorficznym (`.neu-tag`) umieszczone przy prawej krawędzi kontenera mają obcięty cień, gdy kontener ma `overflow: hidden` lub brak odpowiedniego paddingu.
+Przyciski z `box-shadow` neumorficznym (`.neu-tag`) umieszczone przy prawej krawędzi kontenera mają
+obcięty cień, gdy kontener ma `overflow: hidden` lub brak odpowiedniego paddingu.
 
 ### ✅ Poprawne rozwiązanie
 
@@ -77,7 +77,8 @@ pr-1  /* Tailwind: 0.25rem / 4px */
 
 ### Zasada ogólna
 
-Elementy z cieniami zewnętrznymi (box-shadow) wymagają odpowiedniego paddingu w kontenerze nadrzędnym, aby cień nie był obcinany.
+Elementy z cieniami zewnętrznymi (box-shadow) wymagają odpowiedniego paddingu w kontenerze
+nadrzędnym, aby cień nie był obcinany.
 
 ---
 
@@ -88,7 +89,8 @@ Elementy z cieniami zewnętrznymi (box-shadow) wymagają odpowiedniego paddingu 
 
 ### ❌ Błąd
 
-Przyciski umieszczone w kontenerze `flex` bez `flex-wrap` są ucinane gdy nie mieszczą się w jednej linii.
+Przyciski umieszczone w kontenerze `flex` bez `flex-wrap` są ucinane gdy nie mieszczą się w jednej
+linii.
 
 ### ✅ Poprawne rozwiązanie
 
@@ -112,7 +114,8 @@ Zawsze dodawaj `flex-wrap` do kontenerów z przyciskami:
 
 ### Zasada ogólna
 
-Kontenery z wieloma przyciskami lub elementami inline powinny używać `flex-wrap` aby elementy zawijały się do nowej linii zamiast być ucinane.
+Kontenery z wieloma przyciskami lub elementami inline powinny używać `flex-wrap` aby elementy
+zawijały się do nowej linii zamiast być ucinane.
 
 ---
 
@@ -123,11 +126,13 @@ Kontenery z wieloma przyciskami lub elementami inline powinny używać `flex-wra
 
 ### ❌ Błąd
 
-Użyłem `Border.all()` w dekoracjach neumorficznych (`basin`, `statusCard`), co dodawało widoczne obramowanie i łamało iluzję 3D.
+Użyłem `Border.all()` w dekoracjach neumorficznych (`basin`, `statusCard`), co dodawało widoczne
+obramowanie i łamało iluzję 3D.
 
 ### ✅ Poprawne rozwiązanie
 
-W neumorphism elementy "wyłaniają się" z tła dzięki cieniom, nie obramowaniom. Usuń border i wzmocnij cienie:
+W neumorphism elementy "wyłaniają się" z tła dzięki cieniom, nie obramowaniom. Usuń border i
+wzmocnij cienie:
 
 ```dart
 // ❌ Błędnie
@@ -166,7 +171,8 @@ W neumorphism nigdy nie używaj `border` - efekt 3D uzyskujesz przez:
 
 ### ❌ Błąd
 
-Używanie losowych wartości spacing (4, 6, 10, 12...) i border-radius (4, 8, 10, 12, 16, 20) - chaos wizualny.
+Używanie losowych wartości spacing (4, 6, 10, 12...) i border-radius (4, 8, 10, 12, 16, 20) - chaos
+wizualny.
 
 ### ✅ Poprawne rozwiązanie
 
@@ -189,7 +195,8 @@ borderRadius: BorderRadius.circular(12),
 
 ### Zasada ogólna
 
-Rytm spacingu i spójne radiusy są fundamentem jakości UI. Ich złamanie natychmiast obniża poziom wizualny projektu.
+Rytm spacingu i spójne radiusy są fundamentem jakości UI. Ich złamanie natychmiast obniża poziom
+wizualny projektu.
 
 ---
 
@@ -200,7 +207,8 @@ Rytm spacingu i spójne radiusy są fundamentem jakości UI. Ich złamanie natyc
 
 ### ❌ Błąd
 
-Użyto tylko gradientu w `NeuDecoration.basin()`, co nie dawało prawdziwego efektu wklęsłości - Flutter `BoxDecoration` nie wspiera `inset box-shadow`.
+Użyto tylko gradientu w `NeuDecoration.basin()`, co nie dawało prawdziwego efektu wklęsłości -
+Flutter `BoxDecoration` nie wspiera `inset box-shadow`.
 
 ### ✅ Poprawne rozwiązanie
 
@@ -241,7 +249,8 @@ Rozważono `flutter_inset_box_shadow`, ale odrzucono z powodów:
 
 ### Zasada ogólna
 
-W Flutter efekty niedostępne natywnie (jak inset shadow) można symulować przez Stack z warstwami gradientów. Widget własny > pakiet zewnętrzny gdy:
+W Flutter efekty niedostępne natywnie (jak inset shadow) można symulować przez Stack z warstwami
+gradientów. Widget własny > pakiet zewnętrzny gdy:
 
 - Potrzebujesz integracji z istniejącym design system
 - Chcesz pełną kontrolę nad stylami
@@ -258,10 +267,10 @@ W Flutter efekty niedostępne natywnie (jak inset shadow) można symulować prze
 
 Pojedynczy regex zakładający konkretny format odpowiedzi AI:
 
-```typescript
+````typescript
 const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/\{[\s\S]*\}/);
-const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : text;
-```
+const jsonString = jsonMatch ? jsonMatch[1] || jsonMatch[0] : text;
+````
 
 Zawiódł gdy Gemini zwrócił wieloliniowy JSON z niestandardowym formatowaniem.
 
@@ -269,27 +278,27 @@ Zawiódł gdy Gemini zwrócił wieloliniowy JSON z niestandardowym formatowaniem
 
 Kaskadowe próbowanie różnych wzorców, od najbardziej specyficznego do ogólnego:
 
-```typescript
+````typescript
 let jsonString = text.trim();
 
 // Wzorzec 1: ```json ... ```
 const jsonCodeBlockMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
 if (jsonCodeBlockMatch && jsonCodeBlockMatch[1]) {
-    jsonString = jsonCodeBlockMatch[1].trim();
+	jsonString = jsonCodeBlockMatch[1].trim();
 } else {
-    // Wzorzec 2: ``` ... ``` (bez języka)
-    const codeBlockMatch = jsonString.match(/```\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch && codeBlockMatch[1]) {
-        jsonString = codeBlockMatch[1].trim();
-    } else {
-        // Wzorzec 3: surowy JSON { ... }
-        const jsonObjectMatch = jsonString.match(/\{[\s\S]*\}/);
-        if (jsonObjectMatch) {
-            jsonString = jsonObjectMatch[0].trim();
-        }
-    }
+	// Wzorzec 2: ``` ... ``` (bez języka)
+	const codeBlockMatch = jsonString.match(/```\s*([\s\S]*?)\s*```/);
+	if (codeBlockMatch && codeBlockMatch[1]) {
+		jsonString = codeBlockMatch[1].trim();
+	} else {
+		// Wzorzec 3: surowy JSON { ... }
+		const jsonObjectMatch = jsonString.match(/\{[\s\S]*\}/);
+		if (jsonObjectMatch) {
+			jsonString = jsonObjectMatch[0].trim();
+		}
+	}
 }
-```
+````
 
 ### Zasada ogólna
 
@@ -309,7 +318,8 @@ Odpowiedzi AI są nieprzewidywalne. Przy parsowaniu:
 
 ### ❌ Błąd
 
-GestureDetector owijał tylko `AnimatedContainer` z padding vertical, a nie cały `Expanded` obszar. Kliknięcie poza ikoną/tekstem nie działało.
+GestureDetector owijał tylko `AnimatedContainer` z padding vertical, a nie cały `Expanded` obszar.
+Kliknięcie poza ikoną/tekstem nie działało.
 
 ```dart
 // ❌ Błędnie - wąskie pole dotykowe
@@ -365,12 +375,14 @@ Przy tworzeniu przycisków w kontenerach neumorficznych:
 
 ## 9. Race condition przy async UI z modalami (Flutter)
 
-**Data:** 2026-01-12
-**Kontekst:** Wybór opakowania leku z modala bottom sheet czyścił pole tekstowe autocomplete
+**Data:** 2026-01-12 **Kontekst:** Wybór opakowania leku z modala bottom sheet czyścił pole tekstowe
+autocomplete
 
 ### ❌ Błąd
 
-Flaga `_isSelecting` w autocomplete trwała tylko 100ms, podczas gdy async operacja (fetch API + wybór przez użytkownika w modalu) trwała znacznie dłużej. Po zamknięciu modala, callback `onTextChanged` był wywoływany gdy flaga już była `false`.
+Flaga `_isSelecting` w autocomplete trwała tylko 100ms, podczas gdy async operacja (fetch API +
+wybór przez użytkownika w modalu) trwała znacznie dłużej. Po zamknięciu modala, callback
+`onTextChanged` był wywoływany gdy flaga już była `false`.
 
 ```dart
 // ❌ Błędnie - timeout 100ms za krótki
@@ -385,7 +397,8 @@ void _selectResult(RplSearchResult result) {
 
 ### ✅ Poprawne rozwiązanie
 
-1. **Główna ochrona:** Flaga w parent widget kontrolowana przez cykl życia async operacji (try/finally)
+1. **Główna ochrona:** Flaga w parent widget kontrolowana przez cykl życia async operacji
+   (try/finally)
 2. **Backup protection:** Dłuższy timeout (2000ms) w child widget
 3. **Zapobieganie przeciekaniu zdarzeń:** `Future.microtask` przed `Navigator.pop`
 
@@ -416,7 +429,8 @@ onTextChanged: (text) {
 
 Przy async UI flows z modalami:
 
-1. **Nigdy nie używaj stałego timeout** dla flag synchronizacji - czas operacji jest nieprzewidywalny
+1. **Nigdy nie używaj stałego timeout** dla flag synchronizacji - czas operacji jest
+   nieprzewidywalny
 2. **Kontroluj flagi przez async lifecycle** - ustaw na początku, resetuj w `finally`
 3. **Dodaj logging** do kluczowych punktów flow dla łatwiejszego debugowania
 4. **Użyj `Future.microtask`** przed `Navigator.pop` aby zapobiec przeciekaniu zdarzeń tap
@@ -430,7 +444,9 @@ Przy async UI flows z modalami:
 
 ### ❌ Błąd
 
-Wyszukiwanie zwracało poprawną nazwę leku (`RplSearchResult.nazwa`), ale przy pobieraniu szczegółów (`fetchDetailsById`) API `/details/{id}` zwracało dane bez pola nazwy. Nazwa była tracona między warstwami.
+Wyszukiwanie zwracało poprawną nazwę leku (`RplSearchResult.nazwa`), ale przy pobieraniu szczegółów
+(`fetchDetailsById`) API `/details/{id}` zwracało dane bez pola nazwy. Nazwa była tracona między
+warstwami.
 
 ```dart
 // ❌ Błędnie - nazwa z wyszukiwania jest tracona
@@ -466,12 +482,14 @@ Przy warstwowych wywołaniach API (search → details → packages):
 
 ## 11. Błędy nawiasów przy refaktoryzacji zagnieżdżonych widgetów (Flutter)
 
-**Data:** 2026-01-15
-**Kontekst:** Standaryzacja bottomSheet - refaktoryzacja wielu plików z zagnieżdżonymi strukturami
+**Data:** 2026-01-15 **Kontekst:** Standaryzacja bottomSheet - refaktoryzacja wielu plików z
+zagnieżdżonymi strukturami
 
 ### ❌ Błąd
 
-Przy refaktoryzacji zagnieżdżonych widgetów (DraggableScrollableSheet → Column → Expanded → ternary operator) łatwo o:
+Przy refaktoryzacji zagnieżdżonych widgetów (DraggableScrollableSheet → Column → Expanded → ternary
+operator) łatwo o:
+
 1. **Nadmiarowy nawias** - zostaje po usunięciu warstwy
 2. **Brakujący nawias** - szczególnie przy ternary `? : ` wewnątrz `child:`
 
@@ -514,6 +532,53 @@ Przy refaktoryzacji zagnieżdżonych widgetów Flutter:
 - **IDE nie zawsze pomoże** - błędy składniowe mogą wskazywać na złą linię
 - **Weryfikuj strukturę** przed commit - `flutter analyze` lub IDE
 
+## 12. Błędy typów w callbackach generycznych (Flutter)
+
+**Data:** 2026-01-16  
+**Kontekst:** Naprawa `LabelSelector` w `medicine_card.dart`
+
+### ❌ Błąd
+
+Przekazanie callbacku o niezgodnym typie do generycznego widgetu (np. `onChanged` oczekujący
+`String?` zamiast `String`). Powoduje to błąd kompilacji:
+`The argument type 'void Function(String)' can't be assigned to the parameter type 'void Function(String?)?'.`
+
+### ✅ Poprawne rozwiązanie
+
+Upewnij się, że typy w callbacku dokładnie odpowiadają definicji w widgetcie:
+
+```dart
+// ❌ Błędnie
+onChanged: (String value) => ... // Błąd jeśli widget oczekuje String?
+
+// ✅ Poprawnie
+onChanged: (String? value) {
+  if (value == null) return;
+  // ...
+}
+```
+
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-15
+## 13. Usuwanie nieużywanego kodu animacji (performance)
+
+**Data:** 2026-01-16  
+**Kontekst:** Refaktoryzacja `MedicineCard`
+
+### ❌ Błąd
+
+Pozostawianie nieużywanych `AnimationController`, `CurvedAnimation` oraz pól stanu w widgetach
+`StatefulWidget` po zmianie logiki UI. Powoduje to zbędne zużycie pamięci i zaciemnia kod.
+
+### ✅ Poprawne rozwiązanie
+
+1. Usuń pola `controller` i `animation` jeśli nie są już potrzebne.
+2. Usuń `dispose()` jeśli zawiera tylko `controller.dispose()`.
+3. Usuń `with SingleTickerProviderStateMixin` jeśli widget nie potrzebuje już tickera.
+4. Przekształć w `StatelessWidget` jeśli to możliwe (największy zysk na prostocie).
+
+---
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-16

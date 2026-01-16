@@ -321,7 +321,7 @@ class _MedicineCardState extends State<MedicineCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
 
         // === SEPARATOR NAD OPIS ===
         Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
@@ -368,7 +368,7 @@ class _MedicineCardState extends State<MedicineCard> {
         Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
 
         // === PRZYCISKI AKCJI ===
-        const SizedBox(height: 16),
+        const SizedBox(height: 8),
         _buildActionButtons(context, theme, isDark),
       ],
     );
