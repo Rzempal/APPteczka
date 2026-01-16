@@ -210,9 +210,6 @@ class HomeScreenState extends State<HomeScreen> {
             // Line 2: Search bar
             _buildSearchBar(theme, isDark),
 
-            // Line 3: Counter | View | Sort | Filter
-            _buildToolbar(theme, isDark),
-
             // Lista leków - responsywny grid dla szerokich ekranów
             Expanded(
               child: _isLoading
@@ -401,7 +398,53 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-          // Przycisk "Zarządzaj" przeniesiony do ApteczkaToolbar (menu)
+          const Spacer(),
+          // Licznik leków - neumorficzny kontener
+          NeuStaticContainer(
+            isSmall: true,
+            borderRadius: 12,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.pillBottle,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Przycisk pomocy - żarówka z efektem pressed
+          GestureDetector(
+            onTap: _toggleHelpTooltip,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 80),
+              width: 40,
+              height: 40,
+              decoration: _isHelpTooltipOpen
+                  ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
+                  : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+              child: Center(
+                child: Icon(
+                  LucideIcons.lightbulb,
+                  size: 20,
+                  color: _isHelpTooltipOpen
+                      ? Colors.grey
+                      : Colors.amber.shade600,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -505,63 +548,6 @@ class HomeScreenState extends State<HomeScreen> {
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildToolbar(ThemeData theme, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          // Licznik - neumorficzny kontener
-          NeuStaticContainer(
-            isSmall: true,
-            borderRadius: 12,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.pillBottle,
-                  size: 16,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Przycisk pomocy - żarówka z efektem pressed
-          GestureDetector(
-            onTap: _toggleHelpTooltip,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 80),
-              width: 40,
-              height: 40,
-              decoration: _isHelpTooltipOpen
-                  ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
-                  : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-              child: Center(
-                child: Icon(
-                  LucideIcons.lightbulb,
-                  size: 20,
-                  color: _isHelpTooltipOpen
-                      ? Colors.grey
-                      : Colors.amber.shade600,
-                ),
-              ),
-            ),
-          ),
-          // Pozostałe przyciski (sort, filter, funnel-x, menu) są w ApteczkaToolbar
-        ],
       ),
     );
   }
