@@ -8,4 +8,4 @@ description: Proceed GitHub commit
 - where N - continuation of numbering of commits (number of commits+1)
 - Check `git rev-list --count main` commit number
 
-# **Push**
+## **Push**
