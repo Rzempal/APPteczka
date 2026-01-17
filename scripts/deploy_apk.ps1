@@ -4,7 +4,7 @@
 
 param(
     [switch]$SkipBuild,
-    [switch]$SkipUpload = $true,
+    [bool]$SkipUpload = $true,
     [string]$Channel = "production"
 )
 
@@ -76,7 +76,10 @@ function Update-DeployLog {
         default { "[ERR] Blad" }
     }
     
-    $durationLine = if ($Duration) { "- **Czas deploymentu:** $Duration" } else { "" }
+    $durationLine = ""
+    if ($Duration) { 
+        $durationLine = "- **Czas deploymentu:** $Duration" 
+    }
     
     $commitLines = ""
     foreach ($c in $Commits) {
@@ -147,7 +150,7 @@ $timerPs = [powershell]::Create().AddScript({
         }
     }).AddArgument($startTime)
 $timerPs.Runspace = $rs
-$timerAsync = $timerPs.BeginInvoke()
+$null = $timerPs.BeginInvoke()
 
 Print-Info "=== Deploy APK Script $SCRIPT_VERSION ==="
 Load-Env
@@ -325,7 +328,7 @@ if (-not $SkipUpload) {
     Print-Info "Uzywam WinSCP: $winScp"
     Print-Info ("Laczenie z {0}://{1}@{2}..." -f $DEPLOY_PROTOCOL, $DEPLOY_USER, $DEPLOY_HOST)
     
-    $tempScript = Join-Path $env:TEMP "winscp_deploy_$VERSION.txt"
+    $tempScript = Join-Path $env:TEMP "winscp_deploy_$($VERSION_NAME).txt"
     
     # Generowanie skryptu WinSCP linia po linii (ASCII)
     "option batch on" | Out-File $tempScript -Encoding UTF8
