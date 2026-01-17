@@ -786,7 +786,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               children: [
                 Row(
                   children: [
-                    Expanded(
+                    Flexible(
                       child: Text(
                         drug.displayName,
                         style: theme.textTheme.bodyMedium,
