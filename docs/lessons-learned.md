@@ -37,7 +37,9 @@ neu-tag active
 .neu-tag.active {
 	background: linear-gradient(145deg, var(--color-accent-light), var(--color-accent));
 	color: white;
-	box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.1), inset -2px -2px 4px rgba(255, 255, 255, 0.1);
+	box-shadow:
+		inset 2px 2px 4px rgba(0, 0, 0, 0.1),
+		inset -2px -2px 4px rgba(255, 255, 255, 0.1);
 }
 ```
 
@@ -605,14 +607,16 @@ spowodowanych "już istniejącymi" zasobami.
 
 ## 15. Nie zgaduj rozwiązania - testuj i weryfikuj (Flutter UI)
 
-**Data:** 2026-01-17
-**Kontekst:** Standaryzacja UI pól tekstowych - TextField nie dopasowuje się do pills shape
+**Data:** 2026-01-17 **Kontekst:** Standaryzacja UI pól tekstowych - TextField nie dopasowuje się do
+pills shape
 
 ### ❌ Błąd
 
-Zgadywanie rozwiązań zamiast weryfikacji przez testy lub dokumentację. W przypadku TextField nie dopasowującego się do `borderRadius: 50` (pills shape):
+Zgadywanie rozwiązań zamiast weryfikacji przez testy lub dokumentację. W przypadku TextField nie
+dopasowującego się do `borderRadius: 50` (pills shape):
 
-1. **Pierwsza próba:** Dodanie `clipBehavior: Clip.antiAlias` do `AnimatedContainer` - nie zadziałało
+1. **Pierwsza próba:** Dodanie `clipBehavior: Clip.antiAlias` do `AnimatedContainer` - nie
+   zadziałało
 2. **Druga próba:** Dodanie `filled: false` do `InputDecoration` - niepewne, czeka na test
 
 ```dart
@@ -632,9 +636,9 @@ AnimatedContainer(
 
 ### ✅ Poprawne rozwiązanie
 
-**Opcja 1:** Sprawdzić dokumentację Flutter dla `TextField` + `borderRadius`
-**Opcja 2:** Przetestować lokalnie w izolowanym przykładzie
-**Opcja 3:** Użyć dedykowanego widgetu `ClipRRect` (udokumentowane rozwiązanie):
+**Opcja 1:** Sprawdzić dokumentację Flutter dla `TextField` + `borderRadius` **Opcja 2:**
+Przetestować lokalnie w izolowanym przykładzie **Opcja 3:** Użyć dedykowanego widgetu `ClipRRect`
+(udokumentowane rozwiązanie):
 
 ```dart
 // ✅ Poprawnie - ClipRRect jest dedykowany do clippingu
@@ -656,15 +660,66 @@ Przy problemach UI w Flutter:
 1. **NIE zgaduj** - sprawdź dokumentację lub przetestuj lokalnie
 2. **Iteruj z feedbackiem użytkownika** - deploy → test → poprawka → repeat
 3. **Używaj dedykowanych widgetów** - `ClipRRect` do clippingu, nie `clipBehavior` w rodzicu
-4. **Pytaj użytkownika o feedback** - screenshot pokazuje prawdę, zgadywanie prowadzi w ślepą uliczkę
+4. **Pytaj użytkownika o feedback** - screenshot pokazuje prawdę, zgadywanie prowadzi w ślepą
+   uliczkę
 
 ### Dodatkowy problem: Utrata zmian podczas merge conflict
 
-W tej samej sesji: podczas merge `b2c7dac` zmiany w `home_screen.dart` zostały utracone (wzięto starą wersję pliku). Lekcja:
+W tej samej sesji: podczas merge `b2c7dac` zmiany w `home_screen.dart` zostały utracone (wzięto
+starą wersję pliku). Lekcja:
 
 - **Zawsze weryfikuj** co zostało zmergowane: `git diff main..branch -- path/to/file`
 - **Sprawdzaj po merge** czy wszystkie pliki zawierają oczekiwane zmiany
 - **Nie zakładaj** że merge conflict został rozwiązany poprawnie bez weryfikacji
+
+---
+
+---
+
+## 16. Race condition przy async UI z modalami (aktualizacja)
+
+**Data:** 2026-01-17 **Kontekst:** Szybkie zamknięcie panelu etykiet (gest swipe) powodowało utratę
+zmian w UI.
+
+### ❌ Błąd
+
+Wywołanie odświeżenia listy `_loadMedicines()` następowało natychmiast po zamknięciu panelu
+(`.then()`), podczas gdy operacja zapisu `updateMedicineLabels` wciąż trwała w tle.
+
+```dart
+// ❌ Błędnie - race condition
+onChanged: (ids) {
+  storage.update(ids); // fire & forget
+},
+// ...
+.then((_) => _loadMedicines()); // uruchamia się natychmiast po zamknięciu
+```
+
+### ✅ Poprawne rozwiązanie
+
+Śledzenie `Future` operacji zapisu i oczekiwanie na jego zakończenie przed odświeżeniem.
+
+```dart
+// ✅ Poprawnie - czekaj na zapis
+Future<void>? pendingUpdate;
+
+onChanged: (ids) {
+  pendingUpdate = storage.update(ids); // śledź Future
+},
+// ...
+.then((_) async {
+  if (pendingUpdate != null) await pendingUpdate; // czekaj na zakończenie
+  _loadMedicines();
+});
+```
+
+### Zasada ogólna
+
+Przy interakcjach "fire & forget" (np. toggle switch, checkbox w modalu), jeśli zamknięcie widoku
+pociąga za sobą odświeżenie danych rodzica:
+
+1. Zawsze zachowuj referencję do `Future` operacji zapisu.
+2. W bloku sprzątającym (`dispose`, `then`, `pop`) upewnij się, że operacja się zakończyła.
 
 ---
 

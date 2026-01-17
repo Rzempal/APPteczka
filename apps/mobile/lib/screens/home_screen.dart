@@ -521,9 +521,7 @@ class HomeScreenState extends State<HomeScreen> {
         onChanged: (value) {
           final wasActive = _filterState.hasActiveFilters;
           setState(() {
-            _filterState = _filterState.copyWith(
-              searchQuery: value,
-            );
+            _filterState = _filterState.copyWith(searchQuery: value);
           });
           // Powiadom rodzica tylko gdy zmieni się stan aktywności filtrów
           if (wasActive != _filterState.hasActiveFilters) {
@@ -1241,6 +1239,9 @@ class HomeScreenState extends State<HomeScreen> {
     // Lokalna kopia etykiet do reaktywnego UI
     List<String> currentLabels = List<String>.from(medicine.labels);
 
+    // Zmienna do śledzenia oczekującej aktualizacji
+    Future<void>? pendingUpdate;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1305,12 +1306,13 @@ class HomeScreenState extends State<HomeScreen> {
                                 setSheetState(() {
                                   currentLabels = newLabelIds;
                                 });
-                                // Zapisz do storage
-                                await widget.storageService
+                                // Zapisz do storage i przypisz do pendingUpdate
+                                pendingUpdate = widget.storageService
                                     .updateMedicineLabels(
                                       medicine.id,
                                       newLabelIds,
                                     );
+                                await pendingUpdate;
                               },
                             ),
                             const SizedBox(height: 16),
@@ -1325,7 +1327,13 @@ class HomeScreenState extends State<HomeScreen> {
           },
         );
       },
-    ).then((_) => _loadMedicines());
+    ).then((_) async {
+      // Czekaj na ostatnią aktualizację przed odświeżeniem
+      if (pendingUpdate != null) {
+        await pendingUpdate;
+      }
+      _loadMedicines();
+    });
   }
 
   /// Pokazuje dialog edycji notatki (swipe w prawo)
