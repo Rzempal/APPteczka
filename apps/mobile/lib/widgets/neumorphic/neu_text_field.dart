@@ -126,18 +126,37 @@ class _NeuTextFieldState extends State<NeuTextField> {
         ],
         AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          decoration:
-              NeuDecoration.basin(
-                isDark: isDark,
-                radius: widget.borderRadius,
-              ).copyWith(
-                border: Border.all(
-                  color: _isFocused
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
-                  width: _isFocused ? 2 : 1,
-                ),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.darkSurface
+                : AppColors.lightSurface,
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            border: Border.all(
+              color: _isFocused
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+              width: _isFocused ? 2 : 1,
+            ),
+            boxShadow: [
+              // Inner shadow (basin effect)
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withOpacity(0.3)
+                    : Colors.black.withOpacity(0.1),
+                offset: const Offset(2, 2),
+                blurRadius: 4,
+                spreadRadius: 0,
               ),
+              BoxShadow(
+                color: isDark
+                    ? Colors.white.withOpacity(0.03)
+                    : Colors.white.withOpacity(0.7),
+                offset: const Offset(-2, -2),
+                blurRadius: 4,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
           child: TextField(
             controller: _controller,
             focusNode: _focusNode,
