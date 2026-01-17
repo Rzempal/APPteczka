@@ -177,6 +177,7 @@ class _NeuTextFieldState extends State<NeuTextField> {
               hintStyle: TextStyle(
                 color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
+              filled: false,
               prefixIcon: widget.prefixIcon != null
                   ? IconTheme(
                       data: IconThemeData(
