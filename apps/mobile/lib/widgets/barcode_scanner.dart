@@ -786,7 +786,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               children: [
                 Row(
                   children: [
-                    Expanded(
+                    Flexible(
                       child: Text(
                         drug.displayName,
                         style: theme.textTheme.bodyMedium,
@@ -1034,7 +1034,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // H1: ikona + nazwa + → + ✨ + CTA:Podgląd
+          // H1: ikona + nazwa + → + ✨ + CTA:Podgląd + Spacer + CTA:Usuń produkt
           Row(
             children: [
               Icon(
@@ -1064,45 +1064,42 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                   icon: LucideIcons.eye,
                   label: 'Podgląd',
                   color: Colors.green,
-                  onPressed: () =>
-                      _showProductPhotoPreview(index, drug.tempProductImagePath!),
+                  onPressed: () => _showPhotosPreview(index),
                 ),
               ],
+              const Spacer(),
+              _buildActionButton(
+                icon: LucideIcons.trash,
+                label: 'Usuń produkt',
+                color: Colors.red,
+                onPressed: () => _confirmDeleteDrug(index),
+              ),
             ],
           ),
           const SizedBox(height: 8),
 
-          // H2: sekcja daty + CTA:Edytuj datę + CTA:Usuń zdjęcie
+          // H2: sekcja daty - warianty w zaleznosci od stanu
           Row(
             children: [
-              Expanded(child: _buildDateStatus(drug, theme, isDark)),
+              _buildDateStatus(drug, theme, isDark),
               const SizedBox(width: 8),
-              _buildActionButton(
-                icon: LucideIcons.calendarCog,
-                label: 'Edytuj datę',
-                color: theme.colorScheme.primary,
-                onPressed: () => _editExpiryDate(index),
-              ),
-              if (hasExpiryPhoto) ...[
-                const SizedBox(width: 8),
+              if (hasExpiryPhoto && !hasExpiryDate)
+                // Wariant: zdjęcie daty (bez zdefiniowanej daty) - CTA:Podgląd
                 _buildActionButton(
-                  icon: LucideIcons.imageOff,
-                  label: 'Usuń zdjęcie',
-                  color: Colors.red,
-                  onPressed: () => _deleteExpiryPhoto(index),
+                  icon: LucideIcons.eye,
+                  label: 'Podgląd',
+                  color: Colors.orange,
+                  onPressed: () => _showPhotosPreview(index),
+                )
+              else
+                // Wariant: brak daty lub data zdefiniowana - CTA:Edytuj datę
+                _buildActionButton(
+                  icon: LucideIcons.calendarCog,
+                  label: 'Edytuj datę',
+                  color: theme.colorScheme.primary,
+                  onPressed: () => _editExpiryDate(index),
                 ),
-              ],
             ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // H3: CTA:Usuń produkt
-          _buildActionButton(
-            icon: LucideIcons.trash,
-            label: 'Usuń lek',
-            color: Colors.red,
-            onPressed: () => _confirmDeleteDrug(index),
           ),
         ],
       ),
@@ -1113,7 +1110,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   Widget _buildDateStatus(ScannedDrug drug, ThemeData theme, bool isDark) {
     if (drug.expiryDate != null) {
       return Chip(
-        label: Text('📅 ${_formatDate(drug.expiryDate!)}'),
+        avatar: Icon(LucideIcons.calendar, size: 16, color: AppColors.valid),
+        label: Text(_formatDate(drug.expiryDate!)),
         backgroundColor: AppColors.valid.withAlpha(40),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         labelStyle: theme.textTheme.bodySmall,
@@ -1121,7 +1119,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     } else if (drug.tempImagePath != null) {
       return Chip(
         avatar: const Icon(LucideIcons.imagePlus, size: 16, color: Colors.orange),
-        label: const Text('Zdjęcie daty'),
+        label: const Text('Zdjecie daty'),
         backgroundColor: Colors.orange.withAlpha(40),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         labelStyle: theme.textTheme.bodySmall,
@@ -1257,76 +1255,132 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     }
   }
 
-  /// Pokazuje podgląd zdjęcia nazwy produktu z opcją ponownego zrobienia
-  Future<void> _showProductPhotoPreview(int index, String imagePath) async {
+  /// Pokazuje podgląd zdjęć produktu (nazwa + data) z opcją ponownego zrobienia
+  Future<void> _showPhotosPreview(int index) async {
+    final drug = _scannedDrugs[index];
+    final hasProductPhoto = drug.tempProductImagePath != null;
+    final hasExpiryPhoto = drug.tempImagePath != null;
+
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  const Icon(LucideIcons.eye, color: Colors.green),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Podgląd zdjęcia nazwy',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 500),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    const Icon(LucideIcons.eye, color: Colors.green),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Podglad zdjec',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(LucideIcons.x),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-
-            // Zdjęcie
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Image.file(
-                File(imagePath),
-                fit: BoxFit.contain,
-              ),
-            ),
-
-            // Buttony
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('Zamknij'),
+                    IconButton(
+                      icon: const Icon(LucideIcons.x),
+                      onPressed: () => Navigator.pop(context),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () => Navigator.pop(context, true),
-                      icon: const Icon(LucideIcons.camera),
-                      label: const Text('Zrób ponownie'),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+              const Divider(height: 1),
+
+              // Zdjęcia
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Zdjęcie nazwy produktu
+                      if (hasProductPhoto) ...[
+                        Row(
+                          children: [
+                            Icon(LucideIcons.sparkles,
+                                size: 16, color: Colors.purple),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Zdjecie nazwy',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            File(drug.tempProductImagePath!),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
+                      // Zdjęcie daty ważności
+                      if (hasExpiryPhoto) ...[
+                        Row(
+                          children: [
+                            Icon(LucideIcons.calendar,
+                                size: 16, color: Colors.orange),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Zdjecie daty waznosci',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(
+                            File(drug.tempImagePath!),
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              // Buttony
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Zamknij'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => Navigator.pop(context, true),
+                        icon: const Icon(LucideIcons.camera),
+                        label: const Text('Zrob ponownie'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
 
-    // Jeśli user kliknął "Zrób ponownie"
+    // Jeśli user kliknął "Zrób ponownie" - uruchom pelny flow
     if (result == true && mounted) {
       Navigator.pop(context); // Zamknij edit sheet
       setState(() {
