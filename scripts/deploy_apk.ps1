@@ -5,7 +5,8 @@
 param(
     [switch]$SkipBuild,
     [bool]$SkipUpload = $true,
-    [string]$Channel = "production"
+    [string]$Channel = "production",
+    [switch]$CreateTag
 )
 
 $SCRIPT_VERSION = "v12.8"
@@ -130,6 +131,59 @@ $commitLines
     Set-Content -Path $LOG_PATH -Value $finalContent -Encoding UTF8
     Print-Success "Log zapisany: $LOG_PATH"
     return $newEntry
+}
+
+function Create-GitTag {
+    param(
+        [string]$TagName,
+        [string]$Channel
+    )
+
+    if ($Channel -ne "production") { return }
+
+    try {
+        Push-Location $PROJECT_ROOT
+        
+        # Pobierz ostatni tag
+        $lastTag = git describe --tags --abbrev=0 2>$null
+        
+        $logRange = "HEAD"
+        if ($lastTag) {
+            $logRange = "$($lastTag)..HEAD"
+            Print-Info "Generowanie notatek od ostatniego tagu: $lastTag"
+        }
+        else {
+            Print-Info "Nie znaleziono poprzednich tagów. Pobieranie ostatnich 10 commitów."
+            $logRange = "-n 10 HEAD"
+        }
+
+        # Pobierz listę zmian
+        $oldOutputEncoding = [Console]::OutputEncoding
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        $changeLog = git -c "i18n.logOutputEncoding=utf-8" log $logRange --pretty=format:"* %s (%h)"
+        [Console]::OutputEncoding = $oldOutputEncoding
+
+        if (-not $changeLog) {
+            Print-Warn "Brak nowych commitów od ostatniego tagu. Pomijam tworzenie tagu."
+            return
+        }
+
+        $tagMessage = "Release $TagName`n`nChanges:`n$changeLog"
+        
+        Print-Warn "Tworzenie tagu Git: $TagName"
+        git tag -a $TagName -m "$tagMessage"
+        
+        Print-Warn "Wysyłanie tagów na serwer..."
+        git push origin $TagName
+        
+        Print-Success "Tag $TagName utworzony i wysłany pomyślnie!"
+    }
+    catch {
+        Print-Error "Błąd podczas tworzenia tagu Git: $_"
+    }
+    finally {
+        Pop-Location
+    }
 }
 
 
@@ -374,7 +428,11 @@ if (-not $SkipUpload) {
         if ($LASTEXITCODE -eq 0) {
             Print-Success "[4/4] Upload zakonczony sukcesem!"
             $DEPLOY_STATUS = "ok"
-
+            
+            # 5. Opcjonalne tagowanie (Tylko po sukcesie uploadu)
+            if ($CreateTag) {
+                Create-GitTag -TagName "v$VERSION_NAME" -Channel $Channel
+            }
         }
         else {
             Print-Error "[4/4] Blad uploadu (ExitCode: $LASTEXITCODE). Sprawdz logi w releases/winscp_log.xml"

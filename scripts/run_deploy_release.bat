@@ -3,7 +3,7 @@ REM Skrypt uruchamiający deploy_apk.ps1 z obejściem polityki wykonywania skryp
 REM Kliknij 2x ten plik, aby uruchomić deployment
 
 echo Uruchamianie deploymentu APK (Production)...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0deploy_apk.ps1' -Channel production -SkipUpload:$false"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& '%~dp0deploy_apk.ps1' -Channel production -SkipUpload:$false -CreateTag"
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo Wystąpił błąd podczas uruchamiania skryptu PowerShell.
