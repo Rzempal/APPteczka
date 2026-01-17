@@ -700,22 +700,30 @@ class _MedicineCardState extends State<MedicineCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // H1: Szczegóły - termin ważności - data otwarcia + licznik opakowań
         Row(
           children: [
             Text(
-              'Termin ważności',
+              'Szczegoly - termin waznosci - data otwarcia',
               style: theme.textTheme.labelMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            const Spacer(),
             if (packageCount > 0) ...[
               Text(
-                ' - $packageCount op.',
+                '$packageCount',
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.onSurface,
                 ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                LucideIcons.pillBottle,
+                size: 14,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ],
           ],
@@ -928,39 +936,34 @@ class _MedicineCardState extends State<MedicineCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // H1: Kalkulator zapasu leku
+        Text(
+          'Kalkulator zapasu leku',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // H2: Sprawdź do kiedy starczy ci leków [→] + CTA
         Row(
           children: [
-            // Icon + Title
-            Icon(LucideIcons.calendarHeart, size: 16, color: AppColors.primary),
+            Text(
+              'Sprawdz do kiedy starczy ci lekow',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(width: 6),
-            Text(
-              'Do kiedy wystarczy?',
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            Icon(
+              LucideIcons.arrowRight,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 12),
-            // Separator
-            Text(
-              '-',
-              style: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 14,
-              ),
-            ),
-            const SizedBox(width: 12),
-            // CTA buttons
-            if (!canCalculate)
-              Text(
-                'Uzupełnij ilość sztuk',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                  fontSize: 12,
-                ),
-              )
-            else if (supplyEndDate == null)
+            // CTA buttons (bez zmian)
+            if (canCalculate && supplyEndDate == null)
               GestureDetector(
                 onTap: () => _showSetDailyIntakeDialog(context),
                 child: Container(
@@ -982,7 +985,7 @@ class _MedicineCardState extends State<MedicineCard> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Ustaw dzienne zużycie',
+                        'Ustaw dzienne zuzycie',
                         style: TextStyle(
                           color: theme.colorScheme.onSurface,
                           fontSize: 13,
@@ -992,19 +995,33 @@ class _MedicineCardState extends State<MedicineCard> {
                   ),
                 ),
               )
-            else
+            else if (canCalculate && supplyEndDate != null)
               _buildSupplyResultCompact(context, theme, isDark, supplyEndDate),
           ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Kalkulacja szacunkowa. Nie zastępuje zaleceń lekarza.',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontSize: 10,
-            fontStyle: FontStyle.italic,
+
+        // H3: Wypełnij Szczegóły (tylko gdy !canCalculate)
+        if (!canCalculate) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(
+                LucideIcons.cornerLeftDown,
+                size: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Wypelnij Szczegoly leku by odblokowac kalkulator',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                  fontSize: 11,
+                ),
+              ),
+            ],
           ),
-        ),
+        ],
       ],
     );
   }
