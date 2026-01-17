@@ -577,8 +577,30 @@ Pozostawianie nieużywanych `AnimationController`, `CurvedAnimation` oraz pól s
 3. Usuń `with SingleTickerProviderStateMixin` jeśli widget nie potrzebuje już tickera.
 4. Przekształć w `StatelessWidget` jeśli to możliwe (największy zysk na prostocie).
 
----
+## 14. Idempotentnosc skryptow z GitHub CLI (gh)
+
+**Data:** 2026-01-17  
+**Kontekst:** Skrypt `merge_pr.ps1` do automatyzacji PR i merge.
+
+### ❌ Blad
+
+Zakładanie, że PR nigdy nie istnieje w momencie uruchomienia skryptu. `gh pr create` wyrzuca błąd,
+jeśli PR dla danego brancha już jest na GitHubie, co przerywało cały proces automatyzacji.
+
+### ✅ Poprawne rozwiazanie
+
+Zaimplementuj sprawdzenie przed akcją. Jeśli PR istnieje, zaktualizuj go zamiast tworzyć nowy:
+
+1.  Sprawdź numer istniejącego PR: `gh pr list --head $branch --json number`
+2.  Jeśli istnieje: `gh pr edit $number --title "$newTitle"`
+3.  Jeśli nie istnieje: `gh pr create --title "$newTitle" ...`
+
+### Zasada ogolna
+
+Skrypty CI/CD i automatyzacji powinny być **idempotentne** – wielokrotne uruchomienie tego samego
+skryptu w tym samym stanie powinno prowadzić do tego samego (poprawnego) wyniku, a nie do błędów
+spowodowanych "już istniejącymi" zasobami.
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-16
+> 📅 **Ostatnia aktualizacja:** 2026-01-17

@@ -57,13 +57,19 @@ class NeuTextField extends StatefulWidget {
 
 class _NeuTextFieldState extends State<NeuTextField> {
   late FocusNode _focusNode;
+  late TextEditingController _controller;
   bool _isFocused = false;
+  bool _hasText = false;
 
   @override
   void initState() {
     super.initState();
     _focusNode = widget.focusNode ?? FocusNode();
     _focusNode.addListener(_onFocusChange);
+
+    _controller = widget.controller ?? TextEditingController();
+    _controller.addListener(_onTextChange);
+    _hasText = _controller.text.isNotEmpty;
   }
 
   @override
@@ -73,6 +79,12 @@ class _NeuTextFieldState extends State<NeuTextField> {
     } else {
       _focusNode.removeListener(_onFocusChange);
     }
+
+    _controller.removeListener(_onTextChange);
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
+
     super.dispose();
   }
 
@@ -80,6 +92,15 @@ class _NeuTextFieldState extends State<NeuTextField> {
     setState(() {
       _isFocused = _focusNode.hasFocus;
     });
+  }
+
+  void _onTextChange() {
+    final hasText = _controller.text.isNotEmpty;
+    if (hasText != _hasText) {
+      setState(() {
+        _hasText = hasText;
+      });
+    }
   }
 
   @override
@@ -105,20 +126,39 @@ class _NeuTextFieldState extends State<NeuTextField> {
         ],
         AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          decoration:
-              NeuDecoration.basin(
-                isDark: isDark,
-                radius: widget.borderRadius,
-              ).copyWith(
-                border: Border.all(
-                  color: _isFocused
-                      ? AppColors.primary.withOpacity(0.6)
-                      : Colors.transparent,
-                  width: 2,
-                ),
+          decoration: BoxDecoration(
+            color: isDark
+                ? AppColors.darkSurface
+                : AppColors.lightSurface,
+            borderRadius: BorderRadius.circular(widget.borderRadius),
+            border: Border.all(
+              color: _isFocused
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+              width: _isFocused ? 2 : 1,
+            ),
+            boxShadow: [
+              // Inner shadow (basin effect)
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withOpacity(0.3)
+                    : Colors.black.withOpacity(0.1),
+                offset: const Offset(2, 2),
+                blurRadius: 4,
+                spreadRadius: 0,
               ),
+              BoxShadow(
+                color: isDark
+                    ? Colors.white.withOpacity(0.03)
+                    : Colors.white.withOpacity(0.7),
+                offset: const Offset(-2, -2),
+                blurRadius: 4,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
           child: TextField(
-            controller: widget.controller,
+            controller: _controller,
             focusNode: _focusNode,
             onChanged: widget.onChanged,
             onTap: widget.onTap,
@@ -136,8 +176,28 @@ class _NeuTextFieldState extends State<NeuTextField> {
               hintStyle: TextStyle(
                 color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
-              prefixIcon: widget.prefixIcon,
-              suffixIcon: widget.suffixIcon,
+              prefixIcon: widget.prefixIcon != null
+                  ? IconTheme(
+                      data: IconThemeData(
+                        color: _isFocused
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurface,
+                      ),
+                      child: widget.prefixIcon!,
+                    )
+                  : null,
+              suffixIcon: _hasText
+                  ? IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: () {
+                        _controller.clear();
+                        widget.onChanged?.call('');
+                      },
+                    )
+                  : widget.suffixIcon,
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
@@ -153,45 +213,86 @@ class _NeuTextFieldState extends State<NeuTextField> {
 }
 
 /// Neumorphic search field variant
-/// Pre-configured with search icon and clear button
-class NeuSearchField extends StatelessWidget {
-  final TextEditingController controller;
+/// Pre-configured with search icon and pills shape
+class NeuSearchField extends StatefulWidget {
+  final TextEditingController? controller;
   final String hintText;
   final ValueChanged<String>? onChanged;
-  final VoidCallback? onClear;
+  final ValueChanged<String>? onSubmitted;
+  final FocusNode? focusNode;
 
   const NeuSearchField({
     super.key,
-    required this.controller,
+    this.controller,
     this.hintText = 'Szukaj...',
     this.onChanged,
-    this.onClear,
+    this.onSubmitted,
+    this.focusNode,
   });
+
+  @override
+  State<NeuSearchField> createState() => _NeuSearchFieldState();
+}
+
+class _NeuSearchFieldState extends State<NeuSearchField> {
+  late TextEditingController _controller;
+  late FocusNode _focusNode;
+  bool _isFocused = false;
+  bool _hasText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = widget.controller ?? TextEditingController();
+    _controller.addListener(_onTextChange);
+    _hasText = _controller.text.isNotEmpty;
+
+    _focusNode = widget.focusNode ?? FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onTextChange);
+    if (widget.controller == null) {
+      _controller.dispose();
+    }
+
+    _focusNode.removeListener(_onFocusChange);
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    }
+
+    super.dispose();
+  }
+
+  void _onTextChange() {
+    final hasText = _controller.text.isNotEmpty;
+    if (hasText != _hasText) {
+      setState(() {
+        _hasText = hasText;
+      });
+    }
+  }
+
+  void _onFocusChange() {
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return NeuTextField(
-      controller: controller,
-      hintText: hintText,
-      prefixIcon: Icon(
-        Icons.search,
-        color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-      ),
-      suffixIcon: controller.text.isNotEmpty
-          ? IconButton(
-              icon: Icon(
-                Icons.close,
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-              ),
-              onPressed: () {
-                controller.clear();
-                onClear?.call();
-              },
-            )
-          : null,
-      onChanged: onChanged,
+      controller: _controller,
+      focusNode: _focusNode,
+      hintText: widget.hintText,
+      borderRadius: 50, // Pills shape
+      prefixIcon: Icon(Icons.search),
+      onChanged: widget.onChanged,
+      textInputAction: TextInputAction.search,
     );
   }
 }

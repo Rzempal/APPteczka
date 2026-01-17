@@ -101,22 +101,13 @@ class _LeafletSearchSheetState extends State<LeafletSearchSheet> {
           const SizedBox(height: 16),
 
           // Search field
-          Row(
-            children: [
-              Expanded(
-                child: NeuTextField(
-                  controller: _controller,
-                  hintText: 'Wpisz nazwę leku...',
-                  textInputAction: TextInputAction.search,
-                ),
-              ),
-              const SizedBox(width: 12),
-              NeuIconButton(
-                icon: _isLoading ? LucideIcons.loader : LucideIcons.search,
-                onPressed: _isLoading ? null : _search,
-                size: 48,
-              ),
-            ],
+          NeuSearchField(
+            controller: _controller,
+            hintText: 'Wpisz nazwę leku...',
+            onChanged: (_) {
+              // Optional: auto-search on text change if desired
+            },
+            onSubmitted: (_) => _search(),
           ),
           const SizedBox(height: 16),
 
