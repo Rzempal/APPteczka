@@ -367,6 +367,9 @@ class RplService {
               'Accept': 'application/json',
               'User-Agent':
                   'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+              'Origin': 'https://rejestrymedyczne.ezdrowie.gov.pl',
+              'Referer':
+                  'https://rejestrymedyczne.ezdrowie.gov.pl/rpl/search/public',
             },
           )
           .timeout(_timeout);

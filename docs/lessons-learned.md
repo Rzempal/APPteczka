@@ -759,4 +759,58 @@ Jeśli API działa w przeglądarce i `curl`, a nie działa w aplikacji mobilnej:
 
 ---
 
+---
+
+## 18. Brak odświeżania StatefulWidget przy zmianie danych (didUpdateWidget)
+
+**Data:** 2026-01-17 **Kontekst:** Karta leku (`MedicineCard`) nie odświeżała widoku po zmianie
+etykiet/notatki wykonanej w modalu, mimo że rodzic (Lista) przekazywał nowy obiekt.
+
+### ❌ Błąd
+
+Zbyt agresywna optymalizacja w `didUpdateWidget`. Aktualizacja lokalnego stanu następowała _tylko_
+gdy zmieniło się ID leku.
+
+```dart
+@override
+void didUpdateWidget(covariant MedicineCard oldWidget) {
+  super.didUpdateWidget(oldWidget);
+  // ❌ Błąd: Ignoruje zmiany zawartości (np. nowe etykiety), jeśli ID jest to samo
+  if (oldWidget.medicine.id != widget.medicine.id) {
+    _medicine = widget.medicine;
+  }
+}
+```
+
+### ✅ Poprawne rozwiązanie
+
+Rozdzielenie logiki aktualizacji danych od resetowania stanu UI.
+
+```dart
+@override
+void didUpdateWidget(covariant MedicineCard oldWidget) {
+  super.didUpdateWidget(oldWidget);
+
+  // ✅ 1. Zawsze aktualizuj dane, jeśli obiekt jest inny (nawet jeśli to to samo ID)
+  if (oldWidget.medicine != widget.medicine) {
+    _medicine = widget.medicine;
+  }
+
+  // ✅ 2. Resetuj stan UI (zwinięcie, tryb edycji) TYLKO gdy zmieniło się ID
+  if (oldWidget.medicine.id != widget.medicine.id) {
+    _isMoreExpanded = false;
+  }
+}
+```
+
+### Zasada ogólna
+
+W `StatefulWidget`, który trzyma lokalną kopię danych z `widget`:
+
+1. Zawsze implementuj `didUpdateWidget`.
+2. Aktualizuj lokalne dane gdy `oldWidget.data != widget.data`.
+3. Resetuj stan interfejsu (np. scroll, expanded) tylko gdy zmienia się tożsamość obiektu (ID).
+
+---
+
 > 📅 **Ostatnia aktualizacja:** 2026-01-17
