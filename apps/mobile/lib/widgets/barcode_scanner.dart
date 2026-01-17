@@ -1,6 +1,6 @@
-// barcode_scanner.dart v1.6.0 - Skaner kodow kreskowych EAN z batch processing
+// barcode_scanner.dart v1.7.0 - Skaner kodow kreskowych EAN z batch processing
 // Widget do skanowania lekow z Rejestru Produktow Leczniczych
-// v1.6.0 - OCR fallback dla produktow spoza RPL (suplementy, wyroby medyczne)
+// v1.7.0 - Lepsze akcentowanie pomylek usera (czerwony monit, dialog wyboru, AI highlights)
 
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -201,10 +201,14 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   String? _lastError;
   ScannedDrug? _currentDrug; // Lek oczekujacy na date waznosci
   bool _isScannerActive = false;
+  bool _isAiMode = false; // Czy user wybral AI rozpoznawanie
 
   // Animacja sukcesu
   bool _showSuccess = false;
   String? _successMessage;
+
+  // Animacja bledu "Nie rozpoznano"
+  bool _showNotRecognized = false;
 
   @override
   void initState() {
@@ -405,7 +409,11 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 painter: _ScannerOverlayPainter(
                   borderColor: _mode == ScannerMode.ean
                       ? theme.colorScheme.primary
-                      : Colors.orange,
+                      : _mode == ScannerMode.productPhoto && _isAiMode
+                          ? (isDark
+                              ? AppColors.aiAccentDark
+                              : AppColors.aiAccentLight)
+                          : Colors.orange,
                   borderWidth: 3,
                 ),
               ),
@@ -428,6 +436,35 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                         const SizedBox(height: 8),
                         Text(
                           _successMessage ?? 'Rozpoznano!',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // Animacja "Nie rozpoznano"
+            if (_showNotRecognized)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.red.withAlpha(180),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          LucideIcons.circleX,
+                          color: Colors.white,
+                          size: 48,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '❌ Nie rozpoznano',
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -525,10 +562,39 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               Positioned(
                 bottom: 16,
                 right: 16,
-                child: _buildControlButton(
-                  icon: LucideIcons.camera,
-                  label: 'Zrób zdjęcie',
+                child: GestureDetector(
                   onTap: _captureExpiryDatePhoto,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(LucideIcons.calendarPlus,
+                            color: Colors.white, size: 20),
+                        const SizedBox(width: 6),
+                        RichText(
+                          text: const TextSpan(
+                            style: TextStyle(color: Colors.white, fontSize: 12),
+                            children: [
+                              TextSpan(text: 'Zrób zdjęcie '),
+                              TextSpan(
+                                text: 'daty ważności',
+                                style: TextStyle(
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
 
@@ -549,11 +615,54 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               Positioned(
                 bottom: 16,
                 right: 16,
-                child: _buildControlButton(
-                  icon: LucideIcons.camera,
-                  label: 'Zrób zdjęcie',
-                  onTap: _captureProductPhoto,
-                ),
+                child: _isAiMode
+                    ? GestureDetector(
+                        onTap: _captureProductPhoto,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                LucideIcons.sparkles,
+                                color: isDark
+                                    ? AppColors.aiAccentDark
+                                    : AppColors.aiAccentLight,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 6),
+                              RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 12),
+                                  children: [
+                                    const TextSpan(text: 'Zrób zdjęcie '),
+                                    TextSpan(
+                                      text: 'nazwy',
+                                      style: TextStyle(
+                                        color: isDark
+                                            ? AppColors.aiAccentDark
+                                            : AppColors.aiAccentLight,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : _buildControlButton(
+                        icon: LucideIcons.camera,
+                        label: 'Zrób zdjęcie',
+                        onTap: _captureProductPhoto,
+                      ),
               ),
           ],
         ),
@@ -846,15 +955,25 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       final drugInfo = await _rplService.fetchDrugByEan(ean);
 
       if (drugInfo == null) {
-        // Produkt nie znaleziony w RPL - przejdz do trybu zdjecia nazwy
-        HapticFeedback.lightImpact();
+        // Produkt nie znaleziony w RPL - pokaz czerwony overlay i dialog
+        HapticFeedback.heavyImpact();
         _scannedEans.add(ean);
 
         setState(() {
           _currentDrug = ScannedDrug(ean: ean);
-          _mode = ScannerMode.productPhoto;
+          _showNotRecognized = true;
           _isProcessing = false;
         });
+
+        // Pokaz czerwony overlay przez chwile
+        await Future.delayed(const Duration(milliseconds: 800));
+
+        if (!mounted) return;
+
+        setState(() => _showNotRecognized = false);
+
+        // Pokaz dialog wyboru
+        _showCodeNotRecognizedDialog(ean);
         return;
       }
 
@@ -896,6 +1015,74 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
         setState(() => _isProcessing = false);
       }
     }
+  }
+
+  /// Pokazuje dialog wyboru gdy kod nie zostal rozpoznany
+  void _showCodeNotRecognizedDialog(String ean) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final theme = Theme.of(context);
+        final isDark = theme.brightness == Brightness.dark;
+        final aiColor =
+            isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
+
+        return AlertDialog(
+          icon: const Icon(
+            LucideIcons.circleAlert,
+            color: Colors.red,
+            size: 48,
+          ),
+          title: const Text('Nie rozpoznano kodu'),
+          content: Text(
+            'Nie znaleziono leku w bazie RPL.\n\nCo chcesz zrobić?',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyMedium,
+          ),
+          actions: [
+            // Opcja 1: Skanuj ponownie
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                // Usun kod z zestawu, zeby moc skanowac ponownie
+                setState(() {
+                  _scannedEans.remove(ean);
+                  _currentDrug = null;
+                  _mode = ScannerMode.ean;
+                  _isAiMode = false;
+                });
+              },
+              icon: const Icon(LucideIcons.scanBarcode),
+              label: const Text('Zeskanuj kod jeszcze raz'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Opcja 2: AI rozpoznawanie
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                setState(() {
+                  _mode = ScannerMode.productPhoto;
+                  _isAiMode = true;
+                });
+              },
+              icon: Icon(LucideIcons.sparkles, color: aiColor),
+              label: Text(
+                'Pozwól AI rozpoznać lek',
+                style: TextStyle(color: aiColor),
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: aiColor.withAlpha(40),
+                minimumSize: const Size(double.infinity, 48),
+              ),
+            ),
+          ],
+          actionsAlignment: MainAxisAlignment.center,
+        );
+      },
+    );
   }
 
   /// Robi snapshot z widoku kamery (bez opuszczania UI)
@@ -1110,6 +1297,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       _scannedDrugs.add(_currentDrug!);
       _currentDrug = null;
       _mode = ScannerMode.ean; // Wroc do skanowania EAN
+      _isAiMode = false; // Reset trybu AI
     });
   }
 
