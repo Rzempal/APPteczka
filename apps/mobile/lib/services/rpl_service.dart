@@ -356,12 +356,19 @@ class RplService {
     }
 
     final endpoint = Uri.parse(
-      '$_baseUrl/search/public?name=${Uri.encodeComponent(query.trim())}&size=10&page=0',
+      '$_baseUrl/search/public?name=${Uri.encodeComponent(query.trim())}&size=10&page=0&isAdvancedSearch=false',
     );
 
     try {
       final response = await http
-          .get(endpoint, headers: {'Accept': 'application/json'})
+          .get(
+            endpoint,
+            headers: {
+              'Accept': 'application/json',
+              'User-Agent':
+                  'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+            },
+          )
           .timeout(_timeout);
 
       if (response.statusCode != 200) {

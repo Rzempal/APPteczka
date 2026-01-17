@@ -723,4 +723,40 @@ pociąga za sobą odświeżenie danych rodzica:
 
 ---
 
+---
+
+## 17. Blokowanie zapytań API przez brak User-Agent (Dart http)
+
+**Data:** 2026-01-17 **Kontekst:** Wyszukiwanie ulotek w Rejestrze Produktów Leczniczych przestało
+działać (brak wyników).
+
+### ❌ Błąd
+
+Biblioteka `http` w Dart domyślnie wysyła nagłówek `User-Agent` jako `Dart/<version>`. Niektóre
+serwery (np. eZdrowie) blokują takie zapytania (zwracając puste wyniki lub błędy), traktując je jako
+boty, podczas gdy zapytania z `curl` lub przeglądarki działają.
+
+### ✅ Poprawne rozwiązanie
+
+Zawsze dodawaj nagłówek `User-Agent` udający przeglądarkę mobilną w zapytaniach do publicznych API:
+
+```dart
+final response = await http.get(
+  endpoint,
+  headers: {
+    'Accept': 'application/json',
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+  },
+);
+```
+
+### Zasada ogólna
+
+Jeśli API działa w przeglądarce i `curl`, a nie działa w aplikacji mobilnej:
+
+1. Sprawdź nagłówki wysyłane przez aplikację.
+2. Skopiuj nagłówki (szczególnie `User-Agent`, `Accept`, `Referer`) z działającego zapytania.
+
+---
+
 > 📅 **Ostatnia aktualizacja:** 2026-01-17

@@ -209,6 +209,7 @@ class StorageService {
 
   /// Aktualizuje notatkę leku
   Future<void> updateMedicineNote(String id, String? note) async {
+    _log.info('Updating note for medicine $id: $note');
     final medicines = getMedicines();
     final index = medicines.indexWhere((m) => m.id == id);
     if (index != -1) {
@@ -239,6 +240,7 @@ class StorageService {
 
   /// Aktualizuje etykiety leku
   Future<void> updateMedicineLabels(String id, List<String> labelIds) async {
+    _log.info('Updating labels for medicine $id: $labelIds');
     final medicines = getMedicines();
     final index = medicines.indexWhere((m) => m.id == id);
     if (index != -1) {

@@ -1239,9 +1239,6 @@ class HomeScreenState extends State<HomeScreen> {
     // Lokalna kopia etykiet do reaktywnego UI
     List<String> currentLabels = List<String>.from(medicine.labels);
 
-    // Zmienna do śledzenia oczekującej aktualizacji
-    Future<void>? pendingUpdate;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1301,18 +1298,11 @@ class HomeScreenState extends State<HomeScreen> {
                               isOpen: true,
                               onToggle: () {},
                               onLabelTap: (_) {},
-                              onChanged: (newLabelIds) async {
-                                // Aktualizuj lokalny stan (reaktywny UI)
+                              onChanged: (newLabelIds) {
+                                // Aktualizuj TYLKO lokalny stan
                                 setSheetState(() {
                                   currentLabels = newLabelIds;
                                 });
-                                // Zapisz do storage i przypisz do pendingUpdate
-                                pendingUpdate = widget.storageService
-                                    .updateMedicineLabels(
-                                      medicine.id,
-                                      newLabelIds,
-                                    );
-                                await pendingUpdate;
                               },
                             ),
                             const SizedBox(height: 16),
@@ -1328,11 +1318,19 @@ class HomeScreenState extends State<HomeScreen> {
         );
       },
     ).then((_) async {
-      // Czekaj na ostatnią aktualizację przed odświeżeniem
-      if (pendingUpdate != null) {
-        await pendingUpdate;
+      // Zapisz zmiany DOPIERO po zamknięciu arkusza (batch save)
+      // Porównaj z oryginałem, aby unikać zbędnych zapisów
+      final originalLabels = Set<String>.from(medicine.labels);
+      final newLabels = Set<String>.from(currentLabels);
+
+      if (originalLabels.length != newLabels.length ||
+          !originalLabels.containsAll(newLabels)) {
+        await widget.storageService.updateMedicineLabels(
+          medicine.id,
+          currentLabels,
+        );
+        _loadMedicines(); // Odśwież listę po zapisie
       }
-      _loadMedicines();
     });
   }
 
