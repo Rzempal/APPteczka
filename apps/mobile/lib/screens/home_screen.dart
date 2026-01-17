@@ -2602,8 +2602,8 @@ class _HelpBottomSheetContentState extends State<_HelpBottomSheetContent> {
                             _buildFeatureItem(
                               icon: LucideIcons.calculator,
                               title: 'Kalkulator zapasu leku',
-                              description: 'Sprawdź do kiedy starczy ci leków',
-                              path: 'Szczegóły leku → Termin ważności',
+                              description: 'Sprawdz do kiedy starczy ci lekow',
+                              path: 'Szczegoly leku → Kalkulator zapasu',
                             ),
                             const Divider(height: 24),
                             _buildFeatureItem(
