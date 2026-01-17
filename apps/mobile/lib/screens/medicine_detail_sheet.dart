@@ -416,7 +416,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
   }
 
-  /// Sekcja kalkulatora "Do kiedy wystarczy?"
+  /// Sekcja kalkulatora zapasu leku
   Widget _buildSupplyCalculatorSection(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final totalPieces = _medicine.totalPieceCount;
@@ -429,54 +429,62 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Main Row: Icon + Title - CTA
+        // H1: Kalkulator zapasu leku
+        Text(
+          'Kalkulator zapasu leku',
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF6b7280),
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // H2: Sprawdź do kiedy starczy ci leków [→] + CTA
         Row(
           children: [
-            // Icon + Title
-            Icon(LucideIcons.calendarHeart, size: 18, color: AppColors.primary),
-            const SizedBox(width: 6),
             Text(
-              'Do kiedy wystarczy?',
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF6b7280),
+              'Sprawdz do kiedy starczy ci lekow',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            const SizedBox(width: 12),
-            // Separator
-            Text(
-              '-',
-              style: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontSize: 14,
-              ),
+            const SizedBox(width: 6),
+            Icon(
+              LucideIcons.arrowRight,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 12),
             // CTA buttons
-            if (!canCalculate)
-              Text(
-                'Uzupełnij ilość sztuk',
-                style: TextStyle(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                  fontSize: 12,
-                ),
-              )
-            else if (supplyEndDate == null)
+            if (canCalculate && supplyEndDate == null)
               _buildSetDailyIntakeButton(context, isDark)
-            else
+            else if (canCalculate && supplyEndDate != null)
               _buildSupplyResultInline(context, supplyEndDate, isDark),
           ],
         ),
-        const SizedBox(height: 6),
-        Text(
-          'Kalkulacja szacunkowa. Nie zastępuje zaleceń lekarza.',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontSize: 10,
-            fontStyle: FontStyle.italic,
+
+        // H3: Wypełnij Szczegóły (tylko gdy !canCalculate)
+        if (!canCalculate) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(
+                LucideIcons.cornerLeftDown,
+                size: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Wypelnij Szczegoly leku by odblokowac kalkulator',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                  fontSize: 11,
+                ),
+              ),
+            ],
           ),
-        ),
+        ],
       ],
     );
   }

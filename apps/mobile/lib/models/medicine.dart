@@ -166,7 +166,7 @@ class Medicine {
     return total;
   }
 
-  /// Oblicza do kiedy wystarczy leku (pierwszy dzień bez leku)
+  /// Kalkulator zapasu - oblicza do kiedy wystarczy leku (pierwszy dzien bez leku)
   /// Zwraca null jeśli brak danych (pieceCount lub dailyIntake)
   DateTime? calculateSupplyEndDate() {
     if (dailyIntake == null || dailyIntake! <= 0) return null;
