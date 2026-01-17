@@ -54,12 +54,12 @@ class _MonthYearPickerDialogState extends State<MonthYearPickerDialog> {
                 Text(
                   'Miesiąc',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<int>(
-                  value: _selectedMonth,
+                  initialValue: _selectedMonth,
                   decoration: const InputDecoration(
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(
@@ -92,12 +92,12 @@ class _MonthYearPickerDialogState extends State<MonthYearPickerDialog> {
                 Text(
                   'Rok',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<int>(
-                  value: _selectedYear,
+                  initialValue: _selectedYear,
                   decoration: const InputDecoration(
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(

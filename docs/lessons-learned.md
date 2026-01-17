@@ -37,11 +37,11 @@ neu-tag active
 
 ```css
 .neu-tag.active {
-  background: linear-gradient(145deg, var(--color-accent-light), var(--color-accent));
-  color: white;
-  box-shadow:
-    inset 2px 2px 4px rgba(0, 0, 0, 0.1),
-    inset -2px -2px 4px rgba(255, 255, 255, 0.1);
+	background: linear-gradient(145deg, var(--color-accent-light), var(--color-accent));
+	color: white;
+	box-shadow:
+		inset 2px 2px 4px rgba(0, 0, 0, 0.1),
+		inset -2px -2px 4px rgba(255, 255, 255, 0.1);
 }
 ```
 
@@ -288,19 +288,19 @@ let jsonString = text.trim();
 // Wzorzec 1: ```json ... ```
 const jsonCodeBlockMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
 if (jsonCodeBlockMatch && jsonCodeBlockMatch[1]) {
-  jsonString = jsonCodeBlockMatch[1].trim();
+	jsonString = jsonCodeBlockMatch[1].trim();
 } else {
-  // Wzorzec 2: ``` ... ``` (bez języka)
-  const codeBlockMatch = jsonString.match(/```\s*([\s\S]*?)\s*```/);
-  if (codeBlockMatch && codeBlockMatch[1]) {
-    jsonString = codeBlockMatch[1].trim();
-  } else {
-    // Wzorzec 3: surowy JSON { ... }
-    const jsonObjectMatch = jsonString.match(/\{[\s\S]*\}/);
-    if (jsonObjectMatch) {
-      jsonString = jsonObjectMatch[0].trim();
-    }
-  }
+	// Wzorzec 2: ``` ... ``` (bez języka)
+	const codeBlockMatch = jsonString.match(/```\s*([\s\S]*?)\s*```/);
+	if (codeBlockMatch && codeBlockMatch[1]) {
+		jsonString = codeBlockMatch[1].trim();
+	} else {
+		// Wzorzec 3: surowy JSON { ... }
+		const jsonObjectMatch = jsonString.match(/\{[\s\S]*\}/);
+		if (jsonObjectMatch) {
+			jsonString = jsonObjectMatch[0].trim();
+		}
+	}
 }
 ````
 
@@ -910,5 +910,38 @@ Przy edycji klasy z wieloma polami:
 
 Zawsze sprawdzaj `git diff` lub podgląd zmian przed zatwierdzeniem, szczególnie w plikach
 "bibliotecznych" (współdzielone widgety).
+
+---
+
+## 22. Inicjalizacja DropdownButtonFormField
+
+**Data:** 2026-01-17 **Kontekst:** Naprawa selektora roku w `MonthYearPickerDialog`.
+
+### ❌ Błąd
+
+Użycie `value` zamiast `initialValue` w `DropdownButtonFormField` wewnątrz `StatefulWidget`.
+Powodowało to problemy z odświeżaniem widoku przy zmianie wartości przez użytkownika (widget
+"walczył" ze stanem nadrzędnym lub nie reagował poprawnie).
+
+### ✅ Poprawne rozwiązanie
+
+Użyj `initialValue` dla wartości początkowej, jeśli `DropdownButtonFormField` ma zarządzać swoim
+stanem wewnętrznie (przynajmniej wizualnie), lub upewnij się, że `value` jest ściśle powiązane z
+`setState` w rodzicu. W tym przypadku `initialValue` uprościło kod.
+
+```dart
+DropdownButtonFormField<int>(
+  initialValue: _selectedYear, // ✅ Ustaw raz na starcie
+  // value: _selectedYear,     // ❌ Wymaga idealnego syncu ze stanem
+  onChanged: (value) {
+    setState(() => _selectedYear = value!);
+  },
+)
+```
+
+### Zasada ogólna
+
+W formularzach Fluttera, rozróżniaj pola kontrolowane (`controller` / `value`) od niekontrolowanych
+(`initialValue`). Mieszenie tych podejść to proszenie się o błędy UI.
 
 ---
