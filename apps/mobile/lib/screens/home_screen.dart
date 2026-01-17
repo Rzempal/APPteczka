@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
@@ -81,6 +82,9 @@ class HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadMedicines();
+    _searchFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
     // Check for updates on init
     widget.updateService.addListener(_onUpdateChanged);
     widget.updateService.checkForUpdate();
@@ -221,7 +225,7 @@ class HomeScreenState extends State<HomeScreen> {
 
               // Gradient pod całą górną sekcją
               Container(
-                height: 24,
+                height: 20,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -253,7 +257,7 @@ class HomeScreenState extends State<HomeScreen> {
                         children: [
                           // Główna lista - tryb akordeonowy
                           ListView.builder(
-                            padding: const EdgeInsets.only(top: 8, bottom: 16),
+                            padding: const EdgeInsets.only(bottom: 16),
                             itemCount: _filteredMedicines.length,
                             itemBuilder: (context, index) {
                               final medicine = _filteredMedicines[index];
@@ -343,7 +347,7 @@ class HomeScreenState extends State<HomeScreen> {
                             left: 0,
                             right: 0,
                             top: 0,
-                            height: 60,
+                            height: 40,
                             child: IgnorePointer(
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
@@ -355,15 +359,10 @@ class HomeScreenState extends State<HomeScreen> {
                                               ? AppColors.darkBackground
                                               : AppColors.lightBackground)
                                           .withAlpha(0),
-                                      (isDark
-                                              ? AppColors.darkBackground
-                                              : AppColors.lightBackground)
-                                          .withAlpha(128),
                                       isDark
                                           ? AppColors.darkBackground
                                           : AppColors.lightBackground,
                                     ],
-                                    stops: const [0.0, 0.5, 1.0],
                                   ),
                                 ),
                               ),
@@ -517,48 +516,122 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchBar(ThemeData theme, bool isDark) {
-    return Column(
-      children: [
-        // Search bar
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: NeuSearchField(
-            controller: _searchController,
-            focusNode: _searchFocusNode,
-            hintText: 'Szukaj leku...',
-            onChanged: (value) {
-              final wasActive = _filterState.hasActiveFilters;
-              setState(() {
-                _filterState = _filterState.copyWith(
-                  searchQuery: value,
-                );
-              });
-              // Powiadom rodzica tylko gdy zmieni się stan aktywności filtrów
-              if (wasActive != _filterState.hasActiveFilters) {
-                widget.onFiltersChanged?.call();
-              }
-            },
-            onSubmitted: (_) {
-              _searchFocusNode.unfocus();
-            },
-          ),
-        ),
-        // Gradient pod search barem
-        Container(
-          height: 24,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                isDark ? AppColors.darkBackground : AppColors.lightBackground,
-                (isDark ? AppColors.darkBackground : AppColors.lightBackground)
-                    .withAlpha(0),
+    // Glassmorphism - przezroczyste tło z blur (jak toolbar)
+    final backgroundColor = isDark
+        ? AppColors.darkSurface.withValues(alpha: 0.85)
+        : AppColors.lightBackground.withValues(alpha: 0.85);
+
+    final borderColor = isDark
+        ? AppColors.darkShadowDark.withValues(alpha: 0.5)
+        : AppColors.lightShadowDark.withValues(alpha: 0.3);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            height: 56,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: borderColor, width: 1),
+            ),
+            child: Row(
+              children: [
+                // Search icon
+                Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Icon(
+                    LucideIcons.search,
+                    size: 20,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                // Text field
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Szukaj leku...',
+                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                      filled: false,
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 16,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      final wasActive = _filterState.hasActiveFilters;
+                      setState(() {
+                        _filterState = _filterState.copyWith(
+                          searchQuery: value,
+                        );
+                      });
+                      // Powiadom rodzica tylko gdy zmieni się stan aktywności filtrów
+                      if (wasActive != _filterState.hasActiveFilters) {
+                        widget.onFiltersChanged?.call();
+                      }
+                    },
+                    onSubmitted: (_) {
+                      _searchFocusNode.unfocus();
+                    },
+                  ),
+                ),
+                // Clear button (when text is present)
+                if (_searchController.text.isNotEmpty)
+                  IconButton(
+                    icon: Icon(
+                      LucideIcons.x,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: () {
+                      final wasActive = _filterState.hasActiveFilters;
+                      _searchController.clear();
+                      setState(() {
+                        _filterState = _filterState.copyWith(searchQuery: '');
+                      });
+                      if (wasActive != _filterState.hasActiveFilters) {
+                        widget.onFiltersChanged?.call();
+                      }
+                    },
+                  ),
+                // Submit check button - visible only when focused
+                if (_searchFocusNode.hasFocus)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: GestureDetector(
+                      onTap: () {
+                        _searchFocusNode.unfocus();
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Icon(
+                          LucideIcons.check,
+                          size: 18,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 
