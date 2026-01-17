@@ -126,6 +126,7 @@ class _NeuTextFieldState extends State<NeuTextField> {
         ],
         AnimatedContainer(
           duration: const Duration(milliseconds: 150),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: isDark
                 ? AppColors.darkSurface
