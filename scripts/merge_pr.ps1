@@ -48,7 +48,8 @@ Write-Host "Ostatni commit na main: $lastCommit" -ForegroundColor Gray
 # Wyciagnij numer #XXX z ostatniego commita
 if ($lastCommit -match '#(\d+)') {
     $lastNum = [int]$matches[1]
-} else {
+}
+else {
     # Fallback - policz commity
     $lastNum = [int](git rev-list --count origin/main)
 }
@@ -81,12 +82,25 @@ if ($confirm -ne 'y' -and $confirm -ne 'Y') {
     exit 0
 }
 
-# 9. Utworz PR
-Write-Host "Tworzenie PR..." -ForegroundColor Cyan
-gh pr create --base main --head $currentBranch --title "$title" --body " "
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "BLAD: Nie udalo sie utworzyc PR!" -ForegroundColor Red
-    exit 1
+# 9. Utworz lub aktualizuj PR
+Write-Host "Sprawdzanie istniejacych PR..." -ForegroundColor Cyan
+$existingPR = gh pr list --head $currentBranch --json number --jq '.[0].number'
+
+if ($existingPR) {
+    Write-Host "Znaleziono istniejacy PR #$existingPR. Aktualizacja tytulu..." -ForegroundColor Yellow
+    gh pr edit $existingPR --title "$title"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "BLAD: Nie udalo sie zaktualizowac PR!" -ForegroundColor Red
+        exit 1
+    }
+}
+else {
+    Write-Host "Tworzenie nowego PR..." -ForegroundColor Cyan
+    gh pr create --base main --head $currentBranch --title "$title" --body " "
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "BLAD: Nie udalo sie utworzyc PR!" -ForegroundColor Red
+        exit 1
+    }
 }
 
 # 10. Merge PR
