@@ -603,4 +603,69 @@ spowodowanych "już istniejącymi" zasobami.
 
 ---
 
+## 15. Nie zgaduj rozwiązania - testuj i weryfikuj (Flutter UI)
+
+**Data:** 2026-01-17
+**Kontekst:** Standaryzacja UI pól tekstowych - TextField nie dopasowuje się do pills shape
+
+### ❌ Błąd
+
+Zgadywanie rozwiązań zamiast weryfikacji przez testy lub dokumentację. W przypadku TextField nie dopasowującego się do `borderRadius: 50` (pills shape):
+
+1. **Pierwsza próba:** Dodanie `clipBehavior: Clip.antiAlias` do `AnimatedContainer` - nie zadziałało
+2. **Druga próba:** Dodanie `filled: false` do `InputDecoration` - niepewne, czeka na test
+
+```dart
+// ❌ Błędnie - zgadywanie bez weryfikacji
+AnimatedContainer(
+  clipBehavior: Clip.antiAlias,  // zgadywanie #1
+  decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(50),
+  ),
+  child: TextField(
+    decoration: InputDecoration(
+      filled: false,  // zgadywanie #2
+    ),
+  ),
+);
+```
+
+### ✅ Poprawne rozwiązanie
+
+**Opcja 1:** Sprawdzić dokumentację Flutter dla `TextField` + `borderRadius`
+**Opcja 2:** Przetestować lokalnie w izolowanym przykładzie
+**Opcja 3:** Użyć dedykowanego widgetu `ClipRRect` (udokumentowane rozwiązanie):
+
+```dart
+// ✅ Poprawnie - ClipRRect jest dedykowany do clippingu
+AnimatedContainer(
+  decoration: BoxDecoration(
+    borderRadius: BorderRadius.circular(50),
+  ),
+  child: ClipRRect(
+    borderRadius: BorderRadius.circular(50),
+    child: TextField(...),
+  ),
+);
+```
+
+### Zasada ogólna
+
+Przy problemach UI w Flutter:
+
+1. **NIE zgaduj** - sprawdź dokumentację lub przetestuj lokalnie
+2. **Iteruj z feedbackiem użytkownika** - deploy → test → poprawka → repeat
+3. **Używaj dedykowanych widgetów** - `ClipRRect` do clippingu, nie `clipBehavior` w rodzicu
+4. **Pytaj użytkownika o feedback** - screenshot pokazuje prawdę, zgadywanie prowadzi w ślepą uliczkę
+
+### Dodatkowy problem: Utrata zmian podczas merge conflict
+
+W tej samej sesji: podczas merge `b2c7dac` zmiany w `home_screen.dart` zostały utracone (wzięto starą wersję pliku). Lekcja:
+
+- **Zawsze weryfikuj** co zostało zmergowane: `git diff main..branch -- path/to/file`
+- **Sprawdzaj po merge** czy wszystkie pliki zawierają oczekiwane zmiany
+- **Nie zakładaj** że merge conflict został rozwiązany poprawnie bez weryfikacji
+
+---
+
 > 📅 **Ostatnia aktualizacja:** 2026-01-17
