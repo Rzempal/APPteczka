@@ -469,7 +469,7 @@ class HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  LucideIcons.pillBottle,
+                  LucideIcons.packageOpen,
                   size: 16,
                   color: theme.colorScheme.primary,
                 ),
