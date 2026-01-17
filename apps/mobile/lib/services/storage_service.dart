@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:logging/logging.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
+import 'app_logger.dart';
 
 /// Serwis do przechowywania danych lokalnie (Hive)
 class StorageService {
+  static final Logger _log = AppLogger.getLogger('StorageService');
   static const String _medicinesBoxName = 'medicines';
   static const String _labelsBoxName = 'labels';
   static const String _settingsBoxName = 'settings';
