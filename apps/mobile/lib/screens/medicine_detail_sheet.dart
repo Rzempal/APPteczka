@@ -41,7 +41,6 @@ class MedicineDetailSheet extends StatefulWidget {
 class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
   late Medicine _medicine;
   bool _isLabelsOpen = false;
-  bool _isEditingNote = false;
   late TextEditingController _noteController;
   late FocusNode _noteFocusNode;
 
@@ -63,7 +62,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
   }
 
   void _onNoteFocusChange() {
-    if (!_noteFocusNode.hasFocus && _isEditingNote) {
+    if (!_noteFocusNode.hasFocus) {
       _saveNote();
     }
   }
@@ -79,9 +78,6 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         _medicine = updatedMedicine;
       });
     }
-    setState(() {
-      _isEditingNote = false;
-    });
   }
 
   @override
@@ -1006,94 +1002,22 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     );
   }
 
-  /// Sekcja notatki - inline editing z zielonym outline i przyciskiem check wewnątrz
+  /// Sekcja notatki - inline editing z NeuTextField
   Widget _buildNoteSection(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hasNote = _medicine.notatka?.isNotEmpty == true;
-
-    return GestureDetector(
-      onTap: () {
-        if (!_isEditingNote) {
-          setState(() {
-            _isEditingNote = true;
-            _noteController.text = _medicine.notatka ?? '';
-          });
-          // Schedule focus after build
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _noteFocusNode.requestFocus();
-          });
+    return NeuTextField(
+      controller: _noteController,
+      focusNode: _noteFocusNode,
+      hintText: 'Kliknij, aby dodać notatkę',
+      maxLines: null,
+      minLines: 3,
+      borderRadius: 12,
+      prefixIcon: Icon(LucideIcons.stickyNote),
+      onChanged: (value) {
+        // Auto-save on text change
+        if (_noteController.text.trim() != (_medicine.notatka ?? '')) {
+          // Debounce save - will be handled by focus loss
         }
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: double.infinity,
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.transparent
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(8),
-          border: _isEditingNote
-              ? Border.all(color: AppColors.primary, width: 2)
-              : null,
-        ),
-        child: _isEditingNote
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Pole tekstowe - bez wewnętrznego outline
-                  Expanded(
-                    child: TextField(
-                      controller: _noteController,
-                      focusNode: _noteFocusNode,
-                      maxLines: null,
-                      minLines: 1,
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        errorBorder: InputBorder.none,
-                        disabledBorder: InputBorder.none,
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        hintText: 'Wpisz notatkę...',
-                      ),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      onSubmitted: (_) => _saveNote(),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Przycisk check wewnątrz pola, wyrównany do prawej
-                  GestureDetector(
-                    onTap: _saveNote,
-                    child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: NeuDecoration.flatSmall(
-                        isDark: isDark,
-                        radius: 16,
-                      ),
-                      child: Icon(
-                        LucideIcons.check,
-                        size: 16,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ],
-              )
-            : Text(
-                hasNote ? _medicine.notatka! : 'Kliknij, aby dodać notatkę',
-                style: TextStyle(
-                  color: hasNote
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                  fontStyle: hasNote ? FontStyle.normal : FontStyle.italic,
-                ),
-              ),
-      ),
     );
   }
 

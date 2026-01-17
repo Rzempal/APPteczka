@@ -53,7 +53,6 @@ function Get-WinSCP {
     }
     return $null
 }
-
 function Update-DeployLog {
     param(
         [string]$Channel,
@@ -65,7 +64,7 @@ function Update-DeployLog {
         [string]$Duration
     )
     
-    $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\2-PRYWATNE-PROJEKTY_\LOG-APTECZKA\log.md"
+    $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\1_PRYWATNE_PROJEKTY_\LOG_APTECZKA\log.md"
     $MAX_ENTRIES = 10
     $SEPARATOR = "`n---`n"
     
