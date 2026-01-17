@@ -1174,15 +1174,29 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   }
 
   /// Wymusza przejście do trybu zdjęcia nazwy gdy kod jest nieczytelny
-  void _skipBarcodeScan() {
-    HapticFeedback.lightImpact();
+  Future<void> _skipBarcodeScan() async {
+    // Generuj unikalny manual EAN
+    final manualEan = 'MANUAL_${DateTime.now().millisecondsSinceEpoch}';
+
+    // Pokaz ten sam czerwony overlay i dialog co dla nierozpoznanego kodu
+    HapticFeedback.heavyImpact();
+    _scannedEans.add(manualEan);
+
     setState(() {
-      _currentDrug = ScannedDrug(
-        ean: 'MANUAL_${DateTime.now().millisecondsSinceEpoch}',
-      );
-      _mode = ScannerMode.productPhoto;
+      _currentDrug = ScannedDrug(ean: manualEan);
+      _showNotRecognized = true;
       _lastError = null;
     });
+
+    // Pokaz czerwony overlay przez chwile
+    await Future.delayed(const Duration(milliseconds: 800));
+
+    if (!mounted) return;
+
+    setState(() => _showNotRecognized = false);
+
+    // Pokaz dialog wyboru
+    _showCodeNotRecognizedDialog(manualEan);
   }
 
   /// Pomija zdjecie nazwy produktu (batch mode)
