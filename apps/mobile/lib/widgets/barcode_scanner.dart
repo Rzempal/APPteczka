@@ -1,6 +1,6 @@
-// barcode_scanner.dart v1.7.0 - Skaner kodow kreskowych EAN z batch processing
+// barcode_scanner.dart v1.8.0 - Skaner kodow kreskowych EAN z batch processing
 // Widget do skanowania lekow z Rejestru Produktow Leczniczych
-// v1.7.0 - Lepsze akcentowanie pomylek usera (czerwony monit, dialog wyboru, AI highlights)
+// v1.8.0 - Sortowanie najnowsze u gory, numeracja nieznanych, edycja listy (usuwanie, zdjecia, daty)
 
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -14,12 +14,14 @@ import '../models/medicine.dart';
 import '../services/rpl_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/gs1_parser.dart';
+import 'month_year_picker_dialog.dart';
 import 'neumorphic/neumorphic.dart';
 
 /// Zeskanowany lek z kodem EAN i opcjonalna data waznosci
 class ScannedDrug {
   final String ean;
   final RplDrugInfo? drugInfo; // Nullable - moze nie byc w RPL
+  final int? scanSequence; // Numeracja dla nieznanych produktow
   String? expiryDate;
   String? tempImagePath; // Sciezka do snapshotu daty waznosci
   String? tempProductImagePath; // Sciezka do snapshotu nazwy produktu
@@ -32,6 +34,7 @@ class ScannedDrug {
   ScannedDrug({
     required this.ean,
     this.drugInfo,
+    this.scanSequence,
     this.expiryDate,
     this.tempImagePath,
     this.tempProductImagePath,
@@ -41,8 +44,13 @@ class ScannedDrug {
   });
 
   /// Nazwa produktu (z RPL lub OCR)
-  String get displayName =>
-      drugInfo?.fullName ?? scannedName ?? 'Nieznany produkt';
+  String get displayName {
+    if (drugInfo != null) return drugInfo!.fullName;
+    if (scannedName != null) return scannedName!;
+    return scanSequence != null
+        ? 'Nieznany produkt #$scanSequence'
+        : 'Nieznany produkt';
+  }
 
   /// Czy produkt jest z RPL
   bool get isFromRpl => drugInfo != null;
@@ -197,6 +205,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   ScannerMode _mode = ScannerMode.ean;
   final List<ScannedDrug> _scannedDrugs = [];
   final Set<String> _scannedEans = {}; // Unika duplikatow
+  int _scanSequenceCounter = 0; // Licznik dla nieznanych produktow
   bool _isProcessing = false;
   String? _lastError;
   ScannedDrug? _currentDrug; // Lek oczekujacy na date waznosci
@@ -714,10 +723,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
             ),
           ),
           const SizedBox(height: 8),
-          // Lista lekow (max 5 widocznych)
+          // Lista lekow (max 5 widocznych, najnowsze u gory)
           ...(_scannedDrugs.length > 5
-                  ? _scannedDrugs.sublist(_scannedDrugs.length - 5)
-                  : _scannedDrugs)
+                  ? _scannedDrugs.reversed.take(5)
+                  : _scannedDrugs.reversed)
               .map((drug) => _buildDrugItem(drug, theme, isDark)),
           if (_scannedDrugs.length > 5)
             Padding(
@@ -752,11 +761,36 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  drug.displayName,
-                  style: theme.textTheme.bodyMedium,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        drug.displayName,
+                        style: theme.textTheme.bodyMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    // Ikony dla nieznanych produktow (AI rozpozna pozniej)
+                    if (!drug.isFromRpl) ...[
+                      const SizedBox(width: 4),
+                      Icon(
+                        LucideIcons.arrowRight,
+                        size: 14,
+                        color: isDark
+                            ? AppColors.aiAccentDark
+                            : AppColors.aiAccentLight,
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        LucideIcons.sparkles,
+                        size: 14,
+                        color: isDark
+                            ? AppColors.aiAccentDark
+                            : AppColors.aiAccentLight,
+                      ),
+                    ],
+                  ],
                 ),
                 // Pokaz ilosc sztuk jesli dostepna lub info o OCR
                 if (pieceCount != null)
@@ -809,6 +843,22 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
     return Row(
       children: [
+        // Button "Edytuj"
+        Expanded(
+          child: NeuButton(
+            onPressed: () => _showEditSheet(theme, isDark),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(LucideIcons.layoutList, size: 20),
+                const SizedBox(width: 8),
+                const Text('Edytuj'),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Button "Zakończ i przetwórz"
         Expanded(
           child: NeuButton(
             onPressed: () {
@@ -821,9 +871,15 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               children: [
                 Icon(LucideIcons.sparkles, color: aiColor),
                 const SizedBox(width: 8),
-                Text(
-                  'Zakończ i przetwórz (${_scannedDrugs.length})',
-                  style: TextStyle(color: aiColor, fontWeight: FontWeight.w600),
+                Flexible(
+                  child: Text(
+                    'Zakończ i przetwórz (${_scannedDrugs.length})',
+                    style: TextStyle(
+                      color: aiColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -831,6 +887,451 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
         ),
       ],
     );
+  }
+
+  // ==================== EDYCJA LISTY ZESKANOWANYCH LEKOW ====================
+
+  /// Pokazuje modalny bottom sheet z edycją zeskanowanych leków
+  void _showEditSheet(ThemeData theme, bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // Handle do przeciągania
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+
+              // Header z ikoną
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.layoutList, color: AppColors.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Edytuj zeskanowane leki',
+                        style: theme.textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+
+              // Lista zeskanowanych leków (reversed - najnowsze u góry)
+              Expanded(
+                child: ListView.builder(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _scannedDrugs.length,
+                  itemBuilder: (context, index) {
+                    final reversedIndex = _scannedDrugs.length - 1 - index;
+                    final drug = _scannedDrugs[reversedIndex];
+                    return _buildEditableDrugItem(
+                      drug,
+                      reversedIndex,
+                      theme,
+                      isDark,
+                    );
+                  },
+                ),
+              ),
+
+              // Button zamknij
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.scaffoldBackgroundColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(20),
+                      blurRadius: 8,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: NeuButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(LucideIcons.x, size: 20),
+                      SizedBox(width: 8),
+                      Text('Zamknij'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Buduje kartę edycji pojedynczego leku
+  Widget _buildEditableDrugItem(
+    ScannedDrug drug,
+    int index,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final displayName = drug.displayName;
+    final hasExpiryPhoto = drug.tempImagePath != null;
+    final hasProductPhoto = drug.tempProductImagePath != null;
+    final hasExpiryDate = drug.expiryDate != null;
+    final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Nazwa z ikonami
+          Row(
+            children: [
+              Icon(
+                drug.isFromRpl ? LucideIcons.pill : LucideIcons.box,
+                size: 20,
+                color: drug.isFromRpl ? theme.colorScheme.primary : Colors.purple,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  displayName,
+                  style: theme.textTheme.bodyMedium
+                      ?.copyWith(fontWeight: FontWeight.w600),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (!drug.isFromRpl) ...[
+                const SizedBox(width: 4),
+                Icon(LucideIcons.arrowRight, size: 14, color: aiColor),
+                const SizedBox(width: 2),
+                Icon(LucideIcons.sparkles, size: 14, color: aiColor),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+
+          // Status daty
+          _buildDateStatus(drug, theme, isDark),
+
+          const SizedBox(height: 12),
+
+          // Akcje
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              // Podgląd zdjęcia nazwy (jeśli istnieje)
+              if (hasProductPhoto)
+                _buildActionButton(
+                  icon: LucideIcons.eye,
+                  label: 'Podgląd',
+                  color: Colors.green,
+                  onPressed: () =>
+                      _showProductPhotoPreview(index, drug.tempProductImagePath!),
+                ),
+
+              // Usuń zdjęcie daty (jeśli istnieje)
+              if (hasExpiryPhoto)
+                _buildActionButton(
+                  icon: LucideIcons.imageOff,
+                  label: 'Usuń zdjęcie',
+                  color: Colors.red,
+                  onPressed: () => _deleteExpiryPhoto(index),
+                ),
+
+              // Edytuj datę (zawsze dostępne)
+              _buildActionButton(
+                icon: LucideIcons.calendarCog,
+                label: 'Edytuj datę',
+                color: theme.colorScheme.primary,
+                onPressed: () => _editExpiryDate(index),
+              ),
+
+              // Usuń rekord
+              _buildActionButton(
+                icon: LucideIcons.trash,
+                label: 'Usuń lek',
+                color: Colors.red,
+                onPressed: () => _confirmDeleteDrug(index),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Buduje status daty ważności (badge)
+  Widget _buildDateStatus(ScannedDrug drug, ThemeData theme, bool isDark) {
+    if (drug.expiryDate != null) {
+      return Chip(
+        label: Text('📅 ${_formatDate(drug.expiryDate!)}'),
+        backgroundColor: AppColors.valid.withAlpha(40),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        labelStyle: theme.textTheme.bodySmall,
+      );
+    } else if (drug.tempImagePath != null) {
+      return Chip(
+        label: const Text('📸 Zdjęcie daty'),
+        backgroundColor: Colors.orange.withAlpha(40),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        labelStyle: theme.textTheme.bodySmall,
+      );
+    } else {
+      return Chip(
+        label: const Text('Brak daty'),
+        backgroundColor: Colors.grey.withAlpha(40),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        labelStyle: theme.textTheme.bodySmall,
+      );
+    }
+  }
+
+  /// Buduje przycisk akcji z ikoną
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return NeuButton(
+      onPressed: onPressed,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  /// Potwierdza i usuwa lek z listy
+  Future<void> _confirmDeleteDrug(int index) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Usuń lek'),
+        content: const Text('Czy na pewno chcesz usunąć ten lek z listy?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        final drug = _scannedDrugs[index];
+        _scannedEans.remove(drug.ean);
+        _scannedDrugs.removeAt(index);
+
+        // Zamknij bottomSheet jeśli lista pusta
+        if (_scannedDrugs.isEmpty) {
+          Navigator.pop(context);
+        }
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Lek usunięty'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Usuwa zdjęcie daty ważności
+  Future<void> _deleteExpiryPhoto(int index) async {
+    setState(() {
+      final drug = _scannedDrugs[index];
+
+      // Usuń plik fizyczny jeśli istnieje
+      if (drug.tempImagePath != null) {
+        try {
+          final file = File(drug.tempImagePath!);
+          if (file.existsSync()) {
+            file.deleteSync();
+          }
+        } catch (e) {
+          // Ignoruj błędy usuwania pliku
+        }
+      }
+
+      // Wyczyść dane w modelu
+      drug.tempImagePath = null;
+      drug.expiryDate = null;
+    });
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Zdjęcie usunięte. Możesz ponownie zrobić zdjęcie lub wpisać datę',
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  /// Pokazuje podgląd zdjęcia nazwy produktu z opcją ponownego zrobienia
+  Future<void> _showProductPhotoPreview(int index, String imagePath) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => Dialog(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.eye, color: Colors.green),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Podgląd zdjęcia nazwy',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(LucideIcons.x),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+
+            // Zdjęcie
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.contain,
+              ),
+            ),
+
+            // Buttony
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Zamknij'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: () => Navigator.pop(context, true),
+                      icon: const Icon(LucideIcons.camera),
+                      label: const Text('Zrób ponownie'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    // Jeśli user kliknął "Zrób ponownie"
+    if (result == true && mounted) {
+      Navigator.pop(context); // Zamknij edit sheet
+      setState(() {
+        _currentDrug = _scannedDrugs[index];
+        _mode = ScannerMode.productPhoto;
+        _isScannerActive = true;
+      });
+      _controller?.start();
+    }
+  }
+
+  /// Edytuje datę ważności przez picker MM/YYYY
+  Future<void> _editExpiryDate(int index) async {
+    final drug = _scannedDrugs[index];
+    final currentDate =
+        drug.expiryDate != null ? DateTime.tryParse(drug.expiryDate!) : null;
+
+    final now = DateTime.now();
+
+    // Użyj ekstra dialogu z dropdownami MM/YYYY
+    final result = await showDialog<DateTime>(
+      context: context,
+      builder: (context) => MonthYearPickerDialog(
+        initialMonth: currentDate?.month ?? now.month,
+        initialYear: currentDate?.year ?? now.year + 1,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        // Konwertuj DateTime na ISO8601 string (YYYY-MM-DD)
+        final dateStr = result.toIso8601String().split('T')[0];
+        drug.expiryDate = dateStr;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Data ważności: ${result.month.toString().padLeft(2, '0')}/${result.year}',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   // ==================== LOGIKA SKANOWANIA ====================
@@ -960,7 +1461,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
         _scannedEans.add(ean);
 
         setState(() {
-          _currentDrug = ScannedDrug(ean: ean);
+          _currentDrug = ScannedDrug(
+            ean: ean,
+            scanSequence: ++_scanSequenceCounter,
+          );
           _showNotRecognized = true;
           _isProcessing = false;
         });
@@ -1183,7 +1687,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     _scannedEans.add(manualEan);
 
     setState(() {
-      _currentDrug = ScannedDrug(ean: manualEan);
+      _currentDrug = ScannedDrug(
+        ean: manualEan,
+        scanSequence: ++_scanSequenceCounter,
+      );
       _showNotRecognized = true;
       _lastError = null;
     });
