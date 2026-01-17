@@ -1025,6 +1025,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     final hasExpiryPhoto = drug.tempImagePath != null;
     final hasProductPhoto = drug.tempProductImagePath != null;
     final hasExpiryDate = drug.expiryDate != null;
+    final hasAnyPhoto = hasExpiryPhoto || hasProductPhoto;
     final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
 
     return Container(
@@ -1034,7 +1035,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // H1: ikona + nazwa + → + ✨ + CTA:Podgląd + Spacer + CTA:Usuń produkt
+          // H1: ikona + nazwa + → + ✨ + Spacer + CTA:Usuń produkt
           Row(
             children: [
               Icon(
@@ -1058,19 +1059,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 const SizedBox(width: 2),
                 Icon(LucideIcons.sparkles, size: 14, color: aiColor),
               ],
-              if (hasProductPhoto) ...[
-                const SizedBox(width: 8),
-                _buildActionButton(
-                  icon: LucideIcons.eye,
-                  label: 'Podgląd',
-                  color: Colors.green,
-                  onPressed: () => _showPhotosPreview(index),
-                ),
-              ],
               const Spacer(),
               _buildActionButton(
                 icon: LucideIcons.trash,
-                label: 'Usuń produkt',
+                label: 'Usun produkt',
                 color: Colors.red,
                 onPressed: () => _confirmDeleteDrug(index),
               ),
@@ -1084,21 +1076,32 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               _buildDateStatus(drug, theme, isDark),
               const SizedBox(width: 8),
               if (hasExpiryPhoto && !hasExpiryDate)
-                // Wariant: zdjęcie daty (bez zdefiniowanej daty) - CTA:Podgląd
+                // Wariant: zdjęcie daty - tylko CTA:Podgląd
                 _buildActionButton(
                   icon: LucideIcons.eye,
-                  label: 'Podgląd',
+                  label: 'Podglad',
                   color: Colors.orange,
                   onPressed: () => _showPhotosPreview(index),
                 )
-              else
+              else ...[
                 // Wariant: brak daty lub data zdefiniowana - CTA:Edytuj datę
                 _buildActionButton(
                   icon: LucideIcons.calendarCog,
-                  label: 'Edytuj datę',
+                  label: 'Edytuj date',
                   color: theme.colorScheme.primary,
                   onPressed: () => _editExpiryDate(index),
                 ),
+                // + CTA:Podgląd zdjęć (jeśli jest przynajmniej jedno zdjęcie)
+                if (hasAnyPhoto) ...[
+                  const Spacer(),
+                  _buildActionButton(
+                    icon: LucideIcons.eye,
+                    label: 'Podglad zdjec',
+                    color: Colors.green,
+                    onPressed: () => _showPhotosPreview(index),
+                  ),
+                ],
+              ],
             ],
           ),
         ],
