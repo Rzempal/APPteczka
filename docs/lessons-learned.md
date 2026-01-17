@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD024 -->
+
 # 🧠 Lessons Learned
 
 > **Powiązane:** [Architektura](architecture.md) | [Konwencje](conventions.md)
@@ -493,7 +495,7 @@ Przy refaktoryzacji zagnieżdżonych widgetów (DraggableScrollableSheet → Col
 operator) łatwo o:
 
 1. **Nadmiarowy nawias** - zostaje po usunięciu warstwy
-2. **Brakujący nawias** - szczególnie przy ternary `? : ` wewnątrz `child:`
+2. **Brakujący nawias** - szczególnie przy ternary `? :` wewnątrz `child:`
 
 ```dart
 // ❌ Błędnie - nadmiarowy nawias
@@ -593,9 +595,9 @@ jeśli PR dla danego brancha już jest na GitHubie, co przerywało cały proces 
 
 Zaimplementuj sprawdzenie przed akcją. Jeśli PR istnieje, zaktualizuj go zamiast tworzyć nowy:
 
-1.  Sprawdź numer istniejącego PR: `gh pr list --head $branch --json number`
-2.  Jeśli istnieje: `gh pr edit $number --title "$newTitle"`
-3.  Jeśli nie istnieje: `gh pr create --title "$newTitle" ...`
+1. Sprawdź numer istniejącego PR: `gh pr list --head $branch --json number`
+2. Jeśli istnieje: `gh pr edit $number --title "$newTitle"`
+3. Jeśli nie istnieje: `gh pr create --title "$newTitle" ...`
 
 ### Zasada ogolna
 
@@ -882,5 +884,31 @@ String _sanitizeQuery(String raw) {
 
 Przy integracji z restrykcyjnymi API wyszukiwania, "mniej znaczy więcej". Lepiej pokazać 10 wyników
 do wyboru niż 0 przez zbyt szczegółowe zapytanie.
+
+---
+
+## 21. Ryzyko edycji dużych klas przez `replace_file_content`
+
+**Data:** 2026-01-17 **Kontekst:** Próba dodania pola `onSubmitted` do `NeuTextField` spowodowała
+przypadkowe usunięcie wszystkich innych pól klasy, ponieważ narzędzie zastąpiło blok kodu zbyt
+agresywnie/niedokładnie.
+
+### ❌ Błąd
+
+Używanie `replace_file_content` do modyfikacji początku klasy (pola + konstruktor) bez uwzględnienia
+pełnego kontekstu istniejących pól.
+
+### ✅ Poprawne rozwiązanie
+
+Przy edycji klasy z wieloma polami:
+
+1. Używaj małych, precyzyjnych chunków (np. dodaj linię po linii).
+2. Jeśli musisz podmienić duży blok, **ZAWSZE** najpierw pobierz aktualną zawartość pliku i upewnij
+   się, że w nowym contencie zawierasz wszystkie istniejące elementy.
+
+### Zasada ogólna
+
+Zawsze sprawdzaj `git diff` lub podgląd zmian przed zatwierdzeniem, szczególnie w plikach
+"bibliotecznych" (współdzielone widgety).
 
 ---
