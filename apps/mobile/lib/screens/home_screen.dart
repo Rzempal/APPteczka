@@ -521,9 +521,7 @@ class HomeScreenState extends State<HomeScreen> {
         onChanged: (value) {
           final wasActive = _filterState.hasActiveFilters;
           setState(() {
-            _filterState = _filterState.copyWith(
-              searchQuery: value,
-            );
+            _filterState = _filterState.copyWith(searchQuery: value);
           });
           // Powiadom rodzica tylko gdy zmieni się stan aktywności filtrów
           if (wasActive != _filterState.hasActiveFilters) {
@@ -1300,17 +1298,11 @@ class HomeScreenState extends State<HomeScreen> {
                               isOpen: true,
                               onToggle: () {},
                               onLabelTap: (_) {},
-                              onChanged: (newLabelIds) async {
-                                // Aktualizuj lokalny stan (reaktywny UI)
+                              onChanged: (newLabelIds) {
+                                // Aktualizuj TYLKO lokalny stan
                                 setSheetState(() {
                                   currentLabels = newLabelIds;
                                 });
-                                // Zapisz do storage
-                                await widget.storageService
-                                    .updateMedicineLabels(
-                                      medicine.id,
-                                      newLabelIds,
-                                    );
                               },
                             ),
                             const SizedBox(height: 16),
@@ -1325,7 +1317,21 @@ class HomeScreenState extends State<HomeScreen> {
           },
         );
       },
-    ).then((_) => _loadMedicines());
+    ).then((_) async {
+      // Zapisz zmiany DOPIERO po zamknięciu arkusza (batch save)
+      // Porównaj z oryginałem, aby unikać zbędnych zapisów
+      final originalLabels = Set<String>.from(medicine.labels);
+      final newLabels = Set<String>.from(currentLabels);
+
+      if (originalLabels.length != newLabels.length ||
+          !originalLabels.containsAll(newLabels)) {
+        await widget.storageService.updateMedicineLabels(
+          medicine.id,
+          currentLabels,
+        );
+        _loadMedicines(); // Odśwież listę po zapisie
+      }
+    });
   }
 
   /// Pokazuje dialog edycji notatki (swipe w prawo)

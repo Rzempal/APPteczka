@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD024 -->
+
 # 🧠 Lessons Learned
 
 > **Powiązane:** [Architektura](architecture.md) | [Konwencje](conventions.md)
@@ -37,7 +39,9 @@ neu-tag active
 .neu-tag.active {
 	background: linear-gradient(145deg, var(--color-accent-light), var(--color-accent));
 	color: white;
-	box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.1), inset -2px -2px 4px rgba(255, 255, 255, 0.1);
+	box-shadow:
+		inset 2px 2px 4px rgba(0, 0, 0, 0.1),
+		inset -2px -2px 4px rgba(255, 255, 255, 0.1);
 }
 ```
 
@@ -491,7 +495,7 @@ Przy refaktoryzacji zagnieżdżonych widgetów (DraggableScrollableSheet → Col
 operator) łatwo o:
 
 1. **Nadmiarowy nawias** - zostaje po usunięciu warstwy
-2. **Brakujący nawias** - szczególnie przy ternary `? : ` wewnątrz `child:`
+2. **Brakujący nawias** - szczególnie przy ternary `? :` wewnątrz `child:`
 
 ```dart
 // ❌ Błędnie - nadmiarowy nawias
@@ -591,9 +595,9 @@ jeśli PR dla danego brancha już jest na GitHubie, co przerywało cały proces 
 
 Zaimplementuj sprawdzenie przed akcją. Jeśli PR istnieje, zaktualizuj go zamiast tworzyć nowy:
 
-1.  Sprawdź numer istniejącego PR: `gh pr list --head $branch --json number`
-2.  Jeśli istnieje: `gh pr edit $number --title "$newTitle"`
-3.  Jeśli nie istnieje: `gh pr create --title "$newTitle" ...`
+1. Sprawdź numer istniejącego PR: `gh pr list --head $branch --json number`
+2. Jeśli istnieje: `gh pr edit $number --title "$newTitle"`
+3. Jeśli nie istnieje: `gh pr create --title "$newTitle" ...`
 
 ### Zasada ogolna
 
@@ -605,14 +609,16 @@ spowodowanych "już istniejącymi" zasobami.
 
 ## 15. Nie zgaduj rozwiązania - testuj i weryfikuj (Flutter UI)
 
-**Data:** 2026-01-17
-**Kontekst:** Standaryzacja UI pól tekstowych - TextField nie dopasowuje się do pills shape
+**Data:** 2026-01-17 **Kontekst:** Standaryzacja UI pól tekstowych - TextField nie dopasowuje się do
+pills shape
 
 ### ❌ Błąd
 
-Zgadywanie rozwiązań zamiast weryfikacji przez testy lub dokumentację. W przypadku TextField nie dopasowującego się do `borderRadius: 50` (pills shape):
+Zgadywanie rozwiązań zamiast weryfikacji przez testy lub dokumentację. W przypadku TextField nie
+dopasowującego się do `borderRadius: 50` (pills shape):
 
-1. **Pierwsza próba:** Dodanie `clipBehavior: Clip.antiAlias` do `AnimatedContainer` - nie zadziałało
+1. **Pierwsza próba:** Dodanie `clipBehavior: Clip.antiAlias` do `AnimatedContainer` - nie
+   zadziałało
 2. **Druga próba:** Dodanie `filled: false` do `InputDecoration` - niepewne, czeka na test
 
 ```dart
@@ -632,9 +638,9 @@ AnimatedContainer(
 
 ### ✅ Poprawne rozwiązanie
 
-**Opcja 1:** Sprawdzić dokumentację Flutter dla `TextField` + `borderRadius`
-**Opcja 2:** Przetestować lokalnie w izolowanym przykładzie
-**Opcja 3:** Użyć dedykowanego widgetu `ClipRRect` (udokumentowane rozwiązanie):
+**Opcja 1:** Sprawdzić dokumentację Flutter dla `TextField` + `borderRadius` **Opcja 2:**
+Przetestować lokalnie w izolowanym przykładzie **Opcja 3:** Użyć dedykowanego widgetu `ClipRRect`
+(udokumentowane rozwiązanie):
 
 ```dart
 // ✅ Poprawnie - ClipRRect jest dedykowany do clippingu
@@ -656,11 +662,13 @@ Przy problemach UI w Flutter:
 1. **NIE zgaduj** - sprawdź dokumentację lub przetestuj lokalnie
 2. **Iteruj z feedbackiem użytkownika** - deploy → test → poprawka → repeat
 3. **Używaj dedykowanych widgetów** - `ClipRRect` do clippingu, nie `clipBehavior` w rodzicu
-4. **Pytaj użytkownika o feedback** - screenshot pokazuje prawdę, zgadywanie prowadzi w ślepą uliczkę
+4. **Pytaj użytkownika o feedback** - screenshot pokazuje prawdę, zgadywanie prowadzi w ślepą
+   uliczkę
 
 ### Dodatkowy problem: Utrata zmian podczas merge conflict
 
-W tej samej sesji: podczas merge `b2c7dac` zmiany w `home_screen.dart` zostały utracone (wzięto starą wersję pliku). Lekcja:
+W tej samej sesji: podczas merge `b2c7dac` zmiany w `home_screen.dart` zostały utracone (wzięto
+starą wersję pliku). Lekcja:
 
 - **Zawsze weryfikuj** co zostało zmergowane: `git diff main..branch -- path/to/file`
 - **Sprawdzaj po merge** czy wszystkie pliki zawierają oczekiwane zmiany
@@ -668,4 +676,239 @@ W tej samej sesji: podczas merge `b2c7dac` zmiany w `home_screen.dart` zostały 
 
 ---
 
+---
+
+## 16. Race condition przy async UI z modalami (aktualizacja)
+
+**Data:** 2026-01-17 **Kontekst:** Szybkie zamknięcie panelu etykiet (gest swipe) powodowało utratę
+zmian w UI.
+
+### ❌ Błąd
+
+Wywołanie odświeżenia listy `_loadMedicines()` następowało natychmiast po zamknięciu panelu
+(`.then()`), podczas gdy operacja zapisu `updateMedicineLabels` wciąż trwała w tle.
+
+```dart
+// ❌ Błędnie - race condition
+onChanged: (ids) {
+  storage.update(ids); // fire & forget
+},
+// ...
+.then((_) => _loadMedicines()); // uruchamia się natychmiast po zamknięciu
+```
+
+### ✅ Poprawne rozwiązanie
+
+Śledzenie `Future` operacji zapisu i oczekiwanie na jego zakończenie przed odświeżeniem.
+
+```dart
+// ✅ Poprawnie - czekaj na zapis
+Future<void>? pendingUpdate;
+
+onChanged: (ids) {
+  pendingUpdate = storage.update(ids); // śledź Future
+},
+// ...
+.then((_) async {
+  if (pendingUpdate != null) await pendingUpdate; // czekaj na zakończenie
+  _loadMedicines();
+});
+```
+
+### Zasada ogólna
+
+Przy interakcjach "fire & forget" (np. toggle switch, checkbox w modalu), jeśli zamknięcie widoku
+pociąga za sobą odświeżenie danych rodzica:
+
+1. Zawsze zachowuj referencję do `Future` operacji zapisu.
+2. W bloku sprzątającym (`dispose`, `then`, `pop`) upewnij się, że operacja się zakończyła.
+
+---
+
+---
+
+## 17. Blokowanie zapytań API przez brak User-Agent (Dart http)
+
+**Data:** 2026-01-17 **Kontekst:** Wyszukiwanie ulotek w Rejestrze Produktów Leczniczych przestało
+działać (brak wyników).
+
+### ❌ Błąd
+
+Biblioteka `http` w Dart domyślnie wysyła nagłówek `User-Agent` jako `Dart/<version>`. Niektóre
+serwery (np. eZdrowie) blokują takie zapytania (zwracając puste wyniki lub błędy), traktując je jako
+boty, podczas gdy zapytania z `curl` lub przeglądarki działają.
+
+### ✅ Poprawne rozwiązanie
+
+Zawsze dodawaj nagłówek `User-Agent` udający przeglądarkę mobilną w zapytaniach do publicznych API:
+
+```dart
+final response = await http.get(
+  endpoint,
+  headers: {
+    'Accept': 'application/json',
+    'User-Agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36',
+  },
+);
+```
+
+### Zasada ogólna
+
+Jeśli API działa w przeglądarce i `curl`, a nie działa w aplikacji mobilnej:
+
+1. Sprawdź nagłówki wysyłane przez aplikację.
+2. Skopiuj nagłówki (szczególnie `User-Agent`, `Accept`, `Referer`) z działającego zapytania.
+
+---
+
+---
+
+## 18. Brak odświeżania StatefulWidget przy zmianie danych (didUpdateWidget)
+
+**Data:** 2026-01-17 **Kontekst:** Karta leku (`MedicineCard`) nie odświeżała widoku po zmianie
+etykiet/notatki wykonanej w modalu, mimo że rodzic (Lista) przekazywał nowy obiekt.
+
+### ❌ Błąd
+
+Zbyt agresywna optymalizacja w `didUpdateWidget`. Aktualizacja lokalnego stanu następowała _tylko_
+gdy zmieniło się ID leku.
+
+```dart
+@override
+void didUpdateWidget(covariant MedicineCard oldWidget) {
+  super.didUpdateWidget(oldWidget);
+  // ❌ Błąd: Ignoruje zmiany zawartości (np. nowe etykiety), jeśli ID jest to samo
+  if (oldWidget.medicine.id != widget.medicine.id) {
+    _medicine = widget.medicine;
+  }
+}
+```
+
+### ✅ Poprawne rozwiązanie
+
+Rozdzielenie logiki aktualizacji danych od resetowania stanu UI.
+
+```dart
+@override
+void didUpdateWidget(covariant MedicineCard oldWidget) {
+  super.didUpdateWidget(oldWidget);
+
+  // ✅ 1. Zawsze aktualizuj dane, jeśli obiekt jest inny (nawet jeśli to to samo ID)
+  if (oldWidget.medicine != widget.medicine) {
+    _medicine = widget.medicine;
+  }
+
+  // ✅ 2. Resetuj stan UI (zwinięcie, tryb edycji) TYLKO gdy zmieniło się ID
+  if (oldWidget.medicine.id != widget.medicine.id) {
+    _isMoreExpanded = false;
+  }
+}
+```
+
+### Zasada ogólna
+
+W `StatefulWidget`, który trzyma lokalną kopię danych z `widget`:
+
+1. Zawsze implementuj `didUpdateWidget`.
+2. Aktualizuj lokalne dane gdy `oldWidget.data != widget.data`.
+3. Resetuj stan interfejsu (np. scroll, expanded) tylko gdy zmienia się tożsamość obiektu (ID).
+
+---
+
 > 📅 **Ostatnia aktualizacja:** 2026-01-17
+
+---
+
+---
+
+## 19. TextField w Custom Widget nie działa z klawiaturą (onSubmitted)
+
+**Data:** 2026-01-17 **Kontekst:** Wyszukiwanie w "Znajdź ulotkę" nie reagowało na przycisk "Szukaj"
+na klawiaturze ekranowej.
+
+### ❌ Błąd
+
+Custom widget `NeuSearchField` (wrapper na `TextField`) nie przekazywał callbacku `onSubmitted` do
+wewnętrznego `TextField`. Przez to akcja `TextInputAction.search` była wizualnie dostępna, ale
+funkcjonalnie martwa.
+
+### ✅ Poprawne rozwiązanie
+
+Upewnij się, że każdy wrapper na pole tekstowe eksponuje i przekazuje `onSubmitted` (lub
+`onFieldSubmitted` w `TextFormField`).
+
+```dart
+// Wewnątrz NeuTextField
+TextField(
+  // ...
+  onSubmitted: widget.onSubmitted, // ✅ Wiring niezbędny dla klawiatury
+  textInputAction: widget.textInputAction,
+);
+```
+
+### Zasada ogólna
+
+Tworząc własne komponenty UI (wrappery), zawsze weryfikuj działanie akcji klawiatury (Done, Search,
+Next).
+
+---
+
+---
+
+## 20. Zbyt precyzyjne zapytania do oficjalnych rejetrów (RPL)
+
+**Data:** 2026-01-17 **Kontekst:** Wyszukiwanie "Apap Extra 500mg" w Rejestrze Produktów Leczniczych
+nie zwracało wyników, mimo że lek istnieje.
+
+### ❌ Błąd
+
+Oficjalne API często mają restrykcyjne ("głupie") wyszukiwarki, które wymagają dokładnego
+dopasowania frazy i gubią się przy dodatkowych słowach (np. dawce, postaci), jeśli nie są one w
+idealnej kolejności.
+
+### ✅ Poprawne rozwiązanie
+
+Zastosowanie prostej sanityzacji zapytania po stronie klienta - w przypadku RPL najlepiej działa
+wyszukiwanie po **pierwszym słowie** nazwy (Root Name).
+
+```dart
+String _sanitizeQuery(String raw) {
+  // Dla "Apap Extra 500mg" zwróć "Apap"
+  // To daje szersze wyniki, z których użytkownik może łatwo wybrać właściwy
+  final parts = raw.split(' ');
+  return parts.isNotEmpty ? parts.first.trim() : raw.trim();
+}
+```
+
+### Zasada ogólna
+
+Przy integracji z restrykcyjnymi API wyszukiwania, "mniej znaczy więcej". Lepiej pokazać 10 wyników
+do wyboru niż 0 przez zbyt szczegółowe zapytanie.
+
+---
+
+## 21. Ryzyko edycji dużych klas przez `replace_file_content`
+
+**Data:** 2026-01-17 **Kontekst:** Próba dodania pola `onSubmitted` do `NeuTextField` spowodowała
+przypadkowe usunięcie wszystkich innych pól klasy, ponieważ narzędzie zastąpiło blok kodu zbyt
+agresywnie/niedokładnie.
+
+### ❌ Błąd
+
+Używanie `replace_file_content` do modyfikacji początku klasy (pola + konstruktor) bez uwzględnienia
+pełnego kontekstu istniejących pól.
+
+### ✅ Poprawne rozwiązanie
+
+Przy edycji klasy z wieloma polami:
+
+1. Używaj małych, precyzyjnych chunków (np. dodaj linię po linii).
+2. Jeśli musisz podmienić duży blok, **ZAWSZE** najpierw pobierz aktualną zawartość pliku i upewnij
+   się, że w nowym contencie zawierasz wszystkie istniejące elementy.
+
+### Zasada ogólna
+
+Zawsze sprawdzaj `git diff` lub podgląd zmian przed zatwierdzeniem, szczególnie w plikach
+"bibliotecznych" (współdzielone widgety).
+
+---

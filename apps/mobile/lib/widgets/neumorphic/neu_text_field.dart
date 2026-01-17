@@ -14,6 +14,7 @@ class NeuTextField extends StatefulWidget {
   final String? labelText;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
+  final ValueChanged<String>? onSubmitted;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
   final TextInputType? keyboardType;
@@ -35,6 +36,7 @@ class NeuTextField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.onChanged,
+    this.onSubmitted,
     this.onTap,
     this.keyboardType,
     this.textInputAction,
@@ -128,9 +130,7 @@ class _NeuTextFieldState extends State<NeuTextField> {
           duration: const Duration(milliseconds: 150),
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.darkSurface
-                : AppColors.lightSurface,
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             borderRadius: BorderRadius.circular(widget.borderRadius),
             border: Border.all(
               color: _isFocused
@@ -162,6 +162,7 @@ class _NeuTextFieldState extends State<NeuTextField> {
             controller: _controller,
             focusNode: _focusNode,
             onChanged: widget.onChanged,
+            onSubmitted: widget.onSubmitted,
             onTap: widget.onTap,
             keyboardType: widget.keyboardType,
             textInputAction: widget.textInputAction,
@@ -294,6 +295,7 @@ class _NeuSearchFieldState extends State<NeuSearchField> {
       borderRadius: 50, // Pills shape
       prefixIcon: Icon(Icons.search),
       onChanged: widget.onChanged,
+      onSubmitted: widget.onSubmitted,
       textInputAction: TextInputAction.search,
     );
   }

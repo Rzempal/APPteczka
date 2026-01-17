@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:logging/logging.dart';
 import '../models/medicine.dart';
 import '../models/label.dart';
+import 'app_logger.dart';
 
 /// Serwis do przechowywania danych lokalnie (Hive)
 class StorageService {
+  static final Logger _log = AppLogger.getLogger('StorageService');
   static const String _medicinesBoxName = 'medicines';
   static const String _labelsBoxName = 'labels';
   static const String _settingsBoxName = 'settings';
@@ -209,6 +212,7 @@ class StorageService {
 
   /// Aktualizuje notatkę leku
   Future<void> updateMedicineNote(String id, String? note) async {
+    _log.info('Updating note for medicine $id: $note');
     final medicines = getMedicines();
     final index = medicines.indexWhere((m) => m.id == id);
     if (index != -1) {
@@ -239,6 +243,7 @@ class StorageService {
 
   /// Aktualizuje etykiety leku
   Future<void> updateMedicineLabels(String id, List<String> labelIds) async {
+    _log.info('Updating labels for medicine $id: $labelIds');
     final medicines = getMedicines();
     final index = medicines.indexWhere((m) => m.id == id);
     if (index != -1) {

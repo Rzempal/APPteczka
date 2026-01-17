@@ -50,8 +50,7 @@ class MedicineCard extends StatefulWidget {
 class _MedicineCardState extends State<MedicineCard> {
   bool _isMoreExpanded = false; // Akordeon "Więcej"
   bool _isLabelsOpen = false;
-  bool _isEditModeButtonActive =
-      false; // Stan lokalny przycisku trybu edycji
+  bool _isEditModeButtonActive = false; // Stan lokalny przycisku trybu edycji
   late Medicine _medicine;
 
   /// Czy tryb edycji jest aktywny (z ustawień LUB z lokalnego buttona)
@@ -83,9 +82,18 @@ class _MedicineCardState extends State<MedicineCard> {
   @override
   void didUpdateWidget(covariant MedicineCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.medicine.id != widget.medicine.id) {
+
+    // Zawsze aktualizuj lokalną kopię obiektu, jeśli przyszła nowa wersja z góry
+    if (oldWidget.medicine != widget.medicine) {
       _medicine = widget.medicine;
-      _noteController.text = _medicine.notatka ?? '';
+      // Aktualizuj tekst notatki tylko jeśli nie jest aktualnie edytowana
+      if (!_isEditingNote) {
+        _noteController.text = _medicine.notatka ?? '';
+      }
+    }
+
+    // Resetuj stan UI tylko jeśli zmienił się ID (to zupełnie inny lek)
+    if (oldWidget.medicine.id != widget.medicine.id) {
       _isMoreExpanded = false;
       _isLabelsOpen = false;
     }
@@ -1428,9 +1436,14 @@ class _MedicineCardState extends State<MedicineCard> {
           Padding(
             padding: const EdgeInsets.only(right: 4, bottom: 4),
             child: GestureDetector(
-              onTap: () => setState(() => _isEditModeButtonActive = !_isEditModeButtonActive),
+              onTap: () => setState(
+                () => _isEditModeButtonActive = !_isEditModeButtonActive,
+              ),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: _isEditModeButtonActive
                     ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
                     : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
