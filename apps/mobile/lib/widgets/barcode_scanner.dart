@@ -716,11 +716,22 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Zeskanowane leki (${_scannedDrugs.length})',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          Row(
+            children: [
+              Text(
+                'Zeskanowane leki (${_scannedDrugs.length})',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                'daty ważności',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           // Lista lekow (max 5 widocznych, najnowsze u gory)
@@ -873,7 +884,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    'Zakończ i przetwórz (${_scannedDrugs.length})',
+                    'Zakończ (${_scannedDrugs.length})',
                     style: TextStyle(
                       color: aiColor,
                       fontWeight: FontWeight.w600,
@@ -1011,7 +1022,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Nazwa z ikonami
+          // H1: ikona + nazwa + → + ✨ + CTA:Podgląd
           Row(
             children: [
               Icon(
@@ -1020,7 +1031,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 color: drug.isFromRpl ? theme.colorScheme.primary : Colors.purple,
               ),
               const SizedBox(width: 8),
-              Expanded(
+              Flexible(
                 child: Text(
                   displayName,
                   style: theme.textTheme.bodyMedium
@@ -1035,22 +1046,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 const SizedBox(width: 2),
                 Icon(LucideIcons.sparkles, size: 14, color: aiColor),
               ],
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          // Status daty
-          _buildDateStatus(drug, theme, isDark),
-
-          const SizedBox(height: 12),
-
-          // Akcje
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              // Podgląd zdjęcia nazwy (jeśli istnieje)
-              if (hasProductPhoto)
+              if (hasProductPhoto) ...[
+                const SizedBox(width: 8),
                 _buildActionButton(
                   icon: LucideIcons.eye,
                   label: 'Podgląd',
@@ -1058,32 +1055,42 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                   onPressed: () =>
                       _showProductPhotoPreview(index, drug.tempProductImagePath!),
                 ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
 
-              // Usuń zdjęcie daty (jeśli istnieje)
-              if (hasExpiryPhoto)
-                _buildActionButton(
-                  icon: LucideIcons.imageOff,
-                  label: 'Usuń zdjęcie',
-                  color: Colors.red,
-                  onPressed: () => _deleteExpiryPhoto(index),
-                ),
-
-              // Edytuj datę (zawsze dostępne)
+          // H2: sekcja daty + CTA:Edytuj datę + CTA:Usuń zdjęcie
+          Row(
+            children: [
+              Expanded(child: _buildDateStatus(drug, theme, isDark)),
+              const SizedBox(width: 8),
               _buildActionButton(
                 icon: LucideIcons.calendarCog,
                 label: 'Edytuj datę',
                 color: theme.colorScheme.primary,
                 onPressed: () => _editExpiryDate(index),
               ),
-
-              // Usuń rekord
-              _buildActionButton(
-                icon: LucideIcons.trash,
-                label: 'Usuń lek',
-                color: Colors.red,
-                onPressed: () => _confirmDeleteDrug(index),
-              ),
+              if (hasExpiryPhoto) ...[
+                const SizedBox(width: 8),
+                _buildActionButton(
+                  icon: LucideIcons.imageOff,
+                  label: 'Usuń zdjęcie',
+                  color: Colors.red,
+                  onPressed: () => _deleteExpiryPhoto(index),
+                ),
+              ],
             ],
+          ),
+
+          const SizedBox(height: 12),
+
+          // H3: CTA:Usuń produkt
+          _buildActionButton(
+            icon: LucideIcons.trash,
+            label: 'Usuń lek',
+            color: Colors.red,
+            onPressed: () => _confirmDeleteDrug(index),
           ),
         ],
       ),
@@ -1101,7 +1108,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       );
     } else if (drug.tempImagePath != null) {
       return Chip(
-        label: const Text('📸 Zdjęcie daty'),
+        avatar: const Icon(LucideIcons.imagePlus, size: 16, color: Colors.orange),
+        label: const Text('Zdjęcie daty'),
         backgroundColor: Colors.orange.withAlpha(40),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         labelStyle: theme.textTheme.bodySmall,
@@ -1183,36 +1191,57 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
   /// Usuwa zdjęcie daty ważności
   Future<void> _deleteExpiryPhoto(int index) async {
-    setState(() {
-      final drug = _scannedDrugs[index];
-
-      // Usuń plik fizyczny jeśli istnieje
-      if (drug.tempImagePath != null) {
-        try {
-          final file = File(drug.tempImagePath!);
-          if (file.existsSync()) {
-            file.deleteSync();
-          }
-        } catch (e) {
-          // Ignoruj błędy usuwania pliku
-        }
-      }
-
-      // Wyczyść dane w modelu
-      drug.tempImagePath = null;
-      drug.expiryDate = null;
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Zdjęcie usunięte. Możesz ponownie zrobić zdjęcie lub wpisać datę',
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Usuń zdjęcie daty'),
+        content: const Text('Czy na pewno chcesz usunąć zdjęcie daty ważności?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj'),
           ),
-          behavior: SnackBarBehavior.floating,
-          duration: Duration(seconds: 3),
-        ),
-      );
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        final drug = _scannedDrugs[index];
+
+        // Usuń plik fizyczny jeśli istnieje
+        if (drug.tempImagePath != null) {
+          try {
+            final file = File(drug.tempImagePath!);
+            if (file.existsSync()) {
+              file.deleteSync();
+            }
+          } catch (e) {
+            // Ignoruj błędy usuwania pliku
+          }
+        }
+
+        // Wyczyść dane w modelu
+        drug.tempImagePath = null;
+        drug.expiryDate = null;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Zdjęcie usunięte. Możesz ponownie zrobić zdjęcie lub wpisać datę',
+            ),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
