@@ -15,6 +15,18 @@ class NeuTextField extends StatefulWidget {
   final Widget? prefixIcon;
   final Widget? suffixIcon;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
+  final VoidCallback? onTap;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final bool obscureText;
+  final bool readOnly;
+  final int? maxLines;
+  final int? minLines;
+  final double borderRadius;
+  final EdgeInsetsGeometry contentPadding;
+  final FocusNode? focusNode;
+  final String? Function(String?)? validator;
 
   const NeuTextField({
     super.key,
