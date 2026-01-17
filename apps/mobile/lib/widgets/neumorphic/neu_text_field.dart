@@ -14,18 +14,7 @@ class NeuTextField extends StatefulWidget {
   final String? labelText;
   final Widget? prefixIcon;
   final Widget? suffixIcon;
-  final ValueChanged<String>? onChanged;
-  final VoidCallback? onTap;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final bool obscureText;
-  final bool readOnly;
-  final int? maxLines;
-  final int? minLines;
-  final double borderRadius;
-  final EdgeInsetsGeometry contentPadding;
-  final FocusNode? focusNode;
-  final String? Function(String?)? validator;
+  final ValueChanged<String>? onSubmitted;
 
   const NeuTextField({
     super.key,
@@ -35,6 +24,7 @@ class NeuTextField extends StatefulWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.onChanged,
+    this.onSubmitted,
     this.onTap,
     this.keyboardType,
     this.textInputAction,
@@ -128,9 +118,7 @@ class _NeuTextFieldState extends State<NeuTextField> {
           duration: const Duration(milliseconds: 150),
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: isDark
-                ? AppColors.darkSurface
-                : AppColors.lightSurface,
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
             borderRadius: BorderRadius.circular(widget.borderRadius),
             border: Border.all(
               color: _isFocused
@@ -162,6 +150,7 @@ class _NeuTextFieldState extends State<NeuTextField> {
             controller: _controller,
             focusNode: _focusNode,
             onChanged: widget.onChanged,
+            onSubmitted: widget.onSubmitted,
             onTap: widget.onTap,
             keyboardType: widget.keyboardType,
             textInputAction: widget.textInputAction,
@@ -294,6 +283,7 @@ class _NeuSearchFieldState extends State<NeuSearchField> {
       borderRadius: 50, // Pills shape
       prefixIcon: Icon(Icons.search),
       onChanged: widget.onChanged,
+      onSubmitted: widget.onSubmitted,
       textInputAction: TextInputAction.search,
     );
   }

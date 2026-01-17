@@ -814,3 +814,73 @@ W `StatefulWidget`, który trzyma lokalną kopię danych z `widget`:
 ---
 
 > 📅 **Ostatnia aktualizacja:** 2026-01-17
+
+---
+
+---
+
+## 19. TextField w Custom Widget nie działa z klawiaturą (onSubmitted)
+
+**Data:** 2026-01-17 **Kontekst:** Wyszukiwanie w "Znajdź ulotkę" nie reagowało na przycisk "Szukaj"
+na klawiaturze ekranowej.
+
+### ❌ Błąd
+
+Custom widget `NeuSearchField` (wrapper na `TextField`) nie przekazywał callbacku `onSubmitted` do
+wewnętrznego `TextField`. Przez to akcja `TextInputAction.search` była wizualnie dostępna, ale
+funkcjonalnie martwa.
+
+### ✅ Poprawne rozwiązanie
+
+Upewnij się, że każdy wrapper na pole tekstowe eksponuje i przekazuje `onSubmitted` (lub
+`onFieldSubmitted` w `TextFormField`).
+
+```dart
+// Wewnątrz NeuTextField
+TextField(
+  // ...
+  onSubmitted: widget.onSubmitted, // ✅ Wiring niezbędny dla klawiatury
+  textInputAction: widget.textInputAction,
+);
+```
+
+### Zasada ogólna
+
+Tworząc własne komponenty UI (wrappery), zawsze weryfikuj działanie akcji klawiatury (Done, Search,
+Next).
+
+---
+
+---
+
+## 20. Zbyt precyzyjne zapytania do oficjalnych rejetrów (RPL)
+
+**Data:** 2026-01-17 **Kontekst:** Wyszukiwanie "Apap Extra 500mg" w Rejestrze Produktów Leczniczych
+nie zwracało wyników, mimo że lek istnieje.
+
+### ❌ Błąd
+
+Oficjalne API często mają restrykcyjne ("głupie") wyszukiwarki, które wymagają dokładnego
+dopasowania frazy i gubią się przy dodatkowych słowach (np. dawce, postaci), jeśli nie są one w
+idealnej kolejności.
+
+### ✅ Poprawne rozwiązanie
+
+Zastosowanie prostej sanityzacji zapytania po stronie klienta - w przypadku RPL najlepiej działa
+wyszukiwanie po **pierwszym słowie** nazwy (Root Name).
+
+```dart
+String _sanitizeQuery(String raw) {
+  // Dla "Apap Extra 500mg" zwróć "Apap"
+  // To daje szersze wyniki, z których użytkownik może łatwo wybrać właściwy
+  final parts = raw.split(' ');
+  return parts.isNotEmpty ? parts.first.trim() : raw.trim();
+}
+```
+
+### Zasada ogólna
+
+Przy integracji z restrykcyjnymi API wyszukiwania, "mniej znaczy więcej". Lepiej pokazać 10 wyników
+do wyboru niż 0 przez zbyt szczegółowe zapytanie.
+
+---
