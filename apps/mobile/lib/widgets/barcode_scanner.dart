@@ -547,9 +547,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 right: 0,
                 child: Center(
                   child: _buildControlButton(
-                    icon: LucideIcons.antenna,
+                    icon: LucideIcons.captionsOff,
                     label: 'Brak kodu / kod nieczytelny',
                     onTap: _skipBarcodeScan,
+                    trailingIcon: LucideIcons.arrowBigRightDash,
                   ),
                 ),
               ),
@@ -601,6 +602,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                             ],
                           ),
                         ),
+                        const SizedBox(width: 6),
+                        const Icon(LucideIcons.camera,
+                            color: Colors.white, size: 20),
                       ],
                     ),
                   ),
@@ -663,6 +667,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                                   ],
                                 ),
                               ),
+                              const SizedBox(width: 6),
+                              const Icon(LucideIcons.camera,
+                                  color: Colors.white, size: 20),
                             ],
                           ),
                         ),
@@ -683,6 +690,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     required IconData icon,
     String? label,
     required VoidCallback onTap,
+    IconData? trailingIcon,
   }) {
     return GestureDetector(
       onTap: onTap,
@@ -702,6 +710,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 label,
                 style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
+            ],
+            if (trailingIcon != null) ...[
+              const SizedBox(width: 6),
+              Icon(trailingIcon, color: Colors.white, size: 20),
             ],
           ],
         ),
