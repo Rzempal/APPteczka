@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../theme/app_theme.dart';
 import 'neu_decoration.dart';
 
@@ -293,7 +294,7 @@ class _NeuSearchFieldState extends State<NeuSearchField> {
       focusNode: _focusNode,
       hintText: widget.hintText,
       borderRadius: 50, // Pills shape
-      prefixIcon: Icon(Icons.search),
+      prefixIcon: Icon(LucideIcons.packageSearch),
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
       textInputAction: TextInputAction.search,
