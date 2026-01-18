@@ -702,7 +702,7 @@ class _MedicineCardState extends State<MedicineCard> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✓ Zapisano'),
+          content: Text('Zapisano'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -2720,7 +2720,7 @@ class _MedicineCardState extends State<MedicineCard> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text(
-          '⚠️ AI może popełniać błędy, zawsze weryfikuj dane ze stanem faktycznym',
+          'AI może popełniać błędy, zawsze weryfikuj dane ze stanem faktycznym',
           style: TextStyle(fontSize: 13),
         ),
         duration: const Duration(seconds: 4),
@@ -2793,7 +2793,7 @@ class _MedicineCardState extends State<MedicineCard> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('✨ Znaleziono: ${result.period}'),
+              content: Text('Znaleziono: ${result.period}'),
               duration: const Duration(seconds: 3),
               backgroundColor: AppColors.valid,
             ),
@@ -2906,7 +2906,7 @@ class _MedicineCardState extends State<MedicineCard> {
                     Expanded(
                       child: Text(
                         isExpiredAfterOpening && expiryDateStr != null
-                            ? '└── ⚠️ Po terminie ($expiryDateStr) - $shelfLife'
+                            ? '└── Po terminie ($expiryDateStr) - $shelfLife'
                             : '└── $shelfLife',
                         style: TextStyle(
                           fontSize: 10,
