@@ -474,12 +474,16 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
               const SizedBox(width: 6),
-              Text(
-                'Wypełnij Szczegóły leku by odblokować kalkulator',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                  fontSize: 11,
+              Flexible(
+                child: Text(
+                  _medicine.packages.isEmpty
+                      ? 'Wypełnij Szczegóły leku by odblokować kalkulator'
+                      : 'Kalkulator wymaga opakowań z jednostką "sztuki"',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 11,
+                  ),
                 ),
               ),
             ],
@@ -875,28 +879,14 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               ),
             ),
             const SizedBox(width: 8),
-            // Przycisk edycji daty
+            // Przycisk "Szczegóły opakowania" (połączenie edycji daty i ilości)
             GestureDetector(
-              onTap: () => _showEditPackageDateDialog(context, package),
+              onTap: () => _showPackageDetailsBottomSheet(context, package),
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Icon(
-                  LucideIcons.calendarCog,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            // Przycisk określenia ilości
-            GestureDetector(
-              onTap: () => _showEditRemainingDialog(context, package),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(
-                  LucideIcons.blocks,
+                  LucideIcons.pillBottle,
                   size: 20,
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
@@ -1465,7 +1455,416 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
     }
   }
 
+  /// BottomSheet ze szczegółami opakowania (data, status, ilość)
+  Future<void> _showPackageDetailsBottomSheet(
+    BuildContext context,
+    MedicinePackage package,
+  ) async {
+    final currentYear = DateTime.now().year;
+    DateTime currentDate =
+        package.dateTime ?? DateTime.now().add(const Duration(days: 365));
+    int selectedMonth = currentDate.month;
+    int selectedYear = currentDate.year;
+    bool isOpen = package.isOpen;
+    PackageUnit selectedUnit = package.unit;
+    final pieceController = TextEditingController(
+      text: package.pieceCount?.toString() ?? '',
+    );
+    final percentController = TextEditingController(
+      text: package.percentRemaining?.toString() ?? '',
+    );
+    DateTime? openedDate = package.openedDate != null
+        ? DateTime.tryParse(package.openedDate!)
+        : null;
+
+    final result = await showModalBottomSheet<Map<String, dynamic>?>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setBottomSheetState) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.75,
+              minChildSize: 0.5,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (context, scrollController) => Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(BottomSheetConstants.radius),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    // Handle
+                    const BottomSheetDragHandle(),
+
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: BottomSheetConstants.contentPadding,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            LucideIcons.pillBottle,
+                            size: 24,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Szczegóły opakowania',
+                            style: Theme.of(context)
+                                .textTheme
+                                .headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Content
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: BottomSheetConstants.contentPadding,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Sekcja 1: Termin ważności
+                            Text(
+                              'Termin ważności',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF6b7280),
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: DropdownButtonFormField<int>(
+                                    value: selectedMonth,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Miesiąc',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items: List.generate(12, (i) => i + 1)
+                                        .map(
+                                          (m) => DropdownMenuItem(
+                                            value: m,
+                                            child:
+                                                Text(m.toString().padLeft(2, '0')),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (v) => setBottomSheetState(
+                                      () => selectedMonth = v!,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: DropdownButtonFormField<int>(
+                                    value: selectedYear,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Rok',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items: List.generate(15, (i) => currentYear + i)
+                                        .map(
+                                          (y) => DropdownMenuItem(
+                                            value: y,
+                                            child: Text(y.toString()),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (v) => setBottomSheetState(
+                                      () => selectedYear = v!,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // Sekcja 2: Status opakowania
+                            Text(
+                              'Status opakowania',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF6b7280),
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('Zamknięte'),
+                                  selected: !isOpen,
+                                  onSelected: (_) => setBottomSheetState(() {
+                                    isOpen = false;
+                                    // Reset procent przy zamknięciu
+                                    percentController.clear();
+                                  }),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Otwarte'),
+                                  selected: isOpen,
+                                  onSelected: (_) =>
+                                      setBottomSheetState(() => isOpen = true),
+                                ),
+                              ],
+                            ),
+
+                            // Sekcja 3: Data otwarcia (tylko gdy otwarte)
+                            if (isOpen) ...[
+                              const SizedBox(height: 20),
+                              Text(
+                                'Data otwarcia (opcjonalne)',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF6b7280),
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      readOnly: true,
+                                      decoration: InputDecoration(
+                                        labelText: 'Data otwarcia',
+                                        hintText: 'Wybierz datę',
+                                        border: const OutlineInputBorder(),
+                                        suffixIcon: IconButton(
+                                          icon:
+                                              const Icon(LucideIcons.calendar),
+                                          onPressed: () async {
+                                            final picked = await showDatePicker(
+                                              context: context,
+                                              initialDate: openedDate ??
+                                                  DateTime.now(),
+                                              firstDate: DateTime(2000),
+                                              lastDate: DateTime.now(),
+                                            );
+                                            if (picked != null) {
+                                              setBottomSheetState(
+                                                () => openedDate = picked,
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      controller: TextEditingController(
+                                        text: openedDate != null
+                                            ? '${openedDate!.day.toString().padLeft(2, '0')}.${openedDate!.month.toString().padLeft(2, '0')}.${openedDate!.year}'
+                                            : '',
+                                      ),
+                                    ),
+                                  ),
+                                  if (openedDate != null) ...[
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      icon: const Icon(LucideIcons.x),
+                                      onPressed: () => setBottomSheetState(
+                                        () => openedDate = null,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+
+                            const SizedBox(height: 20),
+
+                            // Sekcja 4: Ilość
+                            Text(
+                              'Ilość',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF6b7280),
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('Brak'),
+                                  selected: selectedUnit == PackageUnit.none,
+                                  onSelected: (_) => setBottomSheetState(
+                                    () => selectedUnit = PackageUnit.none,
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Sztuki'),
+                                  selected: selectedUnit == PackageUnit.pieces,
+                                  onSelected: (_) => setBottomSheetState(
+                                    () => selectedUnit = PackageUnit.pieces,
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('ml'),
+                                  selected: selectedUnit == PackageUnit.ml,
+                                  onSelected: (_) => setBottomSheetState(
+                                    () => selectedUnit = PackageUnit.ml,
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Saszetki'),
+                                  selected: selectedUnit == PackageUnit.sachets,
+                                  onSelected: (_) => setBottomSheetState(
+                                    () => selectedUnit = PackageUnit.sachets,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            // Input dla wybranej jednostki
+                            if (selectedUnit != PackageUnit.none) ...[
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: pieceController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: isOpen
+                                      ? 'Pozostało'
+                                      : 'Ilość w opakowaniu',
+                                  hintText: 'np. 30',
+                                  suffixText: selectedUnit == PackageUnit.pieces
+                                      ? 'szt.'
+                                      : selectedUnit == PackageUnit.ml
+                                          ? 'ml'
+                                          : 'saszetki',
+                                  border: const OutlineInputBorder(),
+                                ),
+                              ),
+                            ],
+
+                            // Procent pozostałości (tylko dla otwartych)
+                            if (isOpen && selectedUnit != PackageUnit.none) ...[
+                              const SizedBox(height: 16),
+                              TextField(
+                                controller: percentController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Pozostało procent (opcjonalne)',
+                                  hintText: 'np. 50',
+                                  suffixText: '%',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // Action buttons
+                    Padding(
+                      padding: const EdgeInsets.all(
+                        BottomSheetConstants.contentPadding,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Anuluj'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              onPressed: () {
+                                final lastDay =
+                                    DateTime(selectedYear, selectedMonth + 1, 0);
+                                Navigator.pop(context, {
+                                  'expiryDate':
+                                      lastDay.toIso8601String().split('T')[0],
+                                  'isOpen': isOpen,
+                                  'unit': selectedUnit,
+                                  'pieceCount':
+                                      selectedUnit != PackageUnit.none
+                                          ? int.tryParse(pieceController.text)
+                                          : null,
+                                  'percentRemaining': isOpen &&
+                                          selectedUnit != PackageUnit.none
+                                      ? int.tryParse(percentController.text)
+                                      : null,
+                                  'openedDate': isOpen && openedDate != null
+                                      ? openedDate!
+                                          .toIso8601String()
+                                          .split('T')[0]
+                                      : null,
+                                });
+                              },
+                              child: const Text('Zapisz'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+
+    if (result != null) {
+      final updatedPackage = MedicinePackage(
+        id: package.id,
+        expiryDate: result['expiryDate'] as String,
+        isOpen: result['isOpen'] as bool,
+        unit: result['unit'] as PackageUnit,
+        pieceCount: result['pieceCount'] as int?,
+        percentRemaining: result['percentRemaining'] as int?,
+        openedDate: result['openedDate'] as String?,
+      );
+      final updatedPackages = _medicine.packages
+          .map((p) => p.id == package.id ? updatedPackage : p)
+          .toList();
+      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+      await widget.storageService.saveMedicine(updatedMedicine);
+      setState(() {
+        _medicine = updatedMedicine;
+      });
+    }
+  }
+
   /// Dialog określenia statusu i ilości w opakowaniu
+  /// DEPRECATED: Zastąpiony przez _showPackageDetailsBottomSheet
   Future<void> _showEditRemainingDialog(
     BuildContext context,
     MedicinePackage package,
@@ -1937,14 +2336,8 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
             const SizedBox(height: 12),
             _buildIconExplanation(
               context,
-              LucideIcons.calendarCog,
-              'Edytuj datę ważności ręcznie',
-            ),
-            const SizedBox(height: 12),
-            _buildIconExplanation(
-              context,
-              LucideIcons.blocks,
-              'Określ pozostałą ilość w opakowaniu',
+              LucideIcons.pillBottle,
+              'Edytuj szczegóły opakowania (data, status, ilość)',
             ),
             const SizedBox(height: 12),
             _buildIconExplanation(
