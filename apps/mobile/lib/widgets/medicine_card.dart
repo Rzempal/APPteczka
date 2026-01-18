@@ -509,14 +509,11 @@ class _MedicineCardState extends State<MedicineCard> {
           ],
         ),
 
-        // CTA area: Ulotka + AI badge + Unpin (aligned right)
+        // CTA area: Ulotka + Unpin (aligned right)
         const SizedBox(height: 12),
         Row(
           children: [
             if (hasLeaflet) ...[
-              // AI Shelf Life badge - po lewej stronie od "Pokaż ulotkę"
-              _buildShelfLifeBadge(context, theme, isDark),
-              const SizedBox(width: 8),
               NeuButton(
                 onPressed: () => _showPdfViewer(context),
                 padding: const EdgeInsets.symmetric(
@@ -951,10 +948,6 @@ class _MedicineCardState extends State<MedicineCard> {
             ),
           ),
         ),
-
-        // Sekcja: Ważność po otwarciu (shelf life)
-        const SizedBox(height: 16),
-        _buildShelfLifeSection(context, theme, isDark),
       ],
     );
   }
@@ -988,291 +981,6 @@ class _MedicineCardState extends State<MedicineCard> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  /// Sekcja: Ważność po otwarciu (shelf life) - dotyczy wszystkich opakowań
-  Widget _buildShelfLifeSection(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    final status = _medicine.shelfLifeStatus;
-    final shelfLife = _medicine.shelfLifeAfterOpening;
-    final hasLeaflet = _medicine.leafletUrl != null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // H1: Ulotka - termin ważności po otwarciu + badge
-        Row(
-          children: [
-            Text(
-              'Ulotka - termin ważności po otwarciu',
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: 8),
-            _buildShelfLifeBadge(context, theme, isDark),
-          ],
-        ),
-        const SizedBox(height: 8),
-
-        // Zawartość zależna od statusu
-        if (status == 'pending')
-          _buildShelfLifePendingState(theme, isDark)
-        else if (status == 'completed' && shelfLife != null)
-          _buildShelfLifeFoundState(theme, isDark, shelfLife)
-        else if (status == 'error')
-          _buildShelfLifeErrorState(context, theme, isDark)
-        else
-          // null, 'not_found', 'manual' → pokaż pole ręcznego wprowadzania
-          _buildShelfLifeManualEntry(context, theme, isDark, shelfLife),
-      ],
-    );
-  }
-
-  /// Pending state - czytanie ulotki w toku
-  Widget _buildShelfLifePendingState(ThemeData theme, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: theme.colorScheme.primary,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Text(
-            'Analizuję ulotkę...',
-            style: TextStyle(
-              fontSize: 13,
-              color: theme.colorScheme.onSurfaceVariant,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Found state - znaleziono w ulotce
-  Widget _buildShelfLifeFoundState(
-    ThemeData theme,
-    bool isDark,
-    String shelfLife,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Z ulotki:',
-            style: TextStyle(
-              fontSize: 11,
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '"$shelfLife"',
-            style: TextStyle(
-              fontSize: 11,
-              color: theme.colorScheme.onSurfaceVariant,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'AI może popełniać błędy, zawsze weryfikuj dane ze stanem faktycznym',
-            style: TextStyle(
-              fontSize: 10,
-              color: theme.colorScheme.onSurfaceVariant.withAlpha(180),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Error state - błąd analizy
-  Widget _buildShelfLifeErrorState(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                LucideIcons.circleAlert,
-                size: 16,
-                color: AppColors.expiringSoon,
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'Błąd analizy ulotki',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => _retryShelfLifeAnalysis(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.expiringSoon.withAlpha(50),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.refreshCw,
-                    size: 14,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Spróbuj ponownie',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Manual entry - pole do ręcznego wprowadzania
-  Widget _buildShelfLifeManualEntry(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-    String? currentValue,
-  ) {
-    final controller = TextEditingController(text: currentValue ?? '');
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_medicine.leafletUrl == null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                'Brak ulotki. Wprowadź ręcznie termin ważności po otwarciu:',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            )
-          else if (_medicine.shelfLifeStatus == 'not_found')
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                'Nie znaleziono w ulotce. Możesz wprowadzić ręcznie:',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: 'np. 6 miesięcy, 30 dni',
-              hintStyle: TextStyle(
-                fontSize: 13,
-                color: theme.colorScheme.onSurfaceVariant.withAlpha(128),
-                fontStyle: FontStyle.italic,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(
-                  color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 8,
-              ),
-            ),
-            style: TextStyle(
-              fontSize: 13,
-              color: theme.colorScheme.onSurface,
-            ),
-            onSubmitted: (value) {
-              if (value.isNotEmpty) {
-                _saveManualShelfLife(value);
-              }
-            },
-          ),
-          const SizedBox(height: 6),
-          GestureDetector(
-            onTap: () {
-              final value = controller.text.trim();
-              if (value.isNotEmpty) {
-                _saveManualShelfLife(value);
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withAlpha(50),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.save,
-                    size: 14,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Zapisz',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -2101,6 +1809,10 @@ class _MedicineCardState extends State<MedicineCard> {
                             ],
                           ),
                         ],
+
+                        // === OKRES PRZYDATNOŚCI PO OTWARCIU ===
+                        const SizedBox(height: 16),
+                        _buildShelfLifeBadge(context, theme, isDark),
 
                         // === USUŃ LEK ===
                         const SizedBox(height: 16),
@@ -2932,126 +2644,375 @@ class _MedicineCardState extends State<MedicineCard> {
 
   // ==================== HELPERS ====================
 
-  /// Buduje badge ze statusem analizy AI shelf life
+  /// Sekcja: Okres przydatności po otwarciu (shelf life) - powiększona wersja
   Widget _buildShelfLifeBadge(
     BuildContext context,
     ThemeData theme,
     bool isDark,
   ) {
     final status = _medicine.shelfLifeStatus;
+    final shelfLife = _medicine.shelfLifeAfterOpening;
 
-    // Określ tekst, ikonę i kolor na podstawie statusu
-    String badgeText;
-    IconData badgeIcon;
-    Color badgeColor;
-
-    switch (status) {
-      case 'pending':
-        badgeText = 'Czytam ulotkę...';
-        badgeIcon = LucideIcons.sparkles;
-        badgeColor = theme.colorScheme.primary;
-        break;
-      case 'completed':
-      case 'not_found':
-      case 'manual':
-        // Wszystkie te statusy pokazują "Przeczytano" w badge
-        badgeText = 'Przeczytano';
-        badgeIcon = LucideIcons.sparkles;
-        badgeColor = AppColors.valid;
-        break;
-      case 'error':
-        badgeText = 'Błąd';
-        badgeIcon = LucideIcons.circleAlert;
-        badgeColor = AppColors.expiringSoon;
-        break;
-      default:
-        // Brak statusu - CTA do uruchomienia analizy
-        badgeText = 'Przeczytaj';
-        badgeIcon = LucideIcons.sparkles;
-        badgeColor = theme.colorScheme.onSurfaceVariant;
-    }
-
-    return GestureDetector(
-      onTap: () => _handleShelfLifeBadgeTap(context, status),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+    // completed - znaleziono w ulotce
+    if (status == 'completed' && shelfLife != null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: badgeColor.withAlpha(isDark ? 25 : 15),
-          borderRadius: BorderRadius.circular(12),
+          color: AppColors.valid.withAlpha(isDark ? 30 : 20),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: badgeColor.withAlpha(50),
+            color: AppColors.valid.withAlpha(50),
             width: 1,
           ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              badgeIcon,
-              size: 16,
-              color: badgeColor,
+            // Nagłówek z ikonami
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  LucideIcons.shieldCheck,
+                  size: 16,
+                  color: AppColors.valid,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Okres przydatności po otwarciu sprawdzono w ulotce',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.valid,
+                      fontWeight: FontWeight.w500,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+                Icon(
+                  LucideIcons.sparkles,
+                  size: 14,
+                  color: AppColors.valid.withAlpha(180),
+                ),
+              ],
             ),
-            const SizedBox(width: 6),
-            Text(
-              badgeText,
-              style: TextStyle(
-                color: badgeColor,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+            const SizedBox(height: 8),
+            // Cytat z wcięciem (na wzór Outlook quoted)
+            Container(
+              padding: const EdgeInsets.only(left: 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: AppColors.valid.withAlpha(100),
+                    width: 3,
+                  ),
+                ),
+              ),
+              child: Text(
+                shelfLife,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.valid,
+                  fontStyle: FontStyle.italic,
+                  height: 1.3,
+                ),
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  /// Obsługuje kliknięcie w badge shelf life
-  void _handleShelfLifeBadgeTap(BuildContext context, String? status) {
-    if (status == null) {
-      // Brak statusu - uruchom analizę (jeśli jest ulotka)
-      _startShelfLifeAnalysis();
-    } else if (status == 'completed' || status == 'manual' || status == 'not_found') {
-      // Przeczytano - pokaż tooltip z ostrzeżeniem (tylko dla completed/manual)
-      if (status != 'not_found') {
-        _showShelfLifeWarningTooltip(context);
-      }
+      );
     }
-    // error i pending - brak akcji (retry jest w sekcji poniżej)
-  }
 
-  /// Pokazuje tooltip z ostrzeżeniem o błędach AI
-  void _showShelfLifeWarningTooltip(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          'AI może popełniać błędy, zawsze weryfikuj dane ze stanem faktycznym',
-          style: TextStyle(fontSize: 13),
+    // manual - ręcznie wprowadzony
+    if (status == 'manual' && shelfLife != null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.valid.withAlpha(isDark ? 30 : 20),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: AppColors.valid.withAlpha(50),
+            width: 1,
+          ),
         ),
-        duration: const Duration(seconds: 4),
-        backgroundColor: AppColors.expiringSoon.withAlpha(200),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  LucideIcons.shieldCheck,
+                  size: 16,
+                  color: AppColors.valid,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Okres przydatności po otwarciu (wprowadzono ręcznie)',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppColors.valid,
+                      fontWeight: FontWeight.w500,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.only(left: 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: AppColors.valid.withAlpha(100),
+                    width: 3,
+                  ),
+                ),
+              ),
+              child: Text(
+                shelfLife,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.valid,
+                  fontStyle: FontStyle.italic,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
         ),
-      ),
-    );
-  }
+      );
+    }
 
-  /// Pokazuje info że nie znaleziono w ulotce z sugestią weryfikacji
-  void _showNotFoundInfo(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text(
-          'Nie znaleziono informacji w ulotce. Sprawdź opakowanie lub wprowadź ręcznie poniżej',
-          style: TextStyle(fontSize: 13),
+    // pending - analiza w toku
+    if (status == 'pending') {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.primary.withAlpha(isDark ? 30 : 20),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: theme.colorScheme.primary.withAlpha(50),
+            width: 1,
+          ),
         ),
-        duration: const Duration(seconds: 5),
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Okres przydatności po otwarciu - Sprawdzam w ulotce',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
+                ),
+              ),
+            ),
+            Icon(
+              LucideIcons.sparkles,
+              size: 14,
+              color: theme.colorScheme.primary.withAlpha(180),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // error - błąd analizy
+    if (status == 'error') {
+      return GestureDetector(
+        onTap: () => _retryShelfLifeAnalysis(),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.expiringSoon.withAlpha(isDark ? 30 : 20),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: AppColors.expiringSoon.withAlpha(50),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                LucideIcons.circleAlert,
+                size: 16,
+                color: AppColors.expiringSoon,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Okres przydatności po otwarciu - Błąd',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppColors.expiringSoon,
+                    fontWeight: FontWeight.w500,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+              Icon(
+                LucideIcons.sparkles,
+                size: 14,
+                color: AppColors.expiringSoon.withAlpha(180),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                LucideIcons.refreshCw,
+                size: 14,
+                color: AppColors.expiringSoon,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // not_found - nie znaleziono, pokaż pole ręcznego wpisu
+    if (status == 'not_found') {
+      final controller = TextEditingController(text: shelfLife ?? '');
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurfaceVariant.withAlpha(isDark ? 15 : 10),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: theme.colorScheme.onSurfaceVariant.withAlpha(30),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Okres przydatności po otwarciu - Nie znaleziono... wprowadź ręcznie poniżej',
+              style: TextStyle(
+                fontSize: 11,
+                color: theme.colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+                height: 1.3,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                hintText: 'np. 6 miesięcy, 30 dni',
+                hintStyle: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
+                  fontStyle: FontStyle.italic,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  borderSide: BorderSide(
+                    color: theme.colorScheme.onSurfaceVariant.withAlpha(50),
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                isDense: true,
+              ),
+              style: TextStyle(
+                fontSize: 11,
+                color: theme.colorScheme.onSurface,
+              ),
+              onSubmitted: (value) {
+                if (value.isNotEmpty) {
+                  _saveManualShelfLife(value);
+                }
+              },
+            ),
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () {
+                final value = controller.text.trim();
+                if (value.isNotEmpty) {
+                  _saveManualShelfLife(value);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withAlpha(50),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.save,
+                      size: 12,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Zapisz',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // null - brak statusu, CTA do uruchomienia analizy
+    return GestureDetector(
+      onTap: () => _startShelfLifeAnalysis(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurfaceVariant.withAlpha(isDark ? 15 : 10),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: theme.colorScheme.onSurfaceVariant.withAlpha(30),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              LucideIcons.sparkles,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Okres przydatności po otwarciu - Zweryfikuj z AI',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
