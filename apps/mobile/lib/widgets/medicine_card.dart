@@ -933,6 +933,10 @@ class _MedicineCardState extends State<MedicineCard> {
             ),
           ),
         ),
+
+        // Sekcja: Ważność po otwarciu (shelf life)
+        const SizedBox(height: 16),
+        _buildShelfLifeSection(context, theme, isDark),
       ],
     );
   }
@@ -966,6 +970,291 @@ class _MedicineCardState extends State<MedicineCard> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Sekcja: Ważność po otwarciu (shelf life) - dotyczy wszystkich opakowań
+  Widget _buildShelfLifeSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final status = _medicine.shelfLifeStatus;
+    final shelfLife = _medicine.shelfLifeAfterOpening;
+    final hasLeaflet = _medicine.leafletUrl != null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // H1: Ulotka - termin ważności po otwarciu + badge
+        Row(
+          children: [
+            Text(
+              'Ulotka - termin ważności po otwarciu',
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 8),
+            _buildShelfLifeBadge(context, theme, isDark),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // Zawartość zależna od statusu
+        if (status == 'pending')
+          _buildShelfLifePendingState(theme, isDark)
+        else if (status == 'completed' && shelfLife != null)
+          _buildShelfLifeFoundState(theme, isDark, shelfLife)
+        else if (status == 'error')
+          _buildShelfLifeErrorState(context, theme, isDark)
+        else
+          // null, 'not_found', 'manual' → pokaż pole ręcznego wprowadzania
+          _buildShelfLifeManualEntry(context, theme, isDark, shelfLife),
+      ],
+    );
+  }
+
+  /// Pending state - czytanie ulotki w toku
+  Widget _buildShelfLifePendingState(ThemeData theme, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            'Analizuję ulotkę...',
+            style: TextStyle(
+              fontSize: 13,
+              color: theme.colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Found state - znaleziono w ulotce
+  Widget _buildShelfLifeFoundState(
+    ThemeData theme,
+    bool isDark,
+    String shelfLife,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Z ulotki:',
+            style: TextStyle(
+              fontSize: 11,
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '"$shelfLife"',
+            style: TextStyle(
+              fontSize: 11,
+              color: theme.colorScheme.onSurfaceVariant,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'AI może popełniać błędy, zawsze weryfikuj dane ze stanem faktycznym',
+            style: TextStyle(
+              fontSize: 10,
+              color: theme.colorScheme.onSurfaceVariant.withAlpha(180),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Error state - błąd analizy
+  Widget _buildShelfLifeErrorState(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.circleAlert,
+                size: 16,
+                color: AppColors.expiringSoon,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Błąd analizy ulotki',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _retryShelfLifeAnalysis(),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.expiringSoon.withAlpha(50),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.refreshCw,
+                    size: 14,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Spróbuj ponownie',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Manual entry - pole do ręcznego wprowadzania
+  Widget _buildShelfLifeManualEntry(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+    String? currentValue,
+  ) {
+    final controller = TextEditingController(text: currentValue ?? '');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_medicine.leafletUrl == null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Brak ulotki. Wprowadź ręcznie termin ważności po otwarciu:',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            )
+          else if (_medicine.shelfLifeStatus == 'not_found')
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'Nie znaleziono w ulotce. Możesz wprowadzić ręcznie:',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              hintText: 'np. 6 miesięcy, 30 dni',
+              hintStyle: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurfaceVariant.withAlpha(128),
+                fontStyle: FontStyle.italic,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+            ),
+            style: TextStyle(
+              fontSize: 13,
+              color: theme.colorScheme.onSurface,
+            ),
+            onSubmitted: (value) {
+              if (value.isNotEmpty) {
+                _saveManualShelfLife(value);
+              }
+            },
+          ),
+          const SizedBox(height: 6),
+          GestureDetector(
+            onTap: () {
+              final value = controller.text.trim();
+              if (value.isNotEmpty) {
+                _saveManualShelfLife(value);
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withAlpha(50),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.save,
+                    size: 14,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Zapisz',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2645,6 +2934,9 @@ class _MedicineCardState extends State<MedicineCard> {
         badgeColor = theme.colorScheme.primary;
         break;
       case 'completed':
+      case 'not_found':
+      case 'manual':
+        // Wszystkie te statusy pokazują "Przeczytano" w badge
         badgeText = 'Przeczytano';
         badgeIcon = LucideIcons.sparkles;
         badgeColor = AppColors.valid;
@@ -2653,11 +2945,6 @@ class _MedicineCardState extends State<MedicineCard> {
         badgeText = 'Błąd';
         badgeIcon = LucideIcons.circleAlert;
         badgeColor = AppColors.expiringSoon;
-        break;
-      case 'manual':
-        badgeText = 'Ręcznie';
-        badgeIcon = LucideIcons.pencil;
-        badgeColor = theme.colorScheme.onSurfaceVariant;
         break;
       default:
         // Brak statusu - CTA do uruchomienia analizy
@@ -2703,16 +2990,16 @@ class _MedicineCardState extends State<MedicineCard> {
 
   /// Obsługuje kliknięcie w badge shelf life
   void _handleShelfLifeBadgeTap(BuildContext context, String? status) {
-    if (status == 'completed' || status == 'manual') {
-      // Pokaż tooltip z ostrzeżeniem
-      _showShelfLifeWarningTooltip(context);
-    } else if (status == 'error') {
-      // Retry analysis
-      _retryShelfLifeAnalysis();
-    } else {
-      // Brak statusu - uruchom analizę
+    if (status == null) {
+      // Brak statusu - uruchom analizę (jeśli jest ulotka)
       _startShelfLifeAnalysis();
+    } else if (status == 'completed' || status == 'manual' || status == 'not_found') {
+      // Przeczytano - pokaż tooltip z ostrzeżeniem (tylko dla completed/manual)
+      if (status != 'not_found') {
+        _showShelfLifeWarningTooltip(context);
+      }
     }
+    // error i pending - brak akcji (retry jest w sekcji poniżej)
   }
 
   /// Pokazuje tooltip z ostrzeżeniem o błędach AI
@@ -2725,6 +3012,24 @@ class _MedicineCardState extends State<MedicineCard> {
         ),
         duration: const Duration(seconds: 4),
         backgroundColor: AppColors.expiringSoon.withAlpha(200),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  /// Pokazuje info że nie znaleziono w ulotce z sugestią weryfikacji
+  void _showNotFoundInfo(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Nie znaleziono informacji w ulotce. Sprawdź opakowanie lub wprowadź ręcznie poniżej',
+          style: TextStyle(fontSize: 13),
+        ),
+        duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(
@@ -2800,21 +3105,23 @@ class _MedicineCardState extends State<MedicineCard> {
           );
         }
       } else {
-        // Nie znaleziono
+        // Nie znaleziono w ulotce (to nie jest błąd!)
         final updatedMedicine = _medicine.copyWith(
-          shelfLifeStatus: 'error',
+          shelfLifeStatus: 'not_found',
         );
         await widget.storageService?.saveMedicine(updatedMedicine);
         setState(() => _medicine = updatedMedicine);
         widget.onMedicineUpdated?.call();
 
-        _log.info('Shelf life not found: ${result.reason}');
+        _log.info('Shelf life not found in leaflet: ${result.reason}');
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result.reason ?? 'Nie znaleziono informacji'),
-              duration: const Duration(seconds: 3),
+              content: const Text(
+                'Nie znaleziono w ulotce. Możesz wprowadzić ręcznie poniżej',
+              ),
+              duration: const Duration(seconds: 4),
             ),
           );
         }
@@ -2838,6 +3145,44 @@ class _MedicineCardState extends State<MedicineCard> {
           ),
         );
       }
+    }
+  }
+
+  /// Zapisuje ręcznie wprowadzony termin ważności po otwarciu
+  Future<void> _saveManualShelfLife(String value) async {
+    _log.info('Saving manual shelf life: $value');
+
+    // Waliduj format (np. "6 miesięcy", "30 dni")
+    final parsed = ShelfLifeParser.parse(value);
+    if (!parsed.isValid) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(parsed.error ?? 'Nieprawidłowy format'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: AppColors.expiringSoon,
+          ),
+        );
+      }
+      return;
+    }
+
+    final updatedMedicine = _medicine.copyWith(
+      shelfLifeAfterOpening: value,
+      shelfLifeStatus: 'manual',
+    );
+    await widget.storageService?.saveMedicine(updatedMedicine);
+    setState(() => _medicine = updatedMedicine);
+    widget.onMedicineUpdated?.call();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Zapisano'),
+          duration: const Duration(seconds: 2),
+          backgroundColor: AppColors.valid,
+        ),
+      );
     }
   }
 
@@ -2888,8 +3233,8 @@ class _MedicineCardState extends State<MedicineCard> {
                 fontStyle: FontStyle.italic,
               ),
             ),
-            // Linia 2: Shelf life info (tylko dla otwartych opakowań)
-            if (hasShelfLife)
+            // Linia 2: Shelf life - wyświetl datę ważności zamiast okresu
+            if (hasShelfLife && expiryDateStr != null)
               Padding(
                 padding: const EdgeInsets.only(top: 1),
                 child: Row(
@@ -2905,15 +3250,12 @@ class _MedicineCardState extends State<MedicineCard> {
                     ],
                     Expanded(
                       child: Text(
-                        isExpiredAfterOpening && expiryDateStr != null
-                            ? '└── Po terminie ($expiryDateStr) - $shelfLife'
-                            : '└── $shelfLife',
+                        '└── Ważne do: $expiryDateStr',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           color: isExpiredAfterOpening
                               ? AppColors.expired
-                              : theme.colorScheme.onSurfaceVariant
-                                  .withAlpha(180),
+                              : theme.colorScheme.onSurfaceVariant,
                           fontStyle: FontStyle.italic,
                           fontWeight: isExpiredAfterOpening
                               ? FontWeight.w600

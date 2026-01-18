@@ -1470,12 +1470,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         await widget.storageService.saveMedicine(updatedMedicine);
         _log.info('Shelf life analysis completed: ${result.period}');
       } else {
-        // Nie znaleziono informacji
+        // Nie znaleziono w ulotce (to nie jest błąd)
         final updatedMedicine = medicine.copyWith(
-          shelfLifeStatus: 'error',
+          shelfLifeStatus: 'not_found',
         );
         await widget.storageService.saveMedicine(updatedMedicine);
-        _log.info('Shelf life not found: ${result.reason}');
+        _log.info('Shelf life not found in leaflet: ${result.reason}');
       }
     } catch (e) {
       _log.severe('Error analyzing shelf life: $e');
