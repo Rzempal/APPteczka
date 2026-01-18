@@ -704,7 +704,7 @@ class _MedicineCardState extends State<MedicineCard> {
         Row(
           children: [
             Text(
-              'Szczegoly - termin waznosci - data otwarcia',
+              'Szczegóły - termin ważności - data otwarcia',
               style: theme.textTheme.labelMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -950,7 +950,7 @@ class _MedicineCardState extends State<MedicineCard> {
         Row(
           children: [
             Text(
-              'Sprawdz do kiedy starczy ci lekow',
+              'Sprawdź do kiedy starczy ci leków',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -985,7 +985,7 @@ class _MedicineCardState extends State<MedicineCard> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Ustaw dzienne zuzycie',
+                        'Ustaw dzienne zużycie',
                         style: TextStyle(
                           color: theme.colorScheme.onSurface,
                           fontSize: 13,
@@ -1012,7 +1012,7 @@ class _MedicineCardState extends State<MedicineCard> {
               ),
               const SizedBox(width: 6),
               Text(
-                'Wypelnij Szczegoly leku by odblokowac kalkulator',
+                'Wypełnij Szczegóły leku by odblokować kalkulator',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,

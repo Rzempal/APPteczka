@@ -443,7 +443,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
         Row(
           children: [
             Text(
-              'Sprawdz do kiedy starczy ci lekow',
+              'Sprawdź do kiedy starczy ci leków',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -475,7 +475,7 @@ class _MedicineDetailSheetState extends State<MedicineDetailSheet> {
               ),
               const SizedBox(width: 6),
               Text(
-                'Wypelnij Szczegoly leku by odblokowac kalkulator',
+                'Wypełnij Szczegóły leku by odblokować kalkulator',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,
