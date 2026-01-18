@@ -2651,7 +2651,7 @@ class _MedicineCardState extends State<MedicineCard> {
         break;
       case 'error':
         badgeText = 'Błąd';
-        badgeIcon = LucideIcons.alertCircle;
+        badgeIcon = LucideIcons.circleAlert;
         badgeColor = AppColors.expiringSoon;
         break;
       case 'manual':
@@ -2897,7 +2897,7 @@ class _MedicineCardState extends State<MedicineCard> {
                     // Ostrzeżenie o wygaśnięciu
                     if (isExpiredAfterOpening) ...[
                       Icon(
-                        LucideIcons.alertTriangle,
+                        LucideIcons.triangleAlert,
                         size: 12,
                         color: AppColors.expired,
                       ),
