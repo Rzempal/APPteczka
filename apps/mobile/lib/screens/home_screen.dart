@@ -17,7 +17,6 @@ import '../widgets/app_bottom_sheet.dart';
 import '../theme/app_theme.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import 'edit_medicine_screen.dart';
-import 'medicine_detail_sheet.dart';
 import 'pdf_viewer_screen.dart';
 import '../utils/tag_normalization.dart';
 import '../utils/duplicate_detection.dart';
@@ -1181,57 +1180,6 @@ class HomeScreenState extends State<HomeScreen> {
     final lastDigit = count % 10;
     if (lastDigit >= 2 && lastDigit <= 4) return 'leki';
     return 'leków';
-  }
-
-  void _showMedicineDetails(Medicine medicine) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => MedicineDetailSheet(
-        medicine: medicine,
-        storageService: widget.storageService,
-        onEdit: () async {
-          Navigator.pop(context);
-          final result = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(
-              builder: (_) => EditMedicineScreen(
-                storageService: widget.storageService,
-                medicine: medicine,
-              ),
-            ),
-          );
-          if (result == true) {
-            _loadMedicines();
-          }
-        },
-        onDelete: () async {
-          Navigator.pop(context);
-          if (await _confirmDelete(medicine)) {
-            _deleteMedicine(medicine);
-          }
-        },
-        onTagTap: (tag) {
-          Navigator.pop(context);
-          setState(() {
-            final newTags = Set<String>.from(_filterState.selectedTags);
-            newTags.add(tag);
-            _filterState = _filterState.copyWith(selectedTags: newTags);
-          });
-        },
-        onLabelTap: (labelId) {
-          Navigator.pop(context);
-          setState(() {
-            final newLabels = Set<String>.from(_filterState.selectedLabels);
-            newLabels.add(labelId);
-            _filterState = _filterState.copyWith(selectedLabels: newLabels);
-          });
-        },
-      ),
-    ).then((_) => _loadMedicines()); // Refresh after detail sheet closes
   }
 
   /// Pokazuje bottom sheet z selectorem etykiet (swipe w lewo)
