@@ -2649,6 +2649,11 @@ class _MedicineCardState extends State<MedicineCard> {
         badgeIcon = LucideIcons.sparkles;
         badgeColor = AppColors.valid;
         break;
+      case 'not_found':
+        badgeText = 'Brak w ulotce';
+        badgeIcon = LucideIcons.info;
+        badgeColor = theme.colorScheme.onSurfaceVariant;
+        break;
       case 'error':
         badgeText = 'Błąd';
         badgeIcon = LucideIcons.circleAlert;
@@ -2706,6 +2711,9 @@ class _MedicineCardState extends State<MedicineCard> {
     if (status == 'completed' || status == 'manual') {
       // Pokaż tooltip z ostrzeżeniem
       _showShelfLifeWarningTooltip(context);
+    } else if (status == 'not_found') {
+      // Pokaż sugestię weryfikacji i ręcznego wpisu
+      _showNotFoundInfo(context);
     } else if (status == 'error') {
       // Retry analysis
       _retryShelfLifeAnalysis();
@@ -2725,6 +2733,24 @@ class _MedicineCardState extends State<MedicineCard> {
         ),
         duration: const Duration(seconds: 4),
         backgroundColor: AppColors.expiringSoon.withAlpha(200),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  /// Pokazuje info że nie znaleziono w ulotce z sugestią weryfikacji
+  void _showNotFoundInfo(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Nie znaleziono informacji w ulotce. Sprawdź opakowanie lub wprowadź ręcznie poniżej',
+          style: TextStyle(fontSize: 13),
+        ),
+        duration: const Duration(seconds: 5),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(
@@ -2800,21 +2826,23 @@ class _MedicineCardState extends State<MedicineCard> {
           );
         }
       } else {
-        // Nie znaleziono
+        // Nie znaleziono w ulotce (to nie jest błąd!)
         final updatedMedicine = _medicine.copyWith(
-          shelfLifeStatus: 'error',
+          shelfLifeStatus: 'not_found',
         );
         await widget.storageService?.saveMedicine(updatedMedicine);
         setState(() => _medicine = updatedMedicine);
         widget.onMedicineUpdated?.call();
 
-        _log.info('Shelf life not found: ${result.reason}');
+        _log.info('Shelf life not found in leaflet: ${result.reason}');
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(result.reason ?? 'Nie znaleziono informacji'),
-              duration: const Duration(seconds: 3),
+              content: const Text(
+                'Nie znaleziono w ulotce. Możesz wprowadzić ręcznie poniżej',
+              ),
+              duration: const Duration(seconds: 4),
             ),
           );
         }
