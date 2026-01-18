@@ -1,13 +1,23 @@
-// medicine.dart v0.002 Added barcode verification fields
+// medicine.dart v0.003 Added package units and opened date
 import 'package:uuid/uuid.dart';
+
+/// Jednostka ilości w opakowaniu
+enum PackageUnit {
+  none,    // Brak określonej ilości
+  pieces,  // Sztuki (tabletki, kapsułki)
+  ml,      // Mililitry (syropy, krople)
+  sachets, // Saszetki
+}
 
 /// Opakowanie leku z własną datą ważności
 class MedicinePackage {
   final String id;
   final String expiryDate; // ISO8601 ("2027-03-31")
   final bool isOpen; // true = otwarte, false = zamknięte (default)
-  final int? pieceCount; // Ilość sztuk w opakowaniu
+  final int? pieceCount; // Ilość w opakowaniu (zależna od unit)
   final int? percentRemaining; // % pozostały (tylko dla otwartych)
+  final PackageUnit unit; // Jednostka ilości
+  final String? openedDate; // Data otwarcia (ISO8601, opcjonalne)
 
   MedicinePackage({
     String? id,
@@ -15,6 +25,8 @@ class MedicinePackage {
     this.isOpen = false,
     this.pieceCount,
     this.percentRemaining,
+    this.unit = PackageUnit.pieces,
+    this.openedDate,
   }) : id = id ?? const Uuid().v4();
 
   /// Tworzy z formatu MM/YYYY → ISO ostatni dzień miesiąca
@@ -23,6 +35,8 @@ class MedicinePackage {
     bool isOpen = false,
     int? pieceCount,
     int? percentRemaining,
+    PackageUnit unit = PackageUnit.pieces,
+    String? openedDate,
   }) {
     final parts = mmyyyy.split('/');
     if (parts.length != 2) {
@@ -37,16 +51,30 @@ class MedicinePackage {
       isOpen: isOpen,
       pieceCount: pieceCount,
       percentRemaining: percentRemaining,
+      unit: unit,
+      openedDate: openedDate,
     );
   }
 
   factory MedicinePackage.fromJson(Map<String, dynamic> json) {
+    // Parse unit with backward compatibility
+    PackageUnit unit = PackageUnit.pieces;
+    if (json['unit'] != null) {
+      final unitStr = json['unit'] as String;
+      unit = PackageUnit.values.firstWhere(
+        (e) => e.name == unitStr,
+        orElse: () => PackageUnit.pieces,
+      );
+    }
+
     return MedicinePackage(
       id: json['id'] as String?,
       expiryDate: json['expiryDate'] as String,
       isOpen: json['isOpen'] as bool? ?? false,
       pieceCount: json['pieceCount'] as int?,
       percentRemaining: json['percentRemaining'] as int?,
+      unit: unit,
+      openedDate: json['openedDate'] as String?,
     );
   }
 
@@ -57,6 +85,8 @@ class MedicinePackage {
       if (isOpen) 'isOpen': isOpen,
       if (pieceCount != null) 'pieceCount': pieceCount,
       if (percentRemaining != null) 'percentRemaining': percentRemaining,
+      'unit': unit.name,
+      if (openedDate != null) 'openedDate': openedDate,
     };
   }
 
@@ -66,8 +96,11 @@ class MedicinePackage {
     bool? isOpen,
     int? pieceCount,
     int? percentRemaining,
+    PackageUnit? unit,
+    String? openedDate,
     bool clearPieceCount = false,
     bool clearPercentRemaining = false,
+    bool clearOpenedDate = false,
   }) {
     return MedicinePackage(
       id: id ?? this.id,
@@ -77,6 +110,8 @@ class MedicinePackage {
       percentRemaining: clearPercentRemaining
           ? null
           : (percentRemaining ?? this.percentRemaining),
+      unit: unit ?? this.unit,
+      openedDate: clearOpenedDate ? null : (openedDate ?? this.openedDate),
     );
   }
 
@@ -92,14 +127,56 @@ class MedicinePackage {
 
   /// Opis statusu opakowania
   String get remainingDescription {
+    // Helper: jednostka w odpowiednim formacie
+    String getUnitLabel() {
+      switch (unit) {
+        case PackageUnit.pieces:
+          return 'szt.';
+        case PackageUnit.ml:
+          return 'ml';
+        case PackageUnit.sachets:
+          return 'saszetki';
+        case PackageUnit.none:
+          return '';
+      }
+    }
+
+    // Helper: formatuje datę otwarcia
+    String? formatOpenedDate() {
+      if (openedDate == null) return null;
+      try {
+        final date = DateTime.parse(openedDate!);
+        return '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final unitLabel = getUnitLabel();
+    final openedDateStr = formatOpenedDate();
+
     if (isOpen) {
       // Opakowanie otwarte
-      if (pieceCount != null) return 'Pozostało: $pieceCount szt.';
-      if (percentRemaining != null) return 'Pozostało: $percentRemaining%';
-      return 'Opakowanie otwarte';
+      final parts = <String>[];
+
+      if (openedDateStr != null) {
+        parts.add('Otwarte od: $openedDateStr');
+      } else {
+        parts.add('Opakowanie otwarte');
+      }
+
+      if (percentRemaining != null) {
+        parts.add('pozostało $percentRemaining%');
+      } else if (pieceCount != null && unit != PackageUnit.none) {
+        parts.add('pozostało $pieceCount $unitLabel');
+      }
+
+      return parts.join(', ');
     } else {
       // Opakowanie zamknięte
-      if (pieceCount != null) return 'Zamknięte: $pieceCount szt.';
+      if (pieceCount != null && unit != PackageUnit.none) {
+        return 'Zamknięte: $pieceCount $unitLabel';
+      }
       return 'Opakowanie zamknięte';
     }
   }
@@ -155,11 +232,11 @@ class Medicine {
     return sorted;
   }
 
-  /// Oblicza łączną liczbę sztuk ze wszystkich opakowań
+  /// Oblicza łączną liczbę sztuk ze wszystkich opakowań (tylko unit=pieces)
   int get totalPieceCount {
     int total = 0;
     for (final package in packages) {
-      if (package.pieceCount != null) {
+      if (package.unit == PackageUnit.pieces && package.pieceCount != null) {
         total += package.pieceCount!;
       }
     }
@@ -168,9 +245,10 @@ class Medicine {
 
   /// Kalkulator zapasu - oblicza do kiedy wystarczy leku (pierwszy dzien bez leku)
   /// Zwraca null jeśli brak danych (pieceCount lub dailyIntake)
+  /// UWAGA: Działa tylko dla opakowań z unit=pieces
   DateTime? calculateSupplyEndDate() {
     if (dailyIntake == null || dailyIntake! <= 0) return null;
-    final total = totalPieceCount;
+    final total = totalPieceCount; // Tylko unit=pieces
     if (total <= 0) return null;
 
     // ceil - ostatnia dawka + 1 dzień = pierwszy dzień bez leku
