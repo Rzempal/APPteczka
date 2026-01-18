@@ -11,6 +11,7 @@ import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/gemini_service.dart';
 import '../services/gemini_name_lookup_service.dart';
+import '../services/gemini_shelf_life_service.dart';
 import '../services/date_ocr_service.dart';
 import '../services/rpl_service.dart';
 import '../services/app_logger.dart';
@@ -1010,6 +1011,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 isVerifiedByBarcode: drug.isFromRpl,
               );
               await widget.storageService.saveMedicine(medicine);
+              _triggerShelfLifeAnalysis(medicine); // Auto-trigger shelf life analysis
               importedMedicines.add(medicine);
             } else {
               // AI nie rozpoznalo - zapisz tylko dane z RPL
@@ -1271,6 +1273,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           );
 
           await widget.storageService.saveMedicine(medicine);
+          _triggerShelfLifeAnalysis(medicine); // Auto-trigger shelf life analysis
           savedMedicines.add(medicine);
           _log.fine('Saved medicine: ${medicine.nazwa}');
         } catch (e) {
@@ -1423,6 +1426,65 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         behavior: SnackBarBehavior.floating,
       ),
     );
+  }
+
+  /// Uruchamia analizę shelf life dla leku z ulotką
+  Future<void> _triggerShelfLifeAnalysis(Medicine medicine) async {
+    // Sprawdź czy lek ma ulotkę
+    if (medicine.leafletUrl == null || medicine.leafletUrl!.isEmpty) {
+      return;
+    }
+
+    // Sprawdź czy analiza już została wykonana lub jest w trakcie
+    if (medicine.shelfLifeStatus == 'completed' ||
+        medicine.shelfLifeStatus == 'pending' ||
+        medicine.shelfLifeStatus == 'manual') {
+      return;
+    }
+
+    _log.info(
+        'Triggering shelf life analysis for medicine: ${medicine.nazwa}');
+
+    // Ustaw status na "pending" i zapisz
+    final medicineWithPendingStatus = medicine.copyWith(
+      shelfLifeStatus: 'pending',
+    );
+    await widget.storageService.saveMedicine(medicineWithPendingStatus);
+
+    // Uruchom analizę w tle (fire and forget)
+    _analyzeShelfLifeInBackground(medicineWithPendingStatus);
+  }
+
+  /// Analizuje shelf life w tle i aktualizuje wynik
+  Future<void> _analyzeShelfLifeInBackground(Medicine medicine) async {
+    try {
+      final service = GeminiShelfLifeService();
+      final result = await service.analyzeLeaflet(medicine.leafletUrl!);
+
+      if (result.found) {
+        // Znaleziono informację o shelf life
+        final updatedMedicine = medicine.copyWith(
+          shelfLifeAfterOpening: result.shelfLife,
+          shelfLifeStatus: 'completed',
+        );
+        await widget.storageService.saveMedicine(updatedMedicine);
+        _log.info('Shelf life analysis completed: ${result.period}');
+      } else {
+        // Nie znaleziono informacji
+        final updatedMedicine = medicine.copyWith(
+          shelfLifeStatus: 'error',
+        );
+        await widget.storageService.saveMedicine(updatedMedicine);
+        _log.info('Shelf life not found: ${result.reason}');
+      }
+    } catch (e) {
+      _log.severe('Error analyzing shelf life: $e');
+      // Oznacz jako błąd
+      final updatedMedicine = medicine.copyWith(
+        shelfLifeStatus: 'error',
+      );
+      await widget.storageService.saveMedicine(updatedMedicine);
+    }
   }
 }
 

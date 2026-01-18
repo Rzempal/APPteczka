@@ -1,7 +1,7 @@
 // src/lib/gemini.ts
 // Helper do komunikacji z Gemini API (server-side)
 
-import { generateImportPrompt, generateNameLookupPrompt } from './prompts';
+import { generateImportPrompt, generateNameLookupPrompt, generateShelfLifePrompt } from './prompts';
 
 export interface GeminiOCRResult {
     leki: Array<{
@@ -26,6 +26,17 @@ export interface GeminiNameLookupResult {
 
 export interface GeminiNameLookupError {
     status: 'nie_rozpoznano';
+    reason: string;
+}
+
+export interface GeminiShelfLifeResult {
+    status: 'znaleziono';
+    shelfLife: string;  // Dosłowny cytat z ulotki
+    period: string;     // Okres w formacie naturalnym (np. "6 miesięcy")
+}
+
+export interface GeminiShelfLifeNotFound {
+    status: 'nie_znaleziono';
     reason: string;
 }
 
@@ -288,6 +299,141 @@ export async function lookupMedicineByName(
                 return {
                     status: 'nie_rozpoznano',
                     reason: parsed.reason || 'Nie rozpoznano produktu.'
+                };
+            }
+
+            return {
+                error: 'Nieoczekiwany format odpowiedzi od Gemini.',
+                code: 'PARSE_ERROR'
+            };
+
+        } catch (parseErr) {
+            console.error('JSON parse error:', parseErr, 'Raw text:', text);
+            return {
+                error: `Nie udało się sparsować odpowiedzi Gemini.`,
+                code: 'PARSE_ERROR'
+            };
+        }
+
+    } catch (error) {
+        return {
+            error: `Błąd połączenia z API Gemini: ${error instanceof Error ? error.message : 'Nieznany błąd'}`,
+            code: 'API_ERROR'
+        };
+    }
+}
+
+/**
+ * Analizuje ulotkę PDF w celu znalezienia terminu ważności po otwarciu
+ * UWAGA: Używać tylko server-side (API route)
+ */
+export async function analyzeShelfLife(
+    pdfBase64: string
+): Promise<GeminiShelfLifeResult | GeminiShelfLifeNotFound | GeminiError> {
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+        return {
+            error: 'Brak klucza API Gemini. Skonfiguruj GEMINI_API_KEY w .env.local',
+            code: 'API_KEY_MISSING'
+        };
+    }
+
+    const prompt = generateShelfLifePrompt();
+
+    try {
+        const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                contents: [
+                    {
+                        parts: [
+                            { text: prompt },
+                            {
+                                inline_data: {
+                                    mime_type: 'application/pdf',
+                                    data: pdfBase64
+                                }
+                            }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    temperature: 0.1,
+                    maxOutputTokens: 2048,
+                }
+            })
+        });
+
+        if (response.status === 429) {
+            return {
+                error: 'Przekroczono limit zapytań do API Gemini. Spróbuj za chwilę.',
+                code: 'RATE_LIMIT'
+            };
+        }
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            return {
+                error: `Błąd API Gemini: ${response.status} - ${errorData?.error?.message || 'Nieznany błąd'}`,
+                code: 'API_ERROR'
+            };
+        }
+
+        const data = await response.json();
+        console.log('Gemini Shelf Life raw response:', JSON.stringify(data, null, 2));
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!text) {
+            console.log('Gemini no text found in response');
+            return {
+                error: 'Gemini nie zwróciło odpowiedzi.',
+                code: 'API_ERROR'
+            };
+        }
+
+        console.log('Gemini text response:', text);
+
+        // Wyciągnij JSON z odpowiedzi
+        let jsonString = text.trim();
+
+        const jsonCodeBlockMatch = jsonString.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonCodeBlockMatch && jsonCodeBlockMatch[1]) {
+            jsonString = jsonCodeBlockMatch[1].trim();
+        } else {
+            const codeBlockMatch = jsonString.match(/```\s*([\s\S]*?)\s*```/);
+            if (codeBlockMatch && codeBlockMatch[1]) {
+                jsonString = codeBlockMatch[1].trim();
+            } else {
+                const jsonObjectMatch = jsonString.match(/\{[\s\S]*\}/);
+                if (jsonObjectMatch) {
+                    jsonString = jsonObjectMatch[0].trim();
+                }
+            }
+        }
+
+        console.log('Extracted JSON string:', jsonString.substring(0, 300));
+
+        try {
+            const parsed = JSON.parse(jsonString);
+
+            // Sprawdź czy znaleziono informację
+            if (parsed.status === 'znaleziono' && parsed.shelfLife && parsed.period) {
+                return {
+                    status: 'znaleziono',
+                    shelfLife: parsed.shelfLife,
+                    period: parsed.period
+                };
+            }
+
+            // Nie znaleziono
+            if (parsed.status === 'nie_znaleziono') {
+                return {
+                    status: 'nie_znaleziono',
+                    reason: parsed.reason || 'W ulotce nie znaleziono informacji o terminie ważności po pierwszym otwarciu.'
                 };
             }
 

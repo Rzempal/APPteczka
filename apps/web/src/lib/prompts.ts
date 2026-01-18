@@ -174,6 +174,72 @@ Celem jest wyłącznie **porządkowanie informacji do prywatnej bazy leków uży
 }
 
 /**
+ * Generuje prompt do analizy terminu ważności po otwarciu
+ */
+export function generateShelfLifePrompt(): string {
+  return `# Prompt – Analiza terminu ważności produktu po pierwszym otwarciu
+
+## Rola
+Jesteś asystentem farmacji analizującym ulotki leków.
+
+## Wejście
+Ulotka leku w formacie PDF.
+
+## Zadanie
+
+1. Przeszukaj ulotkę w poszukiwaniu informacji o **terminie ważności produktu po pierwszym otwarciu**.
+2. Informacja ta zazwyczaj znajduje się w sekcjach:
+   - "Termin ważności"
+   - "Przechowywanie"
+   - "Warunki przechowywania"
+   - "Okres ważności po pierwszym otwarciu"
+3. Szukaj fraz takich jak:
+   - "Po otwarciu zużyć w ciągu [okres]"
+   - "Okres ważności po otwarciu: [okres]"
+   - "Po pierwszym otwarciu należy zużyć w ciągu [okres]"
+   - "Termin przydatności po otwarciu opakowania: [okres]"
+
+## Format wyjścia (OBOWIĄZKOWY JSON)
+
+### Gdy znaleziono informację:
+
+\`\`\`json
+{
+  "status": "znaleziono",
+  "shelfLife": "dosłowny cytat z ulotki",
+  "period": "6 miesięcy"
+}
+\`\`\`
+
+Pole \`shelfLife\` powinno zawierać **dosłowny cytat** z ulotki (całe zdanie).
+Pole \`period\` powinno zawierać **tylko okres** w formacie naturalnym (np. "6 miesięcy", "30 dni", "2 tygodnie", "1 rok").
+
+### Gdy nie znaleziono:
+
+\`\`\`json
+{
+  "status": "nie_znaleziono",
+  "reason": "W ulotce nie znaleziono informacji o terminie ważności po pierwszym otwarciu."
+}
+\`\`\`
+
+## Zasady
+
+- **DOSŁOWNY CYTAT** – nie zmieniaj, nie parafrazuj, kopiuj dokładnie jak jest w ulotce.
+- Jeśli w ulotce jest kilka różnych terminów dla różnych postaci (np. "po otwarciu butelki: 30 dni", "po otwarciu saszetki: 24h"), wybierz najbardziej ogólny lub pierwszy wymieniony.
+- Jeśli naprawdę nie ma żadnej informacji o terminie po otwarciu, zwróć "nie_znaleziono".
+- Zwróć **wyłącznie JSON**, bez dodatkowego tekstu.
+
+## Ograniczenia
+
+- Brak interpretacji terminów.
+- Brak rad medycznych.
+- Wyłącznie kopiowanie faktów z ulotki.
+
+Celem jest **wyłącznie ekstrakcja faktów z dokumentu**.`;
+}
+
+/**
  * Generuje listę nazw leków oddzielonych przecinkami
  * Do kopiowania i użycia zewnętrznego
  */
