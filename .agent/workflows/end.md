@@ -1,23 +1,27 @@
 ---
-description: Task completion workflow with code review checklist and Git commit/push process. Ensures documentation updates, lessons learned capture, and consistent commit numbering in Polish.
+description:
+  Task completion workflow with code review checklist and Git commit/push process. Ensures
+  documentation updates, lessons learned capture, and consistent commit numbering in Polish.
 ---
 
 ---
 
-description: Task completion workflow with code review checklist and Git commit/push process. Ensures documentation updates, lessons learned capture, and consistent commit numbering in Polish
----
+## description: Task completion workflow with code review checklist and Git commit/push process. Ensures documentation updates, lessons learned capture, and consistent commit numbering in Polish
 
 ---
 
-name: End
-description: Task completion workflow with code review checklist and Git commit/push process. Ensures documentation updates, lessons learned capture, and consistent commit numbering in Polish
+name: End description: Task completion workflow with code review checklist and Git commit/push
+process. Ensures documentation updates, lessons learned capture, and consistent commit numbering in
+Polish
+
 ---
 
 # End
 
 ## How to use this skill
 
-When the user invokes this skill (e.g., `/end`), the LLM will guide them through the task completion workflow.
+When the user invokes this skill (e.g., `/end`), the LLM will guide them through the task completion
+workflow.
 
 **Example usage:**
 
@@ -111,7 +115,8 @@ git commit -m "#412 Refaktoryzacja struktury plikow i aktualizacja dokumentacji"
 
 ### Step 4: Git Push
 
-**IMPORTANT:** Claude cannot push directly to `main` (403 error). Must push to designated `claude/*` branch.
+**IMPORTANT:** Claude cannot push directly to `main` (403 error). Must push to designated `claude/*`
+branch.
 
 **Instructions for LLM:**
 
@@ -139,13 +144,13 @@ After finishing all steps, provide the user with:
 - ✅ Lessons learned documented
 - ✅ Documentation updated (if needed)
 - ✅ Commit #N created with message: "..."
-- ✅ Changes pushed to `claude/*` branch
+- ✅ Changes pushed to working branch
 
 ---
 
 ## Next Step: Merge to Main
 
-**User must merge `claude/*` branch to `main`** (Claude cannot push to main directly).
+**User must merge working branch to `main`**.
 
 **Option 1 - VS Code Task:**
 

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../theme/app_theme.dart';
-import 'neu_decoration.dart';
 
 /// Neumorphic text field with basin (concave) style
 ///
