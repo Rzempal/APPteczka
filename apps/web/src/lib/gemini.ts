@@ -191,7 +191,9 @@ export async function recognizeMedicinesFromImage(
 /**
  * Sprawdza czy wynik to błąd
  */
-export function isGeminiError(result: GeminiOCRResult | GeminiError | GeminiNameLookupResult | GeminiNameLookupError): result is GeminiError {
+export function isGeminiError(
+    result: GeminiOCRResult | GeminiError | GeminiNameLookupResult | GeminiNameLookupError | GeminiShelfLifeResult | GeminiShelfLifeNotFound
+): result is GeminiError {
     return 'error' in result;
 }
 
