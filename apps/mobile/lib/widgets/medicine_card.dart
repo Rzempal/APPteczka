@@ -6,8 +6,12 @@ import '../models/medicine.dart';
 import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/pdf_cache_service.dart';
+import '../services/gemini_shelf_life_service.dart';
+import '../services/app_logger.dart';
 import '../theme/app_theme.dart';
 import '../screens/pdf_viewer_screen.dart';
+import '../utils/shelf_life_parser.dart';
+import 'package:logging/logging.dart';
 import 'neumorphic/neumorphic.dart';
 import 'label_selector.dart';
 import 'leaflet_search_sheet.dart';
@@ -48,6 +52,7 @@ class MedicineCard extends StatefulWidget {
 }
 
 class _MedicineCardState extends State<MedicineCard> {
+  static final Logger _log = AppLogger.getLogger('MedicineCard');
   bool _isMoreExpanded = false; // Akordeon "Więcej"
   bool _isLabelsOpen = false;
   bool _isEditModeButtonActive = false; // Stan lokalny przycisku trybu edycji
@@ -504,11 +509,14 @@ class _MedicineCardState extends State<MedicineCard> {
           ],
         ),
 
-        // CTA area: Ulotka + Unpin (aligned right)
+        // CTA area: Ulotka + AI badge + Unpin (aligned right)
         const SizedBox(height: 12),
         Row(
           children: [
             if (hasLeaflet) ...[
+              // AI Shelf Life badge - po lewej stronie od "Pokaż ulotkę"
+              _buildShelfLifeBadge(context, theme, isDark),
+              const SizedBox(width: 8),
               NeuButton(
                 onPressed: () => _showPdfViewer(context),
                 padding: const EdgeInsets.symmetric(
@@ -581,8 +589,159 @@ class _MedicineCardState extends State<MedicineCard> {
               ),
           ],
         ),
+
+        // Ręczny wpis shelf life (gdy brak ulotki)
+        if (!hasLeaflet) ...[
+          const SizedBox(height: 12),
+          _buildManualShelfLifeEntry(context, theme, isDark),
+        ],
       ],
     );
+  }
+
+  /// Buduje sekcję ręcznego wpisu shelf life (gdy brak ulotki)
+  Widget _buildManualShelfLifeEntry(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final hasManualEntry =
+        _medicine.shelfLifeAfterOpening != null &&
+        _medicine.shelfLifeStatus == 'manual';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              LucideIcons.pencil,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Ważność po otwarciu',
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: TextEditingController(
+                  text: hasManualEntry ? _medicine.shelfLifeAfterOpening : '',
+                ),
+                decoration: InputDecoration(
+                  hintText: 'np. "6 miesięcy", "30 dni"',
+                  hintStyle: TextStyle(
+                    fontSize: 12,
+                    color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  isDense: true,
+                ),
+                style: const TextStyle(fontSize: 12),
+                onSubmitted: (value) => _saveManualShelfLife(value.trim()),
+              ),
+            ),
+            const SizedBox(width: 8),
+            NeuButton(
+              onPressed: () {
+                final controller = TextEditingController(
+                  text: hasManualEntry ? _medicine.shelfLifeAfterOpening : '',
+                );
+                _showManualShelfLifeDialog(context, controller);
+              },
+              padding: const EdgeInsets.all(10),
+              child: Icon(
+                LucideIcons.save,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Zapisuje ręcznie wpisany shelf life
+  Future<void> _saveManualShelfLife(String value) async {
+    if (value.isEmpty) {
+      // Usuń manual entry
+      final updatedMedicine = _medicine.copyWith(
+        shelfLifeAfterOpening: null,
+        shelfLifeStatus: null,
+      );
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+      return;
+    }
+
+    final updatedMedicine = _medicine.copyWith(
+      shelfLifeAfterOpening: value,
+      shelfLifeStatus: 'manual',
+    );
+    await widget.storageService?.saveMedicine(updatedMedicine);
+    setState(() => _medicine = updatedMedicine);
+    widget.onMedicineUpdated?.call();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✓ Zapisano'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  /// Pokazuje dialog do ręcznego wpisu shelf life
+  Future<void> _showManualShelfLifeDialog(
+    BuildContext context,
+    TextEditingController controller,
+  ) async {
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ważność po otwarciu'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: 'np. "6 miesięcy", "30 dni"',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('Zapisz'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      _saveManualShelfLife(result);
+    }
   }
 
   Widget _buildNoteSection(BuildContext context, ThemeData theme, bool isDark) {
@@ -891,21 +1050,8 @@ class _MedicineCardState extends State<MedicineCard> {
               ),
           ],
         ),
-        // Status opakowania
-        Padding(
-          padding: const EdgeInsets.only(left: 10, top: 2),
-          child: GestureDetector(
-            onTap: () => _showPackageDetailsBottomSheet(context, package),
-            child: Text(
-              '└─ ${package.remainingDescription}',
-              style: TextStyle(
-                fontSize: 11,
-                color: theme.colorScheme.onSurfaceVariant,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-        ),
+        // Status opakowania (z opcjonalnym shelf life info)
+        _buildPackageStatusDescription(context, theme, package),
       ],
     );
   }
@@ -2478,6 +2624,311 @@ class _MedicineCardState extends State<MedicineCard> {
   }
 
   // ==================== HELPERS ====================
+
+  /// Buduje badge ze statusem analizy AI shelf life
+  Widget _buildShelfLifeBadge(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final status = _medicine.shelfLifeStatus;
+
+    // Określ tekst, ikonę i kolor na podstawie statusu
+    String badgeText;
+    IconData badgeIcon;
+    Color badgeColor;
+
+    switch (status) {
+      case 'pending':
+        badgeText = 'Czytam ulotkę...';
+        badgeIcon = LucideIcons.sparkles;
+        badgeColor = theme.colorScheme.primary;
+        break;
+      case 'completed':
+        badgeText = 'Przeczytano';
+        badgeIcon = LucideIcons.sparkles;
+        badgeColor = AppColors.valid;
+        break;
+      case 'error':
+        badgeText = 'Błąd';
+        badgeIcon = LucideIcons.alertCircle;
+        badgeColor = AppColors.expiringSoon;
+        break;
+      case 'manual':
+        badgeText = 'Ręcznie';
+        badgeIcon = LucideIcons.pencil;
+        badgeColor = theme.colorScheme.onSurfaceVariant;
+        break;
+      default:
+        // Brak statusu - CTA do uruchomienia analizy
+        badgeText = 'Przeczytaj';
+        badgeIcon = LucideIcons.sparkles;
+        badgeColor = theme.colorScheme.onSurfaceVariant;
+    }
+
+    return GestureDetector(
+      onTap: () => _handleShelfLifeBadgeTap(context, status),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: badgeColor.withAlpha(isDark ? 25 : 15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: badgeColor.withAlpha(50),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              badgeIcon,
+              size: 16,
+              color: badgeColor,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              badgeText,
+              style: TextStyle(
+                color: badgeColor,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Obsługuje kliknięcie w badge shelf life
+  void _handleShelfLifeBadgeTap(BuildContext context, String? status) {
+    if (status == 'completed' || status == 'manual') {
+      // Pokaż tooltip z ostrzeżeniem
+      _showShelfLifeWarningTooltip(context);
+    } else if (status == 'error') {
+      // Retry analysis
+      _retryShelfLifeAnalysis();
+    } else {
+      // Brak statusu - uruchom analizę
+      _startShelfLifeAnalysis();
+    }
+  }
+
+  /// Pokazuje tooltip z ostrzeżeniem o błędach AI
+  void _showShelfLifeWarningTooltip(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          '⚠️ AI może popełniać błędy, zawsze weryfikuj dane ze stanem faktycznym',
+          style: TextStyle(fontSize: 13),
+        ),
+        duration: const Duration(seconds: 4),
+        backgroundColor: AppColors.expiringSoon.withAlpha(200),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  /// Uruchamia analizę shelf life
+  void _startShelfLifeAnalysis() {
+    if (_medicine.leafletUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Brak ulotki do analizy'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    _analyzeShelfLife();
+  }
+
+  /// Ponawia analizę shelf life po błędzie
+  void _retryShelfLifeAnalysis() {
+    if (_medicine.leafletUrl == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Brak ulotki do analizy'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    _analyzeShelfLife();
+  }
+
+  /// Wykonuje analizę shelf life w tle
+  Future<void> _analyzeShelfLife() async {
+    _log.info('Starting shelf life analysis for ${_medicine.nazwa}');
+
+    // Ustaw status na "pending"
+    final pendingMedicine = _medicine.copyWith(shelfLifeStatus: 'pending');
+    await widget.storageService?.saveMedicine(pendingMedicine);
+    setState(() => _medicine = pendingMedicine);
+    widget.onMedicineUpdated?.call();
+
+    try {
+      final service = GeminiShelfLifeService();
+      final result = await service.analyzeLeaflet(_medicine.leafletUrl!);
+
+      if (result.found) {
+        // Znaleziono informację
+        final updatedMedicine = _medicine.copyWith(
+          shelfLifeAfterOpening: result.shelfLife,
+          shelfLifeStatus: 'completed',
+        );
+        await widget.storageService?.saveMedicine(updatedMedicine);
+        setState(() => _medicine = updatedMedicine);
+        widget.onMedicineUpdated?.call();
+
+        _log.info('Shelf life analysis completed: ${result.period}');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✨ Znaleziono: ${result.period}'),
+              duration: const Duration(seconds: 3),
+              backgroundColor: AppColors.valid,
+            ),
+          );
+        }
+      } else {
+        // Nie znaleziono
+        final updatedMedicine = _medicine.copyWith(
+          shelfLifeStatus: 'error',
+        );
+        await widget.storageService?.saveMedicine(updatedMedicine);
+        setState(() => _medicine = updatedMedicine);
+        widget.onMedicineUpdated?.call();
+
+        _log.info('Shelf life not found: ${result.reason}');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(result.reason ?? 'Nie znaleziono informacji'),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      _log.severe('Error analyzing shelf life: $e');
+
+      final updatedMedicine = _medicine.copyWith(
+        shelfLifeStatus: 'error',
+      );
+      await widget.storageService?.saveMedicine(updatedMedicine);
+      setState(() => _medicine = updatedMedicine);
+      widget.onMedicineUpdated?.call();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd analizy: $e'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: AppColors.expired,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Buduje opis statusu opakowania z opcjonalnym shelf life info i walidacją
+  Widget _buildPackageStatusDescription(
+    BuildContext context,
+    ThemeData theme,
+    MedicinePackage package,
+  ) {
+    final shelfLife = _medicine.shelfLifeAfterOpening;
+    final hasShelfLife = shelfLife != null && package.isOpen;
+
+    // Walidacja wygaśnięcia po otwarciu
+    bool isExpiredAfterOpening = false;
+    String? expiryDateStr;
+
+    if (hasShelfLife &&
+        package.openedDate != null &&
+        (_medicine.shelfLifeStatus == 'completed' ||
+            _medicine.shelfLifeStatus == 'manual')) {
+      // Parsuj okres z natural language
+      final parsed = ShelfLifeParser.parse(shelfLife);
+      if (parsed.isValid && parsed.days != null) {
+        isExpiredAfterOpening =
+            ShelfLifeParser.isExpired(package.openedDate!, parsed.days!);
+        expiryDateStr = ShelfLifeParser.formatExpiryDate(
+          package.openedDate!,
+          parsed.days!,
+        );
+      }
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 10, top: 2),
+      child: GestureDetector(
+        onTap: () => _showPackageDetailsBottomSheet(context, package),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Linia 1: Status opakowania
+            Text(
+              hasShelfLife
+                  ? '├──${package.remainingDescription}'
+                  : '└─ ${package.remainingDescription}',
+              style: TextStyle(
+                fontSize: 11,
+                color: theme.colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            // Linia 2: Shelf life info (tylko dla otwartych opakowań)
+            if (hasShelfLife)
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: Row(
+                  children: [
+                    // Ostrzeżenie o wygaśnięciu
+                    if (isExpiredAfterOpening) ...[
+                      Icon(
+                        LucideIcons.alertTriangle,
+                        size: 12,
+                        color: AppColors.expired,
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Expanded(
+                      child: Text(
+                        isExpiredAfterOpening && expiryDateStr != null
+                            ? '└── ⚠️ Po terminie ($expiryDateStr) - $shelfLife'
+                            : '└── $shelfLife',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: isExpiredAfterOpening
+                              ? AppColors.expired
+                              : theme.colorScheme.onSurfaceVariant
+                                  .withAlpha(180),
+                          fontStyle: FontStyle.italic,
+                          fontWeight: isExpiredAfterOpening
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildBadge(UserLabel label, bool isDark) {
     final colorInfo = labelColors[label.color]!;

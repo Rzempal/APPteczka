@@ -198,6 +198,8 @@ class Medicine {
   final String dataDodania;
   final bool isVerifiedByBarcode; // Dane zweryfikowane po kodzie kreskowym (RPL)
   final String? verificationNote; // Monit o konflikcie nazwa/kod
+  final String? shelfLifeAfterOpening; // Cytat z ulotki o terminie ważności po otwarciu
+  final String? shelfLifeStatus; // "pending" | "completed" | "error" | "manual" | null
 
   Medicine({
     required this.id,
@@ -214,6 +216,8 @@ class Medicine {
     required this.dataDodania,
     this.isVerifiedByBarcode = false,
     this.verificationNote,
+    this.shelfLifeAfterOpening,
+    this.shelfLifeStatus,
   }) : _legacyTerminWaznosci = terminWaznosci;
 
   /// Computed property - zwraca najkrótszą datę (wsteczna kompatybilność)
@@ -284,6 +288,8 @@ class Medicine {
           json['dataDodania'] as String? ?? DateTime.now().toIso8601String(),
       isVerifiedByBarcode: json['isVerifiedByBarcode'] as bool? ?? false,
       verificationNote: json['verificationNote'] as String?,
+      shelfLifeAfterOpening: json['shelfLifeAfterOpening'] as String?,
+      shelfLifeStatus: json['shelfLifeStatus'] as String?,
     );
   }
 
@@ -305,6 +311,9 @@ class Medicine {
       'dataDodania': dataDodania,
       if (isVerifiedByBarcode) 'isVerifiedByBarcode': isVerifiedByBarcode,
       if (verificationNote != null) 'verificationNote': verificationNote,
+      if (shelfLifeAfterOpening != null)
+        'shelfLifeAfterOpening': shelfLifeAfterOpening,
+      if (shelfLifeStatus != null) 'shelfLifeStatus': shelfLifeStatus,
     };
   }
 
@@ -324,6 +333,8 @@ class Medicine {
     String? dataDodania,
     bool? isVerifiedByBarcode,
     String? verificationNote,
+    String? shelfLifeAfterOpening,
+    String? shelfLifeStatus,
   }) {
     return Medicine(
       id: id ?? this.id,
@@ -340,6 +351,9 @@ class Medicine {
       dataDodania: dataDodania ?? this.dataDodania,
       isVerifiedByBarcode: isVerifiedByBarcode ?? this.isVerifiedByBarcode,
       verificationNote: verificationNote ?? this.verificationNote,
+      shelfLifeAfterOpening:
+          shelfLifeAfterOpening ?? this.shelfLifeAfterOpening,
+      shelfLifeStatus: shelfLifeStatus ?? this.shelfLifeStatus,
     );
   }
 
