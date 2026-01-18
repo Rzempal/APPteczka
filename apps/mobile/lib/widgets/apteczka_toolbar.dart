@@ -98,7 +98,7 @@ class ApteczkaToolbar extends StatelessWidget {
                     ),
                     // 4. Search
                     _ToolbarButton(
-                      icon: LucideIcons.packageSearch,
+                      icon: LucideIcons.search,
                       onTap: onSearch,
                       iconColor: iconColor,
                       isDark: isDark,

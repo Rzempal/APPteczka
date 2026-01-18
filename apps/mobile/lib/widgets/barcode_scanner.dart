@@ -48,8 +48,8 @@ class ScannedDrug {
     if (drugInfo != null) return drugInfo!.fullName;
     if (scannedName != null) return scannedName!;
     return scanSequence != null
-        ? 'Nieznany produkt #$scanSequence'
-        : 'Nieznany produkt';
+        ? 'Nieznany #$scanSequence'
+        : 'Nieznany';
   }
 
   /// Czy produkt jest z RPL
@@ -1062,7 +1062,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               const Spacer(),
               _buildActionButton(
                 icon: LucideIcons.trash,
-                label: 'Usun produkt',
+                label: 'Usuń produkt',
                 color: Colors.red,
                 onPressed: () => _confirmDeleteDrug(index),
               ),
@@ -1075,19 +1075,21 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
             children: [
               _buildDateStatus(drug, theme, isDark),
               const SizedBox(width: 8),
-              if (hasExpiryPhoto && !hasExpiryDate)
-                // Wariant: zdjęcie daty - tylko CTA:Podgląd
+              if (hasExpiryPhoto && !hasExpiryDate) ...[
+                // Wariant: zdjęcie daty - tylko CTA:Podgląd zdjęć align-right
+                const Spacer(),
                 _buildActionButton(
                   icon: LucideIcons.eye,
-                  label: 'Podglad',
+                  label: 'Podgląd zdjęć',
                   color: Colors.orange,
                   onPressed: () => _showPhotosPreview(index),
-                )
+                ),
+              ]
               else ...[
                 // Wariant: brak daty lub data zdefiniowana - CTA:Edytuj datę
                 _buildActionButton(
                   icon: LucideIcons.calendarCog,
-                  label: 'Edytuj date',
+                  label: 'Edytuj datę',
                   color: theme.colorScheme.primary,
                   onPressed: () => _editExpiryDate(index),
                 ),
@@ -1096,7 +1098,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                   const Spacer(),
                   _buildActionButton(
                     icon: LucideIcons.eye,
-                    label: 'Podglad zdjec',
+                    label: 'Podgląd zdjęć',
                     color: Colors.green,
                     onPressed: () => _showPhotosPreview(index),
                   ),
@@ -1122,7 +1124,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     } else if (drug.tempImagePath != null) {
       return Chip(
         avatar: const Icon(LucideIcons.imagePlus, size: 16, color: Colors.orange),
-        label: const Text('Zdjecie daty'),
+        label: const Text('Zdjęcie daty'),
         backgroundColor: Colors.orange.withAlpha(40),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         labelStyle: theme.textTheme.bodySmall,
@@ -1281,7 +1283,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Text(
-                        'Podglad zdjec',
+                        'Podgląd zdjęć',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1312,7 +1314,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                                 size: 16, color: Colors.purple),
                             const SizedBox(width: 8),
                             const Text(
-                              'Zdjecie nazwy',
+                              'Zdjęcie nazwy',
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                           ],
@@ -1336,7 +1338,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                                 size: 16, color: Colors.orange),
                             const SizedBox(width: 8),
                             const Text(
-                              'Zdjecie daty waznosci',
+                              'Zdjęcie daty ważności',
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                           ],
@@ -1371,7 +1373,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                       child: FilledButton.icon(
                         onPressed: () => Navigator.pop(context, true),
                         icon: const Icon(LucideIcons.camera),
-                        label: const Text('Zrob ponownie'),
+                        label: const Text('Zrób ponownie'),
                       ),
                     ),
                   ],
