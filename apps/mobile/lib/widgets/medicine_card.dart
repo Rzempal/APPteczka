@@ -679,6 +679,8 @@ class _MedicineCardState extends State<MedicineCard> {
 
   /// Zapisuje ręcznie wpisany shelf life
   Future<void> _saveManualShelfLife(String value) async {
+    _log.info('Saving manual shelf life: $value');
+
     if (value.isEmpty) {
       // Usuń manual entry
       final updatedMedicine = _medicine.copyWith(
@@ -688,6 +690,21 @@ class _MedicineCardState extends State<MedicineCard> {
       await widget.storageService?.saveMedicine(updatedMedicine);
       setState(() => _medicine = updatedMedicine);
       widget.onMedicineUpdated?.call();
+      return;
+    }
+
+    // Waliduj format (np. "6 miesięcy", "30 dni")
+    final parsed = ShelfLifeParser.parse(value);
+    if (!parsed.isValid) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(parsed.error ?? 'Nieprawidłowy format'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: AppColors.expiringSoon,
+          ),
+        );
+      }
       return;
     }
 
@@ -701,9 +718,10 @@ class _MedicineCardState extends State<MedicineCard> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Zapisano'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: const Text('Zapisano'),
+          duration: const Duration(seconds: 2),
+          backgroundColor: AppColors.valid,
         ),
       );
     }
@@ -3145,44 +3163,6 @@ class _MedicineCardState extends State<MedicineCard> {
           ),
         );
       }
-    }
-  }
-
-  /// Zapisuje ręcznie wprowadzony termin ważności po otwarciu
-  Future<void> _saveManualShelfLife(String value) async {
-    _log.info('Saving manual shelf life: $value');
-
-    // Waliduj format (np. "6 miesięcy", "30 dni")
-    final parsed = ShelfLifeParser.parse(value);
-    if (!parsed.isValid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(parsed.error ?? 'Nieprawidłowy format'),
-            duration: const Duration(seconds: 3),
-            backgroundColor: AppColors.expiringSoon,
-          ),
-        );
-      }
-      return;
-    }
-
-    final updatedMedicine = _medicine.copyWith(
-      shelfLifeAfterOpening: value,
-      shelfLifeStatus: 'manual',
-    );
-    await widget.storageService?.saveMedicine(updatedMedicine);
-    setState(() => _medicine = updatedMedicine);
-    widget.onMedicineUpdated?.call();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Zapisano'),
-          duration: const Duration(seconds: 2),
-          backgroundColor: AppColors.valid,
-        ),
-      );
     }
   }
 
