@@ -1062,103 +1062,7 @@ class _MedicineCardState extends State<MedicineCard> {
 
                             const SizedBox(height: 20),
 
-                            // Sekcja 2: Status opakowania
-                            Text(
-                              'Status opakowania',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF6b7280),
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              children: [
-                                ChoiceChip(
-                                  label: const Text('Zamknięte'),
-                                  selected: !isOpen,
-                                  onSelected: (_) => setBottomSheetState(() {
-                                    isOpen = false;
-                                    percentController.clear();
-                                  }),
-                                ),
-                                ChoiceChip(
-                                  label: const Text('Otwarte'),
-                                  selected: isOpen,
-                                  onSelected: (_) =>
-                                      setBottomSheetState(() => isOpen = true),
-                                ),
-                              ],
-                            ),
-
-                            // Sekcja 3: Data otwarcia (tylko gdy otwarte)
-                            if (isOpen) ...[
-                              const SizedBox(height: 20),
-                              Text(
-                                'Data otwarcia (opcjonalne)',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF6b7280),
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      readOnly: true,
-                                      decoration: InputDecoration(
-                                        labelText: 'Data otwarcia',
-                                        hintText: 'Wybierz datę',
-                                        border: const OutlineInputBorder(),
-                                        suffixIcon: IconButton(
-                                          icon:
-                                              const Icon(LucideIcons.calendar),
-                                          onPressed: () async {
-                                            final picked = await showDatePicker(
-                                              context: context,
-                                              initialDate: openedDate ??
-                                                  DateTime.now(),
-                                              firstDate: DateTime(2000),
-                                              lastDate: DateTime.now(),
-                                            );
-                                            if (picked != null) {
-                                              setBottomSheetState(
-                                                () => openedDate = picked,
-                                              );
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                      controller: TextEditingController(
-                                        text: openedDate != null
-                                            ? '${openedDate!.day.toString().padLeft(2, '0')}.${openedDate!.month.toString().padLeft(2, '0')}.${openedDate!.year}'
-                                            : '',
-                                      ),
-                                    ),
-                                  ),
-                                  if (openedDate != null) ...[
-                                    const SizedBox(width: 8),
-                                    IconButton(
-                                      icon: const Icon(LucideIcons.x),
-                                      onPressed: () => setBottomSheetState(
-                                        () => openedDate = null,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ],
-
-                            const SizedBox(height: 20),
-
-                            // Sekcja 4: Ilość
+                            // Sekcja 2: Ilość
                             Text(
                               'Ilość',
                               style: Theme.of(context)
@@ -1237,6 +1141,102 @@ class _MedicineCardState extends State<MedicineCard> {
                                   suffixText: '%',
                                   border: OutlineInputBorder(),
                                 ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 20),
+
+                            // Sekcja 3: Status opakowania
+                            Text(
+                              'Status opakowania',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF6b7280),
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('Zamknięte'),
+                                  selected: !isOpen,
+                                  onSelected: (_) => setBottomSheetState(() {
+                                    isOpen = false;
+                                    percentController.clear();
+                                  }),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Otwarte'),
+                                  selected: isOpen,
+                                  onSelected: (_) =>
+                                      setBottomSheetState(() => isOpen = true),
+                                ),
+                              ],
+                            ),
+
+                            // Sekcja 4: Data otwarcia (tylko gdy otwarte)
+                            if (isOpen) ...[
+                              const SizedBox(height: 20),
+                              Text(
+                                'Data otwarcia (opcjonalne)',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF6b7280),
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      readOnly: true,
+                                      decoration: InputDecoration(
+                                        labelText: 'Data otwarcia',
+                                        hintText: 'Wybierz datę',
+                                        border: const OutlineInputBorder(),
+                                        suffixIcon: IconButton(
+                                          icon:
+                                              const Icon(LucideIcons.calendar),
+                                          onPressed: () async {
+                                            final picked = await showDatePicker(
+                                              context: context,
+                                              initialDate: openedDate ??
+                                                  DateTime.now(),
+                                              firstDate: DateTime(2000),
+                                              lastDate: DateTime.now(),
+                                            );
+                                            if (picked != null) {
+                                              setBottomSheetState(
+                                                () => openedDate = picked,
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      controller: TextEditingController(
+                                        text: openedDate != null
+                                            ? '${openedDate!.day.toString().padLeft(2, '0')}.${openedDate!.month.toString().padLeft(2, '0')}.${openedDate!.year}'
+                                            : '',
+                                      ),
+                                    ),
+                                  ),
+                                  if (openedDate != null) ...[
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      icon: const Icon(LucideIcons.x),
+                                      onPressed: () => setBottomSheetState(
+                                        () => openedDate = null,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ],
 
