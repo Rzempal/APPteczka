@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 
-/// Kolory aplikacji - dopasowane do wersji webowej
-/// Light Mode: miętowo-zielony (jak stary motyw)
-/// Dark Mode: granatowy (jak web dark mode)
+/// Kolory aplikacji - Soft UI Neumorphism 2026
+/// Light Mode: Earthy Clinical (Bone White + Smoky Green)
+/// Dark Mode: Innovation Indigo (Deep Indigo + Neon Mint)
 class AppColors {
   // ============================================
-  // PRIMARY ACCENT - identyczny w obu motywach
+  // PRIMARY & ACCENT - Soft UI Neumorphism 2026
   // ============================================
-  static const Color primary = Color(0xFF10b981);
-  static const Color primaryLight = Color(0xFF34d399);
-  static const Color primaryDark = Color(0xFF059669);
+  // Light mode: Smoky Green
+  static const Color primary = Color(0xFF3E514B);
+  // Light mode: Muted Sage (accent)
+  static const Color accent = Color(0xFF5D8A82);
+  // Dark mode: Deep Teal (primary in dark)
+  static const Color primaryDark = Color(0xFF004D40);
+  // Dark mode: Neon Mint (accent in dark)
+  static const Color accentDark = Color(0xFF00FF9D);
 
   // ============================================
   // AI ACCENT - fioletowy dla funkcji AI
@@ -27,24 +32,23 @@ class AppColors {
   static const Color valid = Color(0xFF22c55e);
 
   // ============================================
-  // LIGHT MODE COLORS
+  // LIGHT MODE COLORS - Earthy Clinical
   // ============================================
-  static const Color lightBackground = Color(0xFFe0e8e4);
-  static const Color lightSurface = Color(0xFFedf3ef);
-  static const Color lightSurfaceDark = Color(0xFFd1ddd7);
+  static const Color lightBackground = Color(0xFFF9F6F2); // Bone White
+  static const Color lightSurface = Color(0xFFF9F6F2); // Same as background
+  static const Color lightFrame = Color(0xFF3E514B); // Smoky Green (frame color)
   static const Color lightText = Color(0xFF1f2937);
   static const Color lightTextMuted = Color(0xFF4b5563);
-  static const Color lightShadowLight = Color(0xFFffffff);
-  static const Color lightShadowDark = Color(0xFFa3b5ad);
+  static const Color lightShadowLight = Color(0xFFFFFFFF); // Spec: white
+  static const Color lightShadowDark = Color(0xFFE8E3D8); // Spec: darker bone
 
-  // Light mode card backgrounds
+  // Light mode card backgrounds (adjusted for Bone White base)
   static const Color lightCardExpired = Color(0xFFFEF2F2);
   static const Color lightCardExpiringSoon = Color(0xFFFFFBEB);
-  // Valid: neutralny szary (jak sekcja filtrów) - nie zielony
-  static const Color lightCardValid = Color(0xFFe8ece4);
-  static const Color lightCardDefault = Color(0xFFF9FAFB);
+  static const Color lightCardValid = Color(0xFFF9F6F2); // Same as background
+  static const Color lightCardDefault = Color(0xFFF9F6F2); // Same as background
 
-  // Light mode gradients
+  // Light mode gradients (subtle, blended with Bone White)
   static const LinearGradient lightGradientExpired = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -57,32 +61,31 @@ class AppColors {
     colors: [Color(0xFFFEF3C7), Color(0xFFFDE68A)],
   );
 
-  // Valid: neutralny gradient (szary) - tylko badge informuje o statusie
+  // Valid: neutral gradient matching background
   static const LinearGradient lightGradientValid = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFe0e6dc), Color(0xFFd4dcd0)],
+    colors: [Color(0xFFF9F6F2), Color(0xFFF5F2EE)],
   );
 
   // ============================================
-  // DARK MODE COLORS (granatowa paleta z web)
+  // DARK MODE COLORS - Innovation Indigo
   // ============================================
-  static const Color darkBackground = Color(0xFF0f172a);
-  static const Color darkSurface = Color(0xFF1e293b);
-  static const Color darkSurfaceLight = Color(0xFF334155);
-  static const Color darkText = Color(0xFFf1f5f9);
+  static const Color darkBackground = Color(0xFF1A1A2E); // Deep Indigo
+  static const Color darkSurface = Color(0xFF1A1A2E); // Same as background
+  static const Color darkFrame = Color(0xFF004D40); // Deep Teal (frame color)
+  static const Color darkText = Color(0xFFE6E6FA); // Lavender (headline text)
   static const Color darkTextMuted = Color(0xFF94a3b8);
-  static const Color darkShadowLight = Color(0xFF1e293b);
-  static const Color darkShadowDark = Color(0xFF070b15);
+  static const Color darkShadowLight = Color(0xFF242442); // Spec: lighter indigo
+  static const Color darkShadowDark = Color(0xFF0A0A16); // Spec: very dark indigo
 
-  // Dark mode card backgrounds (z przezroczystością jak w web)
+  // Dark mode card backgrounds (adjusted for Deep Indigo base)
   static const Color darkCardExpired = Color(0xFF7f1d1d);
   static const Color darkCardExpiringSoon = Color(0xFF78350f);
-  // Valid: neutralny szary (jak tło) - nie zielony
-  static const Color darkCardValid = Color(0xFF1e293b);
-  static const Color darkCardDefault = Color(0xFF1e293b);
+  static const Color darkCardValid = Color(0xFF1A1A2E); // Same as background
+  static const Color darkCardDefault = Color(0xFF1A1A2E); // Same as background
 
-  // Dark mode gradients
+  // Dark mode gradients (subtle, blended with Deep Indigo)
   static const LinearGradient darkGradientExpired = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -95,25 +98,44 @@ class AppColors {
     colors: [Color(0xFF78350f), Color(0xFF92400e)],
   );
 
-  // Valid: neutralny gradient (szary) - tylko badge informuje o statusie
+  // Valid: neutral gradient matching background
   static const LinearGradient darkGradientValid = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1e293b), Color(0xFF334155)],
+    colors: [Color(0xFF1A1A2E), Color(0xFF1F1F38)],
   );
 }
 
 /// Theme aplikacji - Light i Dark
 class AppTheme {
   // ============================================
-  // LIGHT THEME
+  // ORGANIC GEOMETRY - Asymmetric Border Radius
+  // ============================================
+  /// Asymmetric radius for organic shapes: TopLeft: 50, TopRight: 50, BottomRight: 20, BottomLeft: 80
+  static const BorderRadius organicRadius = BorderRadius.only(
+    topLeft: Radius.circular(50),
+    topRight: Radius.circular(50),
+    bottomRight: Radius.circular(20),
+    bottomLeft: Radius.circular(80),
+  );
+
+  /// Smaller organic radius for cards and components
+  static const BorderRadius organicRadiusSmall = BorderRadius.only(
+    topLeft: Radius.circular(24),
+    topRight: Radius.circular(24),
+    bottomRight: Radius.circular(12),
+    bottomLeft: Radius.circular(36),
+  );
+
+  // ============================================
+  // LIGHT THEME - Earthy Clinical
   // ============================================
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
       colorScheme: ColorScheme.light(
-        primary: AppColors.primary,
-        secondary: AppColors.primaryLight,
+        primary: AppColors.primary, // Smoky Green
+        secondary: AppColors.accent, // Muted Sage
         surface: AppColors.lightSurface,
         onSurface: AppColors.lightText,
         onSurfaceVariant: AppColors.lightTextMuted,
@@ -129,7 +151,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: organicRadiusSmall),
         color: AppColors.lightSurface,
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -154,13 +176,13 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.lightSurfaceDark,
-        selectedColor: AppColors.primaryLight,
+        backgroundColor: AppColors.lightShadowDark, // Subtle background
+        selectedColor: AppColors.accent, // Muted Sage accent
         labelStyle: const TextStyle(fontSize: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        indicatorColor: AppColors.primaryLight.withValues(alpha: 0.3),
+        indicatorColor: AppColors.accent.withValues(alpha: 0.3),
         backgroundColor: AppColors.lightSurface,
         surfaceTintColor: Colors.transparent,
       ),
@@ -188,16 +210,16 @@ class AppTheme {
   }
 
   // ============================================
-  // DARK THEME
+  // DARK THEME - Innovation Indigo
   // ============================================
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
       colorScheme: ColorScheme.dark(
-        primary: AppColors.primary,
-        secondary: AppColors.primaryLight,
+        primary: AppColors.primaryDark, // Deep Teal
+        secondary: AppColors.accentDark, // Neon Mint
         surface: AppColors.darkSurface,
-        onSurface: AppColors.darkText,
+        onSurface: AppColors.darkText, // Lavender
         onSurfaceVariant: AppColors.darkTextMuted,
       ),
       scaffoldBackgroundColor: AppColors.darkBackground,
@@ -211,7 +233,7 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: organicRadiusSmall),
         color: AppColors.darkSurface,
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -236,13 +258,13 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       chipTheme: ChipThemeData(
-        backgroundColor: AppColors.darkSurfaceLight,
-        selectedColor: AppColors.primaryLight,
+        backgroundColor: AppColors.darkShadowLight, // Subtle background
+        selectedColor: AppColors.accentDark, // Neon Mint accent
         labelStyle: const TextStyle(fontSize: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        indicatorColor: AppColors.primaryLight.withValues(alpha: 0.2),
+        indicatorColor: AppColors.accentDark.withValues(alpha: 0.2),
         backgroundColor: AppColors.darkSurface,
         surfaceTintColor: Colors.transparent,
       ),

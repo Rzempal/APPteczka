@@ -26,6 +26,9 @@ class StorageService {
   /// Notyfikator zmian trybu edycji zawsze aktywnego
   final ValueNotifier<bool> editModeAlwaysActiveNotifier = ValueNotifier(false);
 
+  /// Notyfikator zmian trybu wydajności
+  final ValueNotifier<bool> performanceModeNotifier = ValueNotifier(false);
+
   /// Inicjalizacja Hive
   Future<void> init() async {
     await Hive.initFlutter();
@@ -37,6 +40,7 @@ class StorageService {
     showBugReportFabNotifier.value = showBugReportFab;
     swipeGesturesEnabledNotifier.value = swipeGesturesEnabled;
     editModeAlwaysActiveNotifier.value = editModeAlwaysActive;
+    performanceModeNotifier.value = performanceMode;
   }
 
   // ==================== SETTINGS ====================
@@ -74,6 +78,15 @@ class StorageService {
 
   set helpTooltipShown(bool value) {
     _settingsBox.put('helpTooltipShown', value);
+  }
+
+  /// Tryb wydajności - uproszczone efekty neumorficzne (domyślnie false)
+  bool get performanceMode =>
+      _settingsBox.get('performanceMode', defaultValue: false) as bool;
+
+  set performanceMode(bool value) {
+    _settingsBox.put('performanceMode', value);
+    performanceModeNotifier.value = value;
   }
 
   // ==================== MEDICINES ====================
