@@ -8,6 +8,13 @@ param(
 
 Write-Host "=== Merge PR Script ===" -ForegroundColor Cyan
 
+# 0. Cleanup - usun wiszace pliki swap
+$swapFile = ".git/.MERGE_MSG.swp"
+if (Test-Path $swapFile) {
+    Write-Host "Usuwanie starego pliku swap..." -ForegroundColor Yellow
+    Remove-Item $swapFile -Force
+}
+
 # 1. Sprawdz czy gh jest zainstalowane
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
     Write-Host "BLAD: GitHub CLI (gh) nie jest zainstalowane!" -ForegroundColor Red
