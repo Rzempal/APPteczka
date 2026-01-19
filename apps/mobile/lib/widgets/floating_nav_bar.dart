@@ -58,11 +58,11 @@ class FloatingNavBar extends StatelessWidget {
 
         int newIndex;
         if (velocity < 0) {
-          // Swipe left → następna zakładka
-          newIndex = (currentIndex + 1) % items.length;
-        } else {
-          // Swipe right → poprzednia zakładka
+          // Swipe left → zakładka w lewo (poprzednia)
           newIndex = (currentIndex - 1 + items.length) % items.length;
+        } else {
+          // Swipe right → zakładka w prawo (następna)
+          newIndex = (currentIndex + 1) % items.length;
         }
 
         HapticFeedback.lightImpact();
