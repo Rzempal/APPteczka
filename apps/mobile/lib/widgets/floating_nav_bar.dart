@@ -142,7 +142,7 @@ class _NavBarItem extends StatelessWidget {
               // Efekt "wypływania" - ujemny margin gdy aktywny
               transform: Matrix4.translationValues(0, isSelected ? -12 : 0, 0),
               decoration: BoxDecoration(
-                color: backgroundColor,
+                color: isSelected ? null : backgroundColor,
                 shape: BoxShape.circle,
                 // Gradient convex dla aktywnego elementu
                 gradient: isSelected
