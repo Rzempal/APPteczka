@@ -49,51 +49,71 @@ class FloatingNavBar extends StatelessWidget {
         ? AppColors.darkTextMuted
         : AppColors.lightTextMuted;
 
-    return Container(
-      // Marginesy - efekt "floating"
-      margin: const EdgeInsets.all(16),
-      height: 72,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(24),
-        // Cienie neumorficzne - flat style
-        boxShadow: [
-          // Cień jasny (top-left)
-          BoxShadow(
-            color: shadowLight,
-            blurRadius: 12,
-            offset: const Offset(-4, -4),
-          ),
-          // Cień ciemny (bottom-right)
-          BoxShadow(
-            color: shadowDark.withValues(alpha: 0.4),
-            blurRadius: 12,
-            offset: const Offset(4, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: items.asMap().entries.map((entry) {
-          final index = entry.key;
-          final item = entry.value;
-          final isSelected = currentIndex == index;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragEnd: (details) {
+        // Swipe gesture - przełączanie zakładek
+        final velocity = details.primaryVelocity ?? 0;
+        if (velocity.abs() < 100) return; // Ignoruj małe ruchy
 
-          return _NavBarItem(
-            item: item,
-            isSelected: isSelected,
-            isDark: isDark,
-            activeColor: activeColor,
-            inactiveColor: inactiveColor,
-            backgroundColor: backgroundColor,
-            shadowLight: shadowLight,
-            shadowDark: shadowDark,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onTap(index);
-            },
-          );
-        }).toList(),
+        int newIndex;
+        if (velocity < 0) {
+          // Swipe left → następna zakładka
+          newIndex = (currentIndex + 1) % items.length;
+        } else {
+          // Swipe right → poprzednia zakładka
+          newIndex = (currentIndex - 1 + items.length) % items.length;
+        }
+
+        HapticFeedback.lightImpact();
+        onTap(newIndex);
+      },
+      child: Container(
+        // Marginesy - efekt "floating"
+        margin: const EdgeInsets.all(16),
+        height: 72,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(24),
+          // Cienie neumorficzne - flat style
+          boxShadow: [
+            // Cień jasny (top-left)
+            BoxShadow(
+              color: shadowLight,
+              blurRadius: 12,
+              offset: const Offset(-4, -4),
+            ),
+            // Cień ciemny (bottom-right)
+            BoxShadow(
+              color: shadowDark.withValues(alpha: 0.4),
+              blurRadius: 12,
+              offset: const Offset(4, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: items.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final isSelected = currentIndex == index;
+
+            return _NavBarItem(
+              item: item,
+              isSelected: isSelected,
+              isDark: isDark,
+              activeColor: activeColor,
+              inactiveColor: inactiveColor,
+              backgroundColor: backgroundColor,
+              shadowLight: shadowLight,
+              shadowDark: shadowDark,
+              onTap: () {
+                HapticFeedback.lightImpact();
+                onTap(index);
+              },
+            );
+          }).toList(),
+        ),
       ),
     );
   }
