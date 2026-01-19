@@ -94,6 +94,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
   bool _isImporting = false;
 
   // Expanded sections
+  bool _heroExpanded = false; // 0. Hero info (domyślnie zwinięty)
   bool _barcodeExpanded =
       true; // 1. Skaner kodów kreskowych (domyślnie rozwinięty)
   bool _manualExpanded = false; // 2. Dodaj ręcznie
@@ -112,6 +113,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(12),
+          child: KartonOpenIcon(size: 24, isDark: isDark),
+        ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -120,6 +125,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             const Text('Dodaj leki'),
           ],
         ),
+        centerTitle: true,
       ),
       body: Stack(
         children: [
@@ -128,42 +134,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header info
-                Container(
-                  decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        NeuInsetContainer(
-                          borderRadius: 12,
-                          padding: const EdgeInsets.all(12),
-                          child: KartonOpenIcon(size: 32, isDark: isDark),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Wybierz metodę dodawania',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Możesz skanować zdjęcia, wczytać kopię zapasową lub dodać ręcznie',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // Header info - akordeon z podpowiedziami
+                _buildHeroAccordion(theme, isDark),
 
                 const SizedBox(height: 16),
 
@@ -181,7 +153,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 _buildExpandableSection(
                   icon: LucideIcons.folderDown,
                   title: 'Import kopii zapasowej',
-                  subtitle: 'Wczytaj kopię zapasową z urządzenia',
+                  subtitle: 'Wybierz plik kopii zapasowej, aby przywrócić zawartość apteczki.',
                   isExpanded: _fileExpanded,
                   onToggle: () =>
                       setState(() => _fileExpanded = !_fileExpanded),
@@ -288,6 +260,179 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
   }
 
+  // ================== SEKCJA HERO AKORDEON ==================
+
+  /// Buduje akordeon Hero z podpowiedziami o metodach dodawania
+  Widget _buildHeroAccordion(ThemeData theme, bool isDark) {
+    final lightbulbColor = _heroExpanded ? Colors.amber.shade600 : Colors.grey;
+
+    return Container(
+      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Header - klikalne
+          InkWell(
+            onTap: () => setState(() => _heroExpanded = !_heroExpanded),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  NeuInsetContainer(
+                    borderRadius: 12,
+                    padding: const EdgeInsets.all(12),
+                    child: Icon(
+                      LucideIcons.lightbulb,
+                      size: 24,
+                      color: lightbulbColor,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Wybierz metodę dodawania',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Wybierz sposób dodania leków do apteczki.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    _heroExpanded
+                        ? LucideIcons.chevronUp
+                        : LucideIcons.chevronDown,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Zawartość rozwijana - podpowiedzi
+          if (_heroExpanded)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Tryb skanowania
+                  Text(
+                    'Tryb skanowania:',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildHeroTip(
+                    theme,
+                    'Skanuj kod z opakowania – najszybszy sposób dodania leku. Aplikacja spróbuje rozpoznać lek automatycznie.',
+                  ),
+                  const SizedBox(height: 4),
+                  _buildHeroTip(
+                    theme,
+                    'Zrób zdjęcie opakowania – AI rozpozna nazwę leku ze zdjęcia.',
+                  ),
+
+                  const SizedBox(height: 12),
+                  Divider(color: theme.colorScheme.outlineVariant),
+                  const SizedBox(height: 12),
+
+                  // Tryb ręczny
+                  Text(
+                    'Tryb ręczny:',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildHeroTip(
+                    theme,
+                    'Wyszukaj lek ręcznie w Rejestrze Produktów Leczniczych i dodaj go do apteczki.',
+                  ),
+
+                  const SizedBox(height: 12),
+                  Divider(color: theme.colorScheme.outlineVariant),
+                  const SizedBox(height: 12),
+
+                  // Backup tip
+                  Text(
+                    'Wykonuj regularnie kopię zapasową apteczki',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Text(
+                        'Ustawienia',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        LucideIcons.arrowRight,
+                        size: 14,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Kopia zapasowa',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  _buildHeroTip(
+                    theme,
+                    'Dane są przechowywane lokalnie na Twoim telefonie. Odinstalowanie aplikacji lub wyczyszczenie jej danych spowoduje utratę zawartości apteczki.',
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Buduje pojedynczą podpowiedź w akordeon Hero
+  Widget _buildHeroTip(ThemeData theme, String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '• ',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   // ================== SEKCJA SKANER KODÓW KRESKOWYCH ==================
 
   /// Buduje sekcję skanera kodów kreskowych z ikoną kaskadową (barcode + AI)
@@ -306,7 +451,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  // Ikona kaskadowa: barcode + AI sparkles
+                  // Ikona kaskadowa: scanSearch + AI sparkles
                   SizedBox(
                     width: 32,
                     height: 32,
@@ -314,7 +459,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       clipBehavior: Clip.none,
                       children: [
                         Icon(
-                          LucideIcons.scanQrCode,
+                          LucideIcons.scanSearch,
                           color: theme.colorScheme.primary,
                           size: 24,
                         ),
@@ -351,7 +496,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                           ),
                         ),
                         Text(
-                          'Dodaj lek skanując kod i datę ważności',
+                          'Zeskanuj kod z opakowania, aby rozpoznać lek.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -408,7 +553,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       clipBehavior: Clip.none,
                       children: [
                         Icon(
-                          LucideIcons.pencil,
+                          LucideIcons.textSearch,
                           color: theme.colorScheme.primary,
                           size: 24,
                         ),
@@ -439,13 +584,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Dodaj ręcznie',
+                          'Wyszukaj lek',
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
-                          'Wpisz nazwę leku - AI uzupełni resztę',
+                          'Wpisz nazwę leku, aby wyszukać go w Rejestrze Produktów Leczniczych.',
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -480,7 +625,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Wybierz plik z kopią zapasową.',
+          'Wybierz plik kopii zapasowej z urządzenia.',
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 16),
