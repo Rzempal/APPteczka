@@ -998,6 +998,20 @@ class _MedicineCardState extends State<MedicineCard> {
       children: [
         Row(
           children: [
+            // Szczegóły opakowania (połączenie edycji daty i ilości)
+            GestureDetector(
+              onTap: () => _showPackageDetailsBottomSheet(context, package),
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                child: Icon(
+                  LucideIcons.pillBottle,
+                  size: 20,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ),
+            const SizedBox(width: 6),
             // Badge z datą
             GestureDetector(
               onTap: () => _showPackageDetailsBottomSheet(context, package),
@@ -1028,20 +1042,6 @@ class _MedicineCardState extends State<MedicineCard> {
                       ),
                     ),
                   ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            // Szczegóły opakowania (połączenie edycji daty i ilości)
-            GestureDetector(
-              onTap: () => _showPackageDetailsBottomSheet(context, package),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(
-                  LucideIcons.pillBottle,
-                  size: 20,
-                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
