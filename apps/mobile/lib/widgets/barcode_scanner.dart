@@ -296,6 +296,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     String subtitle;
     IconData icon;
     Color? iconColor;
+    bool useCascadeIcon = false;
 
     if (_mode == ScannerMode.ean) {
       if (_isProcessing) {
@@ -304,12 +305,13 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
         title = 'Szukam w bazie RPL...';
         subtitle = 'Sprawdzam kod EAN';
       } else {
-        icon = LucideIcons.barcode;
+        icon = LucideIcons.scanLine;
         iconColor = theme.colorScheme.primary;
+        useCascadeIcon = true;
         title = _isScannerActive
             ? 'Zeskanuj kod kreskowy'
             : 'Uruchom skaner by rozpocząć';
-        subtitle = 'Skieruj aparat na kod kreskowy na opakowaniu';
+        subtitle = 'Skieruj aparat na kod na opakowaniu.';
       }
     } else if (_mode == ScannerMode.productPhoto) {
       // Tryb zdjecia nazwy produktu (gdy brak w RPL)
@@ -330,7 +332,37 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       padding: const EdgeInsets.all(16),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 28),
+          // Ikona - kaskadowa dla trybu skanowania EAN
+          useCascadeIcon
+              ? SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Icon(icon, color: iconColor, size: 28),
+                      Positioned(
+                        right: -2,
+                        bottom: -2,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkBackground
+                                : AppColors.lightBackground,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            LucideIcons.mousePointerClick,
+                            color: theme.colorScheme.primary,
+                            size: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : Icon(icon, color: iconColor, size: 28),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1637,9 +1669,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
             color: Colors.red,
             size: 48,
           ),
-          title: const Text('Nie rozpoznano kodu'),
+          title: const Text('Nie udało się rozpoznać leku'),
           content: Text(
-            'Nie znaleziono leku w bazie RPL.\n\nCo chcesz zrobić?',
+            'Nie znaleziono leku w bazie RPL.',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium,
           ),
@@ -1656,8 +1688,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                   _isAiMode = false;
                 });
               },
-              icon: const Icon(LucideIcons.scanBarcode),
-              label: const Text('Zeskanuj kod jeszcze raz'),
+              icon: const Icon(LucideIcons.refreshCw),
+              label: const Text('Spróbuj ponownie'),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 48),
               ),
@@ -1674,7 +1706,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               },
               icon: Icon(LucideIcons.sparkles, color: aiColor),
               label: Text(
-                'Pozwól AI rozpoznać lek',
+                'Zrób zdjęcie nazwy leku (AI)',
                 style: TextStyle(color: aiColor),
               ),
               style: FilledButton.styleFrom(
