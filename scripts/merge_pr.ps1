@@ -122,7 +122,7 @@ if ($LASTEXITCODE -ne 0) {
 # 11. Wroc do main i pobierz zmiany
 Write-Host "Synchronizacja z main..." -ForegroundColor Cyan
 git checkout main
-git merge origin/main --no-edit -m "Sync: [Auto] Aktualizacja po PR #$nextNum"
+git pull origin main --no-edit
 
 Write-Host ""
 Write-Host "=== SUKCES ===" -ForegroundColor Green
