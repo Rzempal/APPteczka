@@ -63,7 +63,7 @@ class _InnerContentContainer extends StatelessWidget {
         : AppColors.lightShadowDark.withAlpha(60);
 
     final innerShadowLight = isDark
-        ? AppColors.darkSurfaceLight.withAlpha(30)
+        ? AppColors.darkShadowLight.withAlpha(30)
         : Colors.white.withAlpha(200);
 
     return Container(
@@ -125,7 +125,7 @@ class AppBottomSheet {
 
         // Kolor zewnętrznej ramki (frame)
         final frameColor = isDark
-            ? AppColors.darkSurfaceLight
+            ? AppColors.darkSurface
             : AppColors.lightSurface;
 
         return Container(
