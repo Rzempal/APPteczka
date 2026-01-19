@@ -1,24 +1,36 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 
-/// Neumorphic Decoration System
-/// Inspired by Android neumorphism library (fornewid/neumorphism)
+/// Neumorphic Decoration System - Soft UI 2026
+/// Based on "Premium Soft UI / Neumorphism" specification
 ///
 /// ShapeTypes:
-/// - flat: raised element with outer shadows (default buttons, cards)
-/// - pressed: sunken element (active/clicked state)
+/// - flat (extruded): raised element with outer shadows (default buttons, cards)
+/// - pressed (inset): sunken element (active/clicked state)
 /// - basin: deeply concave (input fields)
+///
+/// Performance Mode:
+/// - Full: offset ±10, blur 20 (default)
+/// - Performance: offset ±4, blur 8 (reduced GPU load)
 class NeuDecoration {
   // ============================================
-  // SHADOW CONSTANTS
-  // Aligned with neumorph_shadowElevation from Android lib
+  // SHADOW CONSTANTS - Soft UI 2026 Spec
+  // Full mode: extruded effect with deep shadows
+  // Performance mode: reduced shadows for older devices
   // ============================================
-  static const double shadowDistance = 6.0;
-  static const double shadowBlur = 12.0;
-  static const double shadowDistanceSm = 4.0;
-  static const double shadowBlurSm = 8.0;
-  static const double shadowDistanceXs = 2.0;
-  static const double shadowBlurXs = 4.0;
+  // Full mode (default)
+  static const double shadowDistance = 10.0; // Spec: Offset(±10, ±10)
+  static const double shadowBlur = 20.0; // Spec: blurRadius 16-24
+  static const double shadowDistanceSm = 6.0;
+  static const double shadowBlurSm = 12.0;
+  static const double shadowDistanceXs = 3.0;
+  static const double shadowBlurXs = 6.0;
+
+  // Performance mode (reduced GPU load)
+  static const double shadowDistancePerf = 4.0;
+  static const double shadowBlurPerf = 8.0;
+  static const double shadowDistanceSmPerf = 3.0;
+  static const double shadowBlurSmPerf = 6.0;
 
   // ============================================
   // ANIMATION CONSTANTS
@@ -29,12 +41,14 @@ class NeuDecoration {
   static const double iconTapScale = 0.90;
 
   // ============================================
-  // FLAT - Raised element with outer shadows
+  // FLAT - Raised element with outer shadows (Extruded effect)
   // ============================================
   static BoxDecoration flat({
     required bool isDark,
+    BorderRadius? borderRadius,
     double radius = 16,
     Color? backgroundColor,
+    bool performanceMode = false, // Performance toggle
   }) {
     final bgColor =
         backgroundColor ??
@@ -46,21 +60,25 @@ class NeuDecoration {
         ? AppColors.darkShadowDark
         : AppColors.lightShadowDark;
 
+    // Performance mode: reduced shadows
+    final dist = performanceMode ? shadowDistancePerf : shadowDistance;
+    final blur = performanceMode ? shadowBlurPerf : shadowBlur;
+
     return BoxDecoration(
       color: bgColor,
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
       boxShadow: [
         // Dark shadow (bottom-right)
         BoxShadow(
           color: shadowDark.withValues(alpha: isDark ? 0.6 : 0.6),
-          offset: const Offset(shadowDistance, shadowDistance),
-          blurRadius: shadowBlur,
+          offset: Offset(dist, dist),
+          blurRadius: blur,
         ),
         // Light shadow (top-left)
         BoxShadow(
           color: shadowLight.withValues(alpha: isDark ? 0.1 : 1.0),
-          offset: const Offset(-shadowDistance, -shadowDistance),
-          blurRadius: shadowBlur,
+          offset: Offset(-dist, -dist),
+          blurRadius: blur,
         ),
       ],
     );
@@ -71,8 +89,10 @@ class NeuDecoration {
   // ============================================
   static BoxDecoration flatSmall({
     required bool isDark,
+    BorderRadius? borderRadius,
     double radius = 12,
     Color? backgroundColor,
+    bool performanceMode = false,
   }) {
     final bgColor =
         backgroundColor ??
@@ -84,30 +104,35 @@ class NeuDecoration {
         ? AppColors.darkShadowDark
         : AppColors.lightShadowDark;
 
+    // Performance mode: reduced shadows
+    final dist = performanceMode ? shadowDistanceSmPerf : shadowDistanceSm;
+    final blur = performanceMode ? shadowBlurSmPerf : shadowBlurSm;
+
     return BoxDecoration(
       color: bgColor,
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
           color: shadowDark.withValues(alpha: isDark ? 0.6 : 0.6),
-          offset: const Offset(shadowDistanceSm, shadowDistanceSm),
-          blurRadius: shadowBlurSm,
+          offset: Offset(dist, dist),
+          blurRadius: blur,
         ),
         BoxShadow(
           color: shadowLight.withValues(alpha: isDark ? 0.1 : 1.0),
-          offset: const Offset(-shadowDistanceSm, -shadowDistanceSm),
-          blurRadius: shadowBlurSm,
+          offset: Offset(-dist, -dist),
+          blurRadius: blur,
         ),
       ],
     );
   }
 
   // ============================================
-  // PRESSED - Sunken element (active state)
+  // PRESSED - Sunken element (active state / Inset effect)
   // Simple flat background - use NeuInsetContainer for true inner shadows
   // ============================================
   static BoxDecoration pressed({
     required bool isDark,
+    BorderRadius? borderRadius,
     double radius = 16,
     Color? backgroundColor,
   }) {
@@ -117,7 +142,7 @@ class NeuDecoration {
 
     return BoxDecoration(
       color: bgColor,
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
     );
   }
 
@@ -127,13 +152,17 @@ class NeuDecoration {
   // ============================================
   static BoxDecoration pressedSmall({
     required bool isDark,
+    BorderRadius? borderRadius,
     double radius = 12,
+    Color? backgroundColor,
   }) {
-    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
+    final bgColor =
+        backgroundColor ??
+        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
 
     return BoxDecoration(
       color: bgColor,
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
     );
   }
 
@@ -142,25 +171,38 @@ class NeuDecoration {
   // Simple flat background - use NeuInsetContainer for true inner shadows
   // Used for: input fields, nested containers inside flat parents
   // ============================================
-  static BoxDecoration basin({required bool isDark, double radius = 12}) {
-    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
+  static BoxDecoration basin({
+    required bool isDark,
+    BorderRadius? borderRadius,
+    double radius = 12,
+    Color? backgroundColor,
+  }) {
+    final bgColor =
+        backgroundColor ??
+        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
 
     return BoxDecoration(
       color: bgColor,
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
     );
   }
 
   // ============================================
   // CONVEX - Raised with gradient highlight
   // ============================================
-  static BoxDecoration convex({required bool isDark, double radius = 16}) {
+  static BoxDecoration convex({
+    required bool isDark,
+    BorderRadius? borderRadius,
+    double radius = 16,
+    bool performanceMode = false,
+  }) {
+    // Subtle gradient for convex effect
     final lightShade = isDark
-        ? AppColors.darkSurfaceLight
+        ? AppColors.darkShadowLight
         : AppColors.lightSurface;
     final darkShade = isDark
         ? AppColors.darkSurface
-        : AppColors.lightSurfaceDark;
+        : AppColors.lightShadowDark;
     final shadowLight = isDark
         ? AppColors.darkShadowLight
         : AppColors.lightShadowLight;
@@ -168,23 +210,27 @@ class NeuDecoration {
         ? AppColors.darkShadowDark
         : AppColors.lightShadowDark;
 
+    // Performance mode: reduced shadows
+    final dist = performanceMode ? shadowDistancePerf : shadowDistance;
+    final blur = performanceMode ? shadowBlurPerf : shadowBlur;
+
     return BoxDecoration(
       gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [lightShade, darkShade],
       ),
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
           color: shadowDark.withOpacity(isDark ? 0.5 : 0.25),
-          offset: const Offset(shadowDistance, shadowDistance),
-          blurRadius: shadowBlur,
+          offset: Offset(dist, dist),
+          blurRadius: blur,
         ),
         BoxShadow(
           color: shadowLight.withOpacity(isDark ? 0.05 : 0.8),
-          offset: const Offset(-shadowDistance, -shadowDistance),
-          blurRadius: shadowBlur,
+          offset: Offset(-dist, -dist),
+          blurRadius: blur,
         ),
       ],
     );
@@ -196,24 +242,32 @@ class NeuDecoration {
   static BoxDecoration statusCard({
     required bool isDark,
     required LinearGradient gradient,
+    BorderRadius? borderRadius,
     double radius = 16,
     Color? paramsBorderColor, // kept for compatibility
+    bool performanceMode = false,
   }) {
+    // Performance mode: reduced shadows
+    final dist = performanceMode ? shadowDistancePerf : shadowDistance;
+    final distSm = performanceMode ? shadowDistanceSmPerf : shadowDistanceSm;
+    final blur = performanceMode ? shadowBlurPerf : shadowBlur;
+    final blurSm = performanceMode ? shadowBlurSmPerf : shadowBlurSm;
+
     // Light mode: clean neumorphism
     if (!isDark) {
       return BoxDecoration(
         gradient: gradient,
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: borderRadius ?? BorderRadius.circular(radius),
         boxShadow: [
           BoxShadow(
             color: AppColors.lightShadowDark.withValues(alpha: 0.25),
-            offset: const Offset(shadowDistance, shadowDistance),
-            blurRadius: shadowBlur,
+            offset: Offset(dist, dist),
+            blurRadius: blur,
           ),
           BoxShadow(
             color: AppColors.lightShadowLight.withValues(alpha: 0.8),
-            offset: const Offset(-shadowDistanceSm, -shadowDistanceSm),
-            blurRadius: shadowBlurSm,
+            offset: Offset(-distSm, -distSm),
+            blurRadius: blurSm,
           ),
         ],
       );
@@ -249,51 +303,57 @@ class NeuDecoration {
 
     return BoxDecoration(
       gradient: gradient,
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
       border: Border.all(color: borderColor, width: 1),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.4),
+          color: Colors.black.withValues(alpha: performanceMode ? 0.2 : 0.4),
           offset: const Offset(0, 8),
-          blurRadius: 32,
+          blurRadius: performanceMode ? 16 : 32,
         ),
         if (glowColor != Colors.transparent)
           BoxShadow(
             color: glowColor,
             offset: const Offset(0, 0),
-            blurRadius: 12,
+            blurRadius: performanceMode ? 6 : 12,
           ),
       ],
     );
   }
 
   // ============================================
-  // PRIMARY BUTTON - Green accent
+  // PRIMARY BUTTON - Accent color (Soft UI 2026)
   // ============================================
   static BoxDecoration primaryButton({
     required bool isDark,
+    BorderRadius? borderRadius,
     double radius = 12,
     bool isPressed = false,
+    bool performanceMode = false,
   }) {
+    // Use accent colors based on theme
+    final primaryColor = isDark ? AppColors.primaryDark : AppColors.primary;
+    final accentColor = isDark ? AppColors.accentDark : AppColors.accent;
+
     if (isPressed) {
       return BoxDecoration(
-        color: AppColors.primaryDark,
-        borderRadius: BorderRadius.circular(radius),
+        color: primaryColor,
+        borderRadius: borderRadius ?? BorderRadius.circular(radius),
       );
     }
 
     return BoxDecoration(
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [AppColors.primaryLight, AppColors.primary],
+        colors: [accentColor, primaryColor],
       ),
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: AppColors.primary.withOpacity(0.4),
+          color: accentColor.withOpacity(performanceMode ? 0.2 : 0.4),
           offset: const Offset(0, 4),
-          blurRadius: 12,
+          blurRadius: performanceMode ? 6 : 12,
           spreadRadius: -2,
         ),
       ],
@@ -305,13 +365,15 @@ class NeuDecoration {
   // ============================================
   static BoxDecoration destructiveButton({
     required bool isDark,
+    BorderRadius? borderRadius,
     double radius = 12,
     bool isPressed = false,
+    bool performanceMode = false,
   }) {
     if (isPressed) {
       return BoxDecoration(
         color: const Color(0xFFb91c1c), // red-700
-        borderRadius: BorderRadius.circular(radius),
+        borderRadius: borderRadius ?? BorderRadius.circular(radius),
       );
     }
 
@@ -321,12 +383,12 @@ class NeuDecoration {
         end: Alignment.bottomRight,
         colors: [Color(0xFFf87171), AppColors.expired], // red-400 to red-500
       ),
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: AppColors.expired.withOpacity(0.4),
+          color: AppColors.expired.withOpacity(performanceMode ? 0.2 : 0.4),
           offset: const Offset(0, 4),
-          blurRadius: 12,
+          blurRadius: performanceMode ? 6 : 12,
           spreadRadius: -2,
         ),
       ],
@@ -337,10 +399,12 @@ class NeuDecoration {
   // SEARCH BAR - Floating pill with levitation effect
   // Stronger shadows for prominent "floating" appearance
   // ============================================
-  static const double _searchShadowDistance = 8.0;
-  static const double _searchShadowBlur = 20.0;
-
-  static BoxDecoration searchBar({required bool isDark, double radius = 32}) {
+  static BoxDecoration searchBar({
+    required bool isDark,
+    BorderRadius? borderRadius,
+    double radius = 32,
+    bool performanceMode = false,
+  }) {
     final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
     final shadowLight = isDark
         ? AppColors.darkShadowLight
@@ -349,45 +413,53 @@ class NeuDecoration {
         ? AppColors.darkShadowDark
         : AppColors.lightShadowDark;
 
+    // Use standard shadow values (already strong enough)
+    final dist = performanceMode ? shadowDistancePerf : shadowDistance;
+    final blur = performanceMode ? shadowBlurPerf : shadowBlur;
+
     return BoxDecoration(
       color: bgColor,
-      borderRadius: BorderRadius.circular(radius),
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
       boxShadow: [
         // Dark shadow (bottom-right) - stronger for floating effect
         BoxShadow(
           color: shadowDark.withValues(alpha: isDark ? 0.7 : 0.5),
-          offset: const Offset(_searchShadowDistance, _searchShadowDistance),
-          blurRadius: _searchShadowBlur,
+          offset: Offset(dist, dist),
+          blurRadius: blur,
         ),
         // Light shadow (top-left) - highlight for 3D effect
         BoxShadow(
           color: shadowLight.withValues(alpha: isDark ? 0.15 : 1.0),
-          offset: const Offset(-_searchShadowDistance, -_searchShadowDistance),
-          blurRadius: _searchShadowBlur,
+          offset: Offset(-dist, -dist),
+          blurRadius: blur,
         ),
       ],
     );
   }
 
   // ============================================
-  // SEARCH BAR FOCUSED - Active state with green outline
-  // Reduced shadows + green border = element "sinks" visually with accent
+  // SEARCH BAR FOCUSED - Active state with accent outline
+  // Reduced shadows + accent border = element "sinks" visually with accent
   // ============================================
   static BoxDecoration searchBarFocused({
     required bool isDark,
+    BorderRadius? borderRadius,
     double radius = 32,
+    bool performanceMode = false,
   }) {
     final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
     final shadowDark = isDark
         ? AppColors.darkShadowDark
         : AppColors.lightShadowDark;
+    // Use accent color for focused state
+    final accentColor = isDark ? AppColors.accentDark : AppColors.accent;
 
     return BoxDecoration(
       color: bgColor,
-      borderRadius: BorderRadius.circular(radius),
-      // Full green outline for active state
+      borderRadius: borderRadius ?? BorderRadius.circular(radius),
+      // Accent outline for active state
       border: Border.all(
-        color: AppColors.primary.withValues(alpha: isDark ? 0.8 : 0.6),
+        color: accentColor.withValues(alpha: isDark ? 0.8 : 0.6),
         width: 1.5,
       ),
       // Reduced shadows = element "sinks"
@@ -395,7 +467,7 @@ class NeuDecoration {
         BoxShadow(
           color: shadowDark.withValues(alpha: isDark ? 0.3 : 0.2),
           offset: const Offset(2, 2),
-          blurRadius: 6,
+          blurRadius: performanceMode ? 3 : 6,
         ),
       ],
     );

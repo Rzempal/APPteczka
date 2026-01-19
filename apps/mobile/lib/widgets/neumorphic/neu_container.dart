@@ -9,12 +9,14 @@ import 'neu_decoration.dart';
 /// - Animated transition between flat and pressed states
 /// - Optional onTap callback with haptic feedback
 /// - Scale animation on press
+/// - Support for organic border radius (Soft UI 2026)
 class NeuContainer extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
   final bool forcePressed;
-  final double borderRadius;
+  final BorderRadius? borderRadius; // Organic radius support
+  final double radius; // Fallback to circular
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
   final Color? backgroundColor;
@@ -22,6 +24,7 @@ class NeuContainer extends StatefulWidget {
   final double? height;
   final bool enableHaptic;
   final bool isSmall;
+  final bool performanceMode; // Performance toggle
 
   const NeuContainer({
     super.key,
@@ -29,7 +32,8 @@ class NeuContainer extends StatefulWidget {
     this.onTap,
     this.onLongPress,
     this.forcePressed = false,
-    this.borderRadius = 16,
+    this.borderRadius, // Optional organic radius
+    this.radius = 16, // Default circular radius
     this.padding = const EdgeInsets.all(16),
     this.margin = EdgeInsets.zero,
     this.backgroundColor,
@@ -37,6 +41,7 @@ class NeuContainer extends StatefulWidget {
     this.height,
     this.enableHaptic = true,
     this.isSmall = false,
+    this.performanceMode = false,
   });
 
   @override
@@ -98,22 +103,30 @@ class _NeuContainerState extends State<NeuContainer>
         ? (showPressed
               ? NeuDecoration.pressedSmall(
                   isDark: isDark,
-                  radius: widget.borderRadius,
+                  borderRadius: widget.borderRadius,
+                  radius: widget.radius,
+                  backgroundColor: widget.backgroundColor,
                 )
               : NeuDecoration.flatSmall(
                   isDark: isDark,
-                  radius: widget.borderRadius,
+                  borderRadius: widget.borderRadius,
+                  radius: widget.radius,
                   backgroundColor: widget.backgroundColor,
+                  performanceMode: widget.performanceMode,
                 ))
         : (showPressed
               ? NeuDecoration.pressed(
                   isDark: isDark,
-                  radius: widget.borderRadius,
+                  borderRadius: widget.borderRadius,
+                  radius: widget.radius,
+                  backgroundColor: widget.backgroundColor,
                 )
               : NeuDecoration.flat(
                   isDark: isDark,
-                  radius: widget.borderRadius,
+                  borderRadius: widget.borderRadius,
+                  radius: widget.radius,
                   backgroundColor: widget.backgroundColor,
+                  performanceMode: widget.performanceMode,
                 ));
 
     return GestureDetector(
@@ -145,7 +158,8 @@ class _NeuContainerState extends State<NeuContainer>
 /// For static elements that don't need interaction
 class NeuStaticContainer extends StatelessWidget {
   final Widget child;
-  final double borderRadius;
+  final BorderRadius? borderRadius; // Organic radius support
+  final double radius; // Fallback to circular
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry margin;
   final Color? backgroundColor;
@@ -153,11 +167,13 @@ class NeuStaticContainer extends StatelessWidget {
   final double? height;
   final bool isPressed;
   final bool isSmall;
+  final bool performanceMode;
 
   const NeuStaticContainer({
     super.key,
     required this.child,
-    this.borderRadius = 16,
+    this.borderRadius, // Optional organic radius
+    this.radius = 16, // Default circular radius
     this.padding = const EdgeInsets.all(16),
     this.margin = EdgeInsets.zero,
     this.backgroundColor,
@@ -165,6 +181,7 @@ class NeuStaticContainer extends StatelessWidget {
     this.height,
     this.isPressed = false,
     this.isSmall = false,
+    this.performanceMode = false,
   });
 
   @override
@@ -174,18 +191,32 @@ class NeuStaticContainer extends StatelessWidget {
 
     final decoration = isSmall
         ? (isPressed
-              ? NeuDecoration.pressedSmall(isDark: isDark, radius: borderRadius)
+              ? NeuDecoration.pressedSmall(
+                  isDark: isDark,
+                  borderRadius: borderRadius,
+                  radius: radius,
+                  backgroundColor: backgroundColor,
+                )
               : NeuDecoration.flatSmall(
                   isDark: isDark,
-                  radius: borderRadius,
+                  borderRadius: borderRadius,
+                  radius: radius,
                   backgroundColor: backgroundColor,
+                  performanceMode: performanceMode,
                 ))
         : (isPressed
-              ? NeuDecoration.pressed(isDark: isDark, radius: borderRadius)
+              ? NeuDecoration.pressed(
+                  isDark: isDark,
+                  borderRadius: borderRadius,
+                  radius: radius,
+                  backgroundColor: backgroundColor,
+                )
               : NeuDecoration.flat(
                   isDark: isDark,
-                  radius: borderRadius,
+                  borderRadius: borderRadius,
+                  radius: radius,
                   backgroundColor: backgroundColor,
+                  performanceMode: performanceMode,
                 ));
 
     return Container(
