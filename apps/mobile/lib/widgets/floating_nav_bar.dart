@@ -142,24 +142,23 @@ class _NavBarItem extends StatelessWidget {
               // Efekt "wypływania" - ujemny margin gdy aktywny
               transform: Matrix4.translationValues(0, isSelected ? -12 : 0, 0),
               decoration: BoxDecoration(
-                color: isSelected ? null : backgroundColor,
                 shape: BoxShape.circle,
-                // Gradient convex dla aktywnego elementu
-                gradient: isSelected
-                    ? LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isDark
-                            ? [
-                                AppColors.darkSurfaceLight,
-                                AppColors.darkSurface,
-                              ]
-                            : [
-                                AppColors.lightSurface,
-                                AppColors.lightSurfaceDark,
-                              ],
-                      )
-                    : null,
+                // Gradient zawsze obecny - płynna interpolacja bez artefaktów
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isSelected
+                      ? (isDark
+                          ? [
+                              AppColors.darkSurfaceLight,
+                              AppColors.darkSurface,
+                            ]
+                          : [
+                              AppColors.lightSurface,
+                              AppColors.lightSurfaceDark,
+                            ])
+                      : [backgroundColor, backgroundColor],
+                ),
                 // Cienie neumorficzne - tylko dla aktywnego (convex)
                 boxShadow: isSelected
                     ? [
