@@ -1503,11 +1503,11 @@ class _MedicineCardState extends State<MedicineCard> {
         ),
         const SizedBox(height: 8),
 
-        // H2: Sprawdź do kiedy starczy ci leków [→] + CTA
+        // H2: Zapas leku do [→] + CTA
         Row(
           children: [
             Text(
-              'Sprawdź do kiedy starczy ci leków',
+              'Zapas leku do',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -3156,57 +3156,38 @@ class _MedicineCardState extends State<MedicineCard> {
       }
     }
 
+    // Pojedyncza linia z "Zużyć przed" włączonym w opis
+    final description = package.getDescription(useByDate: expiryDateStr);
+
     return Padding(
       padding: const EdgeInsets.only(left: 10, top: 2),
       child: GestureDetector(
         onTap: () => _showPackageDetailsBottomSheet(context, package),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Linia 1: Status opakowania
-            Text(
-              hasShelfLife
-                  ? '├──${package.remainingDescription}'
-                  : '└─ ${package.remainingDescription}',
-              style: TextStyle(
-                fontSize: 11,
-                color: theme.colorScheme.onSurfaceVariant,
-                fontStyle: FontStyle.italic,
+            // Ostrzeżenie o wygaśnięciu
+            if (isExpiredAfterOpening) ...[
+              Icon(
+                LucideIcons.triangleAlert,
+                size: 12,
+                color: AppColors.expired,
               ),
-            ),
-            // Linia 2: Shelf life - wyświetl datę ważności zamiast okresu
-            if (hasShelfLife && expiryDateStr != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 1),
-                child: Row(
-                  children: [
-                    // Ostrzeżenie o wygaśnięciu
-                    if (isExpiredAfterOpening) ...[
-                      Icon(
-                        LucideIcons.triangleAlert,
-                        size: 12,
-                        color: AppColors.expired,
-                      ),
-                      const SizedBox(width: 4),
-                    ],
-                    Expanded(
-                      child: Text(
-                        '└── Ważne do: $expiryDateStr',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: isExpiredAfterOpening
-                              ? AppColors.expired
-                              : theme.colorScheme.onSurfaceVariant,
-                          fontStyle: FontStyle.italic,
-                          fontWeight: isExpiredAfterOpening
-                              ? FontWeight.w600
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ],
+              const SizedBox(width: 4),
+            ],
+            Expanded(
+              child: Text(
+                '└─ $description',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isExpiredAfterOpening
+                      ? AppColors.expired
+                      : theme.colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                  fontWeight:
+                      isExpiredAfterOpening ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
+            ),
           ],
         ),
       ),

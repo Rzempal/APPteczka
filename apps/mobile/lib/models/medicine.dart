@@ -126,7 +126,10 @@ class MedicinePackage {
   DateTime? get dateTime => DateTime.tryParse(expiryDate);
 
   /// Opis statusu opakowania
-  String get remainingDescription {
+  String get remainingDescription => getDescription();
+
+  /// Opis statusu opakowania z opcjonalną datą "Zużyć przed"
+  String getDescription({String? useByDate}) {
     // Helper: jednostka w odpowiednim formacie
     String getUnitLabel() {
       switch (unit) {
@@ -156,22 +159,26 @@ class MedicinePackage {
     final openedDateStr = formatOpenedDate();
 
     if (isOpen) {
-      // Opakowanie otwarte
+      // Opakowanie otwarte - nowy format: Otwarte: *data* · Zużyć przed: *data* · Pozostało: X szt.
       final parts = <String>[];
 
       if (openedDateStr != null) {
-        parts.add('Otwarte od: $openedDateStr');
+        parts.add('Otwarte: $openedDateStr');
       } else {
         parts.add('Opakowanie otwarte');
       }
 
-      if (percentRemaining != null) {
-        parts.add('pozostało $percentRemaining%');
-      } else if (pieceCount != null && unit != PackageUnit.none) {
-        parts.add('pozostało $pieceCount $unitLabel');
+      if (useByDate != null) {
+        parts.add('Zużyć przed: $useByDate');
       }
 
-      return parts.join(', ');
+      if (percentRemaining != null) {
+        parts.add('Pozostało: $percentRemaining%');
+      } else if (pieceCount != null && unit != PackageUnit.none) {
+        parts.add('Pozostało: $pieceCount $unitLabel');
+      }
+
+      return parts.join(' · ');
     } else {
       // Opakowanie zamknięte
       if (pieceCount != null && unit != PackageUnit.none) {
