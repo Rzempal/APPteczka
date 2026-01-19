@@ -499,8 +499,8 @@ class HomeScreenState extends State<HomeScreen> {
                   LucideIcons.lightbulb,
                   size: 20,
                   color: _isHelpTooltipOpen
-                      ? Colors.grey
-                      : Colors.amber.shade600,
+                      ? Colors.amber.shade600
+                      : Colors.grey,
                 ),
               ),
             ),

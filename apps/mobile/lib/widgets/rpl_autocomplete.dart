@@ -320,7 +320,7 @@ class _RplAutocompleteState extends State<RplAutocomplete> {
                 )
               : null,
           border: const OutlineInputBorder(),
-          helperText: 'Wpisz min. 3 znaki, aby wyszukać w RPL',
+          helperText: 'Wpisz co najmniej 3 znaki, aby wyszukać lek w RPL.',
           helperStyle: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
