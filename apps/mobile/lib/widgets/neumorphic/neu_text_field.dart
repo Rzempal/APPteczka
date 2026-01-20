@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../theme/app_theme.dart';
 
-/// Neumorphic text field with basin (concave) style
+/// Neumorphic text field with basin (concave/inset) style
 ///
 /// Features:
-/// - Sunken appearance simulating pressed/input area
+/// - Sunken appearance simulating pressed/input area (Soft UI 2026)
 /// - Optional prefix and suffix icons
-/// - Focus state with primary color border
+/// - Focus state with accent color border
+/// - Support for organic border radius
 class NeuTextField extends StatefulWidget {
   final TextEditingController? controller;
   final String? hintText;
@@ -23,7 +24,8 @@ class NeuTextField extends StatefulWidget {
   final bool readOnly;
   final int? maxLines;
   final int? minLines;
-  final double borderRadius;
+  final BorderRadius? borderRadius; // Organic radius support
+  final double radius; // Fallback to circular
   final EdgeInsetsGeometry contentPadding;
   final FocusNode? focusNode;
   final String? Function(String?)? validator;
@@ -44,7 +46,8 @@ class NeuTextField extends StatefulWidget {
     this.readOnly = false,
     this.maxLines = 1,
     this.minLines,
-    this.borderRadius = 12,
+    this.borderRadius, // Optional organic radius
+    this.radius = 12, // Default circular radius
     this.contentPadding = const EdgeInsets.symmetric(
       horizontal: 16,
       vertical: 14,
@@ -131,27 +134,28 @@ class _NeuTextFieldState extends State<NeuTextField> {
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-            borderRadius: BorderRadius.circular(widget.borderRadius),
+            borderRadius: widget.borderRadius ?? BorderRadius.circular(widget.radius),
             border: Border.all(
               color: _isFocused
-                  ? theme.colorScheme.primary
+                  ? (isDark ? AppColors.accentDark : AppColors.accent) // Use accent color
                   : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
-              width: _isFocused ? 2 : 1,
+              width: _isFocused ? 1.5 : 1,
             ),
             boxShadow: [
-              // Inner shadow (basin effect)
+              // Inner shadow (basin/inset effect) - dark
               BoxShadow(
                 color: isDark
-                    ? Colors.black.withOpacity(0.3)
-                    : Colors.black.withOpacity(0.1),
+                    ? AppColors.darkShadowDark.withOpacity(0.6)
+                    : AppColors.lightShadowDark.withOpacity(0.4),
                 offset: const Offset(2, 2),
                 blurRadius: 4,
                 spreadRadius: 0,
               ),
+              // Inner shadow (basin/inset effect) - light highlight
               BoxShadow(
                 color: isDark
-                    ? Colors.white.withOpacity(0.03)
-                    : Colors.white.withOpacity(0.7),
+                    ? AppColors.darkShadowLight.withOpacity(0.05)
+                    : AppColors.lightShadowLight.withOpacity(0.7),
                 offset: const Offset(-2, -2),
                 blurRadius: 4,
                 spreadRadius: 0,
@@ -292,7 +296,7 @@ class _NeuSearchFieldState extends State<NeuSearchField> {
       controller: _controller,
       focusNode: _focusNode,
       hintText: widget.hintText,
-      borderRadius: 50, // Pills shape
+      radius: 50, // Pills shape
       prefixIcon: Icon(LucideIcons.packageSearch),
       onChanged: widget.onChanged,
       onSubmitted: widget.onSubmitted,
