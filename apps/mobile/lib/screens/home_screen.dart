@@ -204,28 +204,14 @@ class HomeScreenState extends State<HomeScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Soft UI 2026: Frame colors for box-in-box layout
-    final frameColor = isDark ? AppColors.darkFrame : AppColors.lightFrame;
-    final backgroundColor = isDark ? AppColors.darkBackground : AppColors.lightBackground;
-
     return GestureDetector(
       // Zdejmij focus z search bar gdy użytkownik kliknie gdzie indziej
       behavior: HitTestBehavior.opaque,
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        // Organic Frame - Box-in-Box layout (Soft UI 2026)
-        body: Container(
-          color: frameColor, // Zewnętrzna ramka (thick frame)
-          padding: const EdgeInsets.all(12), // 12px padding dla "thick frame effect"
-          child: Container(
-            decoration: BoxDecoration(
-              color: backgroundColor, // Wewnętrzne tło
-              borderRadius: AppTheme.organicRadius, // Asymetryczne zaokrąglenia
-            ),
-            clipBehavior: Clip.antiAlias, // Clip content do organic shape
-            child: SafeArea(
-              child: Column(
-                children: [
+        body: SafeArea(
+          child: Column(
+            children: [
               // Line 1: Logo + Title
               _buildHeaderLine1(theme, isDark),
 
@@ -410,9 +396,7 @@ class HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
               ),
-                ],
-              ),
-            ),
+            ],
           ),
         ),
       ),
