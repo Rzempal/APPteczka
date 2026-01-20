@@ -6,7 +6,7 @@ import 'neu_decoration.dart';
 ///
 /// Variants:
 /// - default: neumorphic flat style
-/// - primary: green accent gradient
+/// - primary: accent gradient (Soft UI 2026)
 /// - destructive: red accent gradient
 class NeuButton extends StatefulWidget {
   final String? label;
@@ -16,10 +16,12 @@ class NeuButton extends StatefulWidget {
   final bool isPrimary;
   final bool isDestructive;
   final bool isExpanded;
-  final double borderRadius;
+  final BorderRadius? borderRadius; // Organic radius support
+  final double radius; // Fallback to circular
   final EdgeInsetsGeometry padding;
   final double iconSize;
   final double fontSize;
+  final bool performanceMode; // Performance toggle
 
   const NeuButton({
     super.key,
@@ -30,10 +32,12 @@ class NeuButton extends StatefulWidget {
     this.isPrimary = false,
     this.isDestructive = false,
     this.isExpanded = false,
-    this.borderRadius = 12,
+    this.borderRadius, // Optional organic radius
+    this.radius = 12, // Default circular radius
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     this.iconSize = 20,
     this.fontSize = 15,
+    this.performanceMode = false,
   });
 
   /// Primary button factory
@@ -44,10 +48,12 @@ class NeuButton extends StatefulWidget {
     this.child,
     this.onPressed,
     this.isExpanded = false,
-    this.borderRadius = 12,
+    this.borderRadius,
+    this.radius = 12,
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     this.iconSize = 20,
     this.fontSize = 15,
+    this.performanceMode = false,
   }) : isPrimary = true,
        isDestructive = false;
 
@@ -59,10 +65,12 @@ class NeuButton extends StatefulWidget {
     this.child,
     this.onPressed,
     this.isExpanded = false,
-    this.borderRadius = 12,
+    this.borderRadius,
+    this.radius = 12,
     this.padding = const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     this.iconSize = 20,
     this.fontSize = 15,
+    this.performanceMode = false,
   }) : isPrimary = false,
        isDestructive = true;
 
@@ -117,19 +125,32 @@ class _NeuButtonState extends State<NeuButton>
     if (widget.isPrimary) {
       return NeuDecoration.primaryButton(
         isDark: isDark,
-        radius: widget.borderRadius,
+        borderRadius: widget.borderRadius,
+        radius: widget.radius,
         isPressed: _isPressed,
+        performanceMode: widget.performanceMode,
       );
     } else if (widget.isDestructive) {
       return NeuDecoration.destructiveButton(
         isDark: isDark,
-        radius: widget.borderRadius,
+        borderRadius: widget.borderRadius,
+        radius: widget.radius,
         isPressed: _isPressed,
+        performanceMode: widget.performanceMode,
       );
     } else {
       return _isPressed
-          ? NeuDecoration.pressed(isDark: isDark, radius: widget.borderRadius)
-          : NeuDecoration.flat(isDark: isDark, radius: widget.borderRadius);
+          ? NeuDecoration.pressed(
+              isDark: isDark,
+              borderRadius: widget.borderRadius,
+              radius: widget.radius,
+            )
+          : NeuDecoration.flat(
+              isDark: isDark,
+              borderRadius: widget.borderRadius,
+              radius: widget.radius,
+              performanceMode: widget.performanceMode,
+            );
     }
   }
 
