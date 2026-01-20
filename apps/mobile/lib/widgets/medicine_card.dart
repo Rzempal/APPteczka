@@ -155,9 +155,12 @@ class _MedicineCardState extends State<MedicineCard> {
               ? NeuDecoration.statusCard(
                   isDark: isDark,
                   gradient: gradient,
-                  radius: 20,
+                  borderRadius: AppTheme.organicRadiusSmall, // Organic shape
                 )
-              : NeuDecoration.flat(isDark: isDark, radius: 20),
+              : NeuDecoration.flat(
+                  isDark: isDark,
+                  borderRadius: AppTheme.organicRadiusSmall, // Organic shape
+                ),
           child: Padding(
             padding: EdgeInsets.all(widget.isCompact ? 12 : 16),
             child: Column(
