@@ -234,15 +234,6 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     if (mounted) setState(() {});
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    _searchFocusNode.dispose();
-    _scrollController.dispose();
-    widget.updateService.removeListener(_onUpdateChanged);
-    super.dispose();
-  }
-
   void _loadMedicines() {
     setState(() {
       _medicines = widget.storageService.getMedicines();
