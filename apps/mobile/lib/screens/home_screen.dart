@@ -1543,7 +1543,7 @@ class _EmptyStateState extends State<_EmptyState> {
                   label: 'Dodaj leki',
                   icon: LucideIcons.plus,
                   onPressed: widget.onAddPressed,
-                  borderRadius: 16,
+                  radius: 16,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 14,
@@ -1555,7 +1555,7 @@ class _EmptyStateState extends State<_EmptyState> {
                   label: 'Przetestuj',
                   icon: LucideIcons.sparkles,
                   onPressed: widget.onDemoPressed,
-                  borderRadius: 16,
+                  radius: 16,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 14,
