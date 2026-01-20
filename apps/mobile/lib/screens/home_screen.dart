@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
@@ -60,7 +59,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 /// Publiczny State dla HomeScreen - umożliwia dostęp z zewnątrz przez GlobalKey
-class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class HomeScreenState extends State<HomeScreen> {
   List<Medicine> _medicines = [];
   FilterState _filterState = const FilterState();
   SortOption _sortOption = SortOption.nameAsc;
@@ -86,10 +85,6 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
   // Search bar state - niezależny od scroll position
   bool _isSearchBarExpanded = true;
 
-  // Shake animation dla ikony licznika (spadające pudło)
-  late AnimationController _shakeController;
-  late Animation<double> _shakeAnimation;
-
   @override
   void initState() {
     super.initState();
@@ -100,15 +95,6 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
 
     // Scroll listener dla collapsing header
     _scrollController.addListener(_onScroll);
-
-    // Shake animation controller dla ikony spadającego pudła
-    _shakeController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-    _shakeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _shakeController, curve: Curves.elasticOut),
-    );
 
     // Pokaż tooltip pomocy po dodaniu pierwszego leku
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -125,7 +111,6 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     _scrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
-    _shakeController.dispose();
     widget.updateService.removeListener(_onUpdateChanged);
     super.dispose();
   }
@@ -205,17 +190,13 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     });
   }
 
-  /// Zwija search bar i uruchamia shake animation dla ikony
+  /// Zwija search bar
   void _collapseSearchBar() {
     setState(() {
       _isSearchBarExpanded = false;
     });
 
     _searchFocusNode.unfocus();
-
-    // Uruchom shake animation (spadające pudło)
-    _shakeController.reset();
-    _shakeController.forward();
   }
 
   /// Otwiera bottomSheet sortowania
@@ -554,43 +535,40 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
             ),
           ],
           const Spacer(),
-          // Licznik leków - klikalne, z transformacją ikony
+          // Licznik leków - klikalne, z animacją otwierania/zamykania pudełka
           GestureDetector(
             onTap: _expandSearchBar,
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Ikona zmienia się z packageOpen → packageSearch
+                // Ikona zmienia się z packageOpen ↔ packageSearch
+                // Efekt: otwieranie/zamykanie kartonu
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 250),
+                  switchInCurve: Curves.backOut, // Sprężynowanie przy wejściu
+                  switchOutCurve: Curves.easeIn, // Szybkie znikanie
                   transitionBuilder: (child, animation) {
-                    // Slide down + shake effect dla packageSearch (spadające pudło)
-                    if (child.key == const ValueKey(true)) {
-                      // packageSearch - slide down z shake
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: const Offset(0, -0.5),
-                          end: Offset.zero,
-                        ).animate(CurvedAnimation(
-                          parent: animation,
-                          curve: Curves.easeOut,
-                        )),
-                        child: AnimatedBuilder(
-                          animation: _shakeAnimation,
-                          builder: (context, child) {
-                            // Shake effect - horizontal jiggle
-                            final shake = math.sin(_shakeAnimation.value * math.pi * 3) * 3;
-                            return Transform.translate(
-                              offset: Offset(shake, 0),
-                              child: child,
-                            );
-                          },
-                          child: child,
-                        ),
-                      );
-                    }
-                    // packageOpen - fade in/out
-                    return FadeTransition(opacity: animation, child: child);
+                    // Określ kierunek: zamykanie (boxOpen→boxSearch) vs otwieranie (boxSearch→boxOpen)
+                    final isClosing = child.key == const ValueKey(true); // packageSearch = zamknięte
+
+                    // Scale ranges:
+                    // Closing: exit 1.0→0.5 (wieko zapada), entry 1.3→1.0 (zatrzask)
+                    // Opening: exit 1.0→0.5 (znika), entry 1.2→1.0 (wyskakuje)
+                    final entryScale = isClosing ? 1.3 : 1.2;
+
+                    return ScaleTransition(
+                      scale: Tween<double>(
+                        begin: entryScale,
+                        end: 1.0,
+                      ).animate(CurvedAnimation(
+                        parent: animation,
+                        curve: isClosing ? Curves.backOut : Curves.easeOut,
+                      )),
+                      child: FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      ),
+                    );
                   },
                   child: Icon(
                     key: ValueKey(!_isSearchBarExpanded),
