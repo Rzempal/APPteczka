@@ -248,55 +248,55 @@ class NeuDecoration {
     bool performanceMode = false,
   }) {
     // Performance mode: reduced shadows
-    final dist = performanceMode ? shadowDistancePerf : shadowDistance;
-    final distSm = performanceMode ? shadowDistanceSmPerf : shadowDistanceSm;
-    final blur = performanceMode ? shadowBlurPerf : shadowBlur;
-    final blurSm = performanceMode ? shadowBlurSmPerf : shadowBlurSm;
+    final blur = performanceMode ? 12.0 : 18.0;
+    final offset = performanceMode ? 4.0 : 6.0;
 
-    // Light mode: clean neumorphism
+    // Light mode: simplified - single shadow + subtle border
     if (!isDark) {
+      // Determine border color from gradient (heuristic)
+      Color baseColor = gradient.colors.first;
+      Color borderColor = AppColors.primary.withValues(alpha: 0.12);
+
+      // Status-aware border colors
+      if (baseColor.value == 0xFF064e3b || baseColor == AppColors.valid) {
+        borderColor = AppColors.valid.withValues(alpha: 0.2);
+      } else if (baseColor.value == 0xFF78350f ||
+          baseColor == AppColors.expiringSoon) {
+        borderColor = AppColors.expiringSoon.withValues(alpha: 0.2);
+      } else if (baseColor.value == 0xFF7f1d1d ||
+          baseColor == AppColors.expired) {
+        borderColor = AppColors.expired.withValues(alpha: 0.2);
+      }
+
       return BoxDecoration(
         gradient: gradient,
         borderRadius: borderRadius ?? BorderRadius.circular(radius),
+        border: Border.all(color: borderColor, width: 1.5),
+        // Single simplified shadow
         boxShadow: [
           BoxShadow(
-            color: AppColors.lightShadowDark.withValues(alpha: 0.25),
-            offset: Offset(dist, dist),
+            color: AppColors.lightShadowDark.withValues(alpha: 0.15),
+            offset: Offset(offset, offset),
             blurRadius: blur,
-          ),
-          BoxShadow(
-            color: AppColors.lightShadowLight.withValues(alpha: 0.8),
-            offset: Offset(-distSm, -distSm),
-            blurRadius: blurSm,
           ),
         ],
       );
     }
 
-    // Dark Mode: Glass Effect (Web match)
-    // CSS: border: 1px solid rgba(148, 163, 184, 0.1);
-    // CSS: box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-
-    // Determine status type for border color (heuristic based on gradient)
+    // Dark Mode: Glass Effect with border (unchanged)
     Color baseColor = gradient.colors.first;
-    Color borderColor = const Color(
-      0xFF94a3b8,
-    ).withValues(alpha: 0.1); // default
+    Color borderColor = const Color(0xFF94a3b8).withValues(alpha: 0.1);
     Color glowColor = Colors.transparent;
 
-    // Check for "Valid" (Green)
     if (baseColor.value == 0xFF064e3b || baseColor == AppColors.valid) {
       borderColor = const Color(0xFF10b981).withValues(alpha: 0.3);
       glowColor = const Color(0xFF10b981).withValues(alpha: 0.1);
-    }
-    // Check for "Warning/Expiring" (Amber/Orange)
-    else if (baseColor.value == 0xFF78350f ||
+    } else if (baseColor.value == 0xFF78350f ||
         baseColor == AppColors.expiringSoon) {
       borderColor = const Color(0xFFf59e0b).withValues(alpha: 0.3);
       glowColor = const Color(0xFFf59e0b).withValues(alpha: 0.1);
-    }
-    // Check for "Expired" (Red)
-    else if (baseColor.value == 0xFF7f1d1d || baseColor == AppColors.expired) {
+    } else if (baseColor.value == 0xFF7f1d1d ||
+        baseColor == AppColors.expired) {
       borderColor = const Color(0xFFef4444).withValues(alpha: 0.3);
       glowColor = const Color(0xFFef4444).withValues(alpha: 0.1);
     }

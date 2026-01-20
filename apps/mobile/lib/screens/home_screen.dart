@@ -428,7 +428,7 @@ class HomeScreenState extends State<HomeScreen> {
                   : AppColors.primary,
             ),
           ),
-          // Update badge
+          // Update badge - simplified
           if (updateAvailable) ...[
             const SizedBox(width: 8),
             GestureDetector(
@@ -436,9 +436,16 @@ class HomeScreenState extends State<HomeScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withAlpha(30),
+                  color: isDark
+                      ? AppColors.primaryDark.withValues(alpha: 0.15)
+                      : AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withAlpha(80)),
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.accentDark.withValues(alpha: 0.4)
+                        : AppColors.primary.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -446,15 +453,15 @@ class HomeScreenState extends State<HomeScreen> {
                     Icon(
                       LucideIcons.download,
                       size: 14,
-                      color: AppColors.primary,
+                      color: isDark ? AppColors.accentDark : AppColors.primary,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       'Aktualizacja',
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? AppColors.accentDark : AppColors.primary,
                       ),
                     ),
                   ],
@@ -463,11 +470,19 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ],
           const Spacer(),
-          // Licznik leków - neumorficzny kontener
-          NeuStaticContainer(
-            isSmall: true,
-            radius: 12,
+          // Licznik leków - simplified (no neumorphic)
+          Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.darkSurface.withValues(alpha: 0.3)
+                  : AppColors.lightSurface.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                width: 1,
+              ),
+            ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -481,23 +496,35 @@ class HomeScreenState extends State<HomeScreen> {
                   '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 8),
-          // Przycisk pomocy - żarówka z efektem pressed
+          // Przycisk pomocy - simplified (no neumorphic animation)
           GestureDetector(
             onTap: _toggleHelpTooltip,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 80),
+            child: Container(
               width: 40,
               height: 40,
-              decoration: _isHelpTooltipOpen
-                  ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
-                  : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+              decoration: BoxDecoration(
+                color: _isHelpTooltipOpen
+                    ? (isDark
+                        ? AppColors.darkSurface.withValues(alpha: 0.5)
+                        : AppColors.lightSurface.withValues(alpha: 0.7))
+                    : (isDark
+                        ? AppColors.darkSurface.withValues(alpha: 0.2)
+                        : AppColors.lightSurface.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(12),
+                border: _isHelpTooltipOpen
+                    ? Border.all(
+                        color: Colors.amber.shade600.withValues(alpha: 0.3),
+                        width: 1,
+                      )
+                    : null,
+              ),
               child: Center(
                 child: Icon(
                   LucideIcons.lightbulb,
