@@ -31,6 +31,7 @@ class MedicineCard extends StatefulWidget {
   final VoidCallback? onMedicineUpdated;
   final bool isCompact;
   final bool isDuplicate;
+  final bool isPerformanceMode;
 
   const MedicineCard({
     super.key,
@@ -45,6 +46,7 @@ class MedicineCard extends StatefulWidget {
     this.onMedicineUpdated,
     this.isCompact = false,
     this.isDuplicate = false,
+    this.isPerformanceMode = false,
   });
 
   @override
@@ -156,10 +158,12 @@ class _MedicineCardState extends State<MedicineCard> {
                   isDark: isDark,
                   gradient: gradient,
                   borderRadius: AppTheme.organicRadiusSmall, // Organic shape
+                  performanceMode: widget.isPerformanceMode,
                 )
               : NeuDecoration.flat(
                   isDark: isDark,
                   borderRadius: AppTheme.organicRadiusSmall, // Organic shape
+                  performanceMode: widget.isPerformanceMode,
                 ),
           child: Padding(
             padding: EdgeInsets.all(widget.isCompact ? 12 : 16),

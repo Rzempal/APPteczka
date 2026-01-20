@@ -313,7 +313,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                   // Line 1: Logo + Title
                   _buildHeaderLine1(theme, isDark),
 
-                  const SizedBox(height: 60),
+                  const SizedBox(height: 8),
 
                   // Lista leków - responsywny grid dla szerokich ekranów
                   Expanded(
@@ -330,7 +330,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                           // Główna lista - tryb akordeonowy
                           ListView.builder(
                             controller: _scrollController,
-                            padding: const EdgeInsets.only(top: 60, bottom: 16),
+                            padding: const EdgeInsets.only(top: 68, bottom: 16),
                             itemCount: _filteredMedicines.length,
                             itemBuilder: (context, index) {
                               final medicine = _filteredMedicines[index];
@@ -347,6 +347,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
                                   labels: _allLabels,
                                   storageService: widget.storageService,
                                   isCompact: !isExpanded,
+                                  isPerformanceMode: widget.storageService.performanceMode,
                                   isDuplicate: hasDuplicates(
                                     medicine,
                                     _medicines,
@@ -438,7 +439,7 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
     final updateAvailable = widget.updateService.updateAvailable;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: [
           // Logo (Vector Icon - no decoration, blends with background)
