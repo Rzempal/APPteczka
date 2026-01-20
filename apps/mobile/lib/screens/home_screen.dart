@@ -137,8 +137,22 @@ class HomeScreenState extends State<HomeScreen> {
   /// Odświeża listę leków
   void refresh() => _loadMedicines();
 
-  /// Aktywuje pole wyszukiwania
+  /// Aktywuje pole wyszukiwania (wywołane z toolbara)
   void activateSearch() {
+    _expandSearchBar();
+  }
+
+  /// Rozwija search bar - scrolluje do góry i focusuje pole
+  void _expandSearchBar() {
+    // Scrolluj do góry aby rozwinąć search bar
+    if (_scrollController.hasClients && _scrollOffset > 0) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
+
     // Najpierw zdejmij focus (jeśli miał), potem przywróć
     // To zagwarantuje że klawiatura zawsze się podniesie
     _searchFocusNode.unfocus();
@@ -462,25 +476,37 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ],
           const Spacer(),
-          // Licznik leków - sam tekst bez outline
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                LucideIcons.packageOpen,
-                size: 18,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14,
+          // Licznik leków - klikalne, z transformacją ikony
+          GestureDetector(
+            onTap: _expandSearchBar,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Ikona zmienia się z packageOpen → packageSearch
+                // Zanika podczas scrollu, pojawia się packageSearch w ostatniej fazie
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: Opacity(
+                    key: ValueKey(_scrollOffset > 40),
+                    opacity: _scrollOffset < 40 ? (1.0 - (_scrollOffset / 40).clamp(0.0, 1.0)) : 1.0,
+                    child: Icon(
+                      _scrollOffset > 40 ? LucideIcons.packageSearch : LucideIcons.packageOpen,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Text(
+                  '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(width: 8),
           // Przycisk pomocy - simplified (no neumorphic animation)
@@ -525,11 +551,14 @@ class HomeScreenState extends State<HomeScreen> {
     // Oblicz progress i width na podstawie scroll offset
     final progress = (_scrollOffset / 80).clamp(0.0, 1.0);
 
-    // Width animation: full width → 48px (zwija się w prawo)
+    // Width animation: full width → 0px (znika całkowicie)
     final screenWidth = MediaQuery.of(context).size.width;
     final maxWidth = screenWidth - 32; // 16px padding z każdej strony
-    final minWidth = 48.0;
+    final minWidth = 0.0; // Zwija się do zera
     final currentWidth = maxWidth - ((maxWidth - minWidth) * progress);
+
+    // Opacity dla ikony packageSearch - zanika synchronicznie z packageOpen (0-40px)
+    final iconOpacity = _scrollOffset < 40 ? (1.0 - (_scrollOffset / 40).clamp(0.0, 1.0)) : 0.0;
 
     return Positioned(
       top: 72, // Poniżej headera (48px logo + 12px padding + 12px margin)
@@ -542,7 +571,6 @@ class HomeScreenState extends State<HomeScreen> {
           duration: Duration.zero, // Instant update podczas scroll
           width: currentWidth,
           height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
             // Glassmorphism effect
             color: isDark
@@ -567,10 +595,13 @@ class HomeScreenState extends State<HomeScreen> {
             controller: _searchController,
             focusNode: _searchFocusNode,
             decoration: InputDecoration(
-              prefixIcon: Icon(
-                LucideIcons.packageSearch,
-                size: 20,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              prefixIcon: Opacity(
+                opacity: iconOpacity,
+                child: Icon(
+                  LucideIcons.packageSearch,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
               ),
               hintText: 'Szukaj leku...',
               hintStyle: theme.textTheme.bodyMedium?.copyWith(
