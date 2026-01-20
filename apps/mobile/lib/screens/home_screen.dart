@@ -76,6 +76,11 @@ class HomeScreenState extends State<HomeScreen> {
   // Sort bottom sheet state
   bool _isSortSheetOpen = false;
 
+  // Scroll animation state
+  final ScrollController _scrollController = ScrollController();
+  double _scrollOffset = 0.0;
+  bool _isTitleVisible = true;
+
   @override
   void initState() {
     super.initState();
@@ -83,6 +88,9 @@ class HomeScreenState extends State<HomeScreen> {
     // Check for updates on init
     widget.updateService.addListener(_onUpdateChanged);
     widget.updateService.checkForUpdate();
+
+    // Scroll listener dla collapsing header
+    _scrollController.addListener(_onScroll);
 
     // Pokaż tooltip pomocy po dodaniu pierwszego leku
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -92,6 +100,33 @@ class HomeScreenState extends State<HomeScreen> {
         _showHelpBottomSheet();
       }
     });
+  }
+
+  void _onScroll() {
+    setState(() {
+      _scrollOffset = _scrollController.offset;
+      // Ukryj tytuł po 50px scrolla
+      _isTitleVisible = _scrollOffset < 50;
+    });
+  }
+
+  String _getTodayDate() {
+    final now = DateTime.now();
+    final months = [
+      'stycznia',
+      'lutego',
+      'marca',
+      'kwietnia',
+      'maja',
+      'czerwca',
+      'lipca',
+      'sierpnia',
+      'września',
+      'października',
+      'listopada',
+      'grudnia'
+    ];
+    return 'Dzisiaj, ${now.day} ${months[now.month - 1]}';
   }
 
   // ==================== PUBLICZNE API (dla ApteczkaToolbar) ====================
@@ -135,6 +170,7 @@ class HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _scrollController.dispose();
     widget.updateService.removeListener(_onUpdateChanged);
     super.dispose();
   }
@@ -252,6 +288,7 @@ class HomeScreenState extends State<HomeScreen> {
                         children: [
                           // Główna lista - tryb akordeonowy
                           ListView.builder(
+                            controller: _scrollController,
                             padding: const EdgeInsets.only(bottom: 16),
                             itemCount: _filteredMedicines.length,
                             itemBuilder: (context, index) {
@@ -418,14 +455,29 @@ class HomeScreenState extends State<HomeScreen> {
             accentColor: AppConfig.isInternal ? AppColors.expired : null,
           ),
           const SizedBox(width: 12),
-          // Tytuł
-          Text(
-            AppConfig.isInternal ? 'Karton DEV' : 'Karton z lekami',
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: AppConfig.isInternal
-                  ? AppColors.expired
-                  : AppColors.primary,
+          // Tytuł lub data - animowane przełączanie
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: _isTitleVisible
+                  ? Text(
+                      AppConfig.isInternal ? 'Karton DEV' : 'Karton z lekami',
+                      key: const ValueKey('title'),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppConfig.isInternal
+                            ? AppColors.expired
+                            : AppColors.primary,
+                      ),
+                    )
+                  : Text(
+                      _getTodayDate(),
+                      key: const ValueKey('date'),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
             ),
           ),
           // Update badge - simplified
@@ -470,37 +522,25 @@ class HomeScreenState extends State<HomeScreen> {
             ),
           ],
           const Spacer(),
-          // Licznik leków - simplified (no neumorphic)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurface.withValues(alpha: 0.3)
-                  : AppColors.lightSurface.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.primary.withValues(alpha: 0.15),
-                width: 1,
+          // Licznik leków - sam tekst bez outline
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                LucideIcons.packageOpen,
+                size: 18,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.packageOpen,
-                  size: 16,
-                  color: theme.colorScheme.primary,
+              const SizedBox(width: 6),
+              Text(
+                '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  '${_filteredMedicines.length} ${_getPolishPlural(_filteredMedicines.length)}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
           const SizedBox(width: 8),
           // Przycisk pomocy - simplified (no neumorphic animation)
@@ -542,25 +582,81 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSearchBar(ThemeData theme, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: NeuSearchField(
-        controller: _searchController,
-        focusNode: _searchFocusNode,
-        hintText: 'Szukaj leku...',
-        onChanged: (value) {
-          final wasActive = _filterState.hasActiveFilters;
-          setState(() {
-            _filterState = _filterState.copyWith(searchQuery: value);
-          });
-          // Powiadom rodzica tylko gdy zmieni się stan aktywności filtrów
-          if (wasActive != _filterState.hasActiveFilters) {
-            widget.onFiltersChanged?.call();
-          }
-        },
-        onSubmitted: (_) {
-          _searchFocusNode.unfocus();
-        },
+    // Oblicz opacity i translację na podstawie scroll offset
+    final opacity = (_scrollOffset < 100) ? 1.0 - (_scrollOffset / 100) : 0.0;
+    final translation = _scrollOffset.clamp(0.0, 30.0);
+
+    return AnimatedOpacity(
+      opacity: opacity.clamp(0.0, 1.0),
+      duration: Duration.zero, // Instant update podczas scroll
+      child: Transform.translate(
+        offset: Offset(0, -translation),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            // Glassmorphism effect
+            color: isDark
+                ? AppColors.darkSurface.withValues(alpha: 0.5)
+                : AppColors.lightSurface.withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Icon(
+                LucideIcons.search,
+                size: 20,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  focusNode: _searchFocusNode,
+                  decoration: InputDecoration(
+                    hintText: 'Szukaj leku...',
+                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant
+                          .withValues(alpha: 0.5),
+                    ),
+                    border: InputBorder.none,
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  onChanged: (value) {
+                    final wasActive = _filterState.hasActiveFilters;
+                    setState(() {
+                      _filterState = _filterState.copyWith(searchQuery: value);
+                    });
+                    if (wasActive != _filterState.hasActiveFilters) {
+                      widget.onFiltersChanged?.call();
+                    }
+                  },
+                  onSubmitted: (_) {
+                    _searchFocusNode.unfocus();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
