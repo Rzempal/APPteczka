@@ -154,11 +154,44 @@ class _MedicineCardState extends State<MedicineCard> {
         onTap: widget.isCompact ? widget.onExpand : null,
         child: Container(
           decoration: widget.isCompact
-              ? NeuDecoration.statusCard(
-                  isDark: isDark,
-                  gradient: gradient,
-                  borderRadius: AppTheme.organicRadiusSmall, // Organic shape
-                  performanceMode: widget.isPerformanceMode,
+              ? BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : AppColors.lightBackground,
+                  borderRadius: AppTheme.organicRadiusSmall,
+                  border: Border(
+                    left: BorderSide(
+                      color: statusColor,
+                      width: 3,
+                    ),
+                  ),
+                  boxShadow: widget.isPerformanceMode
+                      ? [
+                          // Performance mode: reduced shadows
+                          BoxShadow(
+                            color: (isDark ? Colors.black : Colors.black12)
+                                .withValues(alpha: 0.1),
+                            offset: const Offset(2, 2),
+                            blurRadius: 4,
+                          ),
+                        ]
+                      : [
+                          // Full quality: neumorphic shadows
+                          BoxShadow(
+                            color: (isDark
+                                    ? AppColors.darkShadowDark
+                                    : AppColors.lightShadowDark)
+                                .withValues(alpha: isDark ? 0.3 : 0.15),
+                            offset: const Offset(4, 4),
+                            blurRadius: 8,
+                          ),
+                          BoxShadow(
+                            color: (isDark
+                                    ? AppColors.darkShadowLight
+                                    : AppColors.lightShadowLight)
+                                .withValues(alpha: isDark ? 0.05 : 0.5),
+                            offset: const Offset(-2, -2),
+                            blurRadius: 6,
+                          ),
+                        ],
                 )
               : NeuDecoration.flat(
                   isDark: isDark,
