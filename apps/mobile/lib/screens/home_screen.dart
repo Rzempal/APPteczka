@@ -275,32 +275,36 @@ class HomeScreenState extends State<HomeScreen> {
                               final isExpanded =
                                   _expandedMedicineId == medicine.id;
 
-                              final card = MedicineCard(
-                                medicine: medicine,
-                                labels: _allLabels,
-                                storageService: widget.storageService,
-                                isCompact: !isExpanded,
-                                isDuplicate: hasDuplicates(
-                                  medicine,
-                                  _medicines,
+                              // RepaintBoundary prevents unnecessary redraws during scrolling
+                              // Critical for GPU-intensive neumorphic shadows (Soft UI 2026)
+                              final card = RepaintBoundary(
+                                child: MedicineCard(
+                                  medicine: medicine,
+                                  labels: _allLabels,
+                                  storageService: widget.storageService,
+                                  isCompact: !isExpanded,
+                                  isDuplicate: hasDuplicates(
+                                    medicine,
+                                    _medicines,
+                                  ),
+                                  onExpand: () {
+                                    setState(() {
+                                      // Toggle - kliknięcie na rozwiniętą kartę zwija ją
+                                      if (_expandedMedicineId == medicine.id) {
+                                        _expandedMedicineId = null;
+                                      } else {
+                                        _expandedMedicineId = medicine.id;
+                                      }
+                                    });
+                                  },
+                                  onEdit: () => _editMedicine(medicine),
+                                  onDelete: () =>
+                                      _deleteMedicineWithConfirm(medicine),
+                                  onTagTap: (tag) => _filterByTag(tag),
+                                  onLabelTap: (labelId) =>
+                                      _filterByLabel(labelId),
+                                  onMedicineUpdated: _loadMedicines,
                                 ),
-                                onExpand: () {
-                                  setState(() {
-                                    // Toggle - kliknięcie na rozwiniętą kartę zwija ją
-                                    if (_expandedMedicineId == medicine.id) {
-                                      _expandedMedicineId = null;
-                                    } else {
-                                      _expandedMedicineId = medicine.id;
-                                    }
-                                  });
-                                },
-                                onEdit: () => _editMedicine(medicine),
-                                onDelete: () =>
-                                    _deleteMedicineWithConfirm(medicine),
-                                onTagTap: (tag) => _filterByTag(tag),
-                                onLabelTap: (labelId) =>
-                                    _filterByLabel(labelId),
-                                onMedicineUpdated: _loadMedicines,
                               );
 
                               if (!swipeEnabled) {
