@@ -406,6 +406,9 @@ class _MedicineCardState extends State<MedicineCard> {
         case PackageUnit.pieces:
           medicineTypeIcon = LucideIcons.pill;
           break;
+        case PackageUnit.sachets:
+          medicineTypeIcon = LucideIcons.package;
+          break;
         case PackageUnit.none:
           medicineTypeIcon = LucideIcons.packageOpen;
           break;
@@ -420,7 +423,9 @@ class _MedicineCardState extends State<MedicineCard> {
       } else if (firstPackage.pieceCount != null) {
         // Dla zamkniętych - pokaż ilość
         final total = _medicine.totalPieceCount;
-        final unit = firstPackage.unit == PackageUnit.ml ? 'ml' : 'szt.';
+        final unit = firstPackage.unit == PackageUnit.ml
+            ? 'ml'
+            : (firstPackage.unit == PackageUnit.sachets ? 'sasz.' : 'szt.');
 
         // Jeśli mamy dailyIntake, oblicz %
         if (_medicine.dailyIntake != null && _medicine.dailyIntake! > 0) {
