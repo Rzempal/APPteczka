@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
@@ -59,7 +60,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 /// Publiczny State dla HomeScreen - umożliwia dostęp z zewnątrz przez GlobalKey
-class HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   List<Medicine> _medicines = [];
   FilterState _filterState = const FilterState();
   SortOption _sortOption = SortOption.nameAsc;
@@ -79,7 +80,15 @@ class HomeScreenState extends State<HomeScreen> {
   // Scroll animation state
   final ScrollController _scrollController = ScrollController();
   double _scrollOffset = 0.0;
+  double _previousScrollOffset = 0.0;
   bool _isTitleVisible = true;
+
+  // Search bar state - niezależny od scroll position
+  bool _isSearchBarExpanded = true;
+
+  // Shake animation dla ikony licznika (spadające pudło)
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
 
   @override
   void initState() {
@@ -92,6 +101,15 @@ class HomeScreenState extends State<HomeScreen> {
     // Scroll listener dla collapsing header
     _scrollController.addListener(_onScroll);
 
+    // Shake animation controller dla ikony spadającego pudła
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _shakeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _shakeController, curve: Curves.elasticOut),
+    );
+
     // Pokaż tooltip pomocy po dodaniu pierwszego leku
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_medicines.isNotEmpty &&
@@ -102,11 +120,39 @@ class HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    _shakeController.dispose();
+    widget.updateService.removeListener(_onUpdateChanged);
+    super.dispose();
+  }
+
   void _onScroll() {
+    final currentOffset = _scrollController.offset;
+    final isScrollingDown = currentOffset > _previousScrollOffset;
+    final isAtTop = currentOffset <= 0;
+
     setState(() {
-      _scrollOffset = _scrollController.offset;
+      _scrollOffset = currentOffset;
+      _previousScrollOffset = currentOffset;
+
       // Ukryj tytuł po 50px scrolla
       _isTitleVisible = _scrollOffset < 50;
+
+      // Search bar collapse/expand logic
+      if (isAtTop && !_isSearchBarExpanded) {
+        // Scroll dotarł do góry - rozwija search bar
+        _isSearchBarExpanded = true;
+      } else if (isScrollingDown &&
+                 _scrollOffset > 50 &&
+                 _isSearchBarExpanded &&
+                 _searchController.text.isEmpty) {
+        // Scroll w dół + puste pole = zwija search bar
+        _collapseSearchBar();
+      }
     });
   }
 
@@ -142,16 +188,11 @@ class HomeScreenState extends State<HomeScreen> {
     _expandSearchBar();
   }
 
-  /// Rozwija search bar - scrolluje do góry i focusuje pole
+  /// Rozwija search bar - NIE przewija listy, tylko rozwija bar
   void _expandSearchBar() {
-    // Scrolluj do góry aby rozwinąć search bar
-    if (_scrollController.hasClients && _scrollOffset > 0) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
+    setState(() {
+      _isSearchBarExpanded = true;
+    });
 
     // Najpierw zdejmij focus (jeśli miał), potem przywróć
     // To zagwarantuje że klawiatura zawsze się podniesie
@@ -162,6 +203,19 @@ class HomeScreenState extends State<HomeScreen> {
         _searchFocusNode.requestFocus();
       }
     });
+  }
+
+  /// Zwija search bar i uruchamia shake animation dla ikony
+  void _collapseSearchBar() {
+    setState(() {
+      _isSearchBarExpanded = false;
+    });
+
+    _searchFocusNode.unfocus();
+
+    // Uruchom shake animation (spadające pudło)
+    _shakeController.reset();
+    _shakeController.forward();
   }
 
   /// Otwiera bottomSheet sortowania
@@ -483,17 +537,42 @@ class HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Ikona zmienia się z packageOpen → packageSearch
-                // Zanika podczas scrollu, pojawia się packageSearch w ostatniej fazie
                 AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: Opacity(
-                    key: ValueKey(_scrollOffset > 40),
-                    opacity: _scrollOffset < 40 ? (1.0 - (_scrollOffset / 40).clamp(0.0, 1.0)) : 1.0,
-                    child: Icon(
-                      _scrollOffset > 40 ? LucideIcons.packageSearch : LucideIcons.packageOpen,
-                      size: 18,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                    ),
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (child, animation) {
+                    // Slide down + shake effect dla packageSearch (spadające pudło)
+                    if (child.key == const ValueKey(true)) {
+                      // packageSearch - slide down z shake
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, -0.5),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeOut,
+                        )),
+                        child: AnimatedBuilder(
+                          animation: _shakeAnimation,
+                          builder: (context, child) {
+                            // Shake effect - horizontal jiggle
+                            final shake = math.sin(_shakeAnimation.value * math.pi * 3) * 3;
+                            return Transform.translate(
+                              offset: Offset(shake, 0),
+                              child: child,
+                            );
+                          },
+                          child: child,
+                        ),
+                      );
+                    }
+                    // packageOpen - fade in/out
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                  child: Icon(
+                    key: ValueKey(!_isSearchBarExpanded),
+                    !_isSearchBarExpanded ? LucideIcons.packageSearch : LucideIcons.packageOpen,
+                    size: 18,
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -548,27 +627,28 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFloatingSearchBar(ThemeData theme, bool isDark) {
-    // Oblicz progress i width na podstawie scroll offset
-    final progress = (_scrollOffset / 80).clamp(0.0, 1.0);
-
-    // Width animation: full width → 0px (znika całkowicie)
+    // Width animation: expanded → collapsed (0px)
     final screenWidth = MediaQuery.of(context).size.width;
     final maxWidth = screenWidth - 32; // 16px padding z każdej strony
-    final minWidth = 0.0; // Zwija się do zera
-    final currentWidth = maxWidth - ((maxWidth - minWidth) * progress);
+    final currentWidth = _isSearchBarExpanded ? maxWidth : 0.0;
 
-    // Opacity dla ikony packageSearch - zanika synchronicznie z packageOpen (0-40px)
-    final iconOpacity = _scrollOffset < 40 ? (1.0 - (_scrollOffset / 40).clamp(0.0, 1.0)) : 0.0;
+    // Opacity dla ikony - widoczna tylko gdy expanded
+    final iconOpacity = _isSearchBarExpanded ? 1.0 : 0.0;
 
     return Positioned(
       top: 72, // Poniżej headera (48px logo + 12px padding + 12px margin)
       right: 16, // Przykleja do prawej strony - zwija się w prawo
       child: GestureDetector(
         onTap: () {
-          _searchFocusNode.requestFocus();
+          if (!_isSearchBarExpanded) {
+            _expandSearchBar();
+          } else {
+            _searchFocusNode.requestFocus();
+          }
         },
         child: AnimatedContainer(
-          duration: Duration.zero, // Instant update podczas scroll
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
           width: currentWidth,
           height: 48,
           decoration: BoxDecoration(
@@ -595,7 +675,8 @@ class HomeScreenState extends State<HomeScreen> {
             controller: _searchController,
             focusNode: _searchFocusNode,
             decoration: InputDecoration(
-              prefixIcon: Opacity(
+              prefixIcon: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
                 opacity: iconOpacity,
                 child: Icon(
                   LucideIcons.packageSearch,
