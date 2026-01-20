@@ -281,50 +281,270 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
+  /// Buduje opis lub warning - dynamiczny content
+  Widget _buildDescriptionOrWarning(ThemeData theme, Color statusColor) {
+    // Sprawdź warningi w kolejności priorytetu
+
+    // 1. Krytycznie niski stan (czerwony warning)
+    if (_medicine.packages.isNotEmpty) {
+      final firstPackage = _medicine.packages.first;
+      if (firstPackage.isOpen && firstPackage.percentRemaining != null) {
+        if (firstPackage.percentRemaining! <= 10) {
+          return Text(
+            'KRYTYCZNIE NISKI STAN - UZUPEŁNIJ',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.expired,
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+            ),
+          );
+        }
+      } else if (firstPackage.pieceCount != null) {
+        final total = _medicine.totalPieceCount;
+        if (_medicine.dailyIntake != null && _medicine.dailyIntake! > 0) {
+          final daysSupply = total / _medicine.dailyIntake!;
+          if (daysSupply <= 3) {
+            return Text(
+              'ZAPAS NA $daysSupply DNI - UZUPEŁNIJ',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.expired,
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    // 2. Termin ważności < 7 dni (amber warning)
+    final status = _medicine.expiryStatus;
+    if (status == ExpiryStatus.expiringSoon || status == ExpiryStatus.expired) {
+      final expiry = _medicine.terminWaznosci;
+      if (expiry != null) {
+        final date = DateTime.tryParse(expiry);
+        if (date != null) {
+          final daysUntilExpiry = date.difference(DateTime.now()).inDays;
+          if (daysUntilExpiry >= 0 && daysUntilExpiry <= 7) {
+            return Text(
+              'Ważne jeszcze $daysUntilExpiry dni',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.expiringSoon,
+                fontWeight: FontWeight.w600,
+                fontSize: 11,
+              ),
+            );
+          } else if (daysUntilExpiry < 0) {
+            return Text(
+              'Produkt przeterminowany',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: AppColors.expired,
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    // 3. Przydatność po otwarciu (info)
+    if (_medicine.shelfLifeAfterOpening != null &&
+        _medicine.packages.isNotEmpty &&
+        _medicine.packages.first.isOpen) {
+      return Text(
+        'Po otwarciu: ${_medicine.shelfLifeAfterOpening}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.primary,
+          fontWeight: FontWeight.w600,
+          fontSize: 11,
+        ),
+      );
+    }
+
+    // 4. Default - normalny opis
+    return Text(
+      _medicine.opis,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: theme.textTheme.bodySmall?.copyWith(
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
   Widget _buildCompactContent(
     ThemeData theme,
     Color statusColor,
     IconData statusIcon,
   ) {
+    // Określ ikonę rodzaju leku na podstawie jednostki
+    IconData medicineTypeIcon = LucideIcons.pill; // Default
+    String stockLabel = 'DOSTĘPNOŚĆ';
+    String stockText = '';
+    double stockPercentage = 0.0;
+
+    // Oblicz zapas
+    if (_medicine.packages.isNotEmpty) {
+      final firstPackage = _medicine.packages.first;
+
+      // Ikona zależna od jednostki
+      switch (firstPackage.unit) {
+        case PackageUnit.ml:
+          medicineTypeIcon = LucideIcons.droplet;
+          break;
+        case PackageUnit.pieces:
+          medicineTypeIcon = LucideIcons.pill;
+          break;
+        case PackageUnit.none:
+          medicineTypeIcon = LucideIcons.packageOpen;
+          break;
+      }
+
+      // Oblicz procentowy stan zapasu
+      if (firstPackage.isOpen && firstPackage.percentRemaining != null) {
+        // Dla otwartych - użyj percentRemaining
+        stockPercentage = firstPackage.percentRemaining! / 100.0;
+        stockText = '${firstPackage.percentRemaining}%';
+        stockLabel = 'POZOSTAŁO';
+      } else if (firstPackage.pieceCount != null) {
+        // Dla zamkniętych - pokaż ilość
+        final total = _medicine.totalPieceCount;
+        final unit = firstPackage.unit == PackageUnit.ml ? 'ml' : 'szt.';
+
+        // Jeśli mamy dailyIntake, oblicz %
+        if (_medicine.dailyIntake != null && _medicine.dailyIntake! > 0) {
+          final daysSupply = total / _medicine.dailyIntake!;
+          final optimalDays = 30.0; // Zakładamy 30 dni jako 100%
+          stockPercentage = (daysSupply / optimalDays).clamp(0.0, 1.0);
+        } else {
+          // Brak dailyIntake - pokaż jako pełny
+          stockPercentage = 0.8; // Default 80%
+        }
+
+        stockText = '$total $unit';
+      }
+    }
+
     return Column(
       children: [
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
+
+        // Header row: Ikona rodzaju + Opis + Status icon
         Row(
           children: [
-            // Opis z fade-out
-            Expanded(
-              child: ShaderMask(
-                shaderCallback: (bounds) => LinearGradient(
-                  colors: [
-                    Colors.white,
-                    Colors.white,
-                    Colors.white.withValues(alpha: 0),
-                  ],
-                  stops: const [0.0, 0.85, 1.0],
-                ).createShader(bounds),
-                blendMode: BlendMode.dstIn,
-                child: Text(
-                  _medicine.opis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+            // Ikona rodzaju leku (pill/droplet/package)
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                medicineTypeIcon,
+                size: 16,
+                color: theme.colorScheme.primary,
               ),
             ),
-            // Status icon
+            const SizedBox(width: 12),
+
+            // Opis lub warning (dynamiczny)
+            Expanded(
+              child: _buildDescriptionOrWarning(theme, statusColor),
+            ),
+
+            // Status icon (termin ważności)
             if (_medicine.terminWaznosci != null) ...[
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: statusColor,
-                  borderRadius: BorderRadius.circular(12),
+                  color: statusColor.withValues(alpha: 0.15),
+                  border: Border.all(
+                    color: statusColor.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(statusIcon, size: 12, color: Colors.white),
+                child: Icon(statusIcon, size: 12, color: statusColor),
               ),
             ],
           ],
         ),
+
+        // Progress bar section (if stock available)
+        if (_medicine.packages.isNotEmpty && stockText.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Column(
+            children: [
+              // Label row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    stockLabel,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    stockText,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+
+              // Progress bar track
+              Container(
+                height: 8,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: stockPercentage,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: BorderRadius.circular(4),
+                        boxShadow: [
+                          BoxShadow(
+                            color: statusColor.withValues(alpha: 0.3),
+                            blurRadius: 4,
+                            spreadRadius: 0,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
