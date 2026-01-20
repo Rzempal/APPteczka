@@ -157,11 +157,9 @@ class _MedicineCardState extends State<MedicineCard> {
               ? BoxDecoration(
                   color: isDark ? AppColors.darkSurface : AppColors.lightBackground,
                   borderRadius: AppTheme.organicRadiusSmall,
-                  border: Border(
-                    left: BorderSide(
-                      color: statusColor,
-                      width: 3,
-                    ),
+                  border: Border.all(
+                    color: statusColor.withValues(alpha: 0.2),
+                    width: 1.5,
                   ),
                   boxShadow: widget.isPerformanceMode
                       ? [
