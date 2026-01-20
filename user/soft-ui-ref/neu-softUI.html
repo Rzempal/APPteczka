@@ -2,207 +2,392 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karton DEV - Premium UI Showcase</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
         :root {
             --radius-phone: 50px 50px 20px 80px;
-            --radius-card: 28px;
-            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            --radius-card: 32px 32px 14px 62px;
+            --anim-speed: 0.4s;
+            --easing: cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        /* --- DARK MODE: INNOVATION INDIGO (LEFT) --- */
-        .theme-dark {
-            --bg-base: #1A1A2E; 
-            --frame: #004D40; 
-            --text-h: #E6E6FA; /* Lavender */
-            --text-p: #7A7A9A;
-            --accent: #00FF9D; /* Neon Mint */
-            --neu-l: #242442;
-            --neu-d: #0A0A16;
-            --status-warn: #FFBD2E;
+        /* --- MOTYW JASNY: EARTHY CLINICAL --- */
+        .light-mode {
+            --bg-page: #DCDDE1;
+            --phone-frame: #3E514B;
+            --app-bg: #F9F6F2;
+            --text-h: #3E514B;
+            --text-p: #6B7C77;
+            --accent: #5D8A82;
+            --card-shadow: 12px 12px 24px #E8E3D8, -6px -6px 12px #FFFFFF;
+            --card-border: rgba(62, 81, 75, 0.15); /* Subtelny outline szałwiowy */
+            --light-edge: rgba(255, 255, 255, 0.8);
+            --progress-track: rgba(62, 81, 75, 0.05);
         }
 
-        /* --- LIGHT MODE: EARTHY CLINICAL (RIGHT) --- */
-        .theme-light {
-            --bg-base: #F9F6F2; 
-            --frame: #3E514B; 
-            --text-h: #3E514B; 
-            --text-p: #8A9A95;
-            --accent: #5D8A82; 
-            --neu-l: #FFFFFF;
-            --neu-d: #E8E3D8;
-            --status-warn: #DCA546;
+        /* --- MOTYW CIEMNY: INNOVATION INDIGO --- */
+        .dark-mode {
+            --bg-page: #0F0F1A;
+            --phone-frame: #004D40;
+            --app-bg: #1A1A2E;
+            --text-h: #E6E6FA;
+            --text-p: #8E8EA8;
+            --accent: #00FF9D;
+            --card-shadow: 14px 14px 28px #0A0A16, -6px -6px 14px rgba(36, 36, 66, 0.5);
+            --card-border: rgba(0, 255, 157, 0.15); /* Poświata miętowa */
+            --light-edge: rgba(0, 255, 157, 0.05);
+            --progress-track: rgba(0, 255, 157, 0.05);
         }
 
-        body { 
-            background: #E2E4E9; font-family: 'Inter', sans-serif; 
-            display: flex; gap: 60px; padding: 60px; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
+        body {
+            margin: 0;
+            padding: 40px;
+            font-family: 'Inter', sans-serif;
+            background: #E5E7EB;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 60px;
+            flex-wrap: wrap;
+            min-height: 100vh;
         }
 
-        /* PHONE STRUCTURE */
+        .phone-wrapper {
+            position: relative;
+            text-align: center;
+        }
+
+        .label {
+            margin-bottom: 25px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 13px;
+            color: #4B5563;
+        }
+
+        /* STRUKTURA TELEFONU */
         .phone {
-            width: 360px; height: 740px; background: var(--frame); padding: 12px;
-            border-radius: var(--radius-phone); position: relative;
-            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.3);
+            width: 360px;
+            height: 760px;
+            background: var(--phone-frame);
+            padding: 14px;
+            border-radius: var(--radius-phone);
+            box-shadow: 0 40px 80px -20px rgba(0,0,0,0.4);
+            position: relative;
+            transition: var(--anim-speed) var(--easing);
         }
 
         .screen {
-            background: var(--bg-base); border-radius: 40px 40px 15px 72px;
-            height: 100%; width: 100%; position: relative; overflow: hidden;
-            display: flex; flex-direction: column;
+            background: var(--app-bg);
+            border-radius: 40px 40px 15px 72px;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
 
-        .content { padding: 30px 24px; flex: 1; overflow-y: auto; }
-
-        /* NEUMORPHIC HEADER */
-        .header { margin-bottom: 35px; }
-        .header h1 { font-size: 32px; font-weight: 800; margin: 0; color: var(--text-h); letter-spacing: -1px; }
-        .header p { font-size: 13px; color: var(--text-p); margin-top: 5px; }
-
-        /* SEARCH (INSET NEU) */
-        .search-container {
-            background: var(--bg-base); padding: 16px 20px; border-radius: 22px;
-            box-shadow: inset 8px 8px 16px var(--neu-d), inset -8px -8px 16px var(--neu-l);
-            display: flex; align-items: center; margin-bottom: 35px;
+        .top-bar {
+            height: 30px;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 30px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-p);
+            letter-spacing: 0.5px;
         }
-        .search-container input { border: none; background: transparent; outline: none; flex: 1; margin-left: 12px; color: var(--text-h); font-weight: 600; }
 
-        /* NEUMORPHIC CARD */
+        .content {
+            padding: 10px 24px 40px 24px;
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .content::-webkit-scrollbar { display: none; }
+
+        header { margin-bottom: 30px; }
+        header h1 { font-size: 30px; font-weight: 800; color: var(--text-h); margin: 0; letter-spacing: -1px; }
+        header p { color: var(--text-p); font-size: 14px; margin-top: 4px; font-weight: 500; }
+
+        /* WYSZUKIWARKA */
+        .search-box {
+            background: var(--app-bg);
+            padding: 16px 20px;
+            border-radius: 22px;
+            box-shadow: inset 6px 6px 12px rgba(0,0,0,0.06), inset -6px -6px 12px rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            margin-bottom: 35px;
+        }
+        .dark-mode .search-box {
+            box-shadow: inset 8px 8px 16px #0A0A16, inset -8px -8px 16px rgba(36, 36, 66, 0.6);
+        }
+        .search-box i { color: var(--text-p); opacity: 0.7; }
+        .search-box input { border: none; background: transparent; flex: 1; margin-left: 12px; outline: none; color: var(--text-h); font-weight: 600; font-size: 15px; }
+
+        /* HYBRID CARD Z OUTLINE */
         .card {
-            background: var(--bg-base); border-radius: var(--radius-card); padding: 22px; margin-bottom: 28px;
-            box-shadow: 10px 10px 20px var(--neu-d), -10px -10px 20px var(--neu-l);
-            transition: var(--transition); border: 1px solid rgba(255,255,255,0.05);
+            background: var(--app-bg);
+            border-radius: var(--radius-card);
+            padding: 24px;
+            margin-bottom: 28px;
+            position: relative;
+            box-shadow: var(--card-shadow);
+            /* NOWY OUTLINE */
+            border: 1.5px solid var(--card-border);
+            transition: transform 0.3s var(--easing);
         }
-        .card:hover { transform: translateY(-5px); }
 
-        .card-top { display: flex; align-items: center; margin-bottom: 20px; }
+        /* Subtelny gradient krawędziowy dla głębi premium */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            background: linear-gradient(135deg, var(--light-edge), transparent 50%);
+            opacity: 0.6;
+        }
+
+        .card:active {
+            transform: scale(0.975);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
         .icon-neu {
-            width: 48px; height: 48px; background: var(--bg-base); border-radius: 16px;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 5px 5px 10px var(--neu-d), -5px -5px 10px var(--neu-l);
-            margin-right: 18px; color: var(--accent);
+            width: 44px;
+            height: 44px;
+            background: var(--app-bg);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 4px 4px 8px rgba(0,0,0,0.06), -4px -4px 8px rgba(255,255,255,0.8);
+            margin-right: 18px;
+            color: var(--accent);
+            border: 1px solid var(--card-border);
+        }
+        .dark-mode .icon-neu {
+            box-shadow: 4px 4px 10px #0A0A16, -4px -4px 10px rgba(36, 36, 66, 0.6);
         }
 
-        .med-info h3 { margin: 0; font-size: 18px; color: var(--text-h); }
-        .med-info span { font-size: 12px; color: var(--text-p); font-weight: 600; }
+        .med-info h3 { margin: 0; font-size: 17px; font-weight: 700; color: var(--text-h); }
+        .med-info span { font-size: 13px; color: var(--text-p); font-weight: 500; }
 
-        /* PROGRESS BAR */
-        .stock-label { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; color: var(--text-p); margin-bottom: 8px; text-transform: uppercase; }
-        .bar-track { height: 10px; background: var(--bg-base); border-radius: 5px; box-shadow: inset 3px 3px 6px var(--neu-d), inset -3px -3px 6px var(--neu-l); overflow: hidden; }
-        .bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--text-h)); border-radius: 5px; }
+        .stock-section { position: relative; z-index: 2; }
+        .stock-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--text-p);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
 
-        /* DASHED LEGAL BOX */
-        .legal-box {
-            margin-top: 20px; padding: 18px; border: 2px dashed var(--frame); border-radius: 25px;
-            font-size: 11px; line-height: 1.5; color: var(--text-p); display: flex; gap: 12px;
+        .bar-track {
+            height: 10px;
+            background: var(--progress-track);
+            border-radius: 5px;
+            box-shadow: inset 2px 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 5px;
+            box-shadow: 0 0 12px var(--accent);
+        }
+
+        /* LEGAL BOX */
+        .legal {
+            margin-top: 15px;
+            padding: 18px;
+            border: 2px dashed var(--phone-frame);
+            border-radius: 25px;
+            font-size: 11px;
+            color: var(--text-p);
+            display: flex;
+            gap: 12px;
+            opacity: 0.85;
+            line-height: 1.5;
+            font-weight: 500;
         }
 
         /* FAB */
         .fab {
-            position: absolute; bottom: 30px; right: 30px; width: 70px; height: 70px;
-            background: var(--bg-base); border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 12px 12px 24px var(--neu-d), -12px -12px 24px var(--neu-l);
-            color: var(--accent); cursor: pointer; transition: var(--transition);
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            background: var(--app-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            cursor: pointer;
+            box-shadow: 12px 12px 24px rgba(0,0,0,0.18), -8px -8px 16px rgba(255,255,255,0.8);
+            border: 1.5px solid var(--card-border);
+            transition: var(--transition);
         }
-        .fab:hover { transform: scale(1.1) rotate(90deg); }
+        .dark-mode .fab {
+            box-shadow: 12px 12px 28px #0A0A16, -10px -10px 20px rgba(36, 36, 66, 0.6);
+        }
+        .fab:hover { transform: rotate(90deg) scale(1.05); }
+
     </style>
 </head>
 <body>
 
-    <div class="phone theme-dark">
-        <div class="screen">
-            <div class="content">
-                <header class="header">
-                    <h1>Apteczka</h1>
-                    <p>Wszystkie dane są zsynchronizowane</p>
-                </header>
-                
-                <div class="search-container">
-                    <i data-lucide="search" size="20" color="var(--text-p)"></i>
-                    <input type="text" placeholder="Szukaj leku...">
+    <!-- WARIANT JASNY -->
+    <div class="phone-wrapper light-mode">
+        <div class="label">Earthy Clinical (Outline)</div>
+        <div class="phone">
+            <div class="screen">
+                <div class="top-bar">
+                    <span>08:38</span>
+                    <div style="display:flex; gap: 8px; align-items:center;">
+                        <i data-lucide="signal" size="13"></i>
+                        <i data-lucide="wifi" size="13"></i>
+                        <i data-lucide="battery" size="13"></i>
+                    </div>
                 </div>
+                <div class="content">
+                    <header>
+                        <h1>Moja Apteczka</h1>
+                        <p>Dzisiaj, 20 stycznia</p>
+                    </header>
 
-                <div class="card">
-                    <div class="card-top">
-                        <div class="icon-neu"><i data-lucide="pill"></i></div>
-                        <div class="med-info">
-                            <h3>Amoxicillin 500</h3>
-                            <span>Kapsułki • 2x dziennie</span>
+                    <div class="search-box">
+                        <i data-lucide="search" size="18"></i>
+                        <input type="text" placeholder="Szukaj leku...">
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="icon-neu"><i data-lucide="pill"></i></div>
+                            <div class="med-info">
+                                <h3>Amoxicillin 500</h3>
+                                <span>2 kapsułki dziennie</span>
+                            </div>
+                        </div>
+                        <div class="stock-section">
+                            <div class="stock-label"><span>Dostępność</span><span>24 / 30 szt.</span></div>
+                            <div class="bar-track"><div class="bar-fill" style="width: 80%"></div></div>
                         </div>
                     </div>
-                    <div class="stock-label"><span>Stan zapasów</span><span>24 / 30 szt.</span></div>
-                    <div class="bar-track"><div class="bar-fill" style="width: 80%"></div></div>
-                </div>
 
-                <div class="card">
-                    <div class="card-top">
-                        <div class="icon-neu" style="color:var(--status-warn)"><i data-lucide="droplets"></i></div>
-                        <div class="med-info">
-                            <h3>Fenistil krople</h3>
-                            <span>Aerozol • Doraźnie</span>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="icon-neu"><i data-lucide="tablets"></i></div>
+                            <div class="med-info">
+                                <h3>Ibuprofen Max</h3>
+                                <span>Doraźnie, po jedzeniu</span>
+                            </div>
+                        </div>
+                        <div class="stock-section">
+                            <div class="stock-label"><span>Dostępność</span><span>10 / 12 szt.</span></div>
+                            <div class="bar-track"><div class="bar-fill" style="width: 83%"></div></div>
                         </div>
                     </div>
-                    <div class="stock-label"><span style="color:var(--status-warn)">Niski stan</span><span>2 / 20 ml</span></div>
-                    <div class="bar-track"><div class="bar-fill" style="width: 15%; background: var(--status-warn)"></div></div>
-                </div>
 
-                <div class="legal-box">
-                    <i data-lucide="shield-check"></i>
-                    <span>To jest projekt demonstracyjny. W sprawach zdrowia skonsultuj się z lekarzem lub farmaceutą.</span>
+                    <div class="legal">
+                        <i data-lucide="info" size="16" style="flex-shrink:0; margin-top: 2px;"></i>
+                        <span>Aplikacja ma charakter pomocniczy. Przed użyciem leku zawsze przeczytaj ulotkę.</span>
+                    </div>
+                </div>
+                <div class="fab">
+                    <i data-lucide="plus" size="34"></i>
                 </div>
             </div>
-            <div class="fab"><i data-lucide="plus" size="32"></i></div>
         </div>
     </div>
 
-    <div class="phone theme-light">
-        <div class="screen">
-            <div class="content">
-                <header class="header">
-                    <h1>Apteczka</h1>
-                    <p>Ostatnia aktualizacja: Dzisiaj 10:45</p>
-                </header>
-                
-                <div class="search-container">
-                    <i data-lucide="search" size="20" color="var(--text-p)"></i>
-                    <input type="text" placeholder="Szukaj leku...">
+    <!-- WARIANT CIEMNY -->
+    <div class="phone-wrapper dark-mode">
+        <div class="label">Innovation Indigo (Glow)</div>
+        <div class="phone">
+            <div class="screen">
+                <div class="top-bar">
+                    <span>20:38</span>
+                    <div style="display:flex; gap: 8px; align-items:center;">
+                        <i data-lucide="signal" size="13"></i>
+                        <i data-lucide="wifi" size="13"></i>
+                        <i data-lucide="battery" size="13"></i>
+                    </div>
                 </div>
+                <div class="content">
+                    <header>
+                        <h1>Moja Apteczka</h1>
+                        <p>Dane są zsynchronizowane</p>
+                    </header>
 
-                <div class="card">
-                    <div class="card-top">
-                        <div class="icon-neu"><i data-lucide="tablets"></i></div>
-                        <div class="med-info">
-                            <h3>Ibuprofen Max</h3>
-                            <span>Tabletki • Po jedzeniu</span>
+                    <div class="search-box">
+                        <i data-lucide="search" size="18"></i>
+                        <input type="text" placeholder="Wyszukaj...">
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="icon-neu"><i data-lucide="thermometer"></i></div>
+                            <div class="med-info">
+                                <h3>Paracetamol</h3>
+                                <span>Syrop • 120ml</span>
+                            </div>
+                        </div>
+                        <div class="stock-section">
+                            <div class="stock-label"><span>Pozostało</span><span>45 / 120 ml</span></div>
+                            <div class="bar-track"><div class="bar-fill" style="width: 40%"></div></div>
                         </div>
                     </div>
-                    <div class="stock-label"><span>Stan zapasów</span><span>12 / 12 szt.</span></div>
-                    <div class="bar-track"><div class="bar-fill" style="width: 100%"></div></div>
-                </div>
 
-                <div class="card">
-                    <div class="card-top">
-                        <div class="icon-neu"><i data-lucide="thermometer"></i></div>
-                        <div class="med-info">
-                            <h3>Paracetamol</h3>
-                            <span>Syrop • 120ml</span>
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="icon-neu" style="color: #FFBD2E; border-color: rgba(255, 189, 46, 0.3);"><i data-lucide="alert-triangle"></i></div>
+                            <div class="med-info">
+                                <h3>Insulina Rapid</h3>
+                                <span style="color: #FFBD2E;">KRYTYCZNIE NISKI STAN</span>
+                            </div>
+                        </div>
+                        <div class="stock-section">
+                            <div class="stock-label"><span style="color: #FFBD2E;">UZUPEŁNIJ</span><span>0 / 5 szt.</span></div>
+                            <div class="bar-track"><div class="bar-fill" style="width: 5%; background: #FFBD2E; box-shadow: 0 0 15px rgba(255, 189, 46, 0.6);"></div></div>
                         </div>
                     </div>
-                    <div class="stock-label"><span>Stan zapasów</span><span>45 / 120 ml</span></div>
-                    <div class="bar-track"><div class="bar-fill" style="width: 40%"></div></div>
-                </div>
 
-                <div class="legal-box">
-                    <i data-lucide="shield-check"></i>
-                    <span>To jest projekt demonstracyjny. W sprawach zdrowia skonsultuj się z lekarzem lub farmaceutą.</span>
+                    <div class="legal">
+                        <i data-lucide="shield" size="16" style="flex-shrink:0; margin-top: 2px;"></i>
+                        <span>System przypomnień jest aktywny. Zadbaj o regularność przyjmowania dawek.</span>
+                    </div>
+                </div>
+                <div class="fab">
+                    <i data-lucide="plus" size="34"></i>
                 </div>
             </div>
-            <div class="fab"><i data-lucide="plus" size="32"></i></div>
         </div>
     </div>
 
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+    </script>
 </body>
 </html>
+
