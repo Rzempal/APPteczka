@@ -435,7 +435,7 @@ class _KartonOpenPainter extends CustomPainter {
       ..lineTo(8, -15)
       ..lineTo(-8, -15)
       ..close();
-    canvas.drawPath(tubePath, Paint()..color = AppColors.primaryLight);
+    canvas.drawPath(tubePath, Paint()..color = AppColors.accent);
     // Cień tubki
     final tubeShadowPath = Path()
       ..moveTo(-10, 25)

@@ -170,12 +170,12 @@ class _NavBarItem extends StatelessWidget {
                   colors: isSelected
                       ? (isDark
                           ? [
-                              AppColors.darkSurfaceLight,
+                              AppColors.darkShadowLight,
                               AppColors.darkSurface,
                             ]
                           : [
                               AppColors.lightSurface,
-                              AppColors.lightSurfaceDark,
+                              AppColors.lightShadowDark,
                             ])
                       : [backgroundColor, backgroundColor],
                 ),

@@ -462,7 +462,7 @@ class HomeScreenState extends State<HomeScreen> {
           // Licznik leków - neumorficzny kontener
           NeuStaticContainer(
             isSmall: true,
-            borderRadius: 12,
+            radius: 12,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
