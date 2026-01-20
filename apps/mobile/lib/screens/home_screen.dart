@@ -251,28 +251,10 @@ class HomeScreenState extends State<HomeScreen> {
               // Line 1: Logo + Title
               _buildHeaderLine1(theme, isDark),
 
-              // Line 2: Search bar z gradientem
+              // Line 2: Search bar
               _buildSearchBar(theme, isDark),
 
-              // Gradient pod całą górną sekcją
-              Container(
-                height: 20,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      isDark
-                          ? AppColors.darkBackground
-                          : AppColors.lightBackground,
-                      (isDark
-                              ? AppColors.darkBackground
-                              : AppColors.lightBackground)
-                          .withAlpha(0),
-                    ],
-                  ),
-                ),
-              ),
+              const SizedBox(height: 12),
 
               // Lista leków - responsywny grid dla szerokich ekranów
               Expanded(
@@ -377,58 +359,6 @@ class HomeScreenState extends State<HomeScreen> {
                                 child: card,
                               );
                             },
-                          ),
-                          // Gradient fade-out na górze
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            top: 0,
-                            height: 40,
-                            child: IgnorePointer(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [
-                                      (isDark
-                                              ? AppColors.darkBackground
-                                              : AppColors.lightBackground)
-                                          .withAlpha(0),
-                                      isDark
-                                          ? AppColors.darkBackground
-                                          : AppColors.lightBackground,
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          // Gradient fade-out na dole
-                          Positioned(
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            height: 40,
-                            child: IgnorePointer(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      (isDark
-                                              ? AppColors.darkBackground
-                                              : AppColors.lightBackground)
-                                          .withAlpha(0),
-                                      isDark
-                                          ? AppColors.darkBackground
-                                          : AppColors.lightBackground,
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
                           ),
                         ],
                       ),
