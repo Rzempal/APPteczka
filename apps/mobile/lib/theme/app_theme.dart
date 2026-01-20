@@ -127,6 +127,22 @@ class AppTheme {
     bottomLeft: Radius.circular(36),
   );
 
+  /// Organic radius for bottom sheets (only top corners)
+  static const BorderRadius organicRadiusBottomSheet = BorderRadius.only(
+    topLeft: Radius.circular(50),
+    topRight: Radius.circular(50),
+    bottomRight: Radius.zero,
+    bottomLeft: Radius.zero,
+  );
+
+  /// Organic radius for bottom sheet inner content
+  static const BorderRadius organicRadiusBottomSheetInner = BorderRadius.only(
+    topLeft: Radius.circular(36),
+    topRight: Radius.circular(36),
+    bottomRight: Radius.circular(12),
+    bottomLeft: Radius.circular(24),
+  );
+
   // ============================================
   // LIGHT THEME - Earthy Clinical
   // ============================================
