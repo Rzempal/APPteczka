@@ -246,18 +246,18 @@ class HomeScreenState extends State<HomeScreen> {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         body: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              // Line 1: Logo + Title
-              _buildHeaderLine1(theme, isDark),
+              // Main content - Column z headerem i listą
+              Column(
+                children: [
+                  // Line 1: Logo + Title
+                  _buildHeaderLine1(theme, isDark),
 
-              // Line 2: Search bar
-              _buildSearchBar(theme, isDark),
+                  const SizedBox(height: 12),
 
-              const SizedBox(height: 12),
-
-              // Lista leków - responsywny grid dla szerokich ekranów
-              Expanded(
+                  // Lista leków - responsywny grid dla szerokich ekranów
+                  Expanded(
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _filteredMedicines.isEmpty
@@ -362,7 +362,12 @@ class HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
+                  ),
+                ],
               ),
+
+              // Floating search bar - positioned below header
+              _buildFloatingSearchBar(theme, isDark),
             ],
           ),
         ),
@@ -385,31 +390,40 @@ class HomeScreenState extends State<HomeScreen> {
             accentColor: AppConfig.isInternal ? AppColors.expired : null,
           ),
           const SizedBox(width: 12),
-          // Tytuł lub data - animowane przełączanie
+          // Tytuł - slide left za karton
           Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: _isTitleVisible
-                  ? Text(
-                      AppConfig.isInternal ? 'Karton DEV' : 'Karton z lekami',
-                      key: const ValueKey('title'),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppConfig.isInternal
-                            ? AppColors.expired
-                            : AppColors.primary,
-                      ),
-                    )
-                  : Text(
-                      _getTodayDate(),
-                      key: const ValueKey('date'),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+            child: ClipRect(
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                alignment: _isTitleVisible ? Alignment.centerLeft : Alignment.centerRight,
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: _isTitleVisible ? 1.0 : 0.0,
+                  child: Text(
+                    AppConfig.isInternal ? 'Karton DEV' : 'Karton z lekami',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppConfig.isInternal
+                          ? AppColors.expired
+                          : AppColors.primary,
                     ),
+                  ),
+                ),
+              ),
             ),
           ),
+          // Data - pokazuje się gdy tytuł schowany
+          if (!_isTitleVisible)
+            Expanded(
+              child: Text(
+                _getTodayDate(),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
           // Update badge - simplified
           if (updateAvailable) ...[
             const SizedBox(width: 8),
@@ -511,80 +525,87 @@ class HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildSearchBar(ThemeData theme, bool isDark) {
-    // Oblicz opacity i translację na podstawie scroll offset
-    final opacity = (_scrollOffset < 100) ? 1.0 - (_scrollOffset / 100) : 0.0;
-    final translation = _scrollOffset.clamp(0.0, 30.0);
+  Widget _buildFloatingSearchBar(ThemeData theme, bool isDark) {
+    // Oblicz scale i opacity na podstawie scroll offset
+    final progress = (_scrollOffset / 80).clamp(0.0, 1.0);
+    final scale = 1.0 - (progress * 0.1); // Scale down 10%
+    final opacity = 1.0 - progress;
 
-    return AnimatedOpacity(
-      opacity: opacity.clamp(0.0, 1.0),
-      duration: Duration.zero, // Instant update podczas scroll
-      child: Transform.translate(
-        offset: Offset(0, -translation),
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            // Glassmorphism effect
-            color: isDark
-                ? AppColors.darkSurface.withValues(alpha: 0.5)
-                : AppColors.lightSurface.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
+    return Positioned(
+      top: 72, // Poniżej headera (48px logo + 12px padding + 12px margin)
+      left: 16,
+      right: 16,
+      child: AnimatedOpacity(
+        opacity: opacity,
+        duration: Duration.zero, // Instant update podczas scroll
+        child: Transform.scale(
+          scale: scale,
+          alignment: Alignment.topCenter,
+          child: Container(
+            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              // Glassmorphism effect
               color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.05),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                  ? AppColors.darkSurface.withValues(alpha: 0.5)
+                  : AppColors.lightSurface.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
+                width: 1,
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Icon(
-                LucideIcons.search,
-                size: 20,
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  focusNode: _searchFocusNode,
-                  decoration: InputDecoration(
-                    hintText: 'Szukaj leku...',
-                    hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant
-                          .withValues(alpha: 0.5),
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  onChanged: (value) {
-                    final wasActive = _filterState.hasActiveFilters;
-                    setState(() {
-                      _filterState = _filterState.copyWith(searchQuery: value);
-                    });
-                    if (wasActive != _filterState.hasActiveFilters) {
-                      widget.onFiltersChanged?.call();
-                    }
-                  },
-                  onSubmitted: (_) {
-                    _searchFocusNode.unfocus();
-                  },
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
-              ),
-            ],
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  LucideIcons.packageSearch,
+                  size: 20,
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _searchController,
+                    focusNode: _searchFocusNode,
+                    decoration: InputDecoration(
+                      hintText: 'Szukaj leku...',
+                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant
+                            .withValues(alpha: 0.5),
+                      ),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    onChanged: (value) {
+                      final wasActive = _filterState.hasActiveFilters;
+                      setState(() {
+                        _filterState = _filterState.copyWith(searchQuery: value);
+                      });
+                      if (wasActive != _filterState.hasActiveFilters) {
+                        widget.onFiltersChanged?.call();
+                      }
+                    },
+                    onSubmitted: (_) {
+                      _searchFocusNode.unfocus();
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
