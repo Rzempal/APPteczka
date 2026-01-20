@@ -218,41 +218,47 @@ class _MainNavigationState extends State<MainNavigation> {
           ],
         ),
       ),
-      bottomNavigationBar: FloatingNavBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            if (index == 1) {
-              // Apteczka tab
-              if (_currentIndex != 1) {
-                // Przechodzimy z innego tabu -> pokaż toolbar
-                _currentIndex = 1;
-                _showApteczkaToolbar = true;
-              } else {
-                // Już jesteśmy w Apteczce -> toggle toolbar
-                _showApteczkaToolbar = !_showApteczkaToolbar;
+      bottomNavigationBar: ValueListenableBuilder<bool>(
+        valueListenable: widget.storageService.performanceModeNotifier,
+        builder: (context, performanceMode, _) {
+          return FloatingNavBar(
+            currentIndex: _currentIndex,
+            performanceMode: performanceMode,
+            onTap: (index) {
+              setState(() {
+                if (index == 1) {
+                  // Apteczka tab
+                  if (_currentIndex != 1) {
+                    // Przechodzimy z innego tabu -> pokaż toolbar
+                    _currentIndex = 1;
+                    _showApteczkaToolbar = true;
+                  } else {
+                    // Już jesteśmy w Apteczce -> toggle toolbar
+                    _showApteczkaToolbar = !_showApteczkaToolbar;
+                  }
+                } else {
+                  // Inne taby -> ukryj toolbar
+                  _currentIndex = index;
+                  _showApteczkaToolbar = false;
+                }
+              });
+              // Odśwież widok po przełączeniu na Apteczkę
+              if (index == 1) {
+                _homeKey.currentState?.refresh();
               }
-            } else {
-              // Inne taby -> ukryj toolbar
-              _currentIndex = index;
-              _showApteczkaToolbar = false;
-            }
-          });
-          // Odśwież widok po przełączeniu na Apteczkę
-          if (index == 1) {
-            _homeKey.currentState?.refresh();
-          }
+            },
+            items: [
+              const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
+              NavItem(
+                icon: LucideIcons.briefcaseMedical, // fallback
+                iconBuilder: (color, size) =>
+                    KartonMonoClosedIcon(size: size, color: color),
+                label: 'Apteczka',
+              ),
+              const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
+            ],
+          );
         },
-        items: [
-          const NavItem(icon: LucideIcons.plus, label: 'Dodaj'),
-          NavItem(
-            icon: LucideIcons.briefcaseMedical, // fallback
-            iconBuilder: (color, size) =>
-                KartonMonoClosedIcon(size: size, color: color),
-            label: 'Apteczka',
-          ),
-          const NavItem(icon: LucideIcons.settings2, label: 'Ustawienia'),
-        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
