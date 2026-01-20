@@ -994,3 +994,58 @@ W formularzach Fluttera, rozróżniaj pola kontrolowane (`controller` / `value`)
 (`initialValue`). Mieszenie tych podejść to proszenie się o błędy UI.
 
 ---
+
+## 22. Interpolacja AnimatedContainer między różnymi typami właściwości (Flutter)
+
+**Data:** 2026-01-20 **Kontekst:** Floating bottom bar - artefakty wizualne podczas animacji
+przełączania zakładek
+
+### ❌ Błąd
+
+AnimatedContainer interpolował między dwoma różnymi typami wypełnienia BoxDecoration:
+
+- **Stan nieaktywny**: `color: backgroundColor` + `gradient: null`
+- **Stan aktywny**: `color: null` + `gradient: LinearGradient(...)`
+
+To powodowało pojawienie się niepożądanego ciemnoszarego okręgu w trakcie animacji, gdy gradient
+zanikał/pojawiał się, a `color` był widoczny w międzyczasie.
+
+```dart
+// ❌ Błędnie - przełączanie między color a gradient
+BoxDecoration(
+  color: isSelected ? null : backgroundColor,  // Przełączanie typu
+  gradient: isSelected ? LinearGradient(...) : null,  // Drugi typ
+)
+```
+
+### ✅ Poprawne rozwiązanie
+
+Używanie **tylko gradient** dla obu stanów. Dla nieaktywnego stanu gradient ma jednolity kolor (ten
+sam na początku i końcu).
+
+```dart
+// ✅ Poprawnie - ten sam typ właściwości dla obu stanów
+BoxDecoration(
+  // Bez color!
+  gradient: LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: isSelected
+        ? [AppColors.darkSurfaceLight, AppColors.darkSurface]  // Gradient neumorficzny
+        : [backgroundColor, backgroundColor],  // Jednolity kolor jako gradient
+  ),
+)
+```
+
+### Zasada ogólna
+
+Przy animacjach w Flutter (AnimatedContainer, AnimatedOpacity, itp.):
+
+1. **Interpoluj ten sam typ właściwości** - Flutter lepiej radzi sobie z interpolacją między dwoma
+   gradientami niż między color a gradient
+2. **Jednolity kolor jako gradient** - `[color, color]` daje ten sam efekt wizualny co `color`, ale
+   pozwala na płynną interpolację
+3. **Unikaj przełączania między null a wartością** - zamiast `value: condition ? x : null` użyj
+   `value: x dla obu stanów`
+
+---
