@@ -113,6 +113,10 @@ class _SettingsScreenState extends State<SettingsScreen>
               _buildEditModeSection(context, theme, isDark),
               const SizedBox(height: 24),
 
+              // Tryb wydajności
+              _buildPerformanceModeSection(context, theme, isDark),
+              const SizedBox(height: 24),
+
               // Kopia zapasowa (akordeon)
               _buildBackupSection(theme, isDark),
               const SizedBox(height: 24),
@@ -803,6 +807,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   bool _isGesturesOpen = false;
   bool _isEditModeOpen = false;
+  bool _isPerformanceModeOpen = false;
 
   Widget _buildGesturesSection(
     BuildContext context,
@@ -1065,6 +1070,161 @@ class _SettingsScreenState extends State<SettingsScreen>
                                 setLocalState(() {});
                                 setState(() {});
                               },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPerformanceModeSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        final isEnabled = widget.storageService.performanceMode;
+        return Container(
+          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () => setLocalState(
+                  () => _isPerformanceModeOpen = !_isPerformanceModeOpen,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isEnabled ? LucideIcons.zap : LucideIcons.zapOff,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tryb wydajności',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              isEnabled ? 'Włączony' : 'Wyłączony',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _isPerformanceModeOpen
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        size: 20,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Zawartość zwijana
+              if (_isPerformanceModeOpen) ...[
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Toggle switch
+                      NeuInsetContainer(
+                        borderRadius: 12,
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Uproszczone efekty 3D',
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Zmniejsz obciążenie GPU dla starszych urządzeń. Efekty neumorficzne będą prostsze, ale aplikacja będzie działać płynniej.',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Switch(
+                              value: isEnabled,
+                              onChanged: (value) {
+                                widget.storageService.performanceMode = value;
+                                setLocalState(() {});
+                                setState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Opis techniczny
+                      NeuInsetContainer(
+                        borderRadius: 12,
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.info,
+                                  size: 16,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Jak to działa?',
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tryb wydajności redukuje złożoność cieni (offset ±4, blur 8 zamiast ±10, blur 20), co zmniejsza obciążenie GPU o ~60%.',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '💡 Zalecane dla urządzeń z Androidem < 10',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
