@@ -172,7 +172,10 @@ class _SettingsScreenState extends State<SettingsScreen>
     final isUpToDate = updateService.isUpToDate;
 
     return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -435,7 +438,10 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   Widget _buildSyncSection(BuildContext context, ThemeData theme, bool isDark) {
     return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -520,7 +526,10 @@ class _SettingsScreenState extends State<SettingsScreen>
         final currentModeLabel = _getThemeModeLabel(displayMode);
 
         return Container(
-          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
           child: Column(
             children: [
               // Header - klikalne
@@ -817,7 +826,10 @@ class _SettingsScreenState extends State<SettingsScreen>
     return StatefulBuilder(
       builder: (context, setLocalState) {
         return Container(
-          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
           child: Column(
             children: [
               // Header - klikalne
@@ -981,7 +993,10 @@ class _SettingsScreenState extends State<SettingsScreen>
       builder: (context, setLocalState) {
         final isEnabled = widget.storageService.editModeAlwaysActive;
         return Container(
-          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
           child: Column(
             children: [
               // Header - klikalne
@@ -1094,7 +1109,10 @@ class _SettingsScreenState extends State<SettingsScreen>
       builder: (context, setLocalState) {
         final isEnabled = widget.storageService.performanceMode;
         return Container(
-          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
           child: Column(
             children: [
               // Header - klikalne
@@ -1246,7 +1264,10 @@ class _SettingsScreenState extends State<SettingsScreen>
     return StatefulBuilder(
       builder: (context, setLocalState) {
         return Container(
-          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
           child: Column(
             children: [
               // Header - klikalne
@@ -1461,7 +1482,10 @@ class _SettingsScreenState extends State<SettingsScreen>
     return StatefulBuilder(
       builder: (context, setLocalState) {
         return Container(
-          decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+          decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
           child: Column(
             children: [
               // Header - klikalne

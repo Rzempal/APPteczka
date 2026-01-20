@@ -209,7 +209,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     final theme = Theme.of(context);
 
     return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
@@ -267,7 +270,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     final lightbulbColor = _heroExpanded ? Colors.amber.shade600 : Colors.grey;
 
     return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
@@ -440,7 +446,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
 
     return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
@@ -534,7 +543,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     final aiColor = isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
 
     return Container(
-      decoration: NeuDecoration.flat(isDark: isDark, radius: 16),
+      decoration: NeuDecoration.flat(
+        isDark: isDark,
+        borderRadius: AppTheme.organicRadiusSmall,
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [

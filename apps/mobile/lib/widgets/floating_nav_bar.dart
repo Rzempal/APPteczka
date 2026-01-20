@@ -17,16 +17,19 @@ class NavItem {
 /// - Tło: kolory neumorficzne (nie białe)
 /// - Aktywny element: efekt convex (wypukły, "wypływa" nad pasek)
 /// - Cienie neumorficzne (light top-left, dark bottom-right)
+/// - Organic shape: asymetryczne zaokrąglenia (Soft UI 2026)
 class FloatingNavBar extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
   final List<NavItem> items;
+  final bool performanceMode;
 
   const FloatingNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
     required this.items,
+    this.performanceMode = false,
   });
 
   @override
@@ -74,20 +77,26 @@ class FloatingNavBar extends StatelessWidget {
         height: 72,
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(24),
-          // Cienie neumorficzne - flat style
+          borderRadius: AppTheme.organicRadiusSmall, // Organic shape (Soft UI 2026)
+          // Cienie neumorficzne - flat style (Small variant: ±6, blur 12)
           boxShadow: [
             // Cień jasny (top-left)
             BoxShadow(
-              color: shadowLight,
-              blurRadius: 12,
-              offset: const Offset(-4, -4),
+              color: shadowLight.withValues(alpha: isDark ? 0.1 : 1.0),
+              blurRadius: performanceMode ? 6.0 : 12.0,
+              offset: Offset(
+                performanceMode ? -3.0 : -6.0,
+                performanceMode ? -3.0 : -6.0,
+              ),
             ),
             // Cień ciemny (bottom-right)
             BoxShadow(
-              color: shadowDark.withValues(alpha: 0.4),
-              blurRadius: 12,
-              offset: const Offset(4, 4),
+              color: shadowDark.withValues(alpha: isDark ? 0.6 : 0.6),
+              blurRadius: performanceMode ? 6.0 : 12.0,
+              offset: Offset(
+                performanceMode ? 3.0 : 6.0,
+                performanceMode ? 3.0 : 6.0,
+              ),
             ),
           ],
         ),
@@ -107,6 +116,7 @@ class FloatingNavBar extends StatelessWidget {
               backgroundColor: backgroundColor,
               shadowLight: shadowLight,
               shadowDark: shadowDark,
+              performanceMode: performanceMode,
               onTap: () {
                 HapticFeedback.lightImpact();
                 onTap(index);
@@ -129,6 +139,7 @@ class _NavBarItem extends StatelessWidget {
   final Color backgroundColor;
   final Color shadowLight;
   final Color shadowDark;
+  final bool performanceMode;
   final VoidCallback onTap;
 
   const _NavBarItem({
@@ -140,6 +151,7 @@ class _NavBarItem extends StatelessWidget {
     required this.backgroundColor,
     required this.shadowLight,
     required this.shadowDark,
+    required this.performanceMode,
     required this.onTap,
   });
 
@@ -180,19 +192,30 @@ class _NavBarItem extends StatelessWidget {
                       : [backgroundColor, backgroundColor],
                 ),
                 // Cienie neumorficzne - tylko dla aktywnego (convex)
+                // XS variant dla małego elementu
                 boxShadow: isSelected
                     ? [
                         // Jasny cień (top-left) - efekt wypukłości
                         BoxShadow(
-                          color: shadowLight,
-                          blurRadius: 8,
-                          offset: const Offset(-3, -3),
+                          color: shadowLight.withValues(
+                            alpha: isDark ? 0.1 : 1.0,
+                          ),
+                          blurRadius: performanceMode ? 3.0 : 6.0,
+                          offset: Offset(
+                            performanceMode ? -1.5 : -3.0,
+                            performanceMode ? -1.5 : -3.0,
+                          ),
                         ),
                         // Ciemny cień (bottom-right)
                         BoxShadow(
-                          color: shadowDark.withValues(alpha: 0.5),
-                          blurRadius: 8,
-                          offset: const Offset(3, 3),
+                          color: shadowDark.withValues(
+                            alpha: isDark ? 0.6 : 0.5,
+                          ),
+                          blurRadius: performanceMode ? 3.0 : 6.0,
+                          offset: Offset(
+                            performanceMode ? 1.5 : 3.0,
+                            performanceMode ? 1.5 : 3.0,
+                          ),
                         ),
                       ]
                     : null,

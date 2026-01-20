@@ -74,7 +74,7 @@ class _InnerContentContainer extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: innerBgColor,
-        borderRadius: BorderRadius.circular(BottomSheetConstants.innerRadius),
+        borderRadius: AppTheme.organicRadiusBottomSheetInner,
         // Efekt inset shadow - neumorficzne "wgłębienie"
         boxShadow: [
           // Cień wewnętrzny górny-lewy (ciemny)
@@ -129,12 +129,10 @@ class AppBottomSheet {
             : AppColors.lightSurface;
 
         return Container(
-          // Zewnętrzna ramka
+          // Zewnętrzna ramka z organic shape (Soft UI 2026)
           decoration: BoxDecoration(
             color: frameColor,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(BottomSheetConstants.radius),
-            ),
+            borderRadius: AppTheme.organicRadiusBottomSheet,
             // Subtelny cień dla całego bottomSheet
             boxShadow: [
               BoxShadow(
