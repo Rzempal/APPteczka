@@ -452,61 +452,64 @@ class HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMi
           const SizedBox(width: 12),
           // Tytuł + Data - Stack dla płynnej transycji bez konfliktu layoutu
           Expanded(
-            child: Stack(
-              children: [
-                // Tytuł - slide left + fade out
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  left: _isTitleVisible ? 0 : -300,
-                  top: 0,
-                  bottom: 0,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: _isTitleVisible ? 1.0 : 0.0,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        AppConfig.isInternal ? 'Karton DEV' : 'Karton z lekami',
-                        maxLines: 1,
-                        overflow: TextOverflow.clip,
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: AppConfig.isInternal
-                              ? AppColors.expired
-                              : AppColors.primary,
+            child: SizedBox(
+              height: 48, // Fixed height for AnimatedPositioned constraints
+              child: Stack(
+                children: [
+                  // Tytuł - slide left + fade out
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    left: _isTitleVisible ? 0 : -300,
+                    top: 0,
+                    bottom: 0,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: _isTitleVisible ? 1.0 : 0.0,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          AppConfig.isInternal ? 'Karton DEV' : 'Karton z lekami',
+                          maxLines: 1,
+                          overflow: TextOverflow.clip,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppConfig.isInternal
+                                ? AppColors.expired
+                                : AppColors.primary,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                // Data - slide from right + fade in
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  left: _isTitleVisible ? 300 : 0,
-                  top: 0,
-                  bottom: 0,
-                  right: 0,
-                  child: AnimatedOpacity(
-                    duration: const Duration(milliseconds: 200),
-                    opacity: _isTitleVisible ? 0.0 : 1.0,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        _getTodayDate(),
-                        maxLines: 1,
-                        overflow: TextOverflow.visible,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: theme.colorScheme.onSurfaceVariant,
+                  // Data - slide from right + fade in
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    left: _isTitleVisible ? 300 : 0,
+                    top: 0,
+                    bottom: 0,
+                    right: 0,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 200),
+                      opacity: _isTitleVisible ? 0.0 : 1.0,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _getTodayDate(),
+                          maxLines: 1,
+                          overflow: TextOverflow.visible,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           // Update badge - simplified
