@@ -34,7 +34,7 @@ Your job as LLM is to:
 1. **Guide** the user through the code review checklist
 2. **Verify** documentation needs updating
 3. **Prepare** the commit message with proper numbering
-4. **Execute** the Git commit and push to `claude/*` branch
+4. **Execute** the Git commit and push to `main` branch
 
 ---
 
@@ -115,23 +115,15 @@ git commit -m "#412 Refaktoryzacja struktury plikow i aktualizacja dokumentacji"
 
 ### Step 4: Git Push
 
-**IMPORTANT:** Claude cannot push directly to `main` (403 error). Must push to designated `claude/*`
-branch.
-
 **Instructions for LLM:**
 
-1. Push to the designated claude branch: `git push -u origin HEAD:claude/<branch-name>`
+1. Push directly to main: `git push origin main`
 2. Confirm push was successful
-3. Inform user that changes are on `claude/*` branch and need to be merged to `main`
 
 **Example:**
 
 ```bash
-# Push current commits to claude branch
-git push -u origin main:claude/feature-branch-name
-
-# If local main is ahead, reset after push
-git fetch origin main && git reset --hard origin/main
+git push origin main
 ```
 
 ---
@@ -144,42 +136,7 @@ After finishing all steps, provide the user with:
 - ✅ Lessons learned documented
 - ✅ Documentation updated (if needed)
 - ✅ Commit #N created with message: "..."
-- ✅ Changes pushed to working branch
-
----
-
-## Next Step: Merge to Main
-
-**User must merge working branch to `main`**.
-
-**Option 1 - VS Code Task:**
-
-```
-Ctrl+Shift+P → "Tasks: Run Task" → "Git: PR + Merge to Main"
-```
-
-**Option 2 - Terminal:**
-
-```bash
-.\scripts\run_merge_pr.bat
-```
-
-**Option 3 - Manual merge:**
-
-```bash
-git fetch origin
-git checkout main
-git merge origin/claude/<branch-name>
-git push origin main
-```
-
-**Option 4 - Claude workflow:**
-
-```
-/merge
-```
-
-(see `.agent/workflows/merge.md`)
+- ✅ Changes pushed to main
 
 ---
 

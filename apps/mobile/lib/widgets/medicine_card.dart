@@ -205,15 +205,58 @@ class _MedicineCardState extends State<MedicineCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(
-                  theme,
-                  isDark,
-                  medicineLabels,
-                  statusColor,
-                  statusIcon,
-                ),
+                // W compact mode: Row z ikoną + Column(H1, H2)
                 if (widget.isCompact)
-                  _buildCompactContent(theme, statusColor, statusIcon),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Ikona typu leku (wysokość H1+H2)
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _getMedicineTypeIcon(),
+                          size: 22,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Column z H1 (nazwa) + H2 (dynamicStatus)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildHeader(
+                              theme,
+                              isDark,
+                              medicineLabels,
+                              statusColor,
+                              statusIcon,
+                            ),
+                            const SizedBox(height: 4),
+                            _buildDescriptionOrWarning(theme, statusColor),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  _buildHeader(
+                    theme,
+                    isDark,
+                    medicineLabels,
+                    statusColor,
+                    statusIcon,
+                  ),
+                // H3 + H4 pod spodem (tylko compact)
+                if (widget.isCompact)
+                  _buildCompactStockSection(theme, statusColor),
                 if (!widget.isCompact)
                   _buildExpandedContent(theme, isDark, statusColor),
               ],
@@ -238,22 +281,6 @@ class _MedicineCardState extends State<MedicineCard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Ikona typu leku (tylko w compact mode)
-          if (widget.isCompact)
-            Container(
-              width: 40,
-              height: 40,
-              margin: const EdgeInsets.only(right: 12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                _getMedicineTypeIcon(),
-                size: 20,
-                color: theme.colorScheme.primary,
-              ),
-            ),
           // Lewa strona: Nazwa + Ikona duplikatu + Etykiety (tylko w compact)
           Expanded(
             child: Wrap(
@@ -454,13 +481,8 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
-  Widget _buildCompactContent(
-    ThemeData theme,
-    Color statusColor,
-    IconData statusIcon,
-  ) {
-    // Określ ikonę rodzaju leku na podstawie jednostki
-    IconData medicineTypeIcon = LucideIcons.pill; // Default
+  /// Buduje sekcję H3+H4 (zapas leku + progress bar) dla trybu compact
+  Widget _buildCompactStockSection(ThemeData theme, Color statusColor) {
     String unitLabel = 'szt.';
     int currentStock = 0;
     int totalCapacity = 0;
@@ -470,22 +492,18 @@ class _MedicineCardState extends State<MedicineCard> {
     if (_medicine.packages.isNotEmpty) {
       final firstPackage = _medicine.packages.first;
 
-      // Ikona i jednostka zależna od typu opakowania
+      // Jednostka zależna od typu opakowania
       switch (firstPackage.unit) {
         case PackageUnit.ml:
-          medicineTypeIcon = LucideIcons.droplet;
           unitLabel = 'ml';
           break;
         case PackageUnit.pieces:
-          medicineTypeIcon = LucideIcons.pill;
           unitLabel = 'szt.';
           break;
         case PackageUnit.sachets:
-          medicineTypeIcon = LucideIcons.package;
           unitLabel = 'sasz.';
           break;
         case PackageUnit.none:
-          medicineTypeIcon = LucideIcons.packageOpen;
           unitLabel = '';
           break;
       }
@@ -515,60 +533,60 @@ class _MedicineCardState extends State<MedicineCard> {
         ? '$currentStock$unitLabel / $totalCapacity$unitLabel'
         : '';
 
+    // Jeśli brak danych o zapasie, zwróć pusty widget
+    if (stockDisplay.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // H2: dynamicStatus (bez badge daty)
-        _buildDescriptionOrWarning(theme, statusColor),
-
-        // H3: Zapas leku + wartość (jeśli dostępne)
-        if (stockDisplay.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Zapas leku',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
+        // H3: Zapas leku + wartość
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Zapas leku',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
               ),
-              Text(
-                stockDisplay,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ],
-          ),
-
-          // H4: Progress bar
-          const SizedBox(height: 6),
-          Container(
-            height: 6,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(3),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: stockPercentage,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
+            Text(
+              stockDisplay,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+
+        // H4: Progress bar
+        const SizedBox(height: 6),
+        Container(
+          height: 6,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: stockPercentage,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: statusColor,
+                  borderRadius: BorderRadius.circular(3),
                 ),
               ),
             ),
           ),
-        ],
+        ),
       ],
     );
   }
