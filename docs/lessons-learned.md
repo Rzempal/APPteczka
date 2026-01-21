@@ -1218,4 +1218,48 @@ W Dart enum z non-const wartościami (ikony z zewnętrznych pakietów, runtime-g
 
 ---
 
+## 29. Synchronizacja tokenów kolorystycznych (design.md ↔ app_theme.dart)
+
+**Data:** 2026-01-21  
+**Kontekst:** Audyt palety kolorystycznej Light/Dark Mode
+
+### ❌ Błąd
+
+Dokumentacja designu (`design.md`) zawierała szczegółową paletę CSS tokens (np. `--card-bg`,
+`--border`, `--chip-inactive`), podczas gdy implementacja (`app_theme.dart`) miała:
+
+- Brakujące tokeny (np. `cardBg`, `border`)
+- Rozbieżne wartości hex (np. `lightTextMuted` był szary zamiast szaro-zielonego)
+- Niespójne nazewnictwo kolorów statusów (legacy vs themed)
+
+### ✅ Poprawne rozwiązanie
+
+Przeprowadź audyt porównawczy i zaktualizuj implementację:
+
+```dart
+// Dodane tokeny
+static const lightCardBg = Color(0xFFFFFFFF);
+static const darkCardBg = Color(0xFF1F1F35);
+static const lightBorder = Color(0x263E514B); // rgba(62,81,75,0.15)
+static const darkBorder = Color(0x3300FF9D);  // rgba(0,255,157,0.2)
+static const darkChipInactive = Color(0xFF262642);
+
+// Zaktualizowane kolory statusów (themed)
+static const expiredLight = Color(0xFFE26D5C);    // ciepły koral
+static const expiredDark = Color(0xFFFF7070);     // neonowy czerwony
+static const expiringSoonLight = Color(0xFFDCA546); // miodowy
+static const expiringSoonDark = Color(0xFFFFBD2E);  // neonowy żółty
+```
+
+### Zasada ogólna
+
+Przy aktualizacji dokumentacji designu:
+
+1. **Audyt 1:1** - każdy token CSS musi mieć odpowiednik w `app_theme.dart`
+2. **Konwersja formatu** - CSS `rgba(r,g,b,a)` → Dart `Color(0xAARRGGBB)`
+3. **Themed variants** - Light/Dark Mode wymagają osobnych stałych
+4. **Backward compatibility** - zachowaj legacy tokeny z komentarzem `@deprecated`
+
+---
+
 > 📅 **Ostatnia aktualizacja:** 2026-01-21

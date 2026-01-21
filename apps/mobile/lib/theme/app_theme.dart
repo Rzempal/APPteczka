@@ -26,7 +26,15 @@ class AppColors {
 
   // ============================================
   // STATUS COLORS - kolory statusów ważności
+  // Design.md: Warning/Alert, Danger/Error
   // ============================================
+  // Light mode: cieplejsze odcienie
+  static const Color expiredLight = Color(0xFFE26D5C); // Koralowy
+  static const Color expiringSoonLight = Color(0xFFDCA546); // Złoty
+  // Dark mode: neonowe odcienie
+  static const Color expiredDark = Color(0xFFFF7070); // Neonowy czerwony
+  static const Color expiringSoonDark = Color(0xFFFFBD2E); // Neonowy żółty
+  // Legacy (do stopniowej migracji)
   static const Color expired = Color(0xFFef4444);
   static const Color expiringSoon = Color(0xFFf59e0b);
   static const Color valid = Color(0xFF22c55e);
@@ -36,11 +44,17 @@ class AppColors {
   // ============================================
   static const Color lightBackground = Color(0xFFF9F6F2); // Bone White
   static const Color lightSurface = Color(0xFFF9F6F2); // Same as background
-  static const Color lightFrame = Color(0xFF3E514B); // Smoky Green (frame color)
+  static const Color lightCardBg = Color(0xFFFFFFFF); // Czysta biała - tło kart
+  static const Color lightFrame = Color(
+    0xFF3E514B,
+  ); // Smoky Green (frame color)
   static const Color lightText = Color(0xFF1f2937);
-  static const Color lightTextMuted = Color(0xFF4b5563);
+  static const Color lightTextMuted = Color(
+    0xFF6B7C77,
+  ); // Szaro-zielony (design.md)
   static const Color lightShadowLight = Color(0xFFFFFFFF); // Spec: white
   static const Color lightShadowDark = Color(0xFFE8E3D8); // Spec: darker bone
+  static const Color lightBorder = Color(0x263E514B); // rgba(62, 81, 75, 0.15)
 
   // Light mode card backgrounds (adjusted for Bone White base)
   static const Color lightCardExpired = Color(0xFFFEF2F2);
@@ -73,11 +87,24 @@ class AppColors {
   // ============================================
   static const Color darkBackground = Color(0xFF1A1A2E); // Deep Indigo
   static const Color darkSurface = Color(0xFF1A1A2E); // Same as background
+  static const Color darkCardBg = Color(
+    0xFF1F1F35,
+  ); // Rozświetlone indygo - tło kart
   static const Color darkFrame = Color(0xFF004D40); // Deep Teal (frame color)
   static const Color darkText = Color(0xFFE6E6FA); // Lavender (headline text)
   static const Color darkTextMuted = Color(0xFF94a3b8);
-  static const Color darkShadowLight = Color(0xFF242442); // Spec: lighter indigo
-  static const Color darkShadowDark = Color(0xFF0A0A16); // Spec: very dark indigo
+  static const Color darkShadowLight = Color(
+    0xFF242442,
+  ); // Spec: lighter indigo
+  static const Color darkShadowDark = Color(
+    0xFF0A0A16,
+  ); // Spec: very dark indigo
+  static const Color darkBorder = Color(
+    0x3300FF9D,
+  ); // rgba(0, 255, 157, 0.2) - Neon Glow
+  static const Color darkChipInactive = Color(
+    0xFF262642,
+  ); // Tło nieaktywnych chipów
 
   // Dark mode card backgrounds (adjusted for Deep Indigo base)
   static const Color darkCardExpired = Color(0xFF7f1d1d);
