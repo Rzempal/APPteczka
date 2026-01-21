@@ -9,7 +9,7 @@ param(
     [switch]$CreateTag
 )
 
-$SCRIPT_VERSION = "v12.8"
+$SCRIPT_VERSION = "v12.9"
 $ErrorActionPreference = "Stop"
 
 # === Konfiguracja ===
@@ -88,6 +88,7 @@ function Update-DeployLog {
     }
 
     $newEntry = @"
+``
 ## $timestamp | $Channel | v$VersionName
 - **APK:** ``$ApkName``
 - **versionCode:** $VersionCode
@@ -96,6 +97,7 @@ $durationLine
 
 **Ostatnie zmiany:**
 $commitLines
+```
 "@
 
     # Read existing entries
@@ -286,11 +288,11 @@ Print-Info "Kanal: $Channel"
 Print-Info "Wersja: v$VERSION_NAME"
 Print-Info "versionCode: $VERSION_CODE (yyDDDHHmm)"
 Print-Info "APK: $APK_NAME"
-Print-Info "Ostatnie zmiany:"
-if ($LAST_COMMITS -is [string]) { $LAST_COMMITS = @($LAST_COMMITS) }
-foreach ($commit in $LAST_COMMITS) {
-    Print-Info "  $commit"
-}
+# Print-Info "Ostatnie zmiany:"
+# if ($LAST_COMMITS -is [string]) { $LAST_COMMITS = @($LAST_COMMITS) }
+# foreach ($commit in $LAST_COMMITS) {
+#     Print-Info "  $commit"
+# }
 Write-Host ""
 
 # 1. Budowanie
