@@ -1,7 +1,6 @@
 ---
 description:
   Task completion workflow with code review checklist and Git commit/push process. Ensures
-  documentation updates, lessons learned capture, and consistent commit numbering in Polish.
 ---
 
 ---
@@ -44,8 +43,8 @@ Your job as LLM is to:
 
 **Check against these files:**
 
-- `docs/code-review.md` - follow the code review checklist
-- `docs/lessons-learned.md` - add/update key takeaways from:
+- `docs\standards\code-review.md` - follow the code review checklist
+- `docs\lessons-learned.md` - add/update key takeaways from:
   - Completed tasks
   - Resolved technical issues
   - Ideas for process improvement
@@ -72,7 +71,7 @@ Your job as LLM is to:
 1. Review changes made during the session
 2. Identify if README.md or docs/ require updates
 3. If updates needed, make them before committing
-4. If `docs/contributing.md` exists, follow its documentation guidelines
+4. If `docs\standards\contributing.md` exists, follow its documentation guidelines
 
 ---
 

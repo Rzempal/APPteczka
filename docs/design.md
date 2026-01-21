@@ -63,6 +63,20 @@ Zasady spójności (Consistency):
 
 - **`FloatingNavBar`**: Lewitująca nawigacja dolna.
 - **`CollapsibleContainer`**: Rozwijane sekcje szczegółów.
+- **`MedicineCard`**: Karta leku z dwoma trybami wyświetlania.
+  - **Compact mode:** Ikona typu + nazwa + etykiety + progress bar zapasu.
+  - **Expanded mode:** Struktura sekcji:
+    1. Header (nazwa + etykiety + chevron) - **klikalne etykiety** → dodają do filtrów
+    2. Tagi (bez nagłówka) - **klikalne tagi** → dodają do filtrów
+    3. Opis (bez nagłówka H1)
+    4. Wskazania + CTA Ulotka (`newspaper` icon) + pin-off
+    5. Notatka (inline edit)
+    6. Zapas leku: `(icon)X szt. / (icon)Y op., wystarczy do DD.MM`
+    7. Więcej (akordeon): Termin ważności, Kalkulator, Shelf Life, Usuń
+    8. Przyciski akcji
+- **`FiltersSheet`**: Panel filtrów z zakładkami kategorii.
+  - Używa `buildContent(context, scrollController)` do osadzania w `AppBottomSheet.show()`.
+  - Wewnętrznie zawiera: SearchBar, CategoryTabs, Content, ActionButtons.
 
 ---
 
@@ -88,4 +102,4 @@ Neumorfizm niesie ryzyko niskiego kontrastu. Aby zachować standardy z `DESIGN.m
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-14
+> 📅 **Ostatnia aktualizacja:** 2026-01-21

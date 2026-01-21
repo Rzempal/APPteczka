@@ -732,23 +732,25 @@ class HomeScreenState extends State<HomeScreen> {
   void _showFilters() {
     setState(() => _isFiltersSheetOpen = true);
     final labels = widget.storageService.getLabels();
-    showModalBottomSheet(
+
+    AppBottomSheet.show(
           context: context,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          builder: (context) => FiltersSheet(
-            initialState: _filterState,
-            availableTags: _allTags,
-            availableLabels: labels,
-            onApply: (newState) {
-              setState(() {
-                _filterState = newState;
-              });
-              widget.onFiltersChanged?.call();
-            },
-          ),
+          initialChildSize: 0.75,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return FiltersSheet(
+              initialState: _filterState,
+              availableTags: _allTags,
+              availableLabels: labels,
+              onApply: (newState) {
+                setState(() {
+                  _filterState = newState;
+                });
+                widget.onFiltersChanged?.call();
+              },
+            );
+          },
         )
         .then((_) {
           _loadMedicines();

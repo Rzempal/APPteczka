@@ -311,8 +311,10 @@ class _FiltersSheetState extends State<FiltersSheet> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
+  /// Buduje zawartość FiltersSheet do osadzenia w AppBottomSheet.show
+  /// [scrollController] - przekazany z AppBottomSheet
+  Widget buildContent(BuildContext context, ScrollController scrollController) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return PopScope(
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
@@ -320,49 +322,33 @@ class _FiltersSheetState extends State<FiltersSheet> {
           widget.onApply(_state);
         }
       },
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.75,
-        minChildSize: 0.4,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) {
-          final isDark = Theme.of(context).brightness == Brightness.dark;
-          return Container(
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(BottomSheetConstants.radius),
-              ),
-            ),
-            child: Column(
-              children: [
-                // Handle
-                const BottomSheetDragHandle(),
+      child: Column(
+        children: [
+          // Header with title and clear button
+          _buildHeader(context),
 
-                // Header with title and clear button
-                _buildHeader(context),
+          // Search bar (inset neumorphic)
+          _buildSearchBar(context, isDark),
 
-                // Search bar (inset neumorphic)
-                _buildSearchBar(context, isDark),
+          // Horizontal category tabs
+          _buildCategoryTabs(context, isDark),
 
-                // Horizontal category tabs
-                _buildCategoryTabs(context, isDark),
+          const Divider(height: 1),
 
-                const Divider(height: 1),
+          // Content area
+          Expanded(child: _buildTabContent(context, scrollController, isDark)),
 
-                // Content area
-                Expanded(
-                  child: _buildTabContent(context, scrollController, isDark),
-                ),
-
-                // Action buttons
-                _buildActionButtons(context),
-              ],
-            ),
-          );
-        },
+          // Action buttons
+          _buildActionButtons(context),
+        ],
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Fallback dla kompatybilności wstecznej - używa buildContent z pustym scrollController
+    return buildContent(context, ScrollController());
   }
 
   Widget _buildHeader(BuildContext context) {
