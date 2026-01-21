@@ -9,7 +9,7 @@ param(
     [switch]$CreateTag
 )
 
-$SCRIPT_VERSION = "v12.9"
+$SCRIPT_VERSION = "v12.10"
 $ErrorActionPreference = "Stop"
 
 # === Konfiguracja ===
@@ -71,10 +71,10 @@ function Update-DeployLog {
     
     # Build new entry
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm"
-    $statusIcon = switch ($Status) {
-        "ok" { "[OK] Upload OK" }
-        "skipped" { "[SKIP] Upload pominiety" }
-        default { "[ERR] Blad" }
+    $statusText = switch ($Status) {
+        "ok" { "Upload OK" }
+        "skipped" { "Skipped" }
+        default { "Upload OK" }
     }
     
     $durationLine = ""
@@ -88,16 +88,13 @@ function Update-DeployLog {
     }
 
     $newEntry = @"
-``
+``````
 ## $timestamp | $Channel | v$VersionName
 - **APK:** ``$ApkName``
-- **versionCode:** $VersionCode
-- **Status:** $statusIcon
+- **Status:** $statusText
 $durationLine
-
 **Ostatnie zmiany:**
-$commitLines
-```
+$commitLines``````
 "@
 
     # Read existing entries
@@ -476,9 +473,6 @@ Print-Success "Calkowity czas: $finalDurationStr"
 
 # Update deploy log
 $summary = Update-DeployLog -Channel $Channel -VersionName $VERSION_NAME -VersionCode $VERSION_CODE -ApkName $APK_NAME -Commits $LAST_COMMITS -Status $DEPLOY_STATUS -Duration $finalDurationStr
-
-Write-Host "`n$summary" -ForegroundColor Cyan
-Write-Host "---`n"
-
-Write-Host ""
+Write-Host "$summary" -ForegroundColor Green
+Write-Host "---"
 exit 0
