@@ -132,9 +132,9 @@ class HomeScreenState extends State<HomeScreen> {
         // Scroll dotarł do góry - rozwija search bar
         _isSearchBarExpanded = true;
       } else if (isScrollingDown &&
-                 _scrollOffset > 50 &&
-                 _isSearchBarExpanded &&
-                 _searchController.text.isEmpty) {
+          _scrollOffset > 50 &&
+          _isSearchBarExpanded &&
+          _searchController.text.isEmpty) {
         // Scroll w dół + puste pole = zwija search bar
         _collapseSearchBar();
       }
@@ -155,7 +155,7 @@ class HomeScreenState extends State<HomeScreen> {
       'września',
       'października',
       'listopada',
-      'grudnia'
+      'grudnia',
     ];
     return 'Dzisiaj, ${now.day} ${months[now.month - 1]}';
   }
@@ -298,111 +298,121 @@ class HomeScreenState extends State<HomeScreen> {
 
                   // Lista leków - responsywny grid dla szerokich ekranów
                   Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _filteredMedicines.isEmpty
-                    ? _EmptyState(
-                        onDemoPressed: _addDemoMedicines,
-                        onAddPressed: widget.onNavigateToAdd,
-                        hasFilters: _filterState.hasActiveFilters,
-                      )
-                    : Stack(
-                        children: [
-                          // Główna lista - tryb akordeonowy
-                          ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.only(top: 68, bottom: 16),
-                            itemCount: _filteredMedicines.length,
-                            itemBuilder: (context, index) {
-                              final medicine = _filteredMedicines[index];
-                              final swipeEnabled =
-                                  widget.storageService.swipeGesturesEnabled;
-                              final isExpanded =
-                                  _expandedMedicineId == medicine.id;
-
-                              // RepaintBoundary prevents unnecessary redraws during scrolling
-                              // Critical for GPU-intensive neumorphic shadows (Soft UI 2026)
-                              final card = RepaintBoundary(
-                                child: MedicineCard(
-                                  medicine: medicine,
-                                  labels: _allLabels,
-                                  storageService: widget.storageService,
-                                  isCompact: !isExpanded,
-                                  isPerformanceMode: widget.storageService.performanceMode,
-                                  isDuplicate: hasDuplicates(
-                                    medicine,
-                                    _medicines,
-                                  ),
-                                  onExpand: () {
-                                    setState(() {
-                                      // Toggle - kliknięcie na rozwiniętą kartę zwija ją
-                                      if (_expandedMedicineId == medicine.id) {
-                                        _expandedMedicineId = null;
-                                      } else {
-                                        _expandedMedicineId = medicine.id;
-                                      }
-                                    });
-                                  },
-                                  onEdit: () => _editMedicine(medicine),
-                                  onDelete: () =>
-                                      _deleteMedicineWithConfirm(medicine),
-                                  onTagTap: (tag) => _filterByTag(tag),
-                                  onLabelTap: (labelId) =>
-                                      _filterByLabel(labelId),
-                                  onMedicineUpdated: _loadMedicines,
+                    child: _isLoading
+                        ? const Center(child: CircularProgressIndicator())
+                        : _filteredMedicines.isEmpty
+                        ? _EmptyState(
+                            onDemoPressed: _addDemoMedicines,
+                            onAddPressed: widget.onNavigateToAdd,
+                            hasFilters: _filterState.hasActiveFilters,
+                          )
+                        : Stack(
+                            children: [
+                              // Główna lista - tryb akordeonowy
+                              ListView.builder(
+                                controller: _scrollController,
+                                padding: const EdgeInsets.only(
+                                  top: 68,
+                                  bottom: 16,
                                 ),
-                              );
+                                itemCount: _filteredMedicines.length,
+                                itemBuilder: (context, index) {
+                                  final medicine = _filteredMedicines[index];
+                                  final swipeEnabled = widget
+                                      .storageService
+                                      .swipeGesturesEnabled;
+                                  final isExpanded =
+                                      _expandedMedicineId == medicine.id;
 
-                              if (!swipeEnabled) {
-                                return card;
-                              }
+                                  // RepaintBoundary prevents unnecessary redraws during scrolling
+                                  // Critical for GPU-intensive neumorphic shadows (Soft UI 2026)
+                                  final card = RepaintBoundary(
+                                    child: MedicineCard(
+                                      medicine: medicine,
+                                      labels: _allLabels,
+                                      storageService: widget.storageService,
+                                      isCompact: !isExpanded,
+                                      isPerformanceMode:
+                                          widget.storageService.performanceMode,
+                                      isDuplicate: hasDuplicates(
+                                        medicine,
+                                        _medicines,
+                                      ),
+                                      onExpand: () {
+                                        setState(() {
+                                          // Toggle - kliknięcie na rozwiniętą kartę zwija ją
+                                          if (_expandedMedicineId ==
+                                              medicine.id) {
+                                            _expandedMedicineId = null;
+                                          } else {
+                                            _expandedMedicineId = medicine.id;
+                                          }
+                                        });
+                                      },
+                                      onEdit: () => _editMedicine(medicine),
+                                      onDelete: () =>
+                                          _deleteMedicineWithConfirm(medicine),
+                                      onTagTap: (tag) => _filterByTag(tag),
+                                      onLabelTap: (labelId) =>
+                                          _filterByLabel(labelId),
+                                      onMedicineUpdated: _loadMedicines,
+                                    ),
+                                  );
 
-                              return Dismissible(
-                                key: Key(medicine.id),
-                                direction: DismissDirection.horizontal,
-                                // Swipe w prawo → notatki
-                                background: Container(
-                                  alignment: Alignment.centerLeft,
-                                  padding: const EdgeInsets.only(left: 32),
-                                  color: Colors.transparent,
-                                  child: Icon(
-                                    LucideIcons.clipboardPenLine,
-                                    size: 32,
-                                    color: isDark
-                                        ? AppColors.primary
-                                        : Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                                // Swipe w lewo → etykiety
-                                secondaryBackground: Container(
-                                  alignment: Alignment.centerRight,
-                                  padding: const EdgeInsets.only(right: 32),
-                                  color: Colors.transparent,
-                                  child: Icon(
-                                    LucideIcons.tags,
-                                    size: 32,
-                                    color: isDark
-                                        ? AppColors.primary
-                                        : Theme.of(context).colorScheme.primary,
-                                  ),
-                                ),
-                                confirmDismiss: (direction) async {
-                                  if (direction ==
-                                      DismissDirection.endToStart) {
-                                    // Swipe w lewo → edycja etykiet
-                                    _showLabelsSheet(medicine);
-                                  } else {
-                                    // Swipe w prawo → edycja notatki
-                                    _showEditNoteDialog(medicine);
+                                  if (!swipeEnabled) {
+                                    return card;
                                   }
-                                  return false; // Nie usuwaj karty
+
+                                  return Dismissible(
+                                    key: Key(medicine.id),
+                                    direction: DismissDirection.horizontal,
+                                    // Swipe w prawo → notatki
+                                    background: Container(
+                                      alignment: Alignment.centerLeft,
+                                      padding: const EdgeInsets.only(left: 32),
+                                      color: Colors.transparent,
+                                      child: Icon(
+                                        LucideIcons.clipboardPenLine,
+                                        size: 32,
+                                        color: isDark
+                                            ? AppColors.primary
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                      ),
+                                    ),
+                                    // Swipe w lewo → etykiety
+                                    secondaryBackground: Container(
+                                      alignment: Alignment.centerRight,
+                                      padding: const EdgeInsets.only(right: 32),
+                                      color: Colors.transparent,
+                                      child: Icon(
+                                        LucideIcons.tags,
+                                        size: 32,
+                                        color: isDark
+                                            ? AppColors.primary
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                      ),
+                                    ),
+                                    confirmDismiss: (direction) async {
+                                      if (direction ==
+                                          DismissDirection.endToStart) {
+                                        // Swipe w lewo → edycja etykiet
+                                        _showLabelsSheet(medicine);
+                                      } else {
+                                        // Swipe w prawo → edycja notatki
+                                        _showEditNoteDialog(medicine);
+                                      }
+                                      return false; // Nie usuwaj karty
+                                    },
+                                    child: card,
+                                  );
                                 },
-                                child: card,
-                              );
-                            },
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
                   ),
                 ],
               ),
@@ -450,7 +460,9 @@ class HomeScreenState extends State<HomeScreen> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          AppConfig.isInternal ? 'Karton DEV' : 'Karton z lekami',
+                          AppConfig.isInternal
+                              ? 'Karton DEV'
+                              : 'Karton z lekami',
                           maxLines: 1,
                           overflow: TextOverflow.clip,
                           style: theme.textTheme.titleLarge?.copyWith(
@@ -526,7 +538,9 @@ class HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? AppColors.accentDark : AppColors.primary,
+                        color: isDark
+                            ? AppColors.accentDark
+                            : AppColors.primary,
                       ),
                     ),
                   ],
@@ -545,11 +559,14 @@ class HomeScreenState extends State<HomeScreen> {
                 // Efekt: otwieranie/zamykanie kartonu
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
-                  switchInCurve: Curves.backOut, // Sprężynowanie przy wejściu
+                  switchInCurve:
+                      Curves.easeOutBack, // Sprężynowanie przy wejściu
                   switchOutCurve: Curves.easeIn, // Szybkie znikanie
                   transitionBuilder: (child, animation) {
                     // Określ kierunek: zamykanie (boxOpen→boxSearch) vs otwieranie (boxSearch→boxOpen)
-                    final isClosing = child.key == const ValueKey(true); // packageSearch = zamknięte
+                    final isClosing =
+                        child.key ==
+                        const ValueKey(true); // packageSearch = zamknięte
 
                     // Scale ranges:
                     // Closing: exit 1.0→0.5 (wieko zapada), entry 1.3→1.0 (zatrzask)
@@ -557,24 +574,26 @@ class HomeScreenState extends State<HomeScreen> {
                     final entryScale = isClosing ? 1.3 : 1.2;
 
                     return ScaleTransition(
-                      scale: Tween<double>(
-                        begin: entryScale,
-                        end: 1.0,
-                      ).animate(CurvedAnimation(
-                        parent: animation,
-                        curve: isClosing ? Curves.backOut : Curves.easeOut,
-                      )),
-                      child: FadeTransition(
-                        opacity: animation,
-                        child: child,
+                      scale: Tween<double>(begin: entryScale, end: 1.0).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: isClosing
+                              ? Curves.easeOutBack
+                              : Curves.easeOut,
+                        ),
                       ),
+                      child: FadeTransition(opacity: animation, child: child),
                     );
                   },
                   child: Icon(
                     key: ValueKey(!_isSearchBarExpanded),
-                    !_isSearchBarExpanded ? LucideIcons.packageSearch : LucideIcons.packageOpen,
+                    !_isSearchBarExpanded
+                        ? LucideIcons.packageSearch
+                        : LucideIcons.packageOpen,
                     size: 18,
-                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.7,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -599,11 +618,11 @@ class HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(
                 color: _isHelpTooltipOpen
                     ? (isDark
-                        ? AppColors.darkSurface.withValues(alpha: 0.5)
-                        : AppColors.lightSurface.withValues(alpha: 0.7))
+                          ? AppColors.darkSurface.withValues(alpha: 0.5)
+                          : AppColors.lightSurface.withValues(alpha: 0.7))
                     : (isDark
-                        ? AppColors.darkSurface.withValues(alpha: 0.2)
-                        : AppColors.lightSurface.withValues(alpha: 0.3)),
+                          ? AppColors.darkSurface.withValues(alpha: 0.2)
+                          : AppColors.lightSurface.withValues(alpha: 0.3)),
                 borderRadius: BorderRadius.circular(12),
                 border: _isHelpTooltipOpen
                     ? Border.all(
@@ -683,13 +702,16 @@ class HomeScreenState extends State<HomeScreen> {
                 child: Icon(
                   LucideIcons.packageSearch,
                   size: 20,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.7,
+                  ),
                 ),
               ),
               hintText: 'Szukaj leku...',
               hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant
-                    .withValues(alpha: 0.5),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.5,
+                ),
               ),
               border: InputBorder.none,
               isDense: true,
