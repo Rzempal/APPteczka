@@ -153,7 +153,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 _buildExpandableSection(
                   icon: LucideIcons.folderDown,
                   title: 'Import kopii zapasowej',
-                  subtitle: 'Wybierz plik kopii zapasowej, aby przywrócić zawartość apteczki.',
+                  subtitle:
+                      'Wybierz plik kopii zapasowej, aby przywrócić zawartość apteczki.',
                   isExpanded: _fileExpanded,
                   onToggle: () =>
                       setState(() => _fileExpanded = !_fileExpanded),
@@ -218,6 +219,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         children: [
           InkWell(
             onTap: onToggle,
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -280,6 +283,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           // Header - klikalne
           InkWell(
             onTap: () => setState(() => _heroExpanded = !_heroExpanded),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -456,6 +461,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           // Header z ikoną kaskadową
           InkWell(
             onTap: () => setState(() => _barcodeExpanded = !_barcodeExpanded),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -553,6 +560,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           // Header z ikoną kaskadową
           InkWell(
             onTap: () => _toggleManualSection(),
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
@@ -1168,7 +1177,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                 isVerifiedByBarcode: drug.isFromRpl,
               );
               await widget.storageService.saveMedicine(medicine);
-              _triggerShelfLifeAnalysis(medicine); // Auto-trigger shelf life analysis
+              _triggerShelfLifeAnalysis(
+                medicine,
+              ); // Auto-trigger shelf life analysis
               importedMedicines.add(medicine);
             } else {
               // AI nie rozpoznalo - zapisz tylko dane z RPL
@@ -1430,7 +1441,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           );
 
           await widget.storageService.saveMedicine(medicine);
-          _triggerShelfLifeAnalysis(medicine); // Auto-trigger shelf life analysis
+          _triggerShelfLifeAnalysis(
+            medicine,
+          ); // Auto-trigger shelf life analysis
           savedMedicines.add(medicine);
           _log.fine('Saved medicine: ${medicine.nazwa}');
         } catch (e) {
@@ -1599,8 +1612,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       return;
     }
 
-    _log.info(
-        'Triggering shelf life analysis for medicine: ${medicine.nazwa}');
+    _log.info('Triggering shelf life analysis for medicine: ${medicine.nazwa}');
 
     // Ustaw status na "pending" i zapisz
     final medicineWithPendingStatus = medicine.copyWith(
@@ -1628,18 +1640,14 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         _log.info('Shelf life analysis completed: ${result.period}');
       } else {
         // Nie znaleziono w ulotce (to nie jest błąd)
-        final updatedMedicine = medicine.copyWith(
-          shelfLifeStatus: 'not_found',
-        );
+        final updatedMedicine = medicine.copyWith(shelfLifeStatus: 'not_found');
         await widget.storageService.saveMedicine(updatedMedicine);
         _log.info('Shelf life not found in leaflet: ${result.reason}');
       }
     } catch (e) {
       _log.severe('Error analyzing shelf life: $e');
       // Oznacz jako błąd
-      final updatedMedicine = medicine.copyWith(
-        shelfLifeStatus: 'error',
-      );
+      final updatedMedicine = medicine.copyWith(shelfLifeStatus: 'error');
       await widget.storageService.saveMedicine(updatedMedicine);
     }
   }

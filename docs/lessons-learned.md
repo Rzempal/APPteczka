@@ -1094,3 +1094,65 @@ if (Test-Path $apkPath) {
 
 W automatyzacji buildów mobilnych „success condition” to obecność artefaktu (APK/IPA), a nie tylko
 kod wyjścia procesu buildera.
+
+---
+
+## 24. InkWell splash artifacts w kontenerach neumorficznych (Flutter)
+
+**Data:** 2026-01-21 **Kontekst:** Sekcje rozwijalne w ekranie "Dodaj leki" - szary prostokąt w
+narożnikach podczas kliknięcia
+
+### ❌ Błąd
+
+`InkWell` wewnątrz `Container` z neumorficzną dekoracją i `clipBehavior: Clip.antiAlias` powoduje
+pojawienie się szarego prostokątnego artefaktu w narożnikach podczas kliknięcia. Flutter domyślnie
+rysuje splash/highlight effect jako prostokąt, który przez krótką chwilę jest widoczny zanim
+clipping zadziała.
+
+```dart
+// ❌ Błędnie - szary artefakt podczas kliknięcia
+Container(
+  decoration: NeuDecoration.flat(isDark: isDark, borderRadius: organicRadius),
+  clipBehavior: Clip.antiAlias,
+  child: Column(
+    children: [
+      InkWell(  // Splash effect jest prostokątny!
+        onTap: onToggle,
+        child: Padding(...),
+      ),
+    ],
+  ),
+)
+```
+
+### ✅ Poprawne rozwiązanie
+
+Wyłącz splash i highlight effect w `InkWell` gdy jest używany w kontenerach neumorficznych:
+
+```dart
+// ✅ Poprawnie - brak artefaktów
+InkWell(
+  onTap: onToggle,
+  splashColor: Colors.transparent,
+  highlightColor: Colors.transparent,
+  child: Padding(...),
+)
+```
+
+### Alternatywne rozwiązania
+
+1. **Material wrapper** z `borderRadius` - zachowuje efekt splash ograniczony do zaokrąglonych rogów
+2. **GestureDetector** zamiast `InkWell` - brak efektu splash, ale zachowana funkcjonalność
+
+### Zasada ogólna
+
+Przy używaniu `InkWell` w kontenerach z niestandardowym `borderRadius` (szczególnie
+organic/asymmetric):
+
+- Splash effect jest domyślnie prostokątny i może wyciekać poza zaokrąglone rogi
+- Dla kontenerów neumorficznych najprościej jest wyłączyć splash/highlight
+- Alternatywnie użyj `Material` wrapper z odpowiednim `borderRadius`
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-21
