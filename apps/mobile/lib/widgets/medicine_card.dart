@@ -669,18 +669,18 @@ class _MedicineCardState extends State<MedicineCard> {
           ),
         ),
         // Ilość + ikona typu
+        Icon(
+          _getMedicineTypeIcon(),
+          size: 16,
+          color: theme.colorScheme.primary,
+        ),
+        const SizedBox(width: 4),
         Text(
           '$currentStock $unitLabel',
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w600,
             color: theme.colorScheme.onSurface,
           ),
-        ),
-        const SizedBox(width: 4),
-        Icon(
-          _getMedicineTypeIcon(),
-          size: 16,
-          color: theme.colorScheme.primary,
         ),
         // Separator
         Text(
@@ -690,18 +690,18 @@ class _MedicineCardState extends State<MedicineCard> {
           ),
         ),
         // Liczba opakowań + ikona
+        Icon(
+          LucideIcons.pillBottle,
+          size: 16,
+          color: theme.colorScheme.primary,
+        ),
+        const SizedBox(width: 4),
         Text(
           '$packageCount op.',
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.w600,
             color: theme.colorScheme.onSurface,
           ),
-        ),
-        const SizedBox(width: 4),
-        Icon(
-          LucideIcons.pillBottle,
-          size: 16,
-          color: theme.colorScheme.primary,
         ),
         // Data końcowa
         if (endDateStr != null) ...[
@@ -1197,11 +1197,11 @@ class _MedicineCardState extends State<MedicineCard> {
               GestureDetector(
                 onTap: _detachLeaflet,
                 child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 10,
-                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ), // Match NeuButton padding
+                  decoration: NeuDecoration.flat(isDark: isDark, radius: 10),
                   child: Icon(
                     LucideIcons.pinOff,
                     size: 16,
@@ -3426,19 +3426,22 @@ class _MedicineCardState extends State<MedicineCard> {
     final bgColor = Color(colorInfo.hexValue);
     final textColor = _getContrastColor(bgColor);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        label.name.toUpperCase(),
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: textColor,
-          letterSpacing: 0.5,
+    return GestureDetector(
+      onTap: () => widget.onLabelTap?.call(label.id),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          label.name.toUpperCase(),
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: textColor,
+            letterSpacing: 0.5,
+          ),
         ),
       ),
     );
@@ -3464,35 +3467,38 @@ class _MedicineCardState extends State<MedicineCard> {
 
   Widget _buildTag(String tag, bool isDark, ThemeData theme) {
     final borderColor = isDark ? Colors.grey.shade600 : Colors.grey.shade400;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: borderColor),
-      ),
-      child: Text.rich(
-        TextSpan(
-          children: [
-            TextSpan(
-              text: '#',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'monospace',
-                color: borderColor,
+    return GestureDetector(
+      onTap: () => widget.onTagTap?.call(tag),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+        ),
+        child: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: '#',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'monospace',
+                  color: borderColor,
+                ),
               ),
-            ),
-            TextSpan(
-              text: tag,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                fontFamily: 'monospace',
-                color: theme.colorScheme.onSurface,
+              TextSpan(
+                text: tag,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'monospace',
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
