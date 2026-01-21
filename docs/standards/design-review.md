@@ -80,4 +80,36 @@ Aktywnie usuń:
 
 ---
 
+## 🤖 Instrukcja dla Agenta AI
+
+**Podczas przeprowadzania Design Review:**
+
+1.  **Read-Only:** NIE poprawiaj plików CSS/HTML. Zgłoś uwagi.
+2.  **Output:** Wygeneruj raport w nowym pliku w katalogu `docs/audits/`.
+3.  **Nazewnictwo:** `docs/audits/design-audit-YYYYMMDD-HHmm.md`.
+4.  **Format Raportu:**
+
+```markdown
+# Design Audit: [Nazwa Widoku]
+
+Data: YYYY-MM-DD HH:mm
+
+## 1. Consistency Check
+
+- [ ] Spacing (4pt grid): [Pass/Fail]
+- [ ] Typografia: [Pass/Fail]
+- [ ] Kolory: [Pass/Fail]
+
+## 2. Lista Uwag
+
+- ❌ [Sekcja Hero] Niespójny padding (jest 13px, powinno być 16px).
+- ⚠️ [Button] Brak stanu :focus dla klawiatury.
+
+## 3. Rekomendacje
+
+Proszę poprawić paddingi w klasie `.hero-section` na `p-4` (Tailwind).
+```
+
+---
+
 > 📅 **Ostatnia aktualizacja:** 2026-01-15

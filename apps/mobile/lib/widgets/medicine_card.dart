@@ -238,6 +238,22 @@ class _MedicineCardState extends State<MedicineCard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Ikona typu leku (tylko w compact mode)
+          if (widget.isCompact)
+            Container(
+              width: 40,
+              height: 40,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                _getMedicineTypeIcon(),
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
+            ),
           // Lewa strona: Nazwa + Ikona duplikatu + Etykiety (tylko w compact)
           Expanded(
             child: Wrap(
@@ -318,6 +334,22 @@ class _MedicineCardState extends State<MedicineCard> {
         ],
       ),
     );
+  }
+
+  /// Zwraca ikonę typu leku na podstawie jednostki opakowania
+  IconData _getMedicineTypeIcon() {
+    if (_medicine.packages.isEmpty) return LucideIcons.pill;
+
+    switch (_medicine.packages.first.unit) {
+      case PackageUnit.ml:
+        return LucideIcons.droplet;
+      case PackageUnit.pieces:
+        return LucideIcons.pill;
+      case PackageUnit.sachets:
+        return LucideIcons.package;
+      case PackageUnit.none:
+        return LucideIcons.packageOpen;
+    }
   }
 
   /// Buduje opis lub warning - dynamiczny content
@@ -429,162 +461,112 @@ class _MedicineCardState extends State<MedicineCard> {
   ) {
     // Określ ikonę rodzaju leku na podstawie jednostki
     IconData medicineTypeIcon = LucideIcons.pill; // Default
-    String stockLabel = 'DOSTĘPNOŚĆ';
-    String stockText = '';
+    String unitLabel = 'szt.';
+    int currentStock = 0;
+    int totalCapacity = 0;
     double stockPercentage = 0.0;
 
-    // Oblicz zapas
+    // Oblicz zapas i sumę pojemności
     if (_medicine.packages.isNotEmpty) {
       final firstPackage = _medicine.packages.first;
 
-      // Ikona zależna od jednostki
+      // Ikona i jednostka zależna od typu opakowania
       switch (firstPackage.unit) {
         case PackageUnit.ml:
           medicineTypeIcon = LucideIcons.droplet;
+          unitLabel = 'ml';
           break;
         case PackageUnit.pieces:
           medicineTypeIcon = LucideIcons.pill;
+          unitLabel = 'szt.';
           break;
         case PackageUnit.sachets:
           medicineTypeIcon = LucideIcons.package;
+          unitLabel = 'sasz.';
           break;
         case PackageUnit.none:
           medicineTypeIcon = LucideIcons.packageOpen;
+          unitLabel = '';
           break;
       }
 
-      // Oblicz procentowy stan zapasu
-      if (firstPackage.isOpen && firstPackage.percentRemaining != null) {
-        // Dla otwartych - użyj percentRemaining
-        stockPercentage = firstPackage.percentRemaining! / 100.0;
-        stockText = '${firstPackage.percentRemaining}%';
-        stockLabel = 'POZOSTAŁO';
-      } else if (firstPackage.pieceCount != null) {
-        // Dla zamkniętych - pokaż ilość
-        final total = _medicine.totalPieceCount;
-        final unit = firstPackage.unit == PackageUnit.ml
-            ? 'ml'
-            : (firstPackage.unit == PackageUnit.sachets ? 'sasz.' : 'szt.');
-
-        // Jeśli mamy dailyIntake, oblicz %
-        if (_medicine.dailyIntake != null && _medicine.dailyIntake! > 0) {
-          final daysSupply = total / _medicine.dailyIntake!;
-          final optimalDays = 30.0; // Zakładamy 30 dni jako 100%
-          stockPercentage = (daysSupply / optimalDays).clamp(0.0, 1.0);
-        } else {
-          // Brak dailyIntake - pokaż jako pełny
-          stockPercentage = 0.8; // Default 80%
+      // Oblicz sumę pojemności i aktualny stan
+      for (final package in _medicine.packages) {
+        if (package.pieceCount != null) {
+          totalCapacity += package.pieceCount!;
+          // Aktualny stan - dla otwartych użyj percentRemaining
+          if (package.isOpen && package.percentRemaining != null) {
+            currentStock +=
+                (package.pieceCount! * package.percentRemaining! / 100).round();
+          } else {
+            currentStock += package.pieceCount!;
+          }
         }
+      }
 
-        stockText = '$total $unit';
+      // Oblicz procent zapasu
+      if (totalCapacity > 0) {
+        stockPercentage = (currentStock / totalCapacity).clamp(0.0, 1.0);
       }
     }
 
-    return Column(
-      children: [
-        const SizedBox(height: 12),
+    // Format zapasu: "30ml / 100ml" lub "15szt. / 30szt."
+    final stockDisplay = totalCapacity > 0
+        ? '$currentStock$unitLabel / $totalCapacity$unitLabel'
+        : '';
 
-        // Header row: Ikona rodzaju + Opis + Status icon
-        Row(
-          children: [
-            // Ikona rodzaju leku (pill/droplet/package)
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // H2: dynamicStatus (bez badge daty)
+        _buildDescriptionOrWarning(theme, statusColor),
+
+        // H3: Zapas leku + wartość (jeśli dostępne)
+        if (stockDisplay.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Zapas leku',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-              child: Icon(
-                medicineTypeIcon,
-                size: 16,
-                color: theme.colorScheme.primary,
+              Text(
+                stockDisplay,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+
+          // H4: Progress bar
+          const SizedBox(height: 6),
+          Container(
+            height: 6,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: stockPercentage,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(width: 12),
-
-            // Opis lub warning (dynamiczny)
-            Expanded(child: _buildDescriptionOrWarning(theme, statusColor)),
-
-            // Status icon (termin ważności)
-            if (_medicine.terminWaznosci != null) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  border: Border.all(
-                    color: statusColor.withValues(alpha: 0.3),
-                    width: 1,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(statusIcon, size: 12, color: statusColor),
-              ),
-            ],
-          ],
-        ),
-
-        // Progress bar section (if stock available)
-        if (_medicine.packages.isNotEmpty && stockText.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Column(
-            children: [
-              // Label row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    stockLabel,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  Text(
-                    stockText,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-
-              // Progress bar track
-              Container(
-                height: 8,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: FractionallySizedBox(
-                    alignment: Alignment.centerLeft,
-                    widthFactor: stockPercentage,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        borderRadius: BorderRadius.circular(4),
-                        boxShadow: [
-                          BoxShadow(
-                            color: statusColor.withValues(alpha: 0.3),
-                            blurRadius: 4,
-                            spreadRadius: 0,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ],
