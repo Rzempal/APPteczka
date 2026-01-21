@@ -547,28 +547,15 @@ class HomeScreenState extends State<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Ikona zmienia się z packageOpen ↔ packageSearch
-                // Efekt: otwieranie/zamykanie kartonu
+                // Efekt: otwieranie/zamykanie kartonu (scale + fade)
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
-                  switchInCurve: Curves.backOut, // Sprężynowanie przy wejściu
-                  switchOutCurve: Curves.easeIn, // Szybkie znikanie
+                  switchInCurve: Curves.easeOutBack,
+                  switchOutCurve: Curves.easeIn,
                   transitionBuilder: (child, animation) {
-                    // Określ kierunek: zamykanie (boxOpen→boxSearch) vs otwieranie (boxSearch→boxOpen)
-                    final isClosing = child.key == const ValueKey(true); // packageSearch = zamknięte
-
-                    // Scale ranges:
-                    // Closing: exit 1.0→0.5 (wieko zapada), entry 1.3→1.0 (zatrzask)
-                    // Opening: exit 1.0→0.5 (znika), entry 1.2→1.0 (wyskakuje)
-                    final entryScale = isClosing ? 1.3 : 1.2;
-
+                    // Uniwersalna animacja: scale from 1.2 → 1.0 + fade
                     return ScaleTransition(
-                      scale: Tween<double>(
-                        begin: entryScale,
-                        end: 1.0,
-                      ).animate(CurvedAnimation(
-                        parent: animation,
-                        curve: isClosing ? Curves.backOut : Curves.easeOut,
-                      )),
+                      scale: Tween<double>(begin: 1.2, end: 1.0).animate(animation),
                       child: FadeTransition(
                         opacity: animation,
                         child: child,
