@@ -1,12 +1,15 @@
 # 🎨 Neumorphism Style Guide
 
-> **Powiązane:** [Design Review](design-review.md) | [Standardy Kodu](conventions.md)
+> **Powiązane:** [Design Review](standards/design-review.md) |
+> [Standardy Kodu](standards/conventions.md)
 
 ---
 
 ## 🏛️ Filozofia Stylu
 
-Neumorfizm w tym projekcie nie jest celem samym w sobie, lecz narzędziem do budowania hierarchii. Zgodnie z zasadą **KISS** (patrz [Design Review](design-review.md)), stosujemy go oszczędnie, aby nie zaburzyć czytelności (Accessibility).
+Neumorfizm w tym projekcie nie jest celem samym w sobie, lecz narzędziem do budowania hierarchii.
+Zgodnie z zasadą **KISS** (patrz [Design Review](standards/design-review.md)), stosujemy go
+oszczędnie, aby nie zaburzyć czytelności (Accessibility).
 
 ---
 
@@ -16,12 +19,12 @@ Neumorfizm w tym projekcie nie jest celem samym w sobie, lecz narzędziem do bud
 
 Wszystkie dekoracje są wielokrotnością **8px Grid System**.
 
-| Metoda | Radius | Wygląd | Zastosowanie |
-| --- | --- | --- | --- |
-| **`.flat()`** | 16px | Wypukły, miękki | Standardowe kontenery, karty |
-| **`.flatSmall()`** | 12px | Wypukły, subtelny | Tagi, chipy, małe przyciski |
-| **`.pressed()`** | 16px | Wklęsły | Stan aktywny (debossed) |
-| **`.searchBar()`** | 28px (Pill) | Floating | Główny pasek wyszukiwania |
+| Metoda             | Radius      | Wygląd            | Zastosowanie                 |
+| ------------------ | ----------- | ----------------- | ---------------------------- |
+| **`.flat()`**      | 16px        | Wypukły, miękki   | Standardowe kontenery, karty |
+| **`.flatSmall()`** | 12px        | Wypukły, subtelny | Tagi, chipy, małe przyciski  |
+| **`.pressed()`**   | 16px        | Wklęsły           | Stan aktywny (debossed)      |
+| **`.searchBar()`** | 28px (Pill) | Floating          | Główny pasek wyszukiwania    |
 
 ### Kolory Semantyczne
 
@@ -67,15 +70,19 @@ Zasady spójności (Consistency):
 
 Neumorfizm niesie ryzyko niskiego kontrastu. Aby zachować standardy z `DESIGN.md`:
 
-- **Tekst i Ikony:** Nigdy nie polegaj na samym cieniu do rozróżnienia elementów interaktywnych. Używaj wyraźnych kolorów tekstowych (minimum 4.5:1).
-- **Focus States:** Skupienie (np. `searchBarFocused`) musi być sygnalizowane dodatkowym elementem (np. zielony outline), a nie tylko zmianą cienia.
-- **Haptic Feedback:** Każda interakcja (np. `switchOption`) musi generować sygnał haptyczny dla osób niewidomych/słabowidzących.
+- **Tekst i Ikony:** Nigdy nie polegaj na samym cieniu do rozróżnienia elementów interaktywnych.
+  Używaj wyraźnych kolorów tekstowych (minimum 4.5:1).
+- **Focus States:** Skupienie (np. `searchBarFocused`) musi być sygnalizowane dodatkowym elementem
+  (np. zielony outline), a nie tylko zmianą cienia.
+- **Haptic Feedback:** Każda interakcja (np. `switchOption`) musi generować sygnał haptyczny dla
+  osób niewidomych/słabowidzących.
 
 ---
 
 ## 🚀 UX Principles
 
-- **Optimistic UI:** Używamy `AnimatedContainer` (200-250ms) dla płynnych przejść między stanami `flat` a `pressed`.
+- **Optimistic UI:** Używamy `AnimatedContainer` (200-250ms) dla płynnych przejść między stanami
+  `flat` a `pressed`.
 - **Loading States:** Shimmer/Skeletons powinny zachowywać radius 16px, aby pasować do kart.
 - **Feedback:** Używamy `HapticFeedback.lightImpact()` przy zmianach stanu (Toggle, Button).
 

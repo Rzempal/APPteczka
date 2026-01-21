@@ -2,9 +2,11 @@
 
 [![Landing Page](https://img.shields.io/badge/🌐_Landing_Page-kartonzlekami.resztatokod.pl-blue)](https://kartonzlekami.resztatokod.pl)
 
-Aplikacja mobilna do zarządzania domową apteczką z integracją AI. Kataloguj leki, śledź terminy ważności, filtruj po objawach.
+Aplikacja mobilna do zarządzania domową apteczką z integracją AI. Kataloguj leki, śledź terminy
+ważności, filtruj po objawach.
 
-> ⚠️ **Ważne:** Karton z lekami to narzędzie informacyjne (wyszukiwarka w ulotkach), NIE porada medyczna. Aplikacja NIE weryfikuje interakcji międzylekowych.
+> ⚠️ **Ważne:** Karton z lekami to narzędzie informacyjne (wyszukiwarka w ulotkach), NIE porada
+> medyczna. Aplikacja NIE weryfikuje interakcji międzylekowych.
 
 ---
 
@@ -67,12 +69,12 @@ APPteczka/
 
 ## 📋 Roadmap
 
-| Faza | Nazwa | Status |
-| --- | --- | --- |
-| 0-3 | MVP Mobile + Gemini API | ✅ Ukończona |
-| 4 | Web → Landing Page + API | ✅ Ukończona |
-| 5 | Google Play Store Release | 📋 Planowana |
-| 6 | Backend + Sync | 🔮 Przyszłość |
+| Faza | Nazwa                     | Status        |
+| ---- | ------------------------- | ------------- |
+| 0-3  | MVP Mobile + Gemini API   | ✅ Ukończona  |
+| 4    | Web → Landing Page + API  | ✅ Ukończona  |
+| 5    | Google Play Store Release | 📋 Planowana  |
+| 6    | Backend + Sync            | 🔮 Przyszłość |
 
 Szczegóły: [docs/roadmap.md](docs/roadmap.md)
 
@@ -82,38 +84,38 @@ Szczegóły: [docs/roadmap.md](docs/roadmap.md)
 
 ### Mobile (główna platforma)
 
-| Warstwa | Technologia |
-| --- | --- |
-| Framework | Flutter (Dart) |
-| UI | Material Design 3 + Neumorphism |
-| Baza danych | Hive (NoSQL, offline) |
-| Skaner | mobile_scanner + GS1 parser |
-| Platformy | Android (iOS w przyszłości) |
+| Warstwa     | Technologia                     |
+| ----------- | ------------------------------- |
+| Framework   | Flutter (Dart)                  |
+| UI          | Material Design 3 + Neumorphism |
+| Baza danych | Hive (NoSQL, offline)           |
+| Skaner      | mobile_scanner + GS1 parser     |
+| Platformy   | Android (iOS w przyszłości)     |
 
 ### Backend (API Proxy)
 
-| Warstwa | Technologia |
-| --- | --- |
-| Framework | Next.js 16 (App Router) |
-| Hosting | Vercel |
-| AI | Gemini API (OCR, enrichment) |
-| Cel | Landing Page + API dla mobile |
+| Warstwa   | Technologia                   |
+| --------- | ----------------------------- |
+| Framework | Next.js 16 (App Router)       |
+| Hosting   | Vercel                        |
+| AI        | Gemini API (OCR, enrichment)  |
+| Cel       | Landing Page + API dla mobile |
 
 ---
 
 ## 📚 Dokumentacja
 
-| Dokument | Opis |
-| --- | --- |
-| [Architektura](docs/architecture.md) | Stack, przepływ danych |
-| [Baza Danych](docs/database.md) | Encje, schematy |
-| [Konwencje](docs/conventions.md) | Standardy kodu |
-| [Design System](docs/design.md) | Paleta kolorów, typografia, komponenty UI |
-| [Bezpieczeństwo](docs/security.md) | Lokalne dane, disclaimer |
-| [Design Review](docs/design-review.md) | Kryteria oceny UI/UX |
-| [Roadmap](docs/roadmap.md) | Plan rozwoju projektu |
-| [Wdrożenie](docs/deployment.md) | Setup WinSCP i APK lifecycle |
-| [Contributing](docs/contributing.md) | Przewodnik dokumentacji |
+| Dokument                                         | Opis                                      |
+| ------------------------------------------------ | ----------------------------------------- |
+| [Architektura](docs/architecture.md)             | Stack, przepływ danych                    |
+| [Baza Danych](docs/database.md)                  | Encje, schematy                           |
+| [Konwencje](docs/standards/conventions.md)       | Standardy kodu                            |
+| [Design System](docs/design.md)                  | Paleta kolorów, typografia, komponenty UI |
+| [Bezpieczeństwo](docs/security.md)               | Lokalne dane, disclaimer                  |
+| [Design Review](docs/standards/design-review.md) | Kryteria oceny UI/UX                      |
+| [Roadmap](docs/roadmap.md)                       | Plan rozwoju projektu                     |
+| [Wdrożenie](docs/deployment.md)                  | Setup WinSCP i APK lifecycle              |
+| [Contributing](docs/standards/contributing.md)   | Przewodnik dokumentacji                   |
 
 ---
 

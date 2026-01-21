@@ -1,6 +1,6 @@
 # 🧪 Strategia Testów
 
-> **Powiązane:** [Architektura](architecture.md) | [Konwencje](conventions.md)
+> **Powiązane:** [Architektura](../architecture.md) | [Konwencje](conventions.md)
 
 ---
 

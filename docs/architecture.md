@@ -1,21 +1,22 @@
 # 🏛️ Architektura
 
-> **Powiązane:** [Roadmap](roadmap.md) | [Baza Danych](database.md) | [Bezpieczeństwo](security.md) | [Konwencje](conventions.md)
+> **Powiązane:** [Roadmap](roadmap.md) | [Baza Danych](database.md) | [Bezpieczeństwo](security.md)
+> | [Konwencje](standards/conventions.md)
 
 ---
 
 ## 📋 Dokumentacja
 
-| Dokument | Opis |
-|----------|------|
-| [Architektura](architecture.md) | Przegląd systemu, stack, warstwy (ten plik) |
-| [Wdrożenie](deployment.md) | Konfiguracja WinSCP i APK cleanup |
-| [Design System](design.md) | Style, kolory, komponenty |
-| [Release Guide](guidelines/release.md) | Strategia wersjonowania |
-| [Proces dodawania](guidelines/drug_addition_process.md) | Skaner i AI krok po kroku |
-| [Baza Danych](database.md) | Encje, schema JSON/YAML |
-| [Bezpieczeństwo](security.md) | Lokalne dane, disclaimer medyczny |
-| [Roadmap](roadmap.md) | Plan rozwoju projektu |
+| Dokument                                                | Opis                                        |
+| ------------------------------------------------------- | ------------------------------------------- |
+| [Architektura](architecture.md)                         | Przegląd systemu, stack, warstwy (ten plik) |
+| [Wdrożenie](deployment.md)                              | Konfiguracja WinSCP i APK cleanup           |
+| [Design System](design.md)                              | Style, kolory, komponenty                   |
+| [Release Guide](guidelines/release.md)                  | Strategia wersjonowania                     |
+| [Proces dodawania](guidelines/drug_addition_process.md) | Skaner i AI krok po kroku                   |
+| [Baza Danych](database.md)                              | Encje, schema JSON/YAML                     |
+| [Bezpieczeństwo](security.md)                           | Lokalne dane, disclaimer medyczny           |
+| [Roadmap](roadmap.md)                                   | Plan rozwoju projektu                       |
 
 ---
 
@@ -53,7 +54,8 @@ flowchart TB
 ### Przepływ danych
 
 1. **Import leków:** Użytkownik robi zdjęcie → wkleja do AI → kopiuje wynik → importuje do aplikacji
-2. **Analiza objawów:** Użytkownik definiuje objawy → generator tworzy prompt z apteczką → AI analizuje → użytkownik czyta rekomendacje
+2. **Analiza objawów:** Użytkownik definiuje objawy → generator tworzy prompt z apteczką → AI
+   analizuje → użytkownik czyta rekomendacje
 3. **Filtrowanie:** Użytkownik przegląda leki po tagach, objawach, terminie ważności
 
 ---
@@ -62,31 +64,31 @@ flowchart TB
 
 ### Faza 1: MVP Web
 
-| Warstwa | Technologia |
-|---------|-------------|
-| **Framework** | Next.js 16 (App Router) |
-| **UI** | React + Tailwind CSS |
+| Warstwa            | Technologia                  |
+| ------------------ | ---------------------------- |
+| **Framework**      | Next.js 16 (App Router)      |
+| **UI**             | React + Tailwind CSS         |
 | **Przechowywanie** | localStorage (offline-first) |
-| **Walidacja** | Zod + JSON Schema |
-| **Język** | TypeScript |
+| **Walidacja**      | Zod + JSON Schema            |
+| **Język**          | TypeScript                   |
 
 ### Faza 2: Backend
 
-| Warstwa | Technologia |
-|---------|-------------|
-| **API** | Next.js API Routes lub Express |
-| **Baza danych** | SQLite (dev) → PostgreSQL (prod) |
-| **ORM** | Prisma lub Drizzle |
-| **Autentykacja** | NextAuth.js (opcjonalne) |
+| Warstwa          | Technologia                      |
+| ---------------- | -------------------------------- |
+| **API**          | Next.js API Routes lub Express   |
+| **Baza danych**  | SQLite (dev) → PostgreSQL (prod) |
+| **ORM**          | Prisma lub Drizzle               |
+| **Autentykacja** | NextAuth.js (opcjonalne)         |
 
 ### Faza 4: Mobile
 
-| Warstwa | Technologia |
-|---------|-------------|
-| **Framework** | Flutter |
-| **Język** | Dart |
+| Warstwa          | Technologia   |
+| ---------------- | ------------- |
+| **Framework**    | Flutter       |
+| **Język**        | Dart          |
 | **Lokalna baza** | Hive lub Isar |
-| **HTTP** | Dio |
+| **HTTP**         | Dio           |
 
 ---
 
@@ -128,13 +130,13 @@ APPteczka/
 
 ```typescript
 interface Medicine {
-  id: string;              // UUID
-  nazwa: string | null;    // Nazwa leku (null jeśli nierozpoznana)
-  opis: string;            // Krótki opis działania
-  wskazania: string[];     // Lista wskazań
-  tagi: string[];          // Kontrolowane tagi (filtry)
-  terminWaznosci?: Date;   // Opcjonalny termin ważności
-  dataDodania: Date;       // Timestamp importu
+	id: string; // UUID
+	nazwa: string | null; // Nazwa leku (null jeśli nierozpoznana)
+	opis: string; // Krótki opis działania
+	wskazania: string[]; // Lista wskazań
+	tagi: string[]; // Kontrolowane tagi (filtry)
+	terminWaznosci?: Date; // Opcjonalny termin ważności
+	dataDodania: Date; // Timestamp importu
 }
 ```
 
@@ -169,13 +171,12 @@ Gotowe prompty: `docs/prompts/`
 
 > Szczegóły: **[security.md](security.md)**
 
-| Aspekt | Rozwiązanie |
-|--------|-------------|
+| Aspekt           | Rozwiązanie                       |
+| ---------------- | --------------------------------- |
 | **Dane lokalne** | localStorage / IndexedDB (Faza 1) |
-| **Bez wysyłki** | Dane nie opuszczają przeglądarki |
-| **Disclaimer** | "To nie jest porada medyczna" |
+| **Bez wysyłki**  | Dane nie opuszczają przeglądarki  |
+| **Disclaimer**   | "To nie jest porada medyczna"     |
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-14
-> 🏷️ **Wersja:** 1.1.0
+> 📅 **Ostatnia aktualizacja:** 2026-01-14 🏷️ **Wersja:** 1.1.0
