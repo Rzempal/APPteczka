@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'dart:math' as math;
 import '../models/medicine.dart';
 import '../models/label.dart';
 import '../theme/app_theme.dart';
@@ -12,7 +11,7 @@ import '../utils/duplicate_detection.dart';
 class FilterState {
   final String searchQuery;
   final Set<String> selectedTags;
-  final Set<String> selectedLabels; // Nowe: filtrowanie po etykietach
+  final Set<String> selectedLabels;
   final ExpiryFilter expiryFilter;
 
   const FilterState({
@@ -60,6 +59,50 @@ enum ExpiryFilter {
 
   final String label;
   const ExpiryFilter(this.label);
+}
+
+/// Kategorie zakładek filtrów
+enum FilterTab {
+  labels,
+  expiry,
+  symptoms,
+  classification,
+  substances,
+  custom;
+
+  IconData get icon {
+    switch (this) {
+      case FilterTab.labels:
+        return LucideIcons.tag;
+      case FilterTab.expiry:
+        return LucideIcons.calendarClock;
+      case FilterTab.symptoms:
+        return LucideIcons.activity;
+      case FilterTab.classification:
+        return LucideIcons.folderTree;
+      case FilterTab.substances:
+        return LucideIcons.flaskConical;
+      case FilterTab.custom:
+        return LucideIcons.hash;
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case FilterTab.labels:
+        return 'Etykiety';
+      case FilterTab.expiry:
+        return 'Termin';
+      case FilterTab.symptoms:
+        return 'Objawy';
+      case FilterTab.classification:
+        return 'Klasyfikacja';
+      case FilterTab.substances:
+        return 'Substancje';
+      case FilterTab.custom:
+        return 'Moje';
+    }
+  }
 }
 
 /// Podkategorie dla "Objawy i działanie" - posortowane alfabetycznie
@@ -130,15 +173,13 @@ const Map<String, List<String>> tagsObjawIDzialanie = {
   ],
 };
 
-/// Podkategorie dla "Klasyfikacja" - Rodzaj i postac, Grupa docelowa, Typ infekcji
+/// Podkategorie dla "Klasyfikacja"
 const Map<String, List<String>> tagsKlasyfikacja = {
   'Rodzaj i postać leku': [
-    // Status recepty
     'bez recepty',
     'na receptę',
     'suplement',
     'wyrób medyczny',
-    // Postaci farmaceutyczne
     'tabletki',
     'kapsułki',
     'syrop',
@@ -163,32 +204,57 @@ const Map<String, List<String>> tagsKlasyfikacja = {
     'infekcja wirusowa',
     'przeziębienie',
   ],
-  // 'Substancja czynna' - dynamiczna, generowana z apteczki uzytkownika
 };
+
+/// Popularne tagi - predefiniowane
+const List<String> popularSymptomsTag = [
+  'ból',
+  'gorączka',
+  'przeziębienie',
+  'kaszel',
+  'alergia',
+];
+const List<String> popularClassificationTags = [
+  'bez recepty',
+  'tabletki',
+  'syrop',
+  'dla dzieci',
+  'suplement',
+];
 
 /// Wszystkie tagi kategorii (dla wykluczeń w "Moje")
 final Map<String, List<String>> tagCategories = {...tagsKlasyfikacja};
 
-/// Identyfikuje tagi bedace substancjami czynnymi (lacinska nomenklatura)
-/// Np. "Escitalopramum", "Paracetamolum", "Ambroxoli hydrochloridum"
+/// Identyfikuje tagi będące substancjami czynnymi (łacińska nomenklatura)
 bool isActiveSubstanceTag(String tag) {
-  // Substancje czynne maja lacinska nazwe - koncowki typowe
   final lower = tag.toLowerCase();
   final latinEndings = [
-    'um', 'is', 'us', 'ae', 'i', 'as', 'os', // typowe lacińskie
-    'dum', 'lum', 'num', 'rum', 'tum', // -um z przedrostkiem
-    'chloridum', 'bromidum', 'iodidum', // sole
-    'natricum', 'kalicum', 'calcicum', // sole z kationami
+    'um',
+    'is',
+    'us',
+    'ae',
+    'i',
+    'as',
+    'os',
+    'dum',
+    'lum',
+    'num',
+    'rum',
+    'tum',
+    'chloridum',
+    'bromidum',
+    'iodidum',
+    'natricum',
+    'kalicum',
+    'calcicum',
   ];
 
-  // Sprawdz czy konczy sie na lacinska koncowke
   for (final ending in latinEndings) {
     if (lower.endsWith(ending) && tag.length > ending.length + 2) {
       return true;
     }
   }
 
-  // Sprawdz czy zawiera typowe wzorce substancji
   if (lower.contains(' hydrochloridum') ||
       lower.contains(' natricum') ||
       lower.contains(' kalicum') ||
@@ -204,11 +270,11 @@ List<String> extractActiveSubstances(List<String> tags) {
   return tags.where(isActiveSubstanceTag).toList()..sort();
 }
 
-/// Filtr Sheet - styl zbliżony do wersji Web
+/// FiltersSheet z Horizontal Category Tabs - Soft UI 2026
 class FiltersSheet extends StatefulWidget {
   final FilterState initialState;
   final List<String> availableTags;
-  final List<UserLabel> availableLabels; // Nowe: etykiety
+  final List<UserLabel> availableLabels;
   final Function(FilterState) onApply;
 
   const FiltersSheet({
@@ -225,19 +291,24 @@ class FiltersSheet extends StatefulWidget {
 
 class _FiltersSheetState extends State<FiltersSheet> {
   late FilterState _state;
-  final Map<String, bool> _expandedCategories = {};
-  bool _labelsExpanded = false;
-  bool _expiryExpanded = false;
-  bool _tagsExpanded = false;
-  bool _otherTagsExpanded = false;
+  FilterTab _activeTab = FilterTab.symptoms;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _state = widget.initialState;
-    for (final category in tagCategories.keys) {
-      _expandedCategories[category] = false;
+    // Auto-select first tab with content
+    if (widget.availableLabels.isNotEmpty) {
+      _activeTab = FilterTab.labels;
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -246,12 +317,11 @@ class _FiltersSheetState extends State<FiltersSheet> {
       canPop: true,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) {
-          // Auto-save filters on close (swipe down or tap outside)
           widget.onApply(_state);
         }
       },
       child: DraggableScrollableSheet(
-        initialChildSize: 0.7,
+        initialChildSize: 0.75,
         minChildSize: 0.4,
         maxChildSize: 0.95,
         expand: false,
@@ -268,264 +338,25 @@ class _FiltersSheetState extends State<FiltersSheet> {
               children: [
                 // Handle
                 const BottomSheetDragHandle(),
-                // Header
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            LucideIcons.funnel,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Filtry',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      // Clear filters - red icon
-                      if (_state.hasActiveFilters)
-                        IconButton(
-                          onPressed: _clearFilters,
-                          icon: Icon(
-                            LucideIcons.funnelX,
-                            color: AppColors.expired,
-                          ),
-                          tooltip: 'Wyczyść filtry',
-                        ),
-                    ],
-                  ),
-                ),
-                const Divider(),
-                // Scrollable content
+
+                // Header with title and clear button
+                _buildHeader(context),
+
+                // Search bar (inset neumorphic)
+                _buildSearchBar(context, isDark),
+
+                // Horizontal category tabs
+                _buildCategoryTabs(context, isDark),
+
+                const Divider(height: 1),
+
+                // Content area
                 Expanded(
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                      const SizedBox(height: 16),
-
-                      // ========== MOJE ETYKIETY ==========
-                      if (widget.availableLabels.isNotEmpty) ...[
-                        _buildLabelsSectionHeader(),
-                        if (_labelsExpanded) ...[
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: widget.availableLabels.map((label) {
-                              final isSelected = _state.selectedLabels.contains(
-                                label.id,
-                              );
-                              final colorInfo = labelColors[label.color]!;
-
-                              return FilterChip(
-                                selected: isSelected,
-                                label: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 10,
-                                      height: 10,
-                                      decoration: BoxDecoration(
-                                        color: Color(colorInfo.hexValue),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(label.name),
-                                  ],
-                                ),
-                                labelStyle: TextStyle(
-                                  color:
-                                      Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.white
-                                      : Colors.black,
-                                ),
-                                onSelected: (selected) {
-                                  setState(() {
-                                    final newLabels = Set<String>.from(
-                                      _state.selectedLabels,
-                                    );
-                                    if (selected) {
-                                      newLabels.add(label.id);
-                                    } else {
-                                      newLabels.remove(label.id);
-                                    }
-                                    _state = _state.copyWith(
-                                      selectedLabels: newLabels,
-                                    );
-                                  });
-                                },
-                                selectedColor: Color(
-                                  colorInfo.hexValue,
-                                ).withValues(alpha: 0.3),
-                                checkmarkColor: Color(colorInfo.hexValue),
-                              );
-                            }).toList(),
-                          ),
-                        ],
-                        const SizedBox(height: 24),
-                      ],
-
-                      // ========== TERMIN WAŻNOŚCI ==========
-                      _buildMainSectionHeader(
-                        icon: LucideIcons.calendarHeart,
-                        title: 'Termin ważności',
-                        isExpanded: _expiryExpanded,
-                        onTap: () =>
-                            setState(() => _expiryExpanded = !_expiryExpanded),
-                        trailing: _state.expiryFilter != ExpiryFilter.all
-                            ? Icon(
-                                _getExpiryIcon(_state.expiryFilter),
-                                size: 16,
-                                color: _getExpiryColor(_state.expiryFilter),
-                              )
-                            : null,
-                      ),
-                      if (_expiryExpanded) ...[
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: ExpiryFilter.values.map((filter) {
-                            final isSelected = _state.expiryFilter == filter;
-                            return FilterChip(
-                              selected: isSelected,
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  if (isSelected) ...[
-                                    const Icon(Icons.check, size: 16),
-                                    const SizedBox(width: 4),
-                                  ],
-                                  Icon(_getExpiryIcon(filter), size: 16),
-                                  const SizedBox(width: 4),
-                                  Text(filter.label),
-                                ],
-                              ),
-                              labelStyle: TextStyle(
-                                color:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.black,
-                              ),
-                              onSelected: (selected) {
-                                setState(() {
-                                  _state = _state.copyWith(
-                                    expiryFilter: selected
-                                        ? filter
-                                        : ExpiryFilter.all,
-                                  );
-                                });
-                              },
-                              selectedColor: AppColors.primary.withValues(
-                                alpha: 0.2,
-                              ),
-                              checkmarkColor: AppColors.primary,
-                              showCheckmark: false,
-                            );
-                          }).toList(),
-                        ),
-                      ],
-
-                      const SizedBox(height: 24),
-
-                      // ========== TAGI ==========
-                      _buildMainSectionHeader(
-                        icon: LucideIcons.hash,
-                        title: 'Tagi',
-                        isExpanded: _tagsExpanded,
-                        onTap: () =>
-                            setState(() => _tagsExpanded = !_tagsExpanded),
-                        trailing: _state.selectedTags.isNotEmpty
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  '${_state.selectedTags.length}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              )
-                            : null,
-                      ),
-                      if (_tagsExpanded) ...[
-                        const SizedBox(height: 12),
-
-                        // === KLASYFIKACJA (z podkategoriami + dynamiczna Substancja czynna) ===
-                        _buildKlasyfikacjaWithSubstances(
-                          _expandedCategories['Klasyfikacja'] ?? false,
-                        ),
-
-                        // === OBJAWY I DZIAŁANIE (z podkategoriami) ===
-                        _buildCategoryWithSubcategories(
-                          'Objawy i działanie',
-                          tagsObjawIDzialanie,
-                          _expandedCategories['Objawy i działanie'] ?? false,
-                        ),
-
-                        // Moje tagi (niestandardowe)
-                        _buildOtherTagsSection(),
-                      ], // Close if (_tagsExpanded)
-
-                      const SizedBox(height: 24),
-                    ],
-                  ),
+                  child: _buildTabContent(context, scrollController, isDark),
                 ),
-              ),
 
-              // Action buttons
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Clear button
-                    if (_state.hasActiveFilters)
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: _clearFilters,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.expired,
-                            side: BorderSide(color: AppColors.expired),
-                          ),
-                          child: const Text('Wyczyść'),
-                        ),
-                      ),
-                    if (_state.hasActiveFilters) const SizedBox(width: 12),
-                    // Apply button
-                    Expanded(
-                      child: FilledButton(
-                        onPressed: () {
-                          widget.onApply(_state);
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Zastosuj filtry'),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                // Action buttons
+                _buildActionButtons(context),
               ],
             ),
           );
@@ -534,552 +365,597 @@ class _FiltersSheetState extends State<FiltersSheet> {
     );
   }
 
-  Widget _buildLabelsSectionHeader() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      onTap: () => setState(() => _labelsExpanded = !_labelsExpanded),
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: NeuDecoration.flat(isDark: isDark, radius: 8),
-        child: Row(
-          children: [
-            // Chevron arrow with rotation
-            Transform.rotate(
-              angle: _labelsExpanded ? math.pi / 2 : 0,
-              child: Icon(
-                LucideIcons.chevronRight,
-                color: AppColors.primary,
-                size: 18,
+  Widget _buildHeader(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.funnel,
+                color: Theme.of(context).colorScheme.primary,
               ),
-            ),
-            const SizedBox(width: 8),
-            Icon(LucideIcons.tag, color: AppColors.primary, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              'Moje etykiety',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : Colors.black,
-              ),
-            ),
-            const Spacer(),
-            if (_state.selectedLabels.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${_state.selectedLabels.length}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+              const SizedBox(width: 8),
+              Text(
+                'Filtry',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Main section header (Neu style) for Moje etykiety, Termin ważności, #tags
-  Widget _buildMainSectionHeader({
-    required IconData icon,
-    required String title,
-    required bool isExpanded,
-    required VoidCallback onTap,
-    Widget? trailing,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: NeuDecoration.flat(isDark: isDark, radius: 8),
-        child: Row(
-          children: [
-            // Chevron arrow with rotation
-            Transform.rotate(
-              angle: isExpanded ? math.pi / 2 : 0,
-              child: Icon(
-                LucideIcons.chevronRight,
-                color: AppColors.primary,
-                size: 18,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(icon, color: AppColors.primary, size: 18),
-            const SizedBox(width: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : Colors.black,
-              ),
-            ),
-            if (trailing != null) ...[const Spacer(), trailing],
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Kategoria z podkategoriami (dla "Objawy i działanie")
-  Widget _buildCategoryWithSubcategories(
-    String name,
-    Map<String, List<String>> subcategories,
-    bool isExpanded,
-  ) {
-    // Zlicz wszystkie dostępne tagi
-    final allTags = subcategories.values.expand((t) => t).toList();
-    final availableTags = allTags
-        .where((t) => widget.availableTags.contains(t))
-        .toList();
-
-    if (availableTags.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final selectedCount = availableTags
-        .where((t) => _state.selectedTags.contains(t))
-        .length;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Główny nagłówek kategorii
-        InkWell(
-          onTap: () {
-            setState(() {
-              _expandedCategories[name] = !(_expandedCategories[name] ?? false);
-            });
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            child: Row(
-              children: [
-                Transform.rotate(
-                  angle: isExpanded ? math.pi / 2 : 0,
-                  child: Icon(
-                    LucideIcons.chevronRight,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha(150),
-                    size: 14,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '${availableTags.length}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha(100),
-                  ),
-                ),
-                if (selectedCount > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$selectedCount',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
+            ],
           ),
-        ),
-        // Podkategorie
-        if (isExpanded)
-          Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: subcategories.entries.map((subEntry) {
-                final subName = subEntry.key;
-                final subTags =
-                    subEntry.value
-                        .where((t) => widget.availableTags.contains(t))
-                        .toList()
-                      ..sort(); // Sortowanie alfabetyczne
-
-                if (subTags.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 4),
-                      child: Text(
-                        subName,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withAlpha(150),
-                        ),
-                      ),
-                    ),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: subTags.map(_buildTagChip).toList(),
-                    ),
-                  ],
-                );
-              }).toList(),
+          if (_state.hasActiveFilters)
+            IconButton(
+              onPressed: _clearFilters,
+              icon: Icon(LucideIcons.funnelX, color: AppColors.expired),
+              tooltip: 'Wyczyść filtry',
             ),
-          ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-
-  /// Buduje sekcje Klasyfikacja z dynamiczna podkategoria "Substancja czynna"
-  Widget _buildKlasyfikacjaWithSubstances(bool isExpanded) {
-    // Pobierz substancje czynne z dostepnych tagow
-    final activeSubstances = extractActiveSubstances(widget.availableTags);
-
-    // Polacz statyczne kategorie z dynamiczna
-    final subcategories = Map<String, List<String>>.from(tagsKlasyfikacja);
-    if (activeSubstances.isNotEmpty) {
-      subcategories['Substancja czynna'] = activeSubstances;
-    }
-
-    // Zlicz wszystkie dostepne tagi
-    final allTags = subcategories.values.expand((t) => t).toList();
-    final availableTags =
-        allTags.where((t) => widget.availableTags.contains(t)).toList();
-
-    if (availableTags.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final selectedCount =
-        availableTags.where((t) => _state.selectedTags.contains(t)).length;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Główny nagłówek kategorii
-        InkWell(
-          onTap: () {
-            setState(() {
-              _expandedCategories['Klasyfikacja'] =
-                  !(_expandedCategories['Klasyfikacja'] ?? false);
-            });
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-            child: Row(
-              children: [
-                Transform.rotate(
-                  angle: isExpanded ? math.pi / 2 : 0,
-                  child: Icon(
-                    LucideIcons.chevronRight,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha(150),
-                    size: 14,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Klasyfikacja',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '${availableTags.length}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha(100),
-                  ),
-                ),
-                if (selectedCount > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$selectedCount',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-        // Podkategorie
-        if (isExpanded)
-          Padding(
-            padding: const EdgeInsets.only(left: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: subcategories.entries.map((subEntry) {
-                final subName = subEntry.key;
-                final subTags =
-                    subEntry.value
-                        .where((t) => widget.availableTags.contains(t))
-                        .toList()
-                      ..sort();
-
-                if (subTags.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8, bottom: 4),
-                      child: Text(
-                        subName,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withAlpha(150),
-                        ),
-                      ),
-                    ),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: subTags.map(_buildTagChip).toList(),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-
-  Widget _buildCategorySection(
-    String name,
-    List<String> tags,
-    bool isExpanded,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () {
-            setState(() {
-              _expandedCategories[name] = !isExpanded;
-            });
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                // Chevron arrow with rotation
-                Transform.rotate(
-                  angle: isExpanded ? math.pi / 2 : 0,
-                  child: Icon(
-                    LucideIcons.chevronRight,
-                    color: AppColors.primary,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '${tags.length}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.primary.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (isExpanded) ...[
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: tags.map((tag) => _buildTagChip(tag)).toList(),
-            ),
-          ),
         ],
-        const SizedBox(height: 12),
-      ],
+      ),
     );
   }
 
-  Widget _buildOtherTagsSection() {
-    // Zbierz wszystkie tagi z kategorii ORAZ z podkategorii "Objawy i działanie"
+  Widget _buildSearchBar(BuildContext context, bool isDark) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: NeuDecoration.basin(isDark: isDark, radius: 16),
+        child: Row(
+          children: [
+            Icon(
+              LucideIcons.search,
+              size: 18,
+              color: isDark
+                  ? AppColors.darkTextMuted
+                  : AppColors.lightTextMuted,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'Szukaj w tagach...',
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                  hintStyle: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+                onChanged: (value) {
+                  setState(() => _searchQuery = value.toLowerCase());
+                },
+              ),
+            ),
+            if (_searchQuery.isNotEmpty)
+              GestureDetector(
+                onTap: () {
+                  _searchController.clear();
+                  setState(() => _searchQuery = '');
+                },
+                child: Icon(
+                  LucideIcons.x,
+                  size: 16,
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryTabs(BuildContext context, bool isDark) {
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        itemCount: FilterTab.values.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final tab = FilterTab.values[index];
+          final isActive = tab == _activeTab;
+          final count = _getTabCount(tab);
+
+          return GestureDetector(
+            onTap: () => setState(() => _activeTab = tab),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: isActive
+                  ? NeuDecoration.pressed(isDark: isDark, radius: 14)
+                  : NeuDecoration.flat(isDark: isDark, radius: 14),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    tab.icon,
+                    size: 16,
+                    color: isActive
+                        ? AppColors.primary
+                        : (isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    tab.label,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                      color: isActive
+                          ? (isDark ? Colors.white : Colors.black)
+                          : (isDark
+                                ? AppColors.darkTextMuted
+                                : AppColors.lightTextMuted),
+                    ),
+                  ),
+                  if (count > 0) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? AppColors.primary.withAlpha(50)
+                            : (isDark ? Colors.white12 : Colors.black12),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '$count',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: isActive
+                              ? AppColors.primary
+                              : (isDark
+                                    ? AppColors.darkTextMuted
+                                    : AppColors.lightTextMuted),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  int _getTabCount(FilterTab tab) {
+    switch (tab) {
+      case FilterTab.labels:
+        return widget.availableLabels.length;
+      case FilterTab.expiry:
+        return ExpiryFilter.values.length;
+      case FilterTab.symptoms:
+        return tagsObjawIDzialanie.values
+            .expand((e) => e)
+            .where((t) => widget.availableTags.contains(t))
+            .length;
+      case FilterTab.classification:
+        return tagsKlasyfikacja.values
+            .expand((e) => e)
+            .where((t) => widget.availableTags.contains(t))
+            .length;
+      case FilterTab.substances:
+        return extractActiveSubstances(widget.availableTags).length;
+      case FilterTab.custom:
+        return _getCustomTags().length;
+    }
+  }
+
+  List<String> _getCustomTags() {
     final categorizedTags = <String>{
       ...tagCategories.values.expand((e) => e),
       ...tagsObjawIDzialanie.values.expand((e) => e),
     };
-    // Wyklucz substancje czynne (wyswietlane w Klasyfikacja > Substancja czynna)
-    final otherTags = widget.availableTags
+    return widget.availableTags
         .where((t) => !categorizedTags.contains(t) && !isActiveSubstanceTag(t))
         .toList()
       ..sort();
+  }
 
-    if (otherTags.isEmpty) {
-      return const SizedBox.shrink();
+  Widget _buildTabContent(
+    BuildContext context,
+    ScrollController scrollController,
+    bool isDark,
+  ) {
+    return SingleChildScrollView(
+      controller: scrollController,
+      padding: const EdgeInsets.all(24),
+      child: _buildActiveTabContent(isDark),
+    );
+  }
+
+  Widget _buildActiveTabContent(bool isDark) {
+    switch (_activeTab) {
+      case FilterTab.labels:
+        return _buildLabelsTab(isDark);
+      case FilterTab.expiry:
+        return _buildExpiryTab(isDark);
+      case FilterTab.symptoms:
+        return _buildSymptomsTab(isDark);
+      case FilterTab.classification:
+        return _buildClassificationTab(isDark);
+      case FilterTab.substances:
+        return _buildSubstancesTab(isDark);
+      case FilterTab.custom:
+        return _buildCustomTagsTab(isDark);
+    }
+  }
+
+  // ========== TAB: ETYKIETY ==========
+  Widget _buildLabelsTab(bool isDark) {
+    if (widget.availableLabels.isEmpty) {
+      return _buildEmptyState('Brak etykiet', 'Dodaj etykiety do swoich leków');
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Styled like "Objawy i działanie" - bez zielonego akcentu
-        InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: () {
-            setState(() {
-              _otherTagsExpanded = !_otherTagsExpanded;
-            });
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+    final filtered = widget.availableLabels
+        .where(
+          (l) =>
+              _searchQuery.isEmpty ||
+              l.name.toLowerCase().contains(_searchQuery),
+        )
+        .toList();
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: filtered.map((label) {
+        final isSelected = _state.selectedLabels.contains(label.id);
+        final colorInfo = labelColors[label.color]!;
+
+        return GestureDetector(
+          onTap: () => _toggleLabel(label.id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: isSelected
+                ? NeuDecoration.pressed(isDark: isDark, radius: 14).copyWith(
+                    border: Border.all(
+                      color: Color(colorInfo.hexValue),
+                      width: 1.5,
+                    ),
+                  )
+                : NeuDecoration.flat(isDark: isDark, radius: 14),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Chevron arrow with rotation
-                Transform.rotate(
-                  angle: _otherTagsExpanded ? math.pi / 2 : 0,
-                  child: Icon(
-                    LucideIcons.chevronRight,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha(150),
-                    size: 14,
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: Color(colorInfo.hexValue),
+                    shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Moje',
+                  label.name,
                   style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  '${otherTags.length}',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha(100),
+                    color: isDark ? Colors.white : Colors.black,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
-        ),
-        if (_otherTagsExpanded) ...[
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: otherTags.map((tag) => _buildTagChip(tag)).toList(),
+        );
+      }).toList(),
+    );
+  }
+
+  void _toggleLabel(String labelId) {
+    setState(() {
+      final newLabels = Set<String>.from(_state.selectedLabels);
+      if (newLabels.contains(labelId)) {
+        newLabels.remove(labelId);
+      } else {
+        newLabels.add(labelId);
+      }
+      _state = _state.copyWith(selectedLabels: newLabels);
+    });
+  }
+
+  // ========== TAB: TERMIN WAŻNOŚCI ==========
+  Widget _buildExpiryTab(bool isDark) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: ExpiryFilter.values.map((filter) {
+        final isSelected = _state.expiryFilter == filter;
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _state = _state.copyWith(
+                expiryFilter: isSelected ? ExpiryFilter.all : filter,
+              );
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: isSelected
+                ? NeuDecoration.pressed(isDark: isDark, radius: 14).copyWith(
+                    border: Border.all(
+                      color: _getExpiryColor(filter),
+                      width: 1.5,
+                    ),
+                  )
+                : NeuDecoration.flat(isDark: isDark, radius: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _getExpiryIcon(filter),
+                  size: 16,
+                  color: isSelected
+                      ? _getExpiryColor(filter)
+                      : (isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  filter.label,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ========== TAB: OBJAWY ==========
+  Widget _buildSymptomsTab(bool isDark) {
+    return _buildTagTabWithPopular(
+      tagsObjawIDzialanie,
+      popularSymptomsTag,
+      isDark,
+    );
+  }
+
+  // ========== TAB: KLASYFIKACJA ==========
+  Widget _buildClassificationTab(bool isDark) {
+    return _buildTagTabWithPopular(
+      tagsKlasyfikacja,
+      popularClassificationTags,
+      isDark,
+    );
+  }
+
+  Widget _buildTagTabWithPopular(
+    Map<String, List<String>> categories,
+    List<String> popularTags,
+    bool isDark,
+  ) {
+    // Filter available tags
+    final allTags = categories.values.expand((e) => e).toList();
+    final availableInCategory = allTags
+        .where((t) => widget.availableTags.contains(t))
+        .toList();
+
+    // Filter by search
+    final filtered = _searchQuery.isEmpty
+        ? availableInCategory
+        : availableInCategory
+              .where((t) => t.toLowerCase().contains(_searchQuery))
+              .toList();
+
+    if (filtered.isEmpty) {
+      return _buildEmptyState(
+        'Brak tagów',
+        'Żaden tag w tej kategorii nie pasuje',
+      );
+    }
+
+    // Popular tags (that are available)
+    final popular = popularTags.where((t) => filtered.contains(t)).toList();
+
+    // Remaining tags
+    final remaining = filtered.where((t) => !popular.contains(t)).toList()
+      ..sort();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (popular.isNotEmpty && _searchQuery.isEmpty) ...[
+          _buildSectionHeader('Popularne', isDark),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: popular.map((tag) => _buildTagChip(tag, isDark)).toList(),
+          ),
+          const SizedBox(height: 20),
         ],
-        const SizedBox(height: 12),
+        if (remaining.isNotEmpty) ...[
+          _buildSectionHeader('Wszystkie (A-Z)', isDark),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: remaining
+                .map((tag) => _buildTagChip(tag, isDark))
+                .toList(),
+          ),
+        ],
       ],
     );
   }
 
-  Widget _buildTagChip(String tag) {
+  // ========== TAB: SUBSTANCJE ==========
+  Widget _buildSubstancesTab(bool isDark) {
+    final substances = extractActiveSubstances(widget.availableTags);
+    final filtered = _searchQuery.isEmpty
+        ? substances
+        : substances
+              .where((t) => t.toLowerCase().contains(_searchQuery))
+              .toList();
+
+    if (filtered.isEmpty) {
+      return _buildEmptyState(
+        'Brak substancji czynnych',
+        'Substancje są wykrywane automatycznie z bazy leków (łacińskie nazwy)',
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: filtered.map((tag) => _buildTagChip(tag, isDark)).toList(),
+    );
+  }
+
+  // ========== TAB: MOJE TAGI ==========
+  Widget _buildCustomTagsTab(bool isDark) {
+    final customTags = _getCustomTags();
+    final filtered = _searchQuery.isEmpty
+        ? customTags
+        : customTags
+              .where((t) => t.toLowerCase().contains(_searchQuery))
+              .toList();
+
+    if (filtered.isEmpty) {
+      return _buildEmptyState(
+        'Brak niestandardowych tagów',
+        'Dodaj własne tagi do swoich leków',
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: filtered.map((tag) => _buildTagChip(tag, isDark)).toList(),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, bool isDark) {
+    return Text(
+      title.toUpperCase(),
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.2,
+        color: isDark ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+      ),
+    );
+  }
+
+  Widget _buildTagChip(String tag, bool isDark) {
     final isSelected = _state.selectedTags.contains(tag);
 
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: () => _toggleTag(tag),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: isSelected
+            ? NeuDecoration.pressed(isDark: isDark, radius: 14).copyWith(
+                border: Border.all(color: AppColors.primary, width: 1.5),
+              )
+            : NeuDecoration.flat(isDark: isDark, radius: 14),
+        child: Text(
+          tag,
+          style: TextStyle(
+            color: isSelected
+                ? AppColors.primary
+                : (isDark ? Colors.white : Colors.black),
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
 
-    return FilterChip(
-      selected: isSelected,
-      label: Text(tag),
-      labelStyle: TextStyle(color: isDark ? Colors.white : Colors.black),
-      onSelected: (selected) {
-        setState(() {
-          final newTags = Set<String>.from(_state.selectedTags);
-          if (selected) {
-            newTags.add(tag);
-          } else {
-            newTags.remove(tag);
-          }
-          _state = _state.copyWith(selectedTags: newTags);
-        });
-      },
-      selectedColor: AppColors.primary.withValues(alpha: 0.2),
-      checkmarkColor: AppColors.primary,
+  void _toggleTag(String tag) {
+    setState(() {
+      final newTags = Set<String>.from(_state.selectedTags);
+      if (newTags.contains(tag)) {
+        newTags.remove(tag);
+      } else {
+        newTags.add(tag);
+      }
+      _state = _state.copyWith(selectedTags: newTags);
+    });
+  }
+
+  Widget _buildEmptyState(String title, String subtitle) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 40),
+          Icon(LucideIcons.searchX, size: 48, color: AppColors.lightTextMuted),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(color: AppColors.lightTextMuted, fontSize: 13),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          if (_state.hasActiveFilters)
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _clearFilters,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.expired,
+                  side: BorderSide(color: AppColors.expired),
+                ),
+                child: Text('Wyczyść (${_state.activeFilterCount})'),
+              ),
+            ),
+          if (_state.hasActiveFilters) const SizedBox(width: 12),
+          Expanded(
+            child: FilledButton(
+              onPressed: () {
+                widget.onApply(_state);
+                Navigator.pop(context);
+              },
+              child: const Text('Zastosuj filtry'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1138,14 +1014,14 @@ List<Medicine> applyFilters(List<Medicine> medicines, FilterState state) {
       }
     }
 
-    // Filtr tagów (logika AND - lek musi mieć WSZYSTKIE wybrane tagi)
+    // Filtr tagów (logika AND)
     if (state.selectedTags.isNotEmpty) {
       if (!state.selectedTags.every((t) => m.tagi.contains(t))) {
         return false;
       }
     }
 
-    // Filtr etykiet (logika AND - lek musi mieć WSZYSTKIE wybrane etykiety)
+    // Filtr etykiet (logika AND)
     if (state.selectedLabels.isNotEmpty) {
       if (!state.selectedLabels.every((l) => m.labels.contains(l))) {
         return false;
@@ -1154,7 +1030,6 @@ List<Medicine> applyFilters(List<Medicine> medicines, FilterState state) {
 
     // Filtr terminu ważności LUB duplikatów
     if (state.expiryFilter != ExpiryFilter.all) {
-      // Specjalna obsługa dla duplikatów - wymaga całej listy
       if (state.expiryFilter == ExpiryFilter.duplicates) {
         if (!hasDuplicates(m, medicines)) return false;
       } else {

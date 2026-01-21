@@ -1155,4 +1155,67 @@ organic/asymmetric):
 
 ---
 
+## 25. Dart enum z LucideIcons wymaga wzorca getter (Flutter)
+
+**Data:** 2026-01-21 **Kontekst:** FiltersSheet redesign - FilterTab enum z ikonami
+
+### ❌ Błąd
+
+Próba użycia `LucideIcons.xyz` jako pola `final` w enum powoduje błąd kompilacji: "Arguments of a
+constant creation must be constant expressions". LucideIcons nie są `const`.
+
+```dart
+// ❌ Błędnie - LucideIcons nie są const
+enum FilterTab {
+  labels(LucideIcons.tag, 'Etykiety'),  // ERROR!
+  expiry(LucideIcons.calendarClock, 'Termin');
+
+  final IconData icon;
+  final String label;
+  const FilterTab(this.icon, this.label);
+}
+```
+
+### ✅ Poprawne rozwiązanie
+
+Użyj getterów zamiast pól `final`:
+
+```dart
+// ✅ Poprawnie - gettery dla non-const wartości
+enum FilterTab {
+  labels,
+  expiry,
+  symptoms;
+
+  IconData get icon {
+    switch (this) {
+      case FilterTab.labels:
+        return LucideIcons.tag;
+      case FilterTab.expiry:
+        return LucideIcons.calendarClock;
+      case FilterTab.symptoms:
+        return LucideIcons.activity;
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case FilterTab.labels:
+        return 'Etykiety';
+      // ...
+    }
+  }
+}
+```
+
+### Zasada ogólna
+
+W Dart enum z non-const wartościami (ikony z zewnętrznych pakietów, runtime-generated values):
+
+- Użyj **getterów** zamiast pól `final`
+- Gettery są ewaluowane w runtime, więc mogą zwracać non-const wartości
+- Pola `final` w enum muszą być const-constructible
+
+---
+
 > 📅 **Ostatnia aktualizacja:** 2026-01-21
