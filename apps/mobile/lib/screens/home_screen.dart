@@ -136,9 +136,14 @@ class HomeScreenState extends State<HomeScreen> {
                  _isSearchBarExpanded &&
                  _searchController.text.isEmpty) {
         // Scroll w dół + puste pole = zwija search bar
-        _collapseSearchBar();
+        _isSearchBarExpanded = false;
       }
     });
+
+    // Unfocus outside setState to avoid nested state changes
+    if (!_isSearchBarExpanded && _searchFocusNode.hasFocus) {
+      _searchFocusNode.unfocus();
+    }
   }
 
   String _getTodayDate() {
