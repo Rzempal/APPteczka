@@ -469,7 +469,7 @@ class HomeScreenState extends State<HomeScreen> {
                               ? 'Karton DEV'
                               : 'Karton z lekami',
                           maxLines: 1,
-                          overflow: TextOverflow.clip,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppConfig.isInternal
@@ -553,7 +553,6 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
-          const Spacer(),
           // Licznik leków - klikalne, z animacją otwierania/zamykania pudełka
           GestureDetector(
             onTap: _expandSearchBar,
