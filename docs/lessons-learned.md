@@ -1055,3 +1055,42 @@ Przy animacjach w Flutter (AnimatedContainer, AnimatedOpacity, itp.):
    `value: x dla obu stanów`
 
 ---
+
+## 19. Flutter build APK exit code 1 mimo sukcesu (Windows)
+
+**Data:** 2026-01-21  
+**Kontekst:** Automatyzacja budowania APK. `flutter build apk` zwraca kod błędu 1, mimo komunikatu o
+sukcesie.
+
+### ❌ Błąd
+
+Poleganie wyłącznie na `Exit Code` w skryptach CI/CD.
+
+```powershell
+flutter build apk
+if ($LASTEXITCODE -ne 0) { throw "Build failed" } # ❌ Rzuca błąd mimo, że APK powstało
+```
+
+Gradle na Windows czasem zwraca błąd 1 (np. przez warningi lub problemy ze ścieżkami), nawet gdy
+plik wynikowy został poprawnie wygenerowany.
+
+### ✅ Poprawne rozwiązanie
+
+Weryfikuj fizyczne istnienie pliku wynikowego i jego czas modyfikacji.
+
+```powershell
+flutter build apk
+$apkPath = "build\app\outputs\flutter-apk\app-release.apk"
+
+if (Test-Path $apkPath) {
+    $apkTime = (Get-Item $apkPath).LastWriteTime
+    if ($apkTime -gt $startTime) {
+        Write-Host "Build success!"
+    }
+}
+```
+
+### Zasada ogólna
+
+W automatyzacji buildów mobilnych „success condition” to obecność artefaktu (APK/IPA), a nie tylko
+kod wyjścia procesu buildera.

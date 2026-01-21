@@ -155,7 +155,9 @@ class _MedicineCardState extends State<MedicineCard> {
         child: Container(
           decoration: widget.isCompact
               ? BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightBackground,
+                  color: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightBackground,
                   borderRadius: AppTheme.organicRadiusSmall,
                   border: Border.all(
                     color: statusColor.withValues(alpha: 0.2),
@@ -174,18 +176,20 @@ class _MedicineCardState extends State<MedicineCard> {
                       : [
                           // Full quality: neumorphic shadows
                           BoxShadow(
-                            color: (isDark
-                                    ? AppColors.darkShadowDark
-                                    : AppColors.lightShadowDark)
-                                .withValues(alpha: isDark ? 0.3 : 0.15),
+                            color:
+                                (isDark
+                                        ? AppColors.darkShadowDark
+                                        : AppColors.lightShadowDark)
+                                    .withValues(alpha: isDark ? 0.3 : 0.15),
                             offset: const Offset(4, 4),
                             blurRadius: 8,
                           ),
                           BoxShadow(
-                            color: (isDark
-                                    ? AppColors.darkShadowLight
-                                    : AppColors.lightShadowLight)
-                                .withValues(alpha: isDark ? 0.05 : 0.5),
+                            color:
+                                (isDark
+                                        ? AppColors.darkShadowLight
+                                        : AppColors.lightShadowLight)
+                                    .withValues(alpha: isDark ? 0.05 : 0.5),
                             offset: const Offset(-2, -2),
                             blurRadius: 6,
                           ),
@@ -500,9 +504,7 @@ class _MedicineCardState extends State<MedicineCard> {
             const SizedBox(width: 12),
 
             // Opis lub warning (dynamiczny)
-            Expanded(
-              child: _buildDescriptionOrWarning(theme, statusColor),
-            ),
+            Expanded(child: _buildDescriptionOrWarning(theme, statusColor)),
 
             // Status icon (termin ważności)
             if (_medicine.terminWaznosci != null) ...[
@@ -698,7 +700,7 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
-  /// Combined Wskazania + Ulotka section
+  /// Wskazania section
   Widget _buildWskazaniaSection(
     BuildContext context,
     ThemeData theme,
@@ -769,84 +771,6 @@ class _MedicineCardState extends State<MedicineCard> {
                 ),
               ),
             ],
-          ],
-        ),
-
-        // CTA area: Ulotka + Unpin (aligned right)
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            if (hasLeaflet) ...[
-              NeuButton(
-                onPressed: () => _showPdfViewer(context),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      LucideIcons.fileText,
-                      size: 18,
-                      color: AppColors.valid,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Pokaż ulotkę',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Pin-off button - tylko w trybie edycji
-              if (_isEditModeActive) ...[
-                const Spacer(),
-                GestureDetector(
-                  onTap: _detachLeaflet,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: NeuDecoration.flatSmall(
-                      isDark: isDark,
-                      radius: 12,
-                    ),
-                    child: Icon(
-                      LucideIcons.pinOff,
-                      size: 20,
-                      color: AppColors.expired,
-                    ),
-                  ),
-                ),
-              ],
-            ] else
-              NeuButton(
-                onPressed: () => _showLeafletSearch(context),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      LucideIcons.fileSearch,
-                      size: 18,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Znajdź ulotkę',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
           ],
         ),
 
@@ -1024,10 +948,13 @@ class _MedicineCardState extends State<MedicineCard> {
 
   Widget _buildNoteSection(BuildContext context, ThemeData theme, bool isDark) {
     final hasNote = _medicine.notatka?.isNotEmpty == true;
+    final hasLeaflet =
+        _medicine.leafletUrl != null && _medicine.leafletUrl!.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Nagłówek
         Text(
           'Notatka',
           style: theme.textTheme.labelMedium?.copyWith(
@@ -1036,90 +963,151 @@ class _MedicineCardState extends State<MedicineCard> {
           ),
         ),
         const SizedBox(height: 6),
-        GestureDetector(
-          onTap: () {
-            if (!_isEditingNote) {
-              setState(() {
-                _isEditingNote = true;
-                _noteController.text = _medicine.notatka ?? '';
-              });
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _noteFocusNode.requestFocus();
-              });
-            }
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: isDark
-                  ? Colors.transparent
-                  : theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: _isEditingNote
-                    ? AppColors.valid
-                    : (isDark ? Colors.grey.shade700 : Colors.grey.shade400),
-                width: _isEditingNote ? 2 : 1,
-              ),
-            ),
-            child: _isEditingNote
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _noteController,
-                          focusNode: _noteFocusNode,
-                          maxLines: null,
-                          minLines: 1,
-                          decoration: const InputDecoration(
-                            border: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            errorBorder: InputBorder.none,
-                            disabledBorder: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                            hintText: 'Wpisz notatkę...',
-                          ),
-                          style: TextStyle(
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 13,
-                          ),
-                          onSubmitted: (_) => _saveNote(),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _saveNote,
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: NeuDecoration.flatSmall(
-                            isDark: isDark,
-                            radius: 12,
-                          ),
-                          child: Icon(
-                            LucideIcons.check,
-                            size: 20,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Text(
-                    hasNote ? _medicine.notatka! : 'Kliknij, aby dodać notatkę',
-                    style: TextStyle(
-                      color: hasNote
-                          ? theme.colorScheme.onSurface
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontStyle: hasNote ? FontStyle.normal : FontStyle.italic,
-                      fontSize: 13,
+        // Row: Pole tekstowe + CTA Ulotka + unpin
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Pole tekstowe notatki (Expanded)
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  if (!_isEditingNote) {
+                    setState(() {
+                      _isEditingNote = true;
+                      _noteController.text = _medicine.notatka ?? '';
+                    });
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _noteFocusNode.requestFocus();
+                    });
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.transparent
+                        : theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: _isEditingNote
+                          ? AppColors.valid
+                          : (isDark
+                                ? Colors.grey.shade700
+                                : Colors.grey.shade400),
+                      width: _isEditingNote ? 2 : 1,
                     ),
                   ),
-          ),
+                  child: _isEditingNote
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _noteController,
+                                focusNode: _noteFocusNode,
+                                maxLines: null,
+                                minLines: 1,
+                                decoration: const InputDecoration(
+                                  border: InputBorder.none,
+                                  focusedBorder: InputBorder.none,
+                                  enabledBorder: InputBorder.none,
+                                  errorBorder: InputBorder.none,
+                                  disabledBorder: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.zero,
+                                  hintText: 'Wpisz notatkę...',
+                                ),
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                  fontSize: 13,
+                                ),
+                                onSubmitted: (_) => _saveNote(),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: _saveNote,
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: NeuDecoration.flatSmall(
+                                  isDark: isDark,
+                                  radius: 12,
+                                ),
+                                child: Icon(
+                                  LucideIcons.check,
+                                  size: 20,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          hasNote
+                              ? _medicine.notatka!
+                              : 'Kliknij, aby dodać notatkę',
+                          style: TextStyle(
+                            color: hasNote
+                                ? theme.colorScheme.onSurface
+                                : theme.colorScheme.onSurfaceVariant,
+                            fontStyle: hasNote
+                                ? FontStyle.normal
+                                : FontStyle.italic,
+                            fontSize: 13,
+                          ),
+                        ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // CTA Ulotka
+            NeuButton(
+              onPressed: hasLeaflet
+                  ? () => _showPdfViewer(context)
+                  : () => _showLeafletSearch(context),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    hasLeaflet ? LucideIcons.fileText : LucideIcons.fileSearch,
+                    size: 16,
+                    color: hasLeaflet
+                        ? AppColors.valid
+                        : theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Ulotka',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Pin-off button - tylko w trybie edycji i gdy jest ulotka
+            if (hasLeaflet && _isEditModeActive) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: _detachLeaflet,
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 10,
+                  ),
+                  child: Icon(
+                    LucideIcons.pinOff,
+                    size: 16,
+                    color: AppColors.expired,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ],
     );
@@ -1375,7 +1363,9 @@ class _MedicineCardState extends State<MedicineCard> {
               expand: false,
               builder: (context, scrollController) => Container(
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  color: isDark
+                      ? AppColors.darkSurface
+                      : AppColors.lightSurface,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(20),
                   ),
@@ -1406,9 +1396,7 @@ class _MedicineCardState extends State<MedicineCard> {
                           const SizedBox(width: 12),
                           Text(
                             'Szczegóły opakowania',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
+                            style: Theme.of(context).textTheme.headlineSmall
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ],
@@ -1428,9 +1416,7 @@ class _MedicineCardState extends State<MedicineCard> {
                             // Sekcja 1: Termin ważności
                             Text(
                               'Termin ważności',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: const Color(0xFF6b7280),
@@ -1450,8 +1436,9 @@ class _MedicineCardState extends State<MedicineCard> {
                                         .map(
                                           (m) => DropdownMenuItem(
                                             value: m,
-                                            child:
-                                                Text(m.toString().padLeft(2, '0')),
+                                            child: Text(
+                                              m.toString().padLeft(2, '0'),
+                                            ),
                                           ),
                                         )
                                         .toList(),
@@ -1468,14 +1455,18 @@ class _MedicineCardState extends State<MedicineCard> {
                                       labelText: 'Rok',
                                       border: OutlineInputBorder(),
                                     ),
-                                    items: List.generate(15, (i) => currentYear + i)
-                                        .map(
-                                          (y) => DropdownMenuItem(
-                                            value: y,
-                                            child: Text(y.toString()),
-                                          ),
-                                        )
-                                        .toList(),
+                                    items:
+                                        List.generate(
+                                              15,
+                                              (i) => currentYear + i,
+                                            )
+                                            .map(
+                                              (y) => DropdownMenuItem(
+                                                value: y,
+                                                child: Text(y.toString()),
+                                              ),
+                                            )
+                                            .toList(),
                                     onChanged: (v) => setBottomSheetState(
                                       () => selectedYear = v!,
                                     ),
@@ -1489,9 +1480,7 @@ class _MedicineCardState extends State<MedicineCard> {
                             // Sekcja 2: Ilość
                             Text(
                               'Ilość',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: const Color(0xFF6b7280),
@@ -1546,8 +1535,8 @@ class _MedicineCardState extends State<MedicineCard> {
                                   suffixText: selectedUnit == PackageUnit.pieces
                                       ? 'szt.'
                                       : selectedUnit == PackageUnit.ml
-                                          ? 'ml'
-                                          : 'saszetki',
+                                      ? 'ml'
+                                      : 'saszetki',
                                   border: const OutlineInputBorder(),
                                 ),
                               ),
@@ -1573,9 +1562,7 @@ class _MedicineCardState extends State<MedicineCard> {
                             // Sekcja 3: Status opakowania
                             Text(
                               'Status opakowania',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleSmall
+                              style: Theme.of(context).textTheme.titleSmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.w600,
                                     color: const Color(0xFF6b7280),
@@ -1607,9 +1594,7 @@ class _MedicineCardState extends State<MedicineCard> {
                               const SizedBox(height: 20),
                               Text(
                                 'Data otwarcia (opcjonalne)',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleSmall
+                                style: Theme.of(context).textTheme.titleSmall
                                     ?.copyWith(
                                       fontWeight: FontWeight.w600,
                                       color: const Color(0xFF6b7280),
@@ -1626,13 +1611,14 @@ class _MedicineCardState extends State<MedicineCard> {
                                         hintText: 'Wybierz datę',
                                         border: const OutlineInputBorder(),
                                         suffixIcon: IconButton(
-                                          icon:
-                                              const Icon(LucideIcons.calendar),
+                                          icon: const Icon(
+                                            LucideIcons.calendar,
+                                          ),
                                           onPressed: () async {
                                             final picked = await showDatePicker(
                                               context: context,
-                                              initialDate: openedDate ??
-                                                  DateTime.now(),
+                                              initialDate:
+                                                  openedDate ?? DateTime.now(),
                                               firstDate: DateTime(2000),
                                               lastDate: DateTime.now(),
                                             );
@@ -1685,25 +1671,28 @@ class _MedicineCardState extends State<MedicineCard> {
                           Expanded(
                             child: FilledButton(
                               onPressed: () {
-                                final lastDay =
-                                    DateTime(selectedYear, selectedMonth + 1, 0);
+                                final lastDay = DateTime(
+                                  selectedYear,
+                                  selectedMonth + 1,
+                                  0,
+                                );
                                 Navigator.pop(context, {
-                                  'expiryDate':
-                                      lastDay.toIso8601String().split('T')[0],
+                                  'expiryDate': lastDay.toIso8601String().split(
+                                    'T',
+                                  )[0],
                                   'isOpen': isOpen,
                                   'unit': selectedUnit,
-                                  'pieceCount':
-                                      selectedUnit != PackageUnit.none
-                                          ? int.tryParse(pieceController.text)
-                                          : null,
-                                  'percentRemaining': isOpen &&
-                                          selectedUnit != PackageUnit.none
+                                  'pieceCount': selectedUnit != PackageUnit.none
+                                      ? int.tryParse(pieceController.text)
+                                      : null,
+                                  'percentRemaining':
+                                      isOpen && selectedUnit != PackageUnit.none
                                       ? int.tryParse(percentController.text)
                                       : null,
                                   'openedDate': isOpen && openedDate != null
-                                      ? openedDate!
-                                          .toIso8601String()
-                                          .split('T')[0]
+                                      ? openedDate!.toIso8601String().split(
+                                          'T',
+                                        )[0]
                                       : null,
                                 });
                               },
@@ -2923,10 +2912,7 @@ class _MedicineCardState extends State<MedicineCard> {
         decoration: BoxDecoration(
           color: AppColors.valid.withAlpha(isDark ? 30 : 20),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: AppColors.valid.withAlpha(50),
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.valid.withAlpha(50), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2935,11 +2921,7 @@ class _MedicineCardState extends State<MedicineCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  LucideIcons.shieldCheck,
-                  size: 16,
-                  color: AppColors.valid,
-                ),
+                Icon(LucideIcons.shieldCheck, size: 16, color: AppColors.valid),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -2993,10 +2975,7 @@ class _MedicineCardState extends State<MedicineCard> {
         decoration: BoxDecoration(
           color: AppColors.valid.withAlpha(isDark ? 30 : 20),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: AppColors.valid.withAlpha(50),
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.valid.withAlpha(50), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3004,11 +2983,7 @@ class _MedicineCardState extends State<MedicineCard> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  LucideIcons.shieldCheck,
-                  size: 16,
-                  color: AppColors.valid,
-                ),
+                Icon(LucideIcons.shieldCheck, size: 16, color: AppColors.valid),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -3371,9 +3346,7 @@ class _MedicineCardState extends State<MedicineCard> {
     } catch (e) {
       _log.severe('Error analyzing shelf life: $e');
 
-      final updatedMedicine = _medicine.copyWith(
-        shelfLifeStatus: 'error',
-      );
+      final updatedMedicine = _medicine.copyWith(shelfLifeStatus: 'error');
       await widget.storageService?.saveMedicine(updatedMedicine);
       setState(() => _medicine = updatedMedicine);
       widget.onMedicineUpdated?.call();
@@ -3410,8 +3383,10 @@ class _MedicineCardState extends State<MedicineCard> {
       // Parsuj okres z natural language
       final parsed = ShelfLifeParser.parse(shelfLife);
       if (parsed.isValid && parsed.days != null) {
-        isExpiredAfterOpening =
-            ShelfLifeParser.isExpired(package.openedDate!, parsed.days!);
+        isExpiredAfterOpening = ShelfLifeParser.isExpired(
+          package.openedDate!,
+          parsed.days!,
+        );
         expiryDateStr = ShelfLifeParser.formatExpiryDate(
           package.openedDate!,
           parsed.days!,
@@ -3446,8 +3421,9 @@ class _MedicineCardState extends State<MedicineCard> {
                       ? AppColors.expired
                       : theme.colorScheme.onSurfaceVariant,
                   fontStyle: FontStyle.italic,
-                  fontWeight:
-                      isExpiredAfterOpening ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isExpiredAfterOpening
+                      ? FontWeight.w600
+                      : FontWeight.normal,
                 ),
               ),
             ),
