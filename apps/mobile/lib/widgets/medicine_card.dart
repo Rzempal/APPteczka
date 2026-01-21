@@ -327,14 +327,12 @@ class _MedicineCardState extends State<MedicineCard> {
                       color: AppColors.primary,
                     ),
                   ),
-                // Etykiety tylko w compact mode
-                if (widget.isCompact) ...[
-                  ...medicineLabels
-                      .take(3)
-                      .map((label) => _buildBadge(label, isDark)),
-                  if (medicineLabels.length > 3)
-                    _buildBadgeCount(medicineLabels.length - 3, isDark),
-                ],
+                // Etykiety - w obu trybach (compact i expanded)
+                ...medicineLabels
+                    .take(3)
+                    .map((label) => _buildBadge(label, isDark)),
+                if (medicineLabels.length > 3)
+                  _buildBadgeCount(medicineLabels.length - 3, isDark),
               ],
             ),
           ),
@@ -591,6 +589,141 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
+  /// Buduje tagi inline (bez nagłówka) - do wyświetlenia nad opisem
+  Widget _buildTagsInline(BuildContext context, ThemeData theme, bool isDark) {
+    if (_medicine.tagi.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _medicine.tagi
+          .map((tag) => _buildTag(tag, isDark, theme))
+          .toList(),
+    );
+  }
+
+  /// Buduje sekcję zapasu leku w expanded mode
+  /// Format: X{icon}/Y{pillBottle}, wystarczy do DD.MM.YYYY
+  Widget _buildExpandedStockSection(
+    ThemeData theme,
+    bool isDark,
+    Color statusColor,
+  ) {
+    if (_medicine.packages.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Oblicz dane zapasu
+    String unitLabel = 'szt.';
+    int currentStock = 0;
+    final packageCount = _medicine.packages.length;
+    final firstPackage = _medicine.packages.first;
+
+    // Jednostka zależna od typu opakowania
+    switch (firstPackage.unit) {
+      case PackageUnit.ml:
+        unitLabel = 'ml';
+        break;
+      case PackageUnit.pieces:
+        unitLabel = 'szt.';
+        break;
+      case PackageUnit.sachets:
+        unitLabel = 'sasz.';
+        break;
+      case PackageUnit.none:
+        unitLabel = '';
+        break;
+    }
+
+    // Oblicz aktualny stan
+    for (final package in _medicine.packages) {
+      if (package.pieceCount != null) {
+        if (package.isOpen && package.percentRemaining != null) {
+          currentStock +=
+              (package.pieceCount! * package.percentRemaining! / 100).round();
+        } else {
+          currentStock += package.pieceCount!;
+        }
+      }
+    }
+
+    // Oblicz datę do której wystarczy (jeśli mamy dailyIntake)
+    String? endDateStr;
+    if (_medicine.dailyIntake != null &&
+        _medicine.dailyIntake! > 0 &&
+        currentStock > 0) {
+      final daysRemaining = (currentStock / _medicine.dailyIntake!).floor();
+      final endDate = DateTime.now().add(Duration(days: daysRemaining));
+      endDateStr =
+          '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
+    }
+
+    return Row(
+      children: [
+        // Label
+        Text(
+          'Zapas leku: ',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        // Ilość + ikona typu
+        Text(
+          '$currentStock $unitLabel',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Icon(
+          _getMedicineTypeIcon(),
+          size: 16,
+          color: theme.colorScheme.primary,
+        ),
+        // Separator
+        Text(
+          ' / ',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        // Liczba opakowań + ikona
+        Text(
+          '$packageCount op.',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Icon(
+          LucideIcons.pillBottle,
+          size: 16,
+          color: theme.colorScheme.primary,
+        ),
+        // Data końcowa
+        if (endDateStr != null) ...[
+          Text(
+            ', wystarczy do ',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            endDateStr,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: statusColor,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildExpandedContent(
     ThemeData theme,
     bool isDark,
@@ -601,27 +734,48 @@ class _MedicineCardState extends State<MedicineCard> {
       children: [
         const SizedBox(height: 4),
 
-        // === SEPARATOR NAD OPIS ===
+        // === SEPARATOR ===
         Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
         const SizedBox(height: 12),
 
-        // === OPIS ===
-        _buildSection(
-          theme,
-          isDark,
-          title: 'Opis',
-          onEdit: _isEditModeActive
-              ? () => _showEditDescriptionDialog(context)
-              : null,
-          child: Text(
-            _medicine.opis,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface,
+        // === TAGI (bez nagłówka, nad opisem) ===
+        _buildTagsInline(context, theme, isDark),
+
+        // === OPIS (bez nagłówka H1) ===
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                _medicine.opis,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
             ),
-          ),
+            if (_isEditModeActive) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _showEditDescriptionDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 12,
+                  ),
+                  child: Icon(
+                    LucideIcons.squarePen,
+                    size: 20,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
 
-        // === WSKAZANIA (z ulotkę w CTA area) ===
+        // === WSKAZANIA ===
         const SizedBox(height: 16),
         _buildWskazaniaSection(context, theme, isDark),
 
@@ -629,15 +783,11 @@ class _MedicineCardState extends State<MedicineCard> {
         const SizedBox(height: 16),
         _buildNoteSection(context, theme, isDark),
 
-        // === KALKULATOR ZAPASU ===
+        // === ZAPAS LEKU (nowa sekcja) ===
         const SizedBox(height: 16),
-        _buildSupplyCalculatorSection(context, theme, isDark),
+        _buildExpandedStockSection(theme, isDark, statusColor),
 
-        // === TERMIN WAŻNOŚCI ===
-        const SizedBox(height: 16),
-        _buildPackagesSection(context, theme, isDark, statusColor),
-
-        // === WIĘCEJ (akordeon) ===
+        // === WIĘCEJ (akordeon - zawiera packages, calculator, delete) ===
         const SizedBox(height: 16),
         _buildMoreSection(context, theme, isDark),
 
@@ -1071,7 +1221,7 @@ class _MedicineCardState extends State<MedicineCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    hasLeaflet ? LucideIcons.fileText : LucideIcons.fileSearch,
+                    hasLeaflet ? LucideIcons.newspaper : LucideIcons.fileSearch,
                     size: 16,
                     color: hasLeaflet
                         ? AppColors.valid
@@ -1970,12 +2120,17 @@ class _MedicineCardState extends State<MedicineCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // === ETYKIETY (najpierw) ===
-                        _buildLabelsSection(context, theme, isDark),
+                        // === TERMIN WAŻNOŚCI (przeniesiony) ===
+                        _buildPackagesSection(
+                          context,
+                          theme,
+                          isDark,
+                          _getStatusColor(_medicine.expiryStatus),
+                        ),
 
-                        // === TAGI ===
-                        const SizedBox(height: 12),
-                        _buildTagsSection(context, theme, isDark),
+                        // === KALKULATOR ZAPASU (przeniesiony) ===
+                        const SizedBox(height: 16),
+                        _buildSupplyCalculatorSection(context, theme, isDark),
 
                         // === DATA DODANIA + WERYFIKACJA ===
                         const SizedBox(height: 12),
