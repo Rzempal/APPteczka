@@ -13,7 +13,7 @@ import '../screens/pdf_viewer_screen.dart';
 import '../utils/shelf_life_parser.dart';
 import 'package:logging/logging.dart';
 import 'neumorphic/neumorphic.dart';
-import 'label_selector.dart';
+
 import 'leaflet_search_sheet.dart';
 import 'filters_sheet.dart' show tagCategories;
 
@@ -56,7 +56,7 @@ class MedicineCard extends StatefulWidget {
 class _MedicineCardState extends State<MedicineCard> {
   static final Logger _log = AppLogger.getLogger('MedicineCard');
   bool _isMoreExpanded = false; // Akordeon "Więcej"
-  bool _isLabelsOpen = false;
+
   bool _isEditModeButtonActive = false; // Stan lokalny przycisku trybu edycji
   late Medicine _medicine;
 
@@ -102,7 +102,6 @@ class _MedicineCardState extends State<MedicineCard> {
     // Resetuj stan UI tylko jeśli zmienił się ID (to zupełnie inny lek)
     if (oldWidget.medicine.id != widget.medicine.id) {
       _isMoreExpanded = false;
-      _isLabelsOpen = false;
     }
   }
 
@@ -139,7 +138,7 @@ class _MedicineCardState extends State<MedicineCard> {
     final isDark = theme.brightness == Brightness.dark;
 
     final status = _medicine.expiryStatus;
-    final gradient = _getGradient(status, isDark);
+
     final statusColor = _getStatusColor(status);
     final statusIcon = _getStatusIcon(status);
 
@@ -803,52 +802,6 @@ class _MedicineCardState extends State<MedicineCard> {
   }
 
   // ==================== SEKCJE ====================
-
-  Widget _buildSection(
-    ThemeData theme,
-    bool isDark, {
-    required String title,
-    required Widget child,
-    VoidCallback? onEdit,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: child),
-            if (onEdit != null) ...[
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: onEdit,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 12,
-                  ),
-                  child: Icon(
-                    LucideIcons.squarePen,
-                    size: 20,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ],
-    );
-  }
 
   /// Wskazania section
   Widget _buildWskazaniaSection(
@@ -2230,126 +2183,6 @@ class _MedicineCardState extends State<MedicineCard> {
                 : const SizedBox.shrink(),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildTagsSection(BuildContext context, ThemeData theme, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              '#Tags',
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            // Edit button - tylko w trybie edycji
-            if (_isEditModeActive) ...[
-              const Spacer(),
-              GestureDetector(
-                onTap: () => _showEditCustomTagsDialog(context),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 12,
-                  ),
-                  child: Icon(
-                    LucideIcons.squarePen,
-                    size: 20,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 6),
-        if (_medicine.tagi.isEmpty)
-          Text(
-            'Brak tagów',
-            style: TextStyle(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontStyle: FontStyle.italic,
-              fontSize: 12,
-            ),
-          )
-        else
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: _medicine.tagi.map((tag) {
-              return GestureDetector(
-                onTap: () => widget.onTagTap?.call(tag),
-                child: _buildTag(tag, isDark, theme),
-              );
-            }).toList(),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildLabelsSection(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'Etykiety',
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            // Edit button - tylko w trybie edycji
-            if (_isEditModeActive) ...[
-              const Spacer(),
-              GestureDetector(
-                onTap: () => setState(() => _isLabelsOpen = !_isLabelsOpen),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 12,
-                  ),
-                  child: Icon(
-                    _isLabelsOpen
-                        ? LucideIcons.chevronUp
-                        : LucideIcons.squarePen,
-                    size: 20,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 6),
-        if (widget.storageService != null)
-          LabelSelector(
-            storageService: widget.storageService!,
-            selectedLabelIds: _medicine.labels,
-            isOpen: _isEditModeActive && _isLabelsOpen,
-            onToggle: _isEditModeActive
-                ? () => setState(() => _isLabelsOpen = !_isLabelsOpen)
-                : null,
-            onLabelTap: (labelId) => widget.onLabelTap?.call(labelId),
-            onChanged: (newLabelIds) async {
-              final updatedMedicine = _medicine.copyWith(labels: newLabelIds);
-              await widget.storageService?.saveMedicine(updatedMedicine);
-              setState(() => _medicine = updatedMedicine);
-              widget.onMedicineUpdated?.call();
-            },
-          ),
       ],
     );
   }
