@@ -171,6 +171,15 @@ class AppTheme {
   );
 
   // ============================================
+  // CARD BORDER CONSTANTS - for outline consistency
+  // ============================================
+  /// Card border width (design.md: 1.5px)
+  static const double cardBorderWidth = 1.5;
+
+  /// Card border opacity (0.0-1.0)
+  static const double cardBorderOpacity = 0.2;
+
+  // ============================================
   // LIGHT THEME - Earthy Clinical
   // ============================================
   static ThemeData get lightTheme {

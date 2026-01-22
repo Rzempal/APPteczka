@@ -49,7 +49,9 @@ class NeuDecoration {
     double radius = 16,
     Color? backgroundColor,
     bool performanceMode = false, // Performance toggle
-    Border? border, // Optional border for outlines
+    Border? border, // Custom border (e.g. status color for medicine cards)
+    bool useDefaultBorder =
+        true, // Whether to use accent border when no custom border
   }) {
     final bgColor =
         backgroundColor ??
@@ -65,10 +67,21 @@ class NeuDecoration {
     final dist = performanceMode ? shadowDistancePerf : shadowDistance;
     final blur = performanceMode ? shadowBlurPerf : shadowBlur;
 
+    // Default accent border when no custom border provided
+    final effectiveBorder =
+        border ??
+        (useDefaultBorder
+            ? Border.all(
+                color: (isDark ? AppColors.accentDark : AppColors.accent)
+                    .withValues(alpha: AppTheme.cardBorderOpacity),
+                width: AppTheme.cardBorderWidth,
+              )
+            : null);
+
     return BoxDecoration(
       color: bgColor,
       borderRadius: borderRadius ?? BorderRadius.circular(radius),
-      border: border,
+      border: effectiveBorder,
       boxShadow: [
         // Dark shadow (bottom-right)
         BoxShadow(
