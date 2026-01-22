@@ -132,10 +132,17 @@ class _MedicineCardState extends State<MedicineCard> {
     setState(() => _isEditingNote = false);
   }
 
-  /// Czyści notatkę i zapisuje pusty stan
-  void _clearNote() {
+  /// Czyści notatkę i zapisuje pusty stan (null)
+  Future<void> _clearNote() async {
     _noteController.clear();
-    _saveNote();
+    // Bezpośredni zapis null - nie przez _saveNote() żeby uniknąć porównania
+    final updatedMedicine = _medicine.copyWith(notatka: null);
+    await widget.storageService?.saveMedicine(updatedMedicine);
+    setState(() {
+      _medicine = updatedMedicine;
+      _isEditingNote = false;
+    });
+    widget.onMedicineUpdated?.call();
   }
 
   @override
@@ -876,14 +883,6 @@ class _MedicineCardState extends State<MedicineCard> {
         // === WIĘCEJ (akordeon - zawiera packages, calculator, delete) ===
         const SizedBox(height: 16),
         _buildMoreSection(context, theme, isDark),
-
-        // === SEPARATOR PRZED ZWIŃ ===
-        const SizedBox(height: 16),
-        Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
-
-        // === PRZYCISKI AKCJI ===
-        const SizedBox(height: 4),
-        _buildActionButtons(context, theme, isDark),
       ],
     );
   }
@@ -2097,47 +2096,73 @@ class _MedicineCardState extends State<MedicineCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Przycisk "Więcej" / "Mniej" (wyrównany do prawej)
+        // Row z dwoma CTA: Szczegóły (50%) + Zwiń (50%)
         Row(
-          mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            GestureDetector(
-              onTap: () => setState(() => _isMoreExpanded = !_isMoreExpanded),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: _isMoreExpanded
-                    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
-                    : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _isMoreExpanded
-                          ? LucideIcons.chevronsDownUp
-                          : LucideIcons.chevronsUpDown,
-                      size: 18,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _isMoreExpanded ? 'Mniej' : 'Więcej',
-                      style: TextStyle(
+            // Lewa połowa: Szczegóły (rozwija do stanu szczegółowego)
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _isMoreExpanded = !_isMoreExpanded),
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(
+                        _isMoreExpanded
+                            ? LucideIcons.chevronsDownUp
+                            : LucideIcons.chevronsUpDown,
+                        size: 18,
                         color: theme.colorScheme.onSurface,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Text(
+                        _isMoreExpanded ? 'Mniej' : 'Szczegóły',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Prawa połowa: Zwiń (zwija do compact)
+            Expanded(
+              child: GestureDetector(
+                onTap: widget.onExpand,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Zwiń',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        LucideIcons.chevronUp,
+                        size: 18,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ],
         ),
 
-        // Separator po Więcej (gdy rozwinięte)
+        // Separator po Szczegóły (gdy rozwinięte)
         if (_isMoreExpanded) ...[
           const SizedBox(height: 8),
           Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
