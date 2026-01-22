@@ -30,7 +30,7 @@ Motyw oparty na naturalnych barwach, redukujący stres medyczny.
 | `--bg-app`   | `#F9F6F2`                | Kość słoniowa (Bone White). Tło główne aplikacji. Ciepłe, nie męczy oczu.   |
 | `--frame`    | `#3E514B`                | Dymna zieleń. Kolor głównej ramki telefonu oraz nagłówków tekstowych.       |
 | `--accent`   | `#5D8A82`                | Zgaszona Szałwia. Główny kolor akcji, pasków postępu i aktywnych elementów. |
-| `--card-bg`  | `#FFFFFF`                | Czysta Biel. Tło kart leków (dla kontrastu z tłem aplikacji).               |
+| `--card-bg`  | `#FDFBF7`                | Warm Paper. Ciepłe tło kart leków (subtelny kontrast z tłem aplikacji).     |
 | `--text-sec` | `#6B7C77`                | Szaro-zielony. Teksty pomocnicze, opisy, nieaktywne ikony.                  |
 | `--shadow`   | `#E8E3D8`                | Ciepły, beżowy cień (zamiast szarego/czarnego).                             |
 | `--border`   | `rgba(62, 81, 75, 0.15)` | Subtelny obrys kart dla definicji kształtu.                                 |
@@ -59,7 +59,7 @@ Tabela określa, który kolor z powyższych palet należy zastosować do konkret
 | ---------------- | ------------------------ | ----------------------- | ----------------------------------------------- |
 | Container Frame  | `--frame` (#3E514B)      | `--frame` (#004D40)     | Główna ramka otaczająca ekran (asymetryczna).   |
 | Top Header (H1)  | `--frame` (#3E514B)      | `--text-main` (#E6E6FA) | Nagłówek "Moja Apteczka".                       |
-| Card Surface     | `--card-bg` (#FFFFFF)    | `--card-bg` (#1F1F35)   | Powierzchnia kart leków.                        |
+| Card Surface     | `--card-bg` (#FDFBF7)    | `--card-bg` (#1F1F35)   | Powierzchnia kart leków.                        |
 | Card Outline     | `--border` (Szałwia 15%) | `--border` (Neon 20%)   | **Kluczowe:** Karty muszą mieć `border: 1.5px`. |
 | Icons (Active)   | `--accent` (#5D8A82)     | `--accent` (#00FF9D)    | Ikony wewnątrz kart i FAB.                      |
 | Chips (Inactive) | `#FFFFFF`                | `#262642`               | Tło nieaktywnych tagów (kontrast w Dark Mode).  |

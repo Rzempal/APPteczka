@@ -154,9 +154,7 @@ class _MedicineCardState extends State<MedicineCard> {
         child: Container(
           decoration: widget.isCompact
               ? BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkSurface
-                      : AppColors.lightBackground,
+                  color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
                   borderRadius: AppTheme.organicRadiusSmall,
                   border: Border.all(
                     color: statusColor.withValues(alpha: 0.2),
@@ -198,6 +196,10 @@ class _MedicineCardState extends State<MedicineCard> {
                   isDark: isDark,
                   borderRadius: AppTheme.organicRadiusSmall, // Organic shape
                   performanceMode: widget.isPerformanceMode,
+                  border: Border.all(
+                    color: statusColor.withValues(alpha: 0.2),
+                    width: 1.5,
+                  ),
                 ),
           child: Padding(
             padding: EdgeInsets.all(widget.isCompact ? 12 : 16),

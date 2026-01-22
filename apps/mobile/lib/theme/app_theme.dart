@@ -44,7 +44,7 @@ class AppColors {
   // ============================================
   static const Color lightBackground = Color(0xFFF9F6F2); // Bone White
   static const Color lightSurface = Color(0xFFF9F6F2); // Same as background
-  static const Color lightCardBg = Color(0xFFFFFFFF); // Czysta biała - tło kart
+  static const Color lightCardBg = Color(0xFFFDFBF7); // Warm Paper - tło kart
   static const Color lightFrame = Color(
     0xFF3E514B,
   ); // Smoky Green (frame color)

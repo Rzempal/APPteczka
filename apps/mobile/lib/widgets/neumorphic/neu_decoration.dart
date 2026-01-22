@@ -49,6 +49,7 @@ class NeuDecoration {
     double radius = 16,
     Color? backgroundColor,
     bool performanceMode = false, // Performance toggle
+    Border? border, // Optional border for outlines
   }) {
     final bgColor =
         backgroundColor ??
@@ -67,6 +68,7 @@ class NeuDecoration {
     return BoxDecoration(
       color: bgColor,
       borderRadius: borderRadius ?? BorderRadius.circular(radius),
+      border: border,
       boxShadow: [
         // Dark shadow (bottom-right)
         BoxShadow(
