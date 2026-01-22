@@ -135,6 +135,44 @@ Zasady spójności (Consistency):
 
 ---
 
+## 📝 Formularze i Pola Tekstowe (Inset Design)
+
+W stylu Hybrid Soft UI pola formularzy wykorzystują efekt **Inset (Wklęsły)**, aby odróżnić się od
+wypukłych kart i przycisków. Elementy te mają wyglądać na fizycznie wciśnięte w powierzchnię
+interfejsu.
+
+### Paleta Kolorystyczna Inputów
+
+| Token            | Light Mode (Warm Paper) | Dark Mode (Indigo)       | Opis                                                   |
+| ---------------- | ----------------------- | ------------------------ | ------------------------------------------------------ |
+| `--input-bg`     | `#F2F0EC`               | `#151525`                | Tło wklęsłe (Deep Void). Ciemniejsze od tła aplikacji. |
+| `--input-text`   | `#2C3E38`               | `#FFFFFF`                | Główny tekst wprowadzany.                              |
+| `--placeholder`  | `#8A9A95`               | `#5D5D75`                | Tekst pomocniczy.                                      |
+| `--border-idle`  | `rgba(62, 81, 75, 0.1)` | `rgba(0, 255, 157, 0.1)` | Subtelny obrys w stanie spoczynku.                     |
+| `--border-focus` | `#5D8A82` (Szałwia)     | `#00FF9D` (Neon)         | Kolor akcentu przy edycji + Glow.                      |
+| `--error`        | `#E26D5C`               | `#FF7070`                | Kolor błędu walidacji.                                 |
+
+### Design Tokens & Style
+
+- **Kształt:** `BorderRadius: 16px` (spójne z przyciskami i małymi kartami).
+- **Cień Wewnętrzny (Inset):** Kluczowy dla efektu głębi.
+  - Light:
+    `inset 2px 2px 5px rgba(166, 160, 150, 0.4), inset -2px -2px 5px rgba(255, 255, 255, 0.7)`
+  - Dark: `inset 3px 3px 8px #0A0A16, inset -2px -2px 6px rgba(45, 45, 80, 0.3)`
+- **Border (Obrys):**
+  - Idle: `1.5px solid` w kolorze `--border-idle`.
+  - Focus: Kolor akcentu + zewnętrzna poświata (Glow 4px).
+  - Error: Kolor błędu.
+  - Disabled: Styl przerywany (`dashed`), obniżone krycie (`opacity 0.6`).
+- **Ikony:**
+  - Zawsze po lewej stronie (`padding-left: 48px`).
+  - Kolor ikony zmienia się na akcent przy stanie `:focus`.
+- **Typografia:**
+  - Label: Uppercase, `font-size 12px`, `weight 700`, `letter-spacing 0.5px`.
+  - Input text: `font-size 14px`, `weight 500`.
+
+---
+
 ## ♿ Dostępność (WCAG 2.1)
 
 Neumorfizm niesie ryzyko niskiego kontrastu. Aby zachować standardy:
@@ -156,4 +194,4 @@ Neumorfizm niesie ryzyko niskiego kontrastu. Aby zachować standardy:
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-21
+> 📅 **Ostatnia aktualizacja:** 2026-01-22
