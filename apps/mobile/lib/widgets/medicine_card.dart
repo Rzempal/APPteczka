@@ -537,13 +537,13 @@ class _MedicineCardState extends State<MedicineCard> {
         ? '$currentStock$unitLabel / $totalCapacity$unitLabel'
         : '';
 
-    // Jeśli brak danych o zapasie, zwróć pusty widget
-    if (stockDisplay.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
     // Notatka leku (jeśli istnieje)
     final hasNote = _medicine.notatka?.isNotEmpty == true;
+
+    // Jeśli brak danych o zapasie I brak notatki, zwróć pusty widget
+    if (stockDisplay.isEmpty && !hasNote) {
+      return const SizedBox.shrink();
+    }
 
     // Padding wyrównujący z nazwą (ikona 44px + gap 12px = 56px)
     const double alignmentPadding = 56.0;
@@ -558,66 +558,69 @@ class _MedicineCardState extends State<MedicineCard> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Lewa strona: Zapas + Progress Bar
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // H3: Zapas leku + wartość
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Zapas leku',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: theme.colorScheme.onSurfaceVariant,
+              // Lewa strona: Zapas + Progress Bar (tylko gdy jest zapas)
+              if (stockDisplay.isNotEmpty)
+                Expanded(
+                  flex: hasNote ? 2 : 1, // Pełna szerokość gdy brak notatki
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // H3: Zapas leku + wartość
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Zapas leku',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
-                        ),
-                        Text(
-                          stockDisplay,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onSurface,
+                          Text(
+                            stockDisplay,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: theme.colorScheme.onSurface,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    // H4: Progress bar
-                    const SizedBox(height: 6),
-                    Container(
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.onSurface.withValues(
-                          alpha: 0.08,
-                        ),
-                        borderRadius: BorderRadius.circular(3),
+                        ],
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(3),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: stockPercentage,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: statusColor,
-                              borderRadius: BorderRadius.circular(3),
+                      // H4: Progress bar
+                      const SizedBox(height: 6),
+                      Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(3),
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: stockPercentage,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: statusColor,
+                                borderRadius: BorderRadius.circular(3),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               // Prawa strona: Podgląd notatki (jeśli istnieje)
               if (hasNote) ...[
-                const SizedBox(width: 12),
+                if (stockDisplay.isNotEmpty) const SizedBox(width: 12),
                 Expanded(
-                  flex: 1,
+                  flex: stockDisplay.isNotEmpty
+                      ? 1
+                      : 1, // Pełna szerokość gdy sama notatka
                   child: ShaderMask(
                     shaderCallback: (Rect bounds) {
                       return LinearGradient(
