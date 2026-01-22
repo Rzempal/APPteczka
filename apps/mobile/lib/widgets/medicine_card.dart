@@ -135,8 +135,8 @@ class _MedicineCardState extends State<MedicineCard> {
   /// Czyści notatkę i zapisuje pusty stan (null)
   Future<void> _clearNote() async {
     _noteController.clear();
-    // Bezpośredni zapis null - nie przez _saveNote() żeby uniknąć porównania
-    final updatedMedicine = _medicine.copyWith(notatka: null);
+    // Użyj clearNotatka: true aby explicite ustawić null
+    final updatedMedicine = _medicine.copyWith(clearNotatka: true);
     await widget.storageService?.saveMedicine(updatedMedicine);
     setState(() {
       _medicine = updatedMedicine;

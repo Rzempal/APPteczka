@@ -3,9 +3,9 @@ import 'package:uuid/uuid.dart';
 
 /// Jednostka ilości w opakowaniu
 enum PackageUnit {
-  none,    // Brak określonej ilości
-  pieces,  // Sztuki (tabletki, kapsułki)
-  ml,      // Mililitry (syropy, krople)
+  none, // Brak określonej ilości
+  pieces, // Sztuki (tabletki, kapsułki)
+  ml, // Mililitry (syropy, krople)
   sachets, // Saszetki
 }
 
@@ -203,10 +203,13 @@ class Medicine {
   final String? leafletUrl;
   final int? dailyIntake; // Dzienne zużycie tabletek
   final String dataDodania;
-  final bool isVerifiedByBarcode; // Dane zweryfikowane po kodzie kreskowym (RPL)
+  final bool
+  isVerifiedByBarcode; // Dane zweryfikowane po kodzie kreskowym (RPL)
   final String? verificationNote; // Monit o konflikcie nazwa/kod
-  final String? shelfLifeAfterOpening; // Cytat z ulotki o terminie ważności po otwarciu
-  final String? shelfLifeStatus; // "pending" | "completed" | "error" | "manual" | null
+  final String?
+  shelfLifeAfterOpening; // Cytat z ulotki o terminie ważności po otwarciu
+  final String?
+  shelfLifeStatus; // "pending" | "completed" | "error" | "manual" | null
 
   Medicine({
     required this.id,
@@ -342,6 +345,7 @@ class Medicine {
     String? verificationNote,
     String? shelfLifeAfterOpening,
     String? shelfLifeStatus,
+    bool clearNotatka = false, // Explicite ustawia notatka na null
   }) {
     return Medicine(
       id: id ?? this.id,
@@ -350,7 +354,7 @@ class Medicine {
       wskazania: wskazania ?? this.wskazania,
       tagi: tagi ?? this.tagi,
       labels: labels ?? this.labels,
-      notatka: notatka ?? this.notatka,
+      notatka: clearNotatka ? null : (notatka ?? this.notatka),
       packages: packages ?? this.packages,
       terminWaznosci: terminWaznosci ?? _legacyTerminWaznosci,
       leafletUrl: leafletUrl ?? this.leafletUrl,
