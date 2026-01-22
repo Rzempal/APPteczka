@@ -490,6 +490,7 @@ class _MedicineCardState extends State<MedicineCard> {
     int currentStock = 0;
     int totalCapacity = 0;
     double stockPercentage = 0.0;
+    final isDark = theme.brightness == Brightness.dark;
 
     // Oblicz zapas i sumę pojemności
     if (_medicine.packages.isNotEmpty) {
@@ -541,56 +542,127 @@ class _MedicineCardState extends State<MedicineCard> {
       return const SizedBox.shrink();
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // H3: Zapas leku + wartość
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Zapas leku',
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Text(
-              stockDisplay,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
+    // Notatka leku (jeśli istnieje)
+    final hasNote = _medicine.notatka?.isNotEmpty == true;
 
-        // H4: Progress bar
-        const SizedBox(height: 6),
-        Container(
-          height: 6,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(3),
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: stockPercentage,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  borderRadius: BorderRadius.circular(3),
+    // Padding wyrównujący z nazwą (ikona 44px + gap 12px = 56px)
+    const double alignmentPadding = 56.0;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: alignmentPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 8),
+          // H3 + H4 z notatką po prawej
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Lewa strona: Zapas + Progress Bar
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // H3: Zapas leku + wartość
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Zapas leku',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        Text(
+                          stockDisplay,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // H4: Progress bar
+                    const SizedBox(height: 6),
+                    Container(
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.onSurface.withValues(
+                          alpha: 0.08,
+                        ),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: FractionallySizedBox(
+                          alignment: Alignment.centerLeft,
+                          widthFactor: stockPercentage,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
+              // Prawa strona: Podgląd notatki (jeśli istnieje)
+              if (hasNote) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 1,
+                  child: ShaderMask(
+                    shaderCallback: (Rect bounds) {
+                      return LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white,
+                          Colors.white,
+                          Colors.white.withValues(alpha: 0),
+                        ],
+                        stops: const [0.0, 0.6, 1.0],
+                      ).createShader(bounds);
+                    },
+                    blendMode: BlendMode.dstIn,
+                    child: Container(
+                      height: 32, // 2 linie wysokości
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            (isDark ? AppColors.accentDark : AppColors.accent)
+                                .withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        _medicine.notatka!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 10,
+                          color: theme.colorScheme.onSurfaceVariant,
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.fade,
+                        softWrap: true,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1536,7 +1608,7 @@ class _MedicineCardState extends State<MedicineCard> {
                               children: [
                                 Expanded(
                                   child: DropdownButtonFormField<int>(
-                                    value: selectedMonth,
+                                    initialValue: selectedMonth,
                                     decoration: const InputDecoration(
                                       labelText: 'Miesiąc',
                                       border: OutlineInputBorder(),
@@ -1559,7 +1631,7 @@ class _MedicineCardState extends State<MedicineCard> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: DropdownButtonFormField<int>(
-                                    value: selectedYear,
+                                    initialValue: selectedYear,
                                     decoration: const InputDecoration(
                                       labelText: 'Rok',
                                       border: OutlineInputBorder(),
