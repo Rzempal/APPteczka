@@ -132,6 +132,12 @@ class _MedicineCardState extends State<MedicineCard> {
     setState(() => _isEditingNote = false);
   }
 
+  /// Czyści notatkę i zapisuje pusty stan
+  void _clearNote() {
+    _noteController.clear();
+    _saveNote();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -1211,7 +1217,7 @@ class _MedicineCardState extends State<MedicineCard> {
                             ),
                             const SizedBox(width: 8),
                             GestureDetector(
-                              onTap: _saveNote,
+                              onTap: _clearNote,
                               child: Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: NeuDecoration.flatSmall(
@@ -1219,9 +1225,9 @@ class _MedicineCardState extends State<MedicineCard> {
                                   radius: 12,
                                 ),
                                 child: Icon(
-                                  LucideIcons.check,
+                                  LucideIcons.x,
                                   size: 20,
-                                  color: AppColors.primary,
+                                  color: AppColors.expired,
                                 ),
                               ),
                             ),
