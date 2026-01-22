@@ -37,7 +37,7 @@ class NeuInsetContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
+    final bgColor = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
     final shadowColor = isDark
         ? AppColors.darkShadowDark
         : AppColors.lightShadowDark;
@@ -62,10 +62,7 @@ class NeuInsetContainer extends StatelessWidget {
         child: Stack(
           children: [
             // Content with padding
-            Padding(
-              padding: padding,
-              child: child,
-            ),
+            Padding(padding: padding, child: child),
 
             // Inner shadow overlays (IgnorePointer so they don't block taps)
             Positioned.fill(
@@ -121,8 +118,7 @@ class _InnerShadowPainter extends CustomPainter {
     );
 
     final topRect = Rect.fromLTWH(0, 0, size.width, shadowDepth);
-    final topPaint = Paint()
-      ..shader = topGradient.createShader(topRect);
+    final topPaint = Paint()..shader = topGradient.createShader(topRect);
     canvas.drawRect(topRect, topPaint);
 
     // Left shadow (dark)
@@ -136,8 +132,7 @@ class _InnerShadowPainter extends CustomPainter {
     );
 
     final leftRect = Rect.fromLTWH(0, 0, shadowDepth, size.height);
-    final leftPaint = Paint()
-      ..shader = leftGradient.createShader(leftRect);
+    final leftPaint = Paint()..shader = leftGradient.createShader(leftRect);
     canvas.drawRect(leftRect, leftPaint);
 
     // Bottom highlight (light)
@@ -176,8 +171,7 @@ class _InnerShadowPainter extends CustomPainter {
       shadowDepth,
       size.height,
     );
-    final rightPaint = Paint()
-      ..shader = rightGradient.createShader(rightRect);
+    final rightPaint = Paint()..shader = rightGradient.createShader(rightRect);
     canvas.drawRect(rightRect, rightPaint);
   }
 

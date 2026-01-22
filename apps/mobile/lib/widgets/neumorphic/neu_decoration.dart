@@ -52,7 +52,7 @@ class NeuDecoration {
   }) {
     final bgColor =
         backgroundColor ??
-        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
+        (isDark ? AppColors.darkCardBg : AppColors.lightCardBg);
     final shadowLight = isDark
         ? AppColors.darkShadowLight
         : AppColors.lightShadowLight;
@@ -96,7 +96,7 @@ class NeuDecoration {
   }) {
     final bgColor =
         backgroundColor ??
-        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
+        (isDark ? AppColors.darkCardBg : AppColors.lightCardBg);
     final shadowLight = isDark
         ? AppColors.darkShadowLight
         : AppColors.lightShadowLight;
@@ -138,7 +138,7 @@ class NeuDecoration {
   }) {
     final bgColor =
         backgroundColor ??
-        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
+        (isDark ? AppColors.darkCardBg : AppColors.lightCardBg);
 
     return BoxDecoration(
       color: bgColor,
@@ -158,7 +158,7 @@ class NeuDecoration {
   }) {
     final bgColor =
         backgroundColor ??
-        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
+        (isDark ? AppColors.darkCardBg : AppColors.lightCardBg);
 
     return BoxDecoration(
       color: bgColor,
@@ -179,7 +179,7 @@ class NeuDecoration {
   }) {
     final bgColor =
         backgroundColor ??
-        (isDark ? AppColors.darkSurface : AppColors.lightBackground);
+        (isDark ? AppColors.darkCardBg : AppColors.lightCardBg);
 
     return BoxDecoration(
       color: bgColor,
@@ -405,7 +405,7 @@ class NeuDecoration {
     double radius = 32,
     bool performanceMode = false,
   }) {
-    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
+    final bgColor = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
     final shadowLight = isDark
         ? AppColors.darkShadowLight
         : AppColors.lightShadowLight;
@@ -447,7 +447,7 @@ class NeuDecoration {
     double radius = 32,
     bool performanceMode = false,
   }) {
-    final bgColor = isDark ? AppColors.darkSurface : AppColors.lightBackground;
+    final bgColor = isDark ? AppColors.darkCardBg : AppColors.lightCardBg;
     final shadowDark = isDark
         ? AppColors.darkShadowDark
         : AppColors.lightShadowDark;
