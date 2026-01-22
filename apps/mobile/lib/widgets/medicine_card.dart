@@ -527,14 +527,22 @@ class _MedicineCardState extends State<MedicineCard> {
 
       // Oblicz sumę pojemności i aktualny stan
       for (final package in _medicine.packages) {
-        if (package.pieceCount != null) {
-          totalCapacity += package.pieceCount!;
-          // Aktualny stan - dla otwartych użyj percentRemaining
-          if (package.isOpen && package.percentRemaining != null) {
-            currentStock +=
-                (package.pieceCount! * package.percentRemaining! / 100).round();
+        // Capacity - pojemność całkowita (fallback: pieceCount dla wstecznej kompatybilności)
+        final packageCapacity = package.capacity ?? package.pieceCount;
+        if (packageCapacity != null) {
+          totalCapacity += packageCapacity;
+
+          // Aktualny stan - pieceCount dla otwartych, capacity dla zamkniętych
+          if (package.isOpen) {
+            if (package.pieceCount != null) {
+              currentStock += package.pieceCount!;
+            } else if (package.percentRemaining != null) {
+              currentStock +=
+                  (packageCapacity * package.percentRemaining! / 100).round();
+            }
           } else {
-            currentStock += package.pieceCount!;
+            // Zamknięte = pełne
+            currentStock += packageCapacity;
           }
         }
       }
@@ -682,6 +690,74 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
+  /// Zwraca pojemność pierwszego opakowania (lub null)
+  int? _getFirstPackageCapacity() {
+    if (_medicine.packages.isEmpty) return null;
+    final first = _medicine.packages.first;
+    return first.capacity ?? first.pieceCount;
+  }
+
+  /// Buduje sekcję informacji o opakowaniu: moc + pojemność
+  Widget _buildPackageInfoSection(ThemeData theme, bool isDark) {
+    final power = _medicine.power;
+    final capacity = _getFirstPackageCapacity();
+    final firstPackage = _medicine.packages.isNotEmpty
+        ? _medicine.packages.first
+        : null;
+
+    // Jednostka
+    String unitLabel = '';
+    if (firstPackage != null) {
+      switch (firstPackage.unit) {
+        case PackageUnit.pieces:
+          unitLabel = 'szt.';
+          break;
+        case PackageUnit.ml:
+          unitLabel = 'ml';
+          break;
+        case PackageUnit.sachets:
+          unitLabel = 'sasz.';
+          break;
+        case PackageUnit.none:
+          break;
+      }
+    }
+
+    // Format: "500mg · 30 szt." lub tylko jedno z nich
+    final parts = <String>[];
+    if (power != null && power.isNotEmpty) {
+      parts.add(power);
+    }
+    if (capacity != null && unitLabel.isNotEmpty) {
+      parts.add('$capacity $unitLabel');
+    }
+
+    if (parts.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Icon(LucideIcons.package, size: 16, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            'Opakowanie: ',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          Text(
+            parts.join(' · '),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Buduje tagi inline (bez nagłówka) - do wyświetlenia nad opisem
   Widget _buildTagsInline(BuildContext context, ThemeData theme, bool isDark) {
     if (_medicine.tagi.isEmpty) {
@@ -732,12 +808,18 @@ class _MedicineCardState extends State<MedicineCard> {
 
     // Oblicz aktualny stan
     for (final package in _medicine.packages) {
-      if (package.pieceCount != null) {
-        if (package.isOpen && package.percentRemaining != null) {
-          currentStock +=
-              (package.pieceCount! * package.percentRemaining! / 100).round();
+      final packageCapacity = package.capacity ?? package.pieceCount;
+      if (packageCapacity != null) {
+        if (package.isOpen) {
+          if (package.pieceCount != null) {
+            currentStock += package.pieceCount!;
+          } else if (package.percentRemaining != null) {
+            currentStock += (packageCapacity * package.percentRemaining! / 100)
+                .round();
+          }
         } else {
-          currentStock += package.pieceCount!;
+          // Zamknięte = pełne
+          currentStock += packageCapacity;
         }
       }
     }
@@ -830,6 +912,10 @@ class _MedicineCardState extends State<MedicineCard> {
         // === SEPARATOR ===
         Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
         const SizedBox(height: 12),
+
+        // === OPAKOWANIE (moc + pojemność) ===
+        if (_medicine.power != null || _getFirstPackageCapacity() != null)
+          _buildPackageInfoSection(theme, isDark),
 
         // === TAGI (bez nagłówka, nad opisem) ===
         _buildTagsInline(context, theme, isDark),
@@ -1523,6 +1609,11 @@ class _MedicineCardState extends State<MedicineCard> {
     int selectedYear = currentDate.year;
     bool isOpen = package.isOpen;
     PackageUnit selectedUnit = package.unit;
+
+    // Capacity i pieceCount - capacity to pojemność całkowita, pieceCount to pozostała ilość
+    final capacityController = TextEditingController(
+      text: package.capacity?.toString() ?? '',
+    );
     final pieceController = TextEditingController(
       text: package.pieceCount?.toString() ?? '',
     );
@@ -1532,6 +1623,10 @@ class _MedicineCardState extends State<MedicineCard> {
     DateTime? openedDate = package.openedDate != null
         ? DateTime.tryParse(package.openedDate!)
         : null;
+
+    // Flagi do blokowania pętli sync
+    bool isSyncingFromPiece = false;
+    bool isSyncingFromPercent = false;
 
     final result = await showModalBottomSheet<Map<String, dynamic>?>(
       context: context,
@@ -1602,6 +1697,68 @@ class _MedicineCardState extends State<MedicineCard> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Sekcja 0: Informacje wspólne (moc, shelf life)
+                            if (_medicine.power != null &&
+                                _medicine.power!.isNotEmpty) ...[
+                              Text(
+                                'Moc leku',
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF6b7280),
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: TextEditingController(
+                                  text: _medicine.power,
+                                ),
+                                readOnly: true,
+                                decoration: const InputDecoration(
+                                  border: OutlineInputBorder(),
+                                  filled: true,
+                                  fillColor: Color(0xFFF3F4F6),
+                                ),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // Okres przydatności po otwarciu (z AI lub ręczny)
+                            if (_medicine.shelfLifeAfterOpening != null ||
+                                isOpen) ...[
+                              Text(
+                                'Okres przydatności po otwarciu',
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF6b7280),
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: TextEditingController(
+                                  text: _medicine.shelfLifeAfterOpening ?? '',
+                                ),
+                                readOnly: true,
+                                maxLines: 2,
+                                decoration: InputDecoration(
+                                  border: const OutlineInputBorder(),
+                                  hintText: 'Brak informacji',
+                                  suffixIcon:
+                                      _medicine.shelfLifeStatus == 'completed'
+                                      ? const Icon(
+                                          LucideIcons.sparkles,
+                                          color: Colors.amber,
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
                             // Sekcja 1: Termin ważności
                             Text(
                               'Termin ważności',
@@ -1710,16 +1867,15 @@ class _MedicineCardState extends State<MedicineCard> {
                               ],
                             ),
 
-                            // Input dla wybranej jednostki
+                            // Inputs dla wybranej jednostki
                             if (selectedUnit != PackageUnit.none) ...[
                               const SizedBox(height: 16),
+                              // Pojemność opakowania (całkowita)
                               TextField(
-                                controller: pieceController,
+                                controller: capacityController,
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
-                                  labelText: isOpen
-                                      ? 'Pozostało'
-                                      : 'Ilość w opakowaniu',
+                                  labelText: 'Pojemność opakowania',
                                   hintText: 'np. 30',
                                   suffixText: selectedUnit == PackageUnit.pieces
                                       ? 'szt.'
@@ -1728,22 +1884,94 @@ class _MedicineCardState extends State<MedicineCard> {
                                       : 'saszetki',
                                   border: const OutlineInputBorder(),
                                 ),
+                                onChanged: (value) {
+                                  // Przelicz procent jeśli mamy pieceCount
+                                  final capacity = int.tryParse(value);
+                                  final piece = int.tryParse(
+                                    pieceController.text,
+                                  );
+                                  if (capacity != null &&
+                                      capacity > 0 &&
+                                      piece != null &&
+                                      !isSyncingFromPercent) {
+                                    isSyncingFromPiece = true;
+                                    final percent = ((piece / capacity) * 100)
+                                        .round()
+                                        .clamp(0, 100);
+                                    percentController.text = percent.toString();
+                                    isSyncingFromPiece = false;
+                                  }
+                                },
                               ),
-                            ],
 
-                            // Procent pozostałości (tylko dla otwartych)
-                            if (isOpen && selectedUnit != PackageUnit.none) ...[
-                              const SizedBox(height: 16),
-                              TextField(
-                                controller: percentController,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Pozostało procent (opcjonalne)',
-                                  hintText: 'np. 50',
-                                  suffixText: '%',
-                                  border: OutlineInputBorder(),
+                              // Pozostała ilość (tylko dla otwartych)
+                              if (isOpen) ...[
+                                const SizedBox(height: 16),
+                                TextField(
+                                  controller: pieceController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    labelText: 'Pozostała ilość',
+                                    hintText: 'np. 15',
+                                    suffixText:
+                                        selectedUnit == PackageUnit.pieces
+                                        ? 'szt.'
+                                        : selectedUnit == PackageUnit.ml
+                                        ? 'ml'
+                                        : 'saszetki',
+                                    border: const OutlineInputBorder(),
+                                  ),
+                                  onChanged: (value) {
+                                    // Sync: pieceCount → percentRemaining
+                                    if (isSyncingFromPercent) return;
+                                    final capacity = int.tryParse(
+                                      capacityController.text,
+                                    );
+                                    final piece = int.tryParse(value);
+                                    if (capacity != null &&
+                                        capacity > 0 &&
+                                        piece != null) {
+                                      isSyncingFromPiece = true;
+                                      final percent = ((piece / capacity) * 100)
+                                          .round()
+                                          .clamp(0, 100);
+                                      percentController.text = percent
+                                          .toString();
+                                      setBottomSheetState(() {});
+                                      isSyncingFromPiece = false;
+                                    }
+                                  },
                                 ),
-                              ),
+                                const SizedBox(height: 16),
+                                TextField(
+                                  controller: percentController,
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Pozostało procent',
+                                    hintText: 'np. 50',
+                                    suffixText: '%',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (value) {
+                                    // Sync: percentRemaining → pieceCount
+                                    if (isSyncingFromPiece) return;
+                                    final capacity = int.tryParse(
+                                      capacityController.text,
+                                    );
+                                    final percent = int.tryParse(value);
+                                    if (capacity != null &&
+                                        capacity > 0 &&
+                                        percent != null) {
+                                      isSyncingFromPercent = true;
+                                      final piece = ((capacity * percent) / 100)
+                                          .round();
+                                      pieceController.text = piece.toString();
+                                      setBottomSheetState(() {});
+                                      isSyncingFromPercent = false;
+                                    }
+                                  },
+                                ),
+                              ],
                             ],
 
                             const SizedBox(height: 20),
@@ -1871,6 +2099,9 @@ class _MedicineCardState extends State<MedicineCard> {
                                   )[0],
                                   'isOpen': isOpen,
                                   'unit': selectedUnit,
+                                  'capacity': selectedUnit != PackageUnit.none
+                                      ? int.tryParse(capacityController.text)
+                                      : null,
                                   'pieceCount': selectedUnit != PackageUnit.none
                                       ? int.tryParse(pieceController.text)
                                       : null,
@@ -1906,6 +2137,7 @@ class _MedicineCardState extends State<MedicineCard> {
         expiryDate: result['expiryDate'] as String,
         isOpen: result['isOpen'] as bool,
         unit: result['unit'] as PackageUnit,
+        capacity: result['capacity'] as int?,
         pieceCount: result['pieceCount'] as int?,
         percentRemaining: result['percentRemaining'] as int?,
         openedDate: result['openedDate'] as String?,

@@ -1,4 +1,4 @@
-// medicine.dart v0.003 Added package units and opened date
+// medicine.dart v0.004 Added capacity field for package total quantity
 import 'package:uuid/uuid.dart';
 
 /// Jednostka ilości w opakowaniu
@@ -14,7 +14,8 @@ class MedicinePackage {
   final String id;
   final String expiryDate; // ISO8601 ("2027-03-31")
   final bool isOpen; // true = otwarte, false = zamknięte (default)
-  final int? pieceCount; // Ilość w opakowaniu (zależna od unit)
+  final int? capacity; // Pojemność opakowania (całkowita ilość)
+  final int? pieceCount; // Pozostała ilość (zależna od unit)
   final int? percentRemaining; // % pozostały (tylko dla otwartych)
   final PackageUnit unit; // Jednostka ilości
   final String? openedDate; // Data otwarcia (ISO8601, opcjonalne)
@@ -23,6 +24,7 @@ class MedicinePackage {
     String? id,
     required this.expiryDate,
     this.isOpen = false,
+    this.capacity,
     this.pieceCount,
     this.percentRemaining,
     this.unit = PackageUnit.pieces,
@@ -33,6 +35,7 @@ class MedicinePackage {
   factory MedicinePackage.fromMMYYYY(
     String mmyyyy, {
     bool isOpen = false,
+    int? capacity,
     int? pieceCount,
     int? percentRemaining,
     PackageUnit unit = PackageUnit.pieces,
@@ -49,6 +52,7 @@ class MedicinePackage {
     return MedicinePackage(
       expiryDate: lastDay.toIso8601String().split('T')[0],
       isOpen: isOpen,
+      capacity: capacity,
       pieceCount: pieceCount,
       percentRemaining: percentRemaining,
       unit: unit,
@@ -67,10 +71,14 @@ class MedicinePackage {
       );
     }
 
+    // Capacity with fallback to pieceCount for backward compatibility
+    final capacity = json['capacity'] as int? ?? json['pieceCount'] as int?;
+
     return MedicinePackage(
       id: json['id'] as String?,
       expiryDate: json['expiryDate'] as String,
       isOpen: json['isOpen'] as bool? ?? false,
+      capacity: capacity,
       pieceCount: json['pieceCount'] as int?,
       percentRemaining: json['percentRemaining'] as int?,
       unit: unit,
@@ -83,6 +91,7 @@ class MedicinePackage {
       'id': id,
       'expiryDate': expiryDate,
       if (isOpen) 'isOpen': isOpen,
+      if (capacity != null) 'capacity': capacity,
       if (pieceCount != null) 'pieceCount': pieceCount,
       if (percentRemaining != null) 'percentRemaining': percentRemaining,
       'unit': unit.name,
@@ -94,10 +103,12 @@ class MedicinePackage {
     String? id,
     String? expiryDate,
     bool? isOpen,
+    int? capacity,
     int? pieceCount,
     int? percentRemaining,
     PackageUnit? unit,
     String? openedDate,
+    bool clearCapacity = false,
     bool clearPieceCount = false,
     bool clearPercentRemaining = false,
     bool clearOpenedDate = false,
@@ -106,6 +117,7 @@ class MedicinePackage {
       id: id ?? this.id,
       expiryDate: expiryDate ?? this.expiryDate,
       isOpen: isOpen ?? this.isOpen,
+      capacity: clearCapacity ? null : (capacity ?? this.capacity),
       pieceCount: clearPieceCount ? null : (pieceCount ?? this.pieceCount),
       percentRemaining: clearPercentRemaining
           ? null
@@ -193,6 +205,7 @@ class MedicinePackage {
 class Medicine {
   final String id;
   final String? nazwa;
+  final String? power; // Moc leku (np. "500mg") z RPL
   final String opis;
   final List<String> wskazania;
   final List<String> tagi;
@@ -214,6 +227,7 @@ class Medicine {
   Medicine({
     required this.id,
     this.nazwa,
+    this.power,
     required this.opis,
     required this.wskazania,
     required this.tagi,
@@ -286,6 +300,7 @@ class Medicine {
     return Medicine(
       id: json['id'] as String,
       nazwa: json['nazwa'] as String?,
+      power: json['power'] as String?,
       opis: json['opis'] as String? ?? '',
       wskazania: List<String>.from(json['wskazania'] ?? []),
       tagi: List<String>.from(json['tagi'] ?? []),
@@ -308,6 +323,7 @@ class Medicine {
     return {
       'id': id,
       'nazwa': nazwa,
+      if (power != null) 'power': power,
       'opis': opis,
       'wskazania': wskazania,
       'tagi': tagi,
@@ -331,6 +347,7 @@ class Medicine {
   Medicine copyWith({
     String? id,
     String? nazwa,
+    String? power,
     String? opis,
     List<String>? wskazania,
     List<String>? tagi,
@@ -350,6 +367,7 @@ class Medicine {
     return Medicine(
       id: id ?? this.id,
       nazwa: nazwa ?? this.nazwa,
+      power: power ?? this.power,
       opis: opis ?? this.opis,
       wskazania: wskazania ?? this.wskazania,
       tagi: tagi ?? this.tagi,
