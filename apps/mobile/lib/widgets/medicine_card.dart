@@ -245,11 +245,16 @@ class _MedicineCardState extends State<MedicineCard> {
                               color: theme.colorScheme.primary,
                             ),
                           ),
-                          // Notatka preview (pod ikoną, 2 linie)
+                          // Notatka preview (pod ikoną, wysokość = H3+H4 = ~38px)
+                          // Wyświetlana tylko gdy Smart Stock nie jest widoczny
+                          // lub zawsze jako przestrzeń rezerwowa
                           if (_medicine.notatka?.isNotEmpty == true) ...[
                             const SizedBox(height: 4),
                             SizedBox(
                               width: 44,
+                              // Stała wysokość dopasowana do H3+H4
+                              // (quantity row ~18px + gap 6px + bar 6px = ~30px)
+                              height: 30,
                               child: Text(
                                 _medicine.notatka!,
                                 style: theme.textTheme.bodySmall?.copyWith(
@@ -657,38 +662,50 @@ class _MedicineCardState extends State<MedicineCard> {
   }
 
   /// Buduje sekcję Smart Stock z licznikiem opakowań po lewej stronie (expanded mode)
+  /// Layout: Licznik opakowań (jedna linia, wysokość dwóch linii) + Smart Stock
+  /// Smart Stock ma taki sam lewy offset jak w Compact (56px)
   Widget _buildExpandedStockWithPackageCount(
     ThemeData theme,
     Color statusColor,
   ) {
     final packageCount = _medicine.packageCount;
+    // Stała wysokość dla licznika opakowań (2 linie = ~40px)
+    const double packageCounterHeight = 40.0;
+    // Szerokość licznika = szerokość ikony w Compact (44px)
+    const double packageCounterWidth = 44.0;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Lewa strona: licznik opakowań
+        // Lewa strona: licznik opakowań (jedna linia, wysokość dwóch linii)
         if (packageCount > 0) ...[
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '$packageCount',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.onSurface,
+          SizedBox(
+            width: packageCounterWidth,
+            height: packageCounterHeight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  '$packageCount',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                LucideIcons.pillBottle,
-                size: 16,
-                color: theme.colorScheme.primary,
-              ),
-            ],
+                const SizedBox(width: 4),
+                Icon(
+                  LucideIcons.pillBottle,
+                  size: 18,
+                  color: theme.colorScheme.primary,
+                ),
+              ],
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 12), // Gap = 12px (jak w Compact)
         ],
-        // Prawa strona: Smart Stock (rozszerzony)
+        // Prawa strona: Smart Stock (bez Expanded - zachowuje szerokość jak w Compact)
         Expanded(child: _buildCompactStockSection(theme, statusColor)),
       ],
     );
@@ -933,6 +950,128 @@ class _MedicineCardState extends State<MedicineCard> {
       children: _medicine.tagi
           .map((tag) => _buildTag(tag, isDark, theme))
           .toList(),
+    );
+  }
+
+  /// Buduje wiersz z CTA edycji dla State 3 (Szczegółowy)
+  /// Zawiera: Tryb edycji | Etykiety | #Tagi | Zmień nazwę
+  Widget _buildEditActionsRow(ThemeData theme, bool isDark) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        // Tryb edycji (tylko gdy nie zawsze aktywny)
+        if (_showEditModeButton)
+          GestureDetector(
+            onTap: () => setState(
+              () => _isEditModeButtonActive = !_isEditModeButtonActive,
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: _isEditModeButtonActive
+                  ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
+                  : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _isEditModeButtonActive
+                        ? LucideIcons.pencilOff
+                        : LucideIcons.pencil,
+                    size: 14,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Tryb edycji',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        // Etykiety
+        GestureDetector(
+          onTap: () => _showLabelsSheet(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.tags,
+                  size: 14,
+                  color: theme.colorScheme.onSurface,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Etykiety',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // #Tagi
+        GestureDetector(
+          onTap: () => _showEditCustomTagsDialog(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.hash,
+                  size: 14,
+                  color: theme.colorScheme.onSurface,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Tagi',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Zmień nazwę (zawsze widoczny)
+        GestureDetector(
+          onTap: () => _showEditNameDialog(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.textCursorInput,
+                  size: 14,
+                  color: theme.colorScheme.onSurface,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Zmień nazwę',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1457,7 +1596,7 @@ class _MedicineCardState extends State<MedicineCard> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Ustaw Szczegóły opakowania (pojemność)',
+                  'Ustaw szczegóły opakowania',
                   style: TextStyle(
                     color: theme.colorScheme.onSurface,
                     fontSize: 13,
@@ -1488,7 +1627,9 @@ class _MedicineCardState extends State<MedicineCard> {
         if (packages.isEmpty)
           _buildEmptyPackageState(context, theme, isDark)
         else
-          ...packages.map((package) {
+          ...packages.asMap().entries.map((entry) {
+            final index = entry.key;
+            final package = entry.value;
             final pkgStatus = _getPackageStatus(package);
             final pkgColor = _getStatusColor(pkgStatus);
             return Padding(
@@ -1499,6 +1640,7 @@ class _MedicineCardState extends State<MedicineCard> {
                 isDark,
                 package,
                 pkgColor,
+                packageNumber: index + 1,
               ),
             );
           }),
@@ -1571,17 +1713,33 @@ class _MedicineCardState extends State<MedicineCard> {
     ThemeData theme,
     bool isDark,
     MedicinePackage package,
-    Color packageColor,
-  ) {
+    Color packageColor, {
+    int? packageNumber,
+  }) {
     final pkgStatus = _getPackageStatus(package);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
+            // Numer opakowania (jeśli podany)
+            if (packageNumber != null) ...[
+              Text(
+                '$packageNumber.',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 6),
+            ],
             // Szczegóły opakowania (połączenie edycji daty i ilości)
             GestureDetector(
-              onTap: () => _showPackageDetailsBottomSheet(context, package),
+              onTap: () => _showPackageDetailsBottomSheet(
+                context,
+                package,
+                packageIndex: packageNumber != null ? packageNumber - 1 : 0,
+              ),
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
@@ -1655,33 +1813,60 @@ class _MedicineCardState extends State<MedicineCard> {
   /// BottomSheet ze szczegółami opakowania (data, status, ilość)
   Future<void> _showPackageDetailsBottomSheet(
     BuildContext context,
-    MedicinePackage package,
-  ) async {
+    MedicinePackage package, {
+    int packageIndex = 0,
+  }) async {
+    final packages = _medicine.packages;
+    final totalPackages = packages.length;
+
+    // Stan aktualnie edytowanego opakowania (dla nawigacji)
+    int currentIndex = packageIndex;
+    MedicinePackage currentPackage = package;
+
     final currentYear = DateTime.now().year;
     DateTime currentDate =
-        package.dateTime ?? DateTime.now().add(const Duration(days: 365));
+        currentPackage.dateTime ??
+        DateTime.now().add(const Duration(days: 365));
     int selectedMonth = currentDate.month;
     int selectedYear = currentDate.year;
-    bool isOpen = package.isOpen;
-    PackageUnit selectedUnit = package.unit;
+    bool isOpen = currentPackage.isOpen;
+    PackageUnit selectedUnit = currentPackage.unit;
 
     // Capacity i pieceCount - capacity to pojemność całkowita, pieceCount to pozostała ilość
     final capacityController = TextEditingController(
-      text: package.capacity?.toString() ?? '',
+      text: currentPackage.capacity?.toString() ?? '',
     );
     final pieceController = TextEditingController(
-      text: package.pieceCount?.toString() ?? '',
+      text: currentPackage.pieceCount?.toString() ?? '',
     );
     final percentController = TextEditingController(
-      text: package.percentRemaining?.toString() ?? '',
+      text: currentPackage.percentRemaining?.toString() ?? '',
     );
-    DateTime? openedDate = package.openedDate != null
-        ? DateTime.tryParse(package.openedDate!)
+    DateTime? openedDate = currentPackage.openedDate != null
+        ? DateTime.tryParse(currentPackage.openedDate!)
         : null;
 
     // Flagi do blokowania pętli sync
     bool isSyncingFromPiece = false;
     bool isSyncingFromPercent = false;
+
+    // Funkcja aktualizująca stan przy zmianie opakowania
+    void updateForPackage(MedicinePackage pkg, int idx) {
+      currentIndex = idx;
+      currentPackage = pkg;
+      currentDate =
+          pkg.dateTime ?? DateTime.now().add(const Duration(days: 365));
+      selectedMonth = currentDate.month;
+      selectedYear = currentDate.year;
+      isOpen = pkg.isOpen;
+      selectedUnit = pkg.unit;
+      capacityController.text = pkg.capacity?.toString() ?? '';
+      pieceController.text = pkg.pieceCount?.toString() ?? '';
+      percentController.text = pkg.percentRemaining?.toString() ?? '';
+      openedDate = pkg.openedDate != null
+          ? DateTime.tryParse(pkg.openedDate!)
+          : null;
+    }
 
     final result = await showModalBottomSheet<Map<String, dynamic>?>(
       context: context,
@@ -1722,22 +1907,70 @@ class _MedicineCardState extends State<MedicineCard> {
                       ),
                     ),
 
-                    // Header
+                    // Header z nawigacją między opakowaniami
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
                         children: [
+                          // Przycisk Wstecz
+                          if (totalPackages > 1)
+                            IconButton(
+                              onPressed: currentIndex > 0
+                                  ? () {
+                                      final newIdx = currentIndex - 1;
+                                      updateForPackage(
+                                        packages[newIdx],
+                                        newIdx,
+                                      );
+                                      setBottomSheetState(() {});
+                                    }
+                                  : null,
+                              icon: Icon(
+                                LucideIcons.chevronLeft,
+                                color: currentIndex > 0
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withAlpha(80),
+                              ),
+                            ),
                           Icon(
                             LucideIcons.pillBottle,
                             size: 24,
                             color: AppColors.primary,
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 8),
+                          // Numer opakowania
                           Text(
-                            'Szczegóły opakowania',
-                            style: Theme.of(context).textTheme.headlineSmall
+                            totalPackages > 1
+                                ? 'Opakowanie ${currentIndex + 1} z $totalPackages'
+                                : 'Szczegóły opakowania',
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
+                          const Spacer(),
+                          // Przycisk Dalej
+                          if (totalPackages > 1)
+                            IconButton(
+                              onPressed: currentIndex < totalPackages - 1
+                                  ? () {
+                                      final newIdx = currentIndex + 1;
+                                      updateForPackage(
+                                        packages[newIdx],
+                                        newIdx,
+                                      );
+                                      setBottomSheetState(() {});
+                                    }
+                                  : null,
+                              icon: Icon(
+                                LucideIcons.chevronRight,
+                                color: currentIndex < totalPackages - 1
+                                    ? Theme.of(context).colorScheme.onSurface
+                                    : Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withAlpha(80),
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -2149,6 +2382,7 @@ class _MedicineCardState extends State<MedicineCard> {
                                   0,
                                 );
                                 Navigator.pop(context, {
+                                  'packageId': currentPackage.id,
                                   'expiryDate': lastDay.toIso8601String().split(
                                     'T',
                                   )[0],
@@ -2187,8 +2421,9 @@ class _MedicineCardState extends State<MedicineCard> {
     );
 
     if (result != null && widget.storageService != null) {
+      final packageId = result['packageId'] as String;
       final updatedPackage = MedicinePackage(
-        id: package.id,
+        id: packageId,
         expiryDate: result['expiryDate'] as String,
         isOpen: result['isOpen'] as bool,
         unit: result['unit'] as PackageUnit,
@@ -2198,7 +2433,7 @@ class _MedicineCardState extends State<MedicineCard> {
         openedDate: result['openedDate'] as String?,
       );
       final updatedPackages = _medicine.packages
-          .map((p) => p.id == package.id ? updatedPackage : p)
+          .map((p) => p.id == packageId ? updatedPackage : p)
           .toList();
       final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
       await widget.storageService!.saveMedicine(updatedMedicine);
@@ -2894,79 +3129,7 @@ class _MedicineCardState extends State<MedicineCard> {
           .toList();
       final updatedMedicine = _medicine.copyWith(wskazania: wskazania);
       await widget.storageService?.saveMedicine(updatedMedicine);
-      setState(() => _medicine = updatedMedicine);
-      widget.onMedicineUpdated?.call();
     }
-  }
-
-  /// Buduje wiersz CTA: Zmień nazwę | Etykiety | #Tagi
-  /// Wyświetlany w stanie szczegółowym (_isMoreExpanded = true)
-  Widget _buildEditActionsRow(ThemeData theme, bool isDark) {
-    return Wrap(
-      spacing: 12,
-      runSpacing: 8,
-      children: [
-        // Zmień nazwę (tylko niezweryfikowane leki)
-        if (!_medicine.isVerifiedByBarcode)
-          _buildActionChip(
-            icon: LucideIcons.textCursorInput,
-            label: 'Zmień nazwę',
-            onTap: () => _showEditNameDialog(context),
-            theme: theme,
-            isDark: isDark,
-          ),
-
-        // Etykiety
-        _buildActionChip(
-          icon: LucideIcons.tags,
-          label: 'Etykiety',
-          onTap: () => _showLabelsSheet(context),
-          theme: theme,
-          isDark: isDark,
-        ),
-
-        // Tagi
-        _buildActionChip(
-          icon: LucideIcons.hash,
-          label: 'Tagi',
-          onTap: () => _showEditCustomTagsDialog(context),
-          theme: theme,
-          isDark: isDark,
-        ),
-      ],
-    );
-  }
-
-  /// Pojedynczy chip akcji (przycisk CTA)
-  Widget _buildActionChip({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-    required ThemeData theme,
-    required bool isDark,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: theme.colorScheme.onSurface),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   /// Pokazuje bottom sheet z selectorem etykiet
