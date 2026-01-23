@@ -245,24 +245,22 @@ class _MedicineCardState extends State<MedicineCard> {
                               color: theme.colorScheme.primary,
                             ),
                           ),
-                          // Notatka preview (pod ikoną, wysokość = H3+H4 = ~38px)
-                          // Wyświetlana tylko gdy Smart Stock nie jest widoczny
-                          // lub zawsze jako przestrzeń rezerwowa
+                          // Notatka preview (pod ikoną, wysokość = H3+H4)
+                          // Pełna wysokość sekcji stock: 8px gap + 18px row + 6px gap + 6px bar = ~38px
                           if (_medicine.notatka?.isNotEmpty == true) ...[
                             const SizedBox(height: 4),
                             SizedBox(
                               width: 44,
-                              // Stała wysokość dopasowana do H3+H4
-                              // (quantity row ~18px + gap 6px + bar 6px = ~30px)
-                              height: 30,
+                              // Pełna wysokość H3+H4 (dopasowana do _buildCompactStockSection)
+                              height: 38,
                               child: Text(
                                 _medicine.notatka!,
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 8,
+                                  fontSize: 9,
                                   color: theme.colorScheme.onSurfaceVariant,
-                                  height: 1.2,
+                                  height: 1.3,
                                 ),
-                                maxLines: 2,
+                                maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
                               ),
@@ -542,7 +540,12 @@ class _MedicineCardState extends State<MedicineCard> {
 
   /// Buduje sekcję H3+H4 (Smart Hybrid Stock) dla trybu compact
   /// Layout: Ilość (lewa) + Predykcja (prawa) + Segmented Bar
-  Widget _buildCompactStockSection(ThemeData theme, Color statusColor) {
+  /// [skipLeftPadding] - gdy true, nie dodaje lewego paddingu (używane w Expanded z licznikiem)
+  Widget _buildCompactStockSection(
+    ThemeData theme,
+    Color statusColor, {
+    bool skipLeftPadding = false,
+  }) {
     String unitLabel = 'szt.';
     int currentStock = 0;
     int totalCapacity = 0;
@@ -611,10 +614,11 @@ class _MedicineCardState extends State<MedicineCard> {
     final validityColor = validityInfo.color;
 
     // Padding wyrównujący z nazwą (ikona 44px + gap 12px = 56px)
-    const double alignmentPadding = 56.0;
+    // Pomijany gdy skipLeftPadding = true (w Expanded mode z licznikiem opakowań)
+    final double alignmentPadding = skipLeftPadding ? 0.0 : 56.0;
 
     return Padding(
-      padding: const EdgeInsets.only(left: alignmentPadding),
+      padding: EdgeInsets.only(left: alignmentPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -705,8 +709,14 @@ class _MedicineCardState extends State<MedicineCard> {
           ),
           const SizedBox(width: 12), // Gap = 12px (jak w Compact)
         ],
-        // Prawa strona: Smart Stock (bez Expanded - zachowuje szerokość jak w Compact)
-        Expanded(child: _buildCompactStockSection(theme, statusColor)),
+        // Prawa strona: Smart Stock (bez lewego paddingu - licznik już jest po lewej)
+        Expanded(
+          child: _buildCompactStockSection(
+            theme,
+            statusColor,
+            skipLeftPadding: true,
+          ),
+        ),
       ],
     );
   }
