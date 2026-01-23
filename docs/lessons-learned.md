@@ -1262,4 +1262,79 @@ Przy aktualizacji dokumentacji designu:
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-21
+## 28. Priorytetyzacja logiki UI przez dedykowaną klasę (Flutter)
+
+**Data:** 2026-01-23  
+**Kontekst:** Smart Hybrid Stock w `MedicineCard` - 7-poziomowa logika wyświetlania dat/stanów
+
+### ❌ Błąd
+
+Rozproszenie logiki warunkowej bezpośrednio w metodzie budowania UI powoduje:
+
+1. **Trudność utrzymania** - warunki if/else pomieszane z widgetami
+2. **Brak testowalności** - logika wpleciona w UI nie może być testowana jednostkowo
+3. **Powtórzenia** - ten sam kolor używany w wielu miejscach wymaga koordynacji
+
+```dart
+// ❌ Błędnie - logika w metodzie build
+Widget _buildStockSection() {
+  Color color;
+  IconData icon;
+  String text;
+
+  if (isExpired) {
+    color = AppColors.expired;
+    icon = LucideIcons.ban;
+    text = 'Przeterminowane';
+  } else if (lowStock && lowDays) {
+    color = AppColors.expiringSoon;
+    // ... jeszcze 5 warunków
+  }
+
+  return Row(children: [Icon(icon, color: color), Text(text)]);
+}
+```
+
+### ✅ Poprawne rozwiązanie
+
+Ekstrakcja logiki do dedykowanej metody zwracającej **value object**:
+
+```dart
+// ✅ Poprawnie - separacja concerns
+class _ValidityInfo {
+  final IconData icon;
+  final String text;
+  final Color color;
+  final bool isDanger;
+  final bool isWarning;
+}
+
+_ValidityInfo _calculateValidityInfo(double stockPercentage) {
+  // Czysta logika bez UI - łatwa do testowania
+  if (daysUntilExpiry < 0) {
+    return _ValidityInfo(icon: ban, text: 'Przeterminowane', ...);
+  }
+  // ... pozostałe warunki
+}
+
+Widget _buildStockSection() {
+  final info = _calculateValidityInfo(stockPercentage);
+  return Row(children: [
+    Icon(info.icon, color: info.color),
+    Text(info.text),
+  ]);
+}
+```
+
+### Zasada ogólna
+
+Przy wielopoziomowej logice warunkowej w UI:
+
+1. **Wydziel logikę** do osobnej metody zwracającej wszystkie potrzebne wartości
+2. **Użyj value object** (prywatna klasa) do grupowania powiązanych danych
+3. **Flagi `isDanger`/`isWarning`** pozwalają na łatwe stylowanie bez ponownego sprawdzania warunków
+4. **Metoda jest testowalna** - można napisać unit testy dla każdego przypadku
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-23

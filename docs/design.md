@@ -123,6 +123,12 @@ Zasady spójności (Consistency):
 - **`MedicineCard`** (High Performance):
   - Zamiast podwójnych cieni używa **Outline + Single Shadow**.
   - Posiada gradientową poświatę krawędzi (`linear-gradient` od lewego górnego rogu).
+  - **Smart Hybrid Stock (tryb Compact):**
+    - **Góra:** Ilość (lewa, np. `24 szt.`) + Predykcja (prawa, ikona + data/countdown)
+    - **Dół:** Pasek Segmentowany (10 bloków po 10%)
+    - **Logika priorytetu prawej strony:** Shelf-life po otwarciu > Data ważności
+    - **Kolorystyka:** `--accent` (OK), `--warn` (niski stan/czas), `--expired` (danger)
+    - **Dark Mode:** Efekt Glow na aktywnych segmentach paska
 - **`FiltersSheet`** (Unified Bottom Sheet):
   - **Typ A** (Alert): Mały, wycentrowany, płaski dół.
   - **Typ B** (Menu): Lista opcji z ikonami.

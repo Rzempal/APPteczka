@@ -497,7 +497,8 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
-  /// Buduje sekcję H3+H4 (zapas leku + progress bar) dla trybu compact
+  /// Buduje sekcję H3+H4 (Smart Hybrid Stock) dla trybu compact
+  /// Layout: Ilość (lewa) + Predykcja (prawa) + Segmented Bar
   Widget _buildCompactStockSection(ThemeData theme, Color statusColor) {
     String unitLabel = 'szt.';
     int currentStock = 0;
@@ -553,18 +554,17 @@ class _MedicineCardState extends State<MedicineCard> {
       }
     }
 
-    // Format zapasu: "30ml / 100ml" lub "15szt. / 30szt."
-    final stockDisplay = totalCapacity > 0
-        ? '$currentStock$unitLabel / $totalCapacity$unitLabel'
-        : '';
-
     // Notatka leku (jeśli istnieje)
     final hasNote = _medicine.notatka?.isNotEmpty == true;
 
     // Jeśli brak danych o zapasie I brak notatki, zwróć pusty widget
-    if (stockDisplay.isEmpty && !hasNote) {
+    if (totalCapacity == 0 && !hasNote) {
       return const SizedBox.shrink();
     }
+
+    // === Smart Hybrid Stock: oblicz info o ważności ===
+    final validityInfo = _calculateValidityInfo(stockPercentage);
+    final validityColor = validityInfo.color;
 
     // Padding wyrównujący z nazwą (ikona 44px + gap 12px = 56px)
     const double alignmentPadding = 56.0;
@@ -575,118 +575,358 @@ class _MedicineCardState extends State<MedicineCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
-          // H3 + H4 z notatką po prawej
+          // Góra: Ilość (lewa) + Data/Predykcja (prawa) + Notatka (opcjonalnie)
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Lewa strona: Zapas + Progress Bar (tylko gdy jest zapas)
-              if (stockDisplay.isNotEmpty)
-                Expanded(
-                  flex: hasNote ? 2 : 1, // Pełna szerokość gdy brak notatki
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // H3: Zapas leku + wartość
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Zapas leku',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          Text(
-                            stockDisplay,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                      // H4: Progress bar
-                      const SizedBox(height: 6),
-                      Container(
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.onSurface.withValues(
-                            alpha: 0.08,
-                          ),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(3),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: stockPercentage,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: statusColor,
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+              // Lewa strona: Ilość (np. "24 szt.")
+              if (totalCapacity > 0)
+                Text(
+                  '$currentStock$unitLabel',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: validityInfo.isWarning || validityInfo.isDanger
+                        ? validityColor
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
-              // Prawa strona: Podgląd notatki (jeśli istnieje)
-              if (hasNote) ...[
-                if (stockDisplay.isNotEmpty) const SizedBox(width: 12),
+              // Prawa strona: Ikona + Predykcja
+              if (totalCapacity > 0) ...[
+                const Spacer(),
+                Icon(validityInfo.icon, size: 14, color: validityColor),
+                const SizedBox(width: 4),
+                Text(
+                  validityInfo.text,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: validityColor,
+                  ),
+                ),
+              ],
+              // Notatka preview (jeśli istnieje i jest zapas)
+              if (hasNote && totalCapacity > 0) ...[
+                const SizedBox(width: 12),
                 Expanded(
-                  flex: stockDisplay.isNotEmpty
-                      ? 1
-                      : 1, // Pełna szerokość gdy sama notatka
                   child: ShaderMask(
                     shaderCallback: (Rect bounds) {
                       return LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
                         colors: [
                           Colors.white,
                           Colors.white,
                           Colors.white.withValues(alpha: 0),
                         ],
-                        stops: const [0.0, 0.6, 1.0],
+                        stops: const [0.0, 0.7, 1.0],
                       ).createShader(bounds);
                     },
                     blendMode: BlendMode.dstIn,
                     child: Container(
-                      height: 32, // 2 linie wysokości
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      height: 20,
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
                       decoration: BoxDecoration(
                         color:
                             (isDark ? AppColors.accentDark : AppColors.accent)
                                 .withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         _medicine.notatka!,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 10,
+                          fontSize: 9,
                           color: theme.colorScheme.onSurfaceVariant,
-                          height: 1.3,
                         ),
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.fade,
-                        softWrap: true,
+                        softWrap: false,
                       ),
                     ),
                   ),
                 ),
               ],
+              // Jeśli tylko notatka (brak zapasu)
+              if (!hasNote && totalCapacity == 0) const Spacer(),
             ],
           ),
+          // Dół: Segmented Progress Bar (tylko gdy jest zapas)
+          if (totalCapacity > 0) ...[
+            const SizedBox(height: 6),
+            _buildSegmentedProgressBar(
+              stockPercentage,
+              validityColor,
+              isDark,
+              theme,
+            ),
+          ],
+          // Notatka (jeśli brak zapasu - pełna szerokość)
+          if (hasNote && totalCapacity == 0) ...[
+            ShaderMask(
+              shaderCallback: (Rect bounds) {
+                return LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white,
+                    Colors.white,
+                    Colors.white.withValues(alpha: 0),
+                  ],
+                  stops: const [0.0, 0.6, 1.0],
+                ).createShader(bounds);
+              },
+              blendMode: BlendMode.dstIn,
+              child: Container(
+                height: 32,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (isDark ? AppColors.accentDark : AppColors.accent)
+                      .withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  _medicine.notatka!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 10,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.3,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.fade,
+                  softWrap: true,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  /// Oblicza informacje o ważności dla Smart Hybrid Stock
+  /// Zwraca ikonę, tekst, kolor i flagi ostrzeżeń
+  _ValidityInfo _calculateValidityInfo(double stockPercentage) {
+    final now = DateTime.now();
+    final accentColor = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.accentDark
+        : AppColors.accent;
+    final warnColor = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.expiringSoonDark
+        : AppColors.expiringSoonLight;
+    final dangerColor = Theme.of(context).brightness == Brightness.dark
+        ? AppColors.expiredDark
+        : AppColors.expiredLight;
+
+    // === PRIO 1: Przeterminowane (expiry date) ===
+    final expiryDate = _medicine.terminWaznosci;
+    DateTime? expiryDateTime;
+    int? daysUntilExpiry;
+    if (expiryDate != null) {
+      expiryDateTime = DateTime.tryParse(expiryDate);
+      if (expiryDateTime != null) {
+        daysUntilExpiry = expiryDateTime.difference(now).inDays;
+        if (daysUntilExpiry < 0) {
+          return _ValidityInfo(
+            icon: LucideIcons.ban,
+            text: 'Przeterminowane',
+            color: dangerColor,
+            isDanger: true,
+            isWarning: false,
+          );
+        }
+      }
+    }
+
+    // === PRIO 2: Shelf-life po otwarciu (wyższy prio niż expiry) ===
+    final shelfLife = _medicine.shelfLifeAfterOpening;
+    final firstPackage = _medicine.packages.isNotEmpty
+        ? _medicine.packages.first
+        : null;
+    if (shelfLife != null &&
+        firstPackage != null &&
+        firstPackage.isOpen &&
+        firstPackage.openedDate != null &&
+        (_medicine.shelfLifeStatus == 'completed' ||
+            _medicine.shelfLifeStatus == 'manual')) {
+      final parsed = ShelfLifeParser.parse(shelfLife);
+      if (parsed.isValid && parsed.days != null) {
+        final shelfExpiryDate = ShelfLifeParser.getExpiryDate(
+          firstPackage.openedDate!,
+          parsed.days!,
+        );
+        if (shelfExpiryDate != null) {
+          final daysUntilShelfExpiry = shelfExpiryDate.difference(now).inDays;
+
+          // Przeterminowane po otwarciu
+          if (daysUntilShelfExpiry < 0) {
+            return _ValidityInfo(
+              icon: LucideIcons.ban,
+              text: 'Przeterminowane',
+              color: dangerColor,
+              isDanger: true,
+              isWarning: false,
+            );
+          }
+
+          // === PRIO 3: Brak zapasu ===
+          if (stockPercentage <= 0) {
+            return _ValidityInfo(
+              icon: LucideIcons.ban,
+              text: 'Brak zapasu',
+              color: dangerColor,
+              isDanger: true,
+              isWarning: false,
+            );
+          }
+
+          // === PRIO 4: Warning (ilość <20% LUB shelf-life <7 dni) ===
+          if (stockPercentage < 0.20 && daysUntilShelfExpiry < 7) {
+            return _ValidityInfo(
+              icon: LucideIcons.triangleAlert,
+              text: '$daysUntilShelfExpiry dni',
+              color: warnColor,
+              isDanger: false,
+              isWarning: true,
+            );
+          }
+
+          // === PRIO 5: Shelf-life <35 dni (countdown) ===
+          if (daysUntilShelfExpiry < 35) {
+            return _ValidityInfo(
+              icon: LucideIcons.trendingDown,
+              text: 'Otwarto, zużyć w ciągu $daysUntilShelfExpiry dni',
+              color: accentColor,
+              isDanger: false,
+              isWarning: false,
+            );
+          }
+
+          // === PRIO 6: Shelf-life ≥35 dni (data) ===
+          final formattedShelfExpiry =
+              '${shelfExpiryDate.day.toString().padLeft(2, '0')}.${shelfExpiryDate.month.toString().padLeft(2, '0')}';
+          return _ValidityInfo(
+            icon: LucideIcons.circleCheckBig,
+            text: 'Otwarto, zużyć do $formattedShelfExpiry',
+            color: accentColor,
+            isDanger: false,
+            isWarning: false,
+          );
+        }
+      }
+    }
+
+    // === PRIO 3: Brak zapasu (bez shelf-life) ===
+    if (stockPercentage <= 0) {
+      return _ValidityInfo(
+        icon: LucideIcons.ban,
+        text: 'Brak zapasu',
+        color: dangerColor,
+        isDanger: true,
+        isWarning: false,
+      );
+    }
+
+    // === PRIO 4: Warning (ilość <20% LUB expiry <7 dni) ===
+    if (daysUntilExpiry != null &&
+        stockPercentage < 0.20 &&
+        daysUntilExpiry < 7) {
+      return _ValidityInfo(
+        icon: LucideIcons.triangleAlert,
+        text: '$daysUntilExpiry dni',
+        color: warnColor,
+        isDanger: false,
+        isWarning: true,
+      );
+    }
+
+    // === PRIO 5: Expiry <35 dni (countdown) ===
+    if (daysUntilExpiry != null && daysUntilExpiry < 35) {
+      return _ValidityInfo(
+        icon: LucideIcons.trendingDown,
+        text: 'Ważne jeszcze $daysUntilExpiry dni',
+        color: accentColor,
+        isDanger: false,
+        isWarning: false,
+      );
+    }
+
+    // === PRIO 7: Default (data ważności) ===
+    if (expiryDateTime != null) {
+      final formatted =
+          '${expiryDateTime.day.toString().padLeft(2, '0')}.${expiryDateTime.month.toString().padLeft(2, '0')}.${expiryDateTime.year}';
+      return _ValidityInfo(
+        icon: LucideIcons.circleCheckBig,
+        text: formatted,
+        color: accentColor,
+        isDanger: false,
+        isWarning: false,
+      );
+    }
+
+    // Brak danych o ważności
+    return _ValidityInfo(
+      icon: LucideIcons.circleOff,
+      text: 'Brak daty',
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      isDanger: false,
+      isWarning: false,
+    );
+  }
+
+  /// Buduje segmentowany pasek postępu (10 bloków)
+  Widget _buildSegmentedProgressBar(
+    double percentage,
+    Color activeColor,
+    bool isDark,
+    ThemeData theme,
+  ) {
+    const int segmentCount = 10;
+    const double segmentGap = 2.0;
+    final int filledSegments = (percentage * segmentCount).round();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final segmentWidth =
+            (constraints.maxWidth - (segmentCount - 1) * segmentGap) /
+            segmentCount;
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(segmentCount, (index) {
+            final isFilled = index < filledSegments;
+            final isFirst = index == 0;
+            final isLast = index == segmentCount - 1;
+
+            return Container(
+              width: segmentWidth,
+              height: 6,
+              decoration: BoxDecoration(
+                color: isFilled
+                    ? activeColor
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.horizontal(
+                  left: isFirst
+                      ? const Radius.circular(3)
+                      : const Radius.circular(1),
+                  right: isLast
+                      ? const Radius.circular(3)
+                      : const Radius.circular(1),
+                ),
+                // Dark Mode Glow effect
+                boxShadow: isFilled && isDark
+                    ? [
+                        BoxShadow(
+                          color: activeColor.withValues(alpha: 0.4),
+                          blurRadius: 4,
+                          spreadRadius: 0,
+                        ),
+                      ]
+                    : null,
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 
@@ -3926,4 +4166,22 @@ class _MedicineCardState extends State<MedicineCard> {
       return isoDate;
     }
   }
+}
+
+/// Helper class dla Smart Hybrid Stock
+/// Przechowuje informacje o ważności leku do wyświetlenia w compakt mode
+class _ValidityInfo {
+  final IconData icon;
+  final String text;
+  final Color color;
+  final bool isDanger;
+  final bool isWarning;
+
+  const _ValidityInfo({
+    required this.icon,
+    required this.text,
+    required this.color,
+    required this.isDanger,
+    required this.isWarning,
+  });
 }
