@@ -101,6 +101,7 @@ class RplDrugDetails {
     Map<String, dynamic> json, {
     int? knownId,
     String? knownName,
+    String? knownForm,
   }) {
     final id = json['id'] as int? ?? knownId;
     if (id == null) {
@@ -125,11 +126,12 @@ class RplDrugDetails {
         json['power'] as String? ??
         '';
 
-    // Fallback dla postaci
+    // Fallback dla postaci - knownForm z wyszukiwania jako ostateczny fallback
     final form =
         json['pharmaceuticalFormName'] as String? ??
         json['pharmaceuticalForm'] as String? ??
         json['form'] as String? ??
+        knownForm ??
         '';
 
     return RplDrugDetails(
@@ -402,7 +404,12 @@ class RplService {
   /// Pobiera szczegolowe informacje o leku po ID (publiczna metoda)
   /// Zwraca pelne dane leku wlacznie z lista opakowan (packages)
   /// [knownName] - nazwa z wyszukiwania (fallback gdy API nie zwraca nazwy)
-  Future<RplDrugDetails?> fetchDetailsById(int id, {String? knownName}) async {
+  /// [knownForm] - postac z wyszukiwania (fallback gdy API nie zwraca postaci)
+  Future<RplDrugDetails?> fetchDetailsById(
+    int id, {
+    String? knownName,
+    String? knownForm,
+  }) async {
     final endpoint = Uri.parse('$_baseUrl/search/public/details/$id');
 
     try {
@@ -426,16 +433,16 @@ class RplService {
         _log.fine(
           'RAW API response for id=$id: '
           'medicinalProductName="${data['medicinalProductName']}", '
-          'name="${data['name']}", '
-          'medicinalProductPower="${data['medicinalProductPower']}", '
+          'pharmaceuticalFormName="${data['pharmaceuticalFormName']}", '
           'keys=${data.keys.take(10).toList()}',
         );
 
-        // Przekazujemy id i knownName z parametru - API nie zawsze zwraca te pola
+        // Przekazujemy id, knownName i knownForm z parametru - API nie zawsze zwraca te pola
         final result = RplDrugDetails.fromJson(
           data,
           knownId: id,
           knownName: knownName,
+          knownForm: knownForm,
         );
 
         // DEBUG: Weryfikuj sparsowane dane

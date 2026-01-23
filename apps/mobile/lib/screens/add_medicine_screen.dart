@@ -890,11 +890,12 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     try {
       // Pobierz szczegóły leku (z listą opakowań)
-      // Przekazujemy result.nazwa jako fallback gdy API details nie zwraca nazwy
+      // Przekazujemy result.nazwa i result.postac jako fallback gdy API details nie zwraca tych pól
       _log.fine('Fetching drug details for id: ${result.id}');
       final details = await _rplService.fetchDetailsById(
         result.id,
         knownName: result.nazwa,
+        knownForm: result.postac,
       );
 
       if (details == null) {
