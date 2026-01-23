@@ -223,29 +223,47 @@ class _MedicineCardState extends State<MedicineCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // W compact mode: Row z ikoną + Column(H1, H2)
+                // W compact mode: Row z ikoną/notatką + Column(H1, H2)
                 if (widget.isCompact)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Ikona typu leku (wysokość H1+H2)
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.1,
+                      // Lewa kolumna: Ikona + Notatka (pod ikoną)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          // Ikona typu leku (bez tła)
+                          SizedBox(
+                            width: 44,
+                            height: 44,
+                            child: Icon(
+                              _getMedicineTypeIcon(),
+                              size: 24,
+                              color: theme.colorScheme.primary,
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          _getMedicineTypeIcon(),
-                          size: 22,
-                          color: theme.colorScheme.primary,
-                        ),
+                          // Notatka preview (pod ikoną, 2 linie)
+                          if (_medicine.notatka?.isNotEmpty == true) ...[
+                            const SizedBox(height: 4),
+                            SizedBox(
+                              width: 44,
+                              child: Text(
+                                _medicine.notatka!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 8,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  height: 1.2,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                       const SizedBox(width: 12),
-                      // Column z H1 (nazwa) + H2 (dynamicStatus)
+                      // Prawa kolumna: H1 (nazwa) + H2 (statyczny opis)
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,7 +276,15 @@ class _MedicineCardState extends State<MedicineCard> {
                               statusIcon,
                             ),
                             const SizedBox(height: 4),
-                            _buildDescriptionOrWarning(theme, statusColor),
+                            // H2: Statyczny opis (bez dynamicznej logiki)
+                            Text(
+                              _medicine.opis,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -554,11 +580,9 @@ class _MedicineCardState extends State<MedicineCard> {
       }
     }
 
-    // Notatka leku (jeśli istnieje)
-    final hasNote = _medicine.notatka?.isNotEmpty == true;
-
-    // Jeśli brak danych o zapasie I brak notatki, zwróć pusty widget
-    if (totalCapacity == 0 && !hasNote) {
+    // Jeśli brak danych o zapasie, zwróć pusty widget
+    // Notatka jest teraz wyświetlana pod ikoną w głównym Row
+    if (totalCapacity == 0) {
       return const SizedBox.shrink();
     }
 
@@ -575,129 +599,43 @@ class _MedicineCardState extends State<MedicineCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 8),
-          // Góra: Ilość (lewa) + Data/Predykcja (prawa) + Notatka (opcjonalnie)
+          // Góra: Ilość (lewa) + Data/Predykcja (prawa)
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Lewa strona: Ilość (np. "24 szt.")
-              if (totalCapacity > 0)
-                Text(
-                  '$currentStock$unitLabel',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: validityInfo.isWarning || validityInfo.isDanger
-                        ? validityColor
-                        : theme.colorScheme.onSurface,
-                  ),
-                ),
-              // Prawa strona: Ikona + Predykcja
-              if (totalCapacity > 0) ...[
-                const Spacer(),
-                Icon(validityInfo.icon, size: 14, color: validityColor),
-                const SizedBox(width: 4),
-                Text(
-                  validityInfo.text,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: validityColor,
-                  ),
-                ),
-              ],
-              // Notatka preview (jeśli istnieje i jest zapas)
-              if (hasNote && totalCapacity > 0) ...[
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ShaderMask(
-                    shaderCallback: (Rect bounds) {
-                      return LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Colors.white,
-                          Colors.white,
-                          Colors.white.withValues(alpha: 0),
-                        ],
-                        stops: const [0.0, 0.7, 1.0],
-                      ).createShader(bounds);
-                    },
-                    blendMode: BlendMode.dstIn,
-                    child: Container(
-                      height: 20,
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      decoration: BoxDecoration(
-                        color:
-                            (isDark ? AppColors.accentDark : AppColors.accent)
-                                .withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        _medicine.notatka!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontSize: 9,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.fade,
-                        softWrap: false,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-              // Jeśli tylko notatka (brak zapasu)
-              if (!hasNote && totalCapacity == 0) const Spacer(),
-            ],
-          ),
-          // Dół: Segmented Progress Bar (tylko gdy jest zapas)
-          if (totalCapacity > 0) ...[
-            const SizedBox(height: 6),
-            _buildSegmentedProgressBar(
-              stockPercentage,
-              validityColor,
-              isDark,
-              theme,
-            ),
-          ],
-          // Notatka (jeśli brak zapasu - pełna szerokość)
-          if (hasNote && totalCapacity == 0) ...[
-            ShaderMask(
-              shaderCallback: (Rect bounds) {
-                return LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white,
-                    Colors.white,
-                    Colors.white.withValues(alpha: 0),
-                  ],
-                  stops: const [0.0, 0.6, 1.0],
-                ).createShader(bounds);
-              },
-              blendMode: BlendMode.dstIn,
-              child: Container(
-                height: 32,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: (isDark ? AppColors.accentDark : AppColors.accent)
-                      .withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  _medicine.notatka!,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 10,
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.3,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.fade,
-                  softWrap: true,
+              Text(
+                '$currentStock$unitLabel',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: validityInfo.isWarning || validityInfo.isDanger
+                      ? validityColor
+                      : theme.colorScheme.onSurface,
                 ),
               ),
-            ),
-          ],
+              // Prawa strona: Ikona + Predykcja
+              const Spacer(),
+              Icon(validityInfo.icon, size: 14, color: validityColor),
+              const SizedBox(width: 4),
+              Text(
+                validityInfo.text,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: validityColor,
+                ),
+              ),
+            ],
+          ),
+          // Dół: Segmented Progress Bar
+          const SizedBox(height: 6),
+          _buildSegmentedProgressBar(
+            stockPercentage,
+            validityColor,
+            isDark,
+            theme,
+          ),
         ],
       ),
     );
