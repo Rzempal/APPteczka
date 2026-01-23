@@ -987,6 +987,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
   /// Pokazuje modalny bottom sheet z edycją zeskanowanych leków
   void _showEditSheet(ThemeData theme, bool isDark) {
+    // Zatrzymaj skaner podczas edycji listy
+    _controller?.stop();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1087,7 +1090,12 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
           ),
         ),
       ),
-    );
+    ).whenComplete(() {
+      // Wznów skaner po zamknięciu edycji (jeśli nie jest spauzowany globalnie)
+      if (!ScannerPauseService.instance.isPaused) {
+        _controller?.start();
+      }
+    });
   }
 
   /// Buduje kartę edycji pojedynczego leku
