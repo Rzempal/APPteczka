@@ -1743,18 +1743,7 @@ class _MedicineCardState extends State<MedicineCard> {
       children: [
         Row(
           children: [
-            // Numer opakowania (jeśli podany)
-            if (packageNumber != null) ...[
-              Text(
-                '$packageNumber.',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(width: 6),
-            ],
-            // Szczegóły opakowania (połączenie edycji daty i ilości)
+            // Numer opakowania + ikona pillBottle w jednym CTA
             GestureDetector(
               onTap: () => _showPackageDetailsBottomSheet(
                 context,
@@ -1762,16 +1751,35 @@ class _MedicineCardState extends State<MedicineCard> {
                 packageIndex: packageNumber != null ? packageNumber - 1 : 0,
               ),
               child: Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(
-                  LucideIcons.pillBottle,
-                  size: 20,
-                  color: theme.colorScheme.onSurface,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Numer opakowania (jeśli podany)
+                    if (packageNumber != null) ...[
+                      Text(
+                        '$packageNumber.',
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Icon(
+                      LucideIcons.pillBottle,
+                      size: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 8),
             // Badge z datą
             GestureDetector(
               onTap: () => _showPackageDetailsBottomSheet(context, package),
