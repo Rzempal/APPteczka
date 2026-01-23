@@ -47,9 +47,7 @@ class ScannedDrug {
   String get displayName {
     if (drugInfo != null) return drugInfo!.fullName;
     if (scannedName != null) return scannedName!;
-    return scanSequence != null
-        ? 'Nieznany #$scanSequence'
-        : 'Nieznany';
+    return scanSequence != null ? 'Nieznany #$scanSequence' : 'Nieznany';
   }
 
   /// Czy produkt jest z RPL
@@ -218,6 +216,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
   // Animacja bledu "Nie rozpoznano"
   bool _showNotRecognized = false;
+
+  // Tryb rescan ("Zrób ponownie") - aktualizuje istniejący lek zamiast dodawać nowy
+  bool _isRescanning = false;
+  int? _rescanIndex;
 
   @override
   void initState() {
@@ -451,10 +453,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                   borderColor: _mode == ScannerMode.ean
                       ? theme.colorScheme.primary
                       : _mode == ScannerMode.productPhoto && _isAiMode
-                          ? (isDark
-                              ? AppColors.aiAccentDark
-                              : AppColors.aiAccentLight)
-                          : Colors.orange,
+                      ? (isDark
+                            ? AppColors.aiAccentDark
+                            : AppColors.aiAccentLight)
+                      : Colors.orange,
                   borderWidth: 3,
                 ),
               ),
@@ -607,8 +609,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 child: GestureDetector(
                   onTap: _captureExpiryDatePhoto,
                   child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black54,
                       borderRadius: BorderRadius.circular(20),
@@ -616,8 +620,11 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(LucideIcons.calendarPlus,
-                            color: Colors.white, size: 20),
+                        const Icon(
+                          LucideIcons.calendarPlus,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                         const SizedBox(width: 6),
                         RichText(
                           text: const TextSpan(
@@ -635,8 +642,11 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Icon(LucideIcons.camera,
-                            color: Colors.white, size: 20),
+                        const Icon(
+                          LucideIcons.camera,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ],
                     ),
                   ),
@@ -665,7 +675,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                         onTap: _captureProductPhoto,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 8),
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black54,
                             borderRadius: BorderRadius.circular(20),
@@ -684,7 +696,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                               RichText(
                                 text: TextSpan(
                                   style: const TextStyle(
-                                      color: Colors.white, fontSize: 12),
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
                                   children: [
                                     const TextSpan(text: 'Zrób zdjęcie '),
                                     TextSpan(
@@ -700,8 +714,11 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              const Icon(LucideIcons.camera,
-                                  color: Colors.white, size: 20),
+                              const Icon(
+                                LucideIcons.camera,
+                                color: Colors.white,
+                                size: 20,
+                              ),
                             ],
                           ),
                         ),
@@ -960,8 +977,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
         builder: (context, scrollController) => Container(
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: Column(
             children: [
@@ -986,8 +1002,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                     Expanded(
                       child: Text(
                         'Edytuj zeskanowane leki',
-                        style: theme.textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -1073,14 +1090,17 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
               Icon(
                 drug.isFromRpl ? LucideIcons.pill : LucideIcons.box,
                 size: 20,
-                color: drug.isFromRpl ? theme.colorScheme.primary : Colors.purple,
+                color: drug.isFromRpl
+                    ? theme.colorScheme.primary
+                    : Colors.purple,
               ),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
                   displayName,
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -1116,8 +1136,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                   color: Colors.orange,
                   onPressed: () => _showPhotosPreview(index),
                 ),
-              ]
-              else ...[
+              ] else ...[
                 // Wariant: brak daty lub data zdefiniowana - CTA:Edytuj datę
                 _buildActionButton(
                   icon: LucideIcons.calendarCog,
@@ -1155,7 +1174,11 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       );
     } else if (drug.tempImagePath != null) {
       return Chip(
-        avatar: const Icon(LucideIcons.imagePlus, size: 16, color: Colors.orange),
+        avatar: const Icon(
+          LucideIcons.imagePlus,
+          size: 16,
+          color: Colors.orange,
+        ),
         label: const Text('Zdjęcie daty'),
         backgroundColor: Colors.orange.withAlpha(40),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -1242,7 +1265,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Usuń zdjęcie daty'),
-        content: const Text('Czy na pewno chcesz usunąć zdjęcie daty ważności?'),
+        content: const Text(
+          'Czy na pewno chcesz usunąć zdjęcie daty ważności?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1342,8 +1367,11 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                       if (hasProductPhoto) ...[
                         Row(
                           children: [
-                            Icon(LucideIcons.sparkles,
-                                size: 16, color: Colors.purple),
+                            Icon(
+                              LucideIcons.sparkles,
+                              size: 16,
+                              color: Colors.purple,
+                            ),
                             const SizedBox(width: 8),
                             const Text(
                               'Zdjęcie nazwy',
@@ -1366,8 +1394,11 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                       if (hasExpiryPhoto) ...[
                         Row(
                           children: [
-                            Icon(LucideIcons.calendar,
-                                size: 16, color: Colors.orange),
+                            Icon(
+                              LucideIcons.calendar,
+                              size: 16,
+                              color: Colors.orange,
+                            ),
                             const SizedBox(width: 8),
                             const Text(
                               'Zdjęcie daty ważności',
@@ -1420,8 +1451,15 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     // Jeśli user kliknął "Zrób ponownie" - uruchom pelny flow
     if (result == true && mounted) {
       Navigator.pop(context); // Zamknij edit sheet
+
+      // Usun stare pliki zdjec przed rescanem
+      final drug = _scannedDrugs[index];
+      _deleteTemporaryFiles(drug);
+
       setState(() {
-        _currentDrug = _scannedDrugs[index];
+        _isRescanning = true;
+        _rescanIndex = index;
+        _currentDrug = drug;
         _mode = ScannerMode.productPhoto;
         _isScannerActive = true;
       });
@@ -1432,8 +1470,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   /// Edytuje datę ważności przez picker MM/YYYY
   Future<void> _editExpiryDate(int index) async {
     final drug = _scannedDrugs[index];
-    final currentDate =
-        drug.expiryDate != null ? DateTime.tryParse(drug.expiryDate!) : null;
+    final currentDate = drug.expiryDate != null
+        ? DateTime.tryParse(drug.expiryDate!)
+        : null;
 
     final now = DateTime.now();
 
@@ -1660,8 +1699,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       builder: (context) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
-        final aiColor =
-            isDark ? AppColors.aiAccentDark : AppColors.aiAccentLight;
+        final aiColor = isDark
+            ? AppColors.aiAccentDark
+            : AppColors.aiAccentLight;
 
         return AlertDialog(
           icon: const Icon(
@@ -1947,11 +1987,42 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     if (_currentDrug == null) return;
 
     setState(() {
-      _scannedDrugs.add(_currentDrug!);
+      if (_isRescanning && _rescanIndex != null) {
+        // RESCAN MODE: lek juz jest na liscie, nie dodajemy ponownie
+        // Zdjecia zostaly juz zaktualizowane w _currentDrug (ktory wskazuje na _scannedDrugs[index])
+        _isRescanning = false;
+        _rescanIndex = null;
+      } else {
+        // NORMAL MODE: dodaj nowy lek do listy
+        _scannedDrugs.add(_currentDrug!);
+      }
       _currentDrug = null;
       _mode = ScannerMode.ean; // Wroc do skanowania EAN
       _isAiMode = false; // Reset trybu AI
     });
+  }
+
+  /// Usuwa tymczasowe pliki zdjęć przed rescanem
+  void _deleteTemporaryFiles(ScannedDrug drug) {
+    if (drug.tempImagePath != null) {
+      try {
+        final file = File(drug.tempImagePath!);
+        if (file.existsSync()) file.deleteSync();
+      } catch (_) {
+        // Ignoruj bledy usuwania
+      }
+    }
+    if (drug.tempProductImagePath != null) {
+      try {
+        final file = File(drug.tempProductImagePath!);
+        if (file.existsSync()) file.deleteSync();
+      } catch (_) {
+        // Ignoruj bledy usuwania
+      }
+    }
+    // Wyczysc sciezki przed nowym zdjeciem
+    drug.tempImagePath = null;
+    drug.tempProductImagePath = null;
   }
 
   void _showError(String message) {
