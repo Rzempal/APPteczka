@@ -1337,4 +1337,61 @@ Przy wielopoziomowej logice warunkowej w UI:
 
 ---
 
+## 24. Layout alignment - skipPadding pattern
+
+**Data:** 2026-01-23  
+**Kontekst:** Smart Stock w MedicineCard - rozna szerokosc w Compact vs Expanded
+
+### ❌ Blad
+
+Metoda `_buildCompactStockSection` miala hardcoded padding 56px, ktory byl odpowiedni dla trybu
+Compact (wyrownanie z ikona leku). Jednak gdy metoda byla wywolywana z Expanded mode (gdzie licznik
+opakwan juz zajmowal lewa strone), padding powodowal podwojny offset i waski progress bar.
+
+```dart
+// ❌ Blednie - hardcoded padding nie dziala w kazdym kontekscie
+Widget _buildCompactStockSection(...) {
+  const double alignmentPadding = 56.0; // zawsze 56px
+  return Padding(
+    padding: const EdgeInsets.only(left: alignmentPadding),
+    child: ...
+  );
+}
+```
+
+### ✅ Poprawne rozwiazanie
+
+Dodanie parametru opcjonalnego `skipLeftPadding` umozliwiajacego pominiecie paddingu gdy kontekst
+wywolania go nie wymaga:
+
+```dart
+// ✅ Poprawnie - parametr kontroluje padding
+Widget _buildCompactStockSection(
+  ThemeData theme,
+  Color statusColor, {
+  bool skipLeftPadding = false,  // domyslnie false dla Compact
+}) {
+  final double alignmentPadding = skipLeftPadding ? 0.0 : 56.0;
+  return Padding(
+    padding: EdgeInsets.only(left: alignmentPadding),
+    child: ...
+  );
+}
+
+// Wywolanie z Expanded (z licznikiem opakwan po lewej):
+_buildCompactStockSection(theme, color, skipLeftPadding: true);
+```
+
+### Zasada ogolna
+
+Przy tworzeniu reużywalnych metod UI:
+
+1. **Unikaj hardcoded wartosci** ktore zaleza od kontekstu wywolania
+2. **Dodaj parametry opcjonalne** z rozsadnymi wartosciami domyslnymi
+3. **Domyslna wartosc** powinna odpowiadac najczestszemu przypadkowi uzycia
+4. **Nazwa parametru** powinna jasno komunikowac intencje (np. `skipLeftPadding` zamiast
+   `noPadding`)
+
+---
+
 > 📅 **Ostatnia aktualizacja:** 2026-01-23
