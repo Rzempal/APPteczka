@@ -17,6 +17,8 @@ import 'neumorphic/neumorphic.dart';
 
 import 'leaflet_search_sheet.dart';
 import 'filters_sheet.dart' show tagCategories;
+import 'label_selector.dart';
+import 'app_bottom_sheet.dart';
 
 /// Karta leku - styl neumorficzny z akordeonem
 /// v2.5 - unified button sizing, delete section shadow fix
@@ -1109,6 +1111,10 @@ class _MedicineCardState extends State<MedicineCard> {
         // === SEPARATOR ===
         Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
         const SizedBox(height: 12),
+
+        // === CTA: Zmień nazwę | Etykiety | #Tagi ===
+        if (_isMoreExpanded) _buildEditActionsRow(theme, isDark),
+        if (_isMoreExpanded) const SizedBox(height: 12),
 
         // === OPAKOWANIE (moc + pojemność) ===
         if (_medicine.power != null || _getFirstPackageCapacity() != null)
@@ -3039,6 +3045,173 @@ class _MedicineCardState extends State<MedicineCard> {
       setState(() => _medicine = updatedMedicine);
       widget.onMedicineUpdated?.call();
     }
+  }
+
+  /// Buduje wiersz CTA: Zmień nazwę | Etykiety | #Tagi
+  /// Wyświetlany w stanie szczegółowym (_isMoreExpanded = true)
+  Widget _buildEditActionsRow(ThemeData theme, bool isDark) {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      children: [
+        // Zmień nazwę (tylko niezweryfikowane leki)
+        if (!_medicine.isVerifiedByBarcode)
+          _buildActionChip(
+            icon: LucideIcons.textCursorInput,
+            label: 'Zmień nazwę',
+            onTap: () => _showEditNameDialog(context),
+            theme: theme,
+            isDark: isDark,
+          ),
+
+        // Etykiety
+        _buildActionChip(
+          icon: LucideIcons.tags,
+          label: 'Etykiety',
+          onTap: () => _showLabelsSheet(context),
+          theme: theme,
+          isDark: isDark,
+        ),
+
+        // Tagi
+        _buildActionChip(
+          icon: LucideIcons.hash,
+          label: 'Tagi',
+          onTap: () => _showEditCustomTagsDialog(context),
+          theme: theme,
+          isDark: isDark,
+        ),
+      ],
+    );
+  }
+
+  /// Pojedynczy chip akcji (przycisk CTA)
+  Widget _buildActionChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required ThemeData theme,
+    required bool isDark,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: theme.colorScheme.onSurface),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: theme.colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Pokazuje bottom sheet z selectorem etykiet
+  void _showLabelsSheet(BuildContext context) {
+    List<String> currentLabels = List<String>.from(_medicine.labels);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final theme = Theme.of(context);
+            final isDark = theme.brightness == Brightness.dark;
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(BottomSheetConstants.radius),
+                ),
+              ),
+              child: DraggableScrollableSheet(
+                initialChildSize: 0.5,
+                minChildSize: 0.3,
+                maxChildSize: 0.8,
+                expand: false,
+                builder: (context, scrollController) => Column(
+                  children: [
+                    const BottomSheetDragHandle(),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: BottomSheetConstants.contentPadding,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header
+                            Row(
+                              children: [
+                                Icon(
+                                  LucideIcons.tags,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'Etykiety: ${_medicine.nazwa ?? "Lek"}',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            // LabelSelector z reaktywnym stanem
+                            if (widget.storageService != null)
+                              LabelSelector(
+                                storageService: widget.storageService!,
+                                selectedLabelIds: currentLabels,
+                                isOpen: true,
+                                onToggle: () {},
+                                onLabelTap: (_) {},
+                                onChanged: (newLabelIds) {
+                                  setSheetState(() {
+                                    currentLabels = newLabelIds;
+                                  });
+                                },
+                              ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) async {
+      // Zapisz zmiany po zamknięciu arkusza
+      final originalLabels = Set<String>.from(_medicine.labels);
+      final newLabels = Set<String>.from(currentLabels);
+
+      if (originalLabels.length != newLabels.length ||
+          !originalLabels.containsAll(newLabels)) {
+        final updatedMedicine = _medicine.copyWith(labels: currentLabels);
+        await widget.storageService?.saveMedicine(updatedMedicine);
+        setState(() => _medicine = updatedMedicine);
+        widget.onMedicineUpdated?.call();
+      }
+    });
   }
 
   Future<void> _showEditCustomTagsDialog(BuildContext context) async {
