@@ -226,47 +226,20 @@ class _MedicineCardState extends State<MedicineCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // W compact mode: Row z ikoną/notatką + Column(H1, H2)
+                // W compact mode: Row z ikoną + Column(H1, H2)
                 if (widget.isCompact)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Lewa kolumna: Ikona + Notatka (pod ikoną)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Ikona typu leku (bez tła)
-                          SizedBox(
-                            width: 44,
-                            height: 44,
-                            child: Icon(
-                              _getMedicineTypeIcon(),
-                              size: 24,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                          // Notatka preview (pod ikoną, wysokość = H3+H4)
-                          // Pełna wysokość sekcji stock: 8px gap + 18px row + 6px gap + 6px bar = ~38px
-                          if (_medicine.notatka?.isNotEmpty == true) ...[
-                            const SizedBox(height: 4),
-                            SizedBox(
-                              width: 44,
-                              // Pełna wysokość H3+H4 (dopasowana do _buildCompactStockSection)
-                              height: 38,
-                              child: Text(
-                                _medicine.notatka!,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontSize: 9,
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                  height: 1.3,
-                                ),
-                                maxLines: 3,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        ],
+                      // Lewa kolumna: Tylko ikona (notatka przeniesiona do H3+H4)
+                      SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: Icon(
+                          _getMedicineTypeIcon(),
+                          size: 24,
+                          color: theme.colorScheme.primary,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       // Prawa kolumna: H1 (nazwa) + H2 (statyczny opis)
@@ -304,9 +277,9 @@ class _MedicineCardState extends State<MedicineCard> {
                     statusColor,
                     statusIcon,
                   ),
-                // H3 + H4 pod spodem (tylko compact)
+                // H3 + H4 pod spodem (tylko compact) - z notatką po lewej
                 if (widget.isCompact)
-                  _buildCompactStockSection(theme, statusColor),
+                  _buildCompactStockWithNote(theme, statusColor),
                 if (!widget.isCompact)
                   _buildExpandedContent(theme, isDark, statusColor),
               ],
@@ -535,6 +508,44 @@ class _MedicineCardState extends State<MedicineCard> {
       style: theme.textTheme.bodySmall?.copyWith(
         color: theme.colorScheme.onSurfaceVariant,
       ),
+    );
+  }
+
+  /// Buduje sekcję H3+H4 (Smart Stock) z notatką po lewej dla trybu compact
+  /// Layout: [Notatka 44px] + [gap 12px] + [Smart Stock flex]
+  Widget _buildCompactStockWithNote(ThemeData theme, Color statusColor) {
+    final hasNote = _medicine.notatka?.isNotEmpty == true;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Lewa kolumna: Notatka (wyrównana z ikoną powyżej)
+        SizedBox(
+          width: 44,
+          child: hasNote
+              ? Text(
+                  _medicine.notatka!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontSize: 9,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    height: 1.3,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                )
+              : const SizedBox.shrink(),
+        ),
+        const SizedBox(width: 12),
+        // Prawa kolumna: Smart Stock (bez lewego paddingu)
+        Expanded(
+          child: _buildCompactStockSection(
+            theme,
+            statusColor,
+            skipLeftPadding: true,
+          ),
+        ),
+      ],
     );
   }
 
