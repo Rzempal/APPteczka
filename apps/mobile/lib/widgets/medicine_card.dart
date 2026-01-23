@@ -656,6 +656,44 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
+  /// Buduje sekcję Smart Stock z licznikiem opakowań po lewej stronie (expanded mode)
+  Widget _buildExpandedStockWithPackageCount(
+    ThemeData theme,
+    Color statusColor,
+  ) {
+    final packageCount = _medicine.packageCount;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Lewa strona: licznik opakowań
+        if (packageCount > 0) ...[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '$packageCount',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                LucideIcons.pillBottle,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+            ],
+          ),
+          const SizedBox(width: 12),
+        ],
+        // Prawa strona: Smart Stock (rozszerzony)
+        Expanded(child: _buildCompactStockSection(theme, statusColor)),
+      ],
+    );
+  }
+
   /// Oblicza informacje o ważności dla Smart Hybrid Stock
   /// Zwraca ikonę, tekst, kolor i flagi ostrzeżeń
   _ValidityInfo _calculateValidityInfo(double stockPercentage) {
@@ -883,77 +921,6 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
-  /// Zwraca pojemność pierwszego opakowania (lub null)
-  int? _getFirstPackageCapacity() {
-    if (_medicine.packages.isEmpty) return null;
-    final first = _medicine.packages.first;
-    return first.capacity ?? first.pieceCount;
-  }
-
-  /// Buduje sekcję informacji o opakowaniu: moc + pojemność
-  Widget _buildPackageInfoSection(ThemeData theme, bool isDark) {
-    final power = _medicine.power;
-    final capacity = _getFirstPackageCapacity();
-    final firstPackage = _medicine.packages.isNotEmpty
-        ? _medicine.packages.first
-        : null;
-
-    // Jednostka
-    String unitLabel = '';
-    if (firstPackage != null) {
-      switch (firstPackage.unit) {
-        case PackageUnit.pieces:
-          unitLabel = 'szt.';
-          break;
-        case PackageUnit.ml:
-          unitLabel = 'ml';
-          break;
-        case PackageUnit.grams:
-          unitLabel = 'g';
-          break;
-        case PackageUnit.sachets:
-          unitLabel = 'sasz.';
-          break;
-        case PackageUnit.none:
-          break;
-      }
-    }
-
-    // Format: "500mg · 30 szt." lub tylko jedno z nich
-    final parts = <String>[];
-    if (power != null && power.isNotEmpty) {
-      parts.add(power);
-    }
-    if (capacity != null && unitLabel.isNotEmpty) {
-      parts.add('$capacity $unitLabel');
-    }
-
-    if (parts.isEmpty) return const SizedBox.shrink();
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Icon(LucideIcons.package, size: 16, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            'Opakowanie: ',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Text(
-            parts.join(' · '),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Buduje tagi inline (bez nagłówka) - do wyświetlenia nad opisem
   Widget _buildTagsInline(BuildContext context, ThemeData theme, bool isDark) {
     if (_medicine.tagi.isEmpty) {
@@ -966,135 +933,6 @@ class _MedicineCardState extends State<MedicineCard> {
       children: _medicine.tagi
           .map((tag) => _buildTag(tag, isDark, theme))
           .toList(),
-    );
-  }
-
-  /// Buduje sekcję zapasu leku w expanded mode
-  /// Format: X{icon}/Y{pillBottle}, wystarczy do DD.MM.YYYY
-  Widget _buildExpandedStockSection(
-    ThemeData theme,
-    bool isDark,
-    Color statusColor,
-  ) {
-    if (_medicine.packages.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    // Oblicz dane zapasu
-    String unitLabel = 'szt.';
-    int currentStock = 0;
-    final packageCount = _medicine.packages.length;
-    final firstPackage = _medicine.packages.first;
-
-    // Jednostka zależna od typu opakowania
-    switch (firstPackage.unit) {
-      case PackageUnit.ml:
-        unitLabel = 'ml';
-        break;
-      case PackageUnit.grams:
-        unitLabel = 'g';
-        break;
-      case PackageUnit.pieces:
-        unitLabel = 'szt.';
-        break;
-      case PackageUnit.sachets:
-        unitLabel = 'sasz.';
-        break;
-      case PackageUnit.none:
-        unitLabel = '';
-        break;
-    }
-
-    // Oblicz aktualny stan
-    for (final package in _medicine.packages) {
-      final packageCapacity = package.capacity ?? package.pieceCount;
-      if (packageCapacity != null) {
-        if (package.isOpen) {
-          if (package.pieceCount != null) {
-            currentStock += package.pieceCount!;
-          } else if (package.percentRemaining != null) {
-            currentStock += (packageCapacity * package.percentRemaining! / 100)
-                .round();
-          }
-        } else {
-          // Zamknięte = pełne
-          currentStock += packageCapacity;
-        }
-      }
-    }
-
-    // Oblicz datę do której wystarczy (jeśli mamy dailyIntake)
-    String? endDateStr;
-    if (_medicine.dailyIntake != null &&
-        _medicine.dailyIntake! > 0 &&
-        currentStock > 0) {
-      final daysRemaining = (currentStock / _medicine.dailyIntake!).floor();
-      final endDate = DateTime.now().add(Duration(days: daysRemaining));
-      endDateStr =
-          '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
-    }
-
-    return Row(
-      children: [
-        // Label
-        Text(
-          'Zapas leku: ',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        // Ilość + ikona typu
-        Icon(
-          _getMedicineTypeIcon(),
-          size: 16,
-          color: theme.colorScheme.primary,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '$currentStock $unitLabel',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        // Separator
-        Text(
-          ' / ',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        // Liczba opakowań + ikona
-        Icon(
-          LucideIcons.pillBottle,
-          size: 16,
-          color: theme.colorScheme.primary,
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '$packageCount op.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        // Data końcowa
-        if (endDateStr != null) ...[
-          Text(
-            ', wystarczy do ',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Text(
-            endDateStr,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: statusColor,
-            ),
-          ),
-        ],
-      ],
     );
   }
 
@@ -1116,9 +954,7 @@ class _MedicineCardState extends State<MedicineCard> {
         if (_isMoreExpanded) _buildEditActionsRow(theme, isDark),
         if (_isMoreExpanded) const SizedBox(height: 12),
 
-        // === OPAKOWANIE (moc + pojemność) ===
-        if (_medicine.power != null || _getFirstPackageCapacity() != null)
-          _buildPackageInfoSection(theme, isDark),
+        // === OPAKOWANIE (usunięto - info przeniesione do szczegółów) ===
 
         // === TAGI (bez nagłówka, nad opisem) ===
         _buildTagsInline(context, theme, isDark),
@@ -1165,9 +1001,9 @@ class _MedicineCardState extends State<MedicineCard> {
         const SizedBox(height: 16),
         _buildNoteSection(context, theme, isDark),
 
-        // === ZAPAS LEKU (Smart Stock z compact) ===
+        // === ZAPAS LEKU (Smart Stock z compact) + licznik opakowań ===
         const SizedBox(height: 16),
-        _buildCompactStockSection(theme, statusColor),
+        _buildExpandedStockWithPackageCount(theme, statusColor),
 
         // === WIĘCEJ (akordeon - zawiera packages, calculator, delete) ===
         const SizedBox(height: 16),
@@ -1603,33 +1439,49 @@ class _MedicineCardState extends State<MedicineCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // H1: Szczegóły - termin ważności - data otwarcia + licznik opakowań
-        Row(
-          children: [
-            Text(
-              'Szczegóły',
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const Spacer(),
-            if (packageCount > 0) ...[
-              Text(
-                '$packageCount',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+        // CTA: Ustaw Szczegóły opakowania (pojemność) - wyzwala bottomSheet
+        GestureDetector(
+          onTap: () => packages.isNotEmpty
+              ? _showPackageDetailsBottomSheet(context, packages.first)
+              : _showAddPackageDialog(context),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.pencil,
+                  size: 16,
                   color: theme.colorScheme.onSurface,
                 ),
-              ),
-              const SizedBox(width: 4),
-              Icon(
-                LucideIcons.pillBottle,
-                size: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ],
-          ],
+                const SizedBox(width: 8),
+                Text(
+                  'Ustaw Szczegóły opakowania (pojemność)',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 13,
+                  ),
+                ),
+                const Spacer(),
+                if (packageCount > 0) ...[
+                  Text(
+                    '$packageCount',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    LucideIcons.pillBottle,
+                    size: 14,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 8),
 
@@ -2550,7 +2402,7 @@ class _MedicineCardState extends State<MedicineCard> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        _isMoreExpanded ? 'Mniej' : 'Szczegóły',
+                        'Szczegóły',
                         style: TextStyle(
                           color: theme.colorScheme.onSurface,
                           fontSize: 13,
@@ -4218,35 +4070,6 @@ class _MedicineCardState extends State<MedicineCard> {
   Color _getContrastColor(Color background) {
     final luminance = background.computeLuminance();
     return luminance > 0.5 ? const Color(0xFF1e293b) : Colors.white;
-  }
-
-  LinearGradient _getGradient(ExpiryStatus status, bool isDark) {
-    switch (status) {
-      case ExpiryStatus.expired:
-        return isDark
-            ? AppColors.darkGradientExpired
-            : AppColors.lightGradientExpired;
-      case ExpiryStatus.expiringSoon:
-        return isDark
-            ? AppColors.darkGradientValid
-            : const LinearGradient(
-                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
-              );
-      case ExpiryStatus.valid:
-        return isDark
-            ? AppColors.darkGradientValid
-            : const LinearGradient(
-                colors: [Color(0xFFe0e8e4), Color(0xFFe0e8e4)],
-              );
-      case ExpiryStatus.unknown:
-        return LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? [const Color(0xFF1e293b), const Color(0xFF334155)]
-              : [const Color(0xFFe0e8e4), const Color(0xFFe0e8e4)],
-        );
-    }
   }
 
   Color _getStatusColor(ExpiryStatus status) {
