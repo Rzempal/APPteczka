@@ -1154,6 +1154,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             if (result.found && result.medicine != null) {
               // Tworzymy Medicine z polaczeniem danych z RPL i AI
               final med = result.medicine!;
+              final form = drug.drugInfo?.form;
               final medicine = Medicine(
                 id: const Uuid().v4(),
                 nazwa: drug.displayName,
@@ -1170,12 +1171,14 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                         MedicinePackage(
                           expiryDate: drug.expiryDate!,
                           pieceCount: drug.pieceCount,
+                          unit: PharmaceuticalFormHelper.getPackageUnit(form),
                         ),
                       ]
                     : [],
                 dataDodania: DateTime.now().toIso8601String(),
                 leafletUrl: drug.drugInfo?.leafletUrl,
                 isVerifiedByBarcode: drug.isFromRpl,
+                pharmaceuticalForm: form?.isNotEmpty == true ? form : null,
               );
               await widget.storageService.saveMedicine(medicine);
               _triggerShelfLifeAnalysis(

@@ -16,6 +16,7 @@ import '../theme/app_theme.dart';
 import '../utils/gs1_parser.dart';
 import 'month_year_picker_dialog.dart';
 import 'neumorphic/neumorphic.dart';
+import '../utils/pharmaceutical_form_helper.dart';
 
 /// Zeskanowany lek z kodem EAN i opcjonalna data waznosci
 class ScannedDrug {
@@ -59,6 +60,7 @@ class ScannedDrug {
   /// Konwertuje do modelu Medicine
   Medicine toMedicine(String id) {
     final pieceCount = _parsePackaging();
+    final form = drugInfo?.form;
 
     return Medicine(
       id: id,
@@ -67,10 +69,17 @@ class ScannedDrug {
       wskazania: [],
       tagi: scannedTags ?? (drugInfo != null ? _generateTags() : <String>[]),
       packages: expiryDate != null
-          ? [MedicinePackage(expiryDate: expiryDate!, pieceCount: pieceCount)]
+          ? [
+              MedicinePackage(
+                expiryDate: expiryDate!,
+                pieceCount: pieceCount,
+                unit: PharmaceuticalFormHelper.getPackageUnit(form),
+              ),
+            ]
           : [],
       dataDodania: DateTime.now().toIso8601String(),
       leafletUrl: drugInfo?.leafletUrl,
+      pharmaceuticalForm: form?.isNotEmpty == true ? form : null,
     );
   }
 
