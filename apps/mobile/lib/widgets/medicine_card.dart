@@ -1159,9 +1159,9 @@ class _MedicineCardState extends State<MedicineCard> {
         const SizedBox(height: 16),
         _buildNoteSection(context, theme, isDark),
 
-        // === ZAPAS LEKU (nowa sekcja) ===
+        // === ZAPAS LEKU (Smart Stock z compact) ===
         const SizedBox(height: 16),
-        _buildExpandedStockSection(theme, isDark, statusColor),
+        _buildCompactStockSection(theme, statusColor),
 
         // === WIĘCEJ (akordeon - zawiera packages, calculator, delete) ===
         const SizedBox(height: 16),
@@ -1601,7 +1601,7 @@ class _MedicineCardState extends State<MedicineCard> {
         Row(
           children: [
             Text(
-              'Szczegóły - termin ważności - data otwarcia',
+              'Szczegóły',
               style: theme.textTheme.labelMedium?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -2373,7 +2373,36 @@ class _MedicineCardState extends State<MedicineCard> {
         ),
         const SizedBox(height: 8),
 
-        // H2: Zapas leku do [→] + CTA
+        // CTA: Ustaw dzienne zużycie - zawsze widoczne gdy canCalculate
+        if (canCalculate)
+          GestureDetector(
+            onTap: () => _showSetDailyIntakeDialog(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    LucideIcons.pillBottle,
+                    size: 18,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Ustaw dzienne zużycie',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 8),
+
+        // H2: Zapas leku do [→] + wynik (tylko gdy supplyEndDate != null)
         Row(
           children: [
             Text(
@@ -2389,40 +2418,8 @@ class _MedicineCardState extends State<MedicineCard> {
               color: theme.colorScheme.onSurfaceVariant,
             ),
             const SizedBox(width: 12),
-            // CTA buttons (bez zmian)
-            if (canCalculate && supplyEndDate == null)
-              GestureDetector(
-                onTap: () => _showSetDailyIntakeDialog(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 12,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        LucideIcons.pillBottle,
-                        size: 18,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Ustaw dzienne zużycie',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else if (canCalculate && supplyEndDate != null)
+            // Wynik kalkulatora (tylko gdy ustawiono dailyIntake)
+            if (canCalculate && supplyEndDate != null)
               _buildSupplyResultCompact(context, theme, isDark, supplyEndDate),
           ],
         ),
