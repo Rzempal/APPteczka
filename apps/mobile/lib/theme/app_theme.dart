@@ -56,6 +56,17 @@ class AppColors {
   static const Color lightShadowDark = Color(0xFFE8E3D8); // Spec: darker bone
   static const Color lightBorder = Color(0x263E514B); // rgba(62, 81, 75, 0.15)
 
+  // Light mode input colors (Inset Design spec)
+  static const Color lightInputBg = Color(0xFFF2F0EC); // --input-bg: Deep Void
+  static const Color lightInputText = Color(0xFF2C3E38); // --input-text
+  static const Color lightPlaceholder = Color(0xFF8A9A95); // --placeholder
+  static const Color lightBorderIdle = Color(
+    0x1A3E514B,
+  ); // --border-idle: 10% opacity
+  static const Color lightBorderFocus = Color(
+    0xFF5D8A82,
+  ); // --border-focus: Szałwia
+
   // Light mode card backgrounds (adjusted for Bone White base)
   static const Color lightCardExpired = Color(0xFFFEF2F2);
   static const Color lightCardExpiringSoon = Color(0xFFFFFBEB);
@@ -105,6 +116,17 @@ class AppColors {
   static const Color darkChipInactive = Color(
     0xFF262642,
   ); // Tło nieaktywnych chipów
+
+  // Dark mode input colors (Inset Design spec)
+  static const Color darkInputBg = Color(0xFF151525); // --input-bg: Deep Void
+  static const Color darkInputText = Color(0xFFFFFFFF); // --input-text
+  static const Color darkPlaceholder = Color(0xFF5D5D75); // --placeholder
+  static const Color darkBorderIdle = Color(
+    0x1A00FF9D,
+  ); // --border-idle: 10% opacity
+  static const Color darkBorderFocus = Color(
+    0xFF00FF9D,
+  ); // --border-focus: Neon
 
   // Dark mode card backgrounds (adjusted for Deep Indigo base)
   static const Color darkCardExpired = Color(0xFF7f1d1d);
@@ -208,18 +230,28 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.lightSurface,
+        fillColor: AppColors.lightInputBg, // Inset Design: Deep Void
+        hintStyle: const TextStyle(color: AppColors.lightPlaceholder),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.lightBorderIdle,
+            width: 1.5,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.lightBorderIdle,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.lightBorderFocus,
+            width: 1.5,
+          ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
@@ -290,18 +322,28 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.darkSurface,
+        fillColor: AppColors.darkInputBg, // Inset Design: Deep Void
+        hintStyle: const TextStyle(color: AppColors.darkPlaceholder),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.darkBorderIdle,
+            width: 1.5,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.darkBorderIdle,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.darkBorderFocus,
+            width: 1.5,
+          ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(

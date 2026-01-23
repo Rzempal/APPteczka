@@ -47,7 +47,7 @@ class NeuTextField extends StatefulWidget {
     this.maxLines = 1,
     this.minLines,
     this.borderRadius, // Optional organic radius
-    this.radius = 12, // Default circular radius
+    this.radius = 16, // Design spec: 16px for inputs
     this.contentPadding = const EdgeInsets.symmetric(
       horizontal: 16,
       vertical: 14,
@@ -121,9 +121,11 @@ class _NeuTextFieldState extends State<NeuTextField> {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 8),
             child: Text(
-              widget.labelText!,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w500,
+              widget.labelText!.toUpperCase(),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
@@ -134,14 +136,25 @@ class _NeuTextFieldState extends State<NeuTextField> {
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-            borderRadius: widget.borderRadius ?? BorderRadius.circular(widget.radius),
+            borderRadius:
+                widget.borderRadius ?? BorderRadius.circular(widget.radius),
             border: Border.all(
               color: _isFocused
-                  ? (isDark ? AppColors.accentDark : AppColors.accent) // Use accent color
+                  ? (isDark
+                        ? AppColors.accentDark
+                        : AppColors.accent) // Use accent color
                   : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
               width: _isFocused ? 1.5 : 1,
             ),
             boxShadow: [
+              // Focus glow effect
+              if (_isFocused)
+                BoxShadow(
+                  color: (isDark ? AppColors.accentDark : AppColors.accent)
+                      .withOpacity(0.3),
+                  blurRadius: 4,
+                  spreadRadius: 0,
+                ),
               // Inner shadow (basin/inset effect) - dark
               BoxShadow(
                 color: isDark
