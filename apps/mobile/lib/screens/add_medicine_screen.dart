@@ -23,6 +23,7 @@ import '../widgets/rpl_package_selector.dart';
 import '../widgets/neumorphic/neumorphic.dart';
 import '../theme/app_theme.dart';
 import '../utils/tag_normalization.dart';
+import '../utils/pharmaceutical_form_helper.dart';
 
 /// Lek oczekujący na zapis (Batch Mode)
 class PendingDrug {
@@ -1432,12 +1433,14 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
               MedicinePackage(
                 expiryDate: '',
                 pieceCount: _parsePackaging(pkg.packaging),
+                unit: PharmaceuticalFormHelper.getPackageUnit(rpl.form),
               ),
             ],
             dataDodania: DateTime.now().toIso8601String(),
             leafletUrl: rpl.leafletUrl,
             // Manual entry via RPL search is considered verified
             isVerifiedByBarcode: true,
+            pharmaceuticalForm: rpl.form.isNotEmpty ? rpl.form : null,
           );
 
           await widget.storageService.saveMedicine(medicine);

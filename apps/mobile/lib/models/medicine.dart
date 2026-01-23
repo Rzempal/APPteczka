@@ -6,6 +6,7 @@ enum PackageUnit {
   none, // Brak określonej ilości
   pieces, // Sztuki (tabletki, kapsułki)
   ml, // Mililitry (syropy, krople)
+  grams, // Gramy (maści, kremy, żele)
   sachets, // Saszetki
 }
 
@@ -149,6 +150,8 @@ class MedicinePackage {
           return 'szt.';
         case PackageUnit.ml:
           return 'ml';
+        case PackageUnit.grams:
+          return 'g';
         case PackageUnit.sachets:
           return 'saszetki';
         case PackageUnit.none:
@@ -223,6 +226,8 @@ class Medicine {
   shelfLifeAfterOpening; // Cytat z ulotki o terminie ważności po otwarciu
   final String?
   shelfLifeStatus; // "pending" | "completed" | "error" | "manual" | null
+  final String?
+  pharmaceuticalForm; // Postać farmaceutyczna z RPL (np. "Tabletka powlekana")
 
   Medicine({
     required this.id,
@@ -242,6 +247,7 @@ class Medicine {
     this.verificationNote,
     this.shelfLifeAfterOpening,
     this.shelfLifeStatus,
+    this.pharmaceuticalForm,
   }) : _legacyTerminWaznosci = terminWaznosci;
 
   /// Computed property - zwraca najkrótszą datę (wsteczna kompatybilność)
@@ -315,6 +321,7 @@ class Medicine {
       verificationNote: json['verificationNote'] as String?,
       shelfLifeAfterOpening: json['shelfLifeAfterOpening'] as String?,
       shelfLifeStatus: json['shelfLifeStatus'] as String?,
+      pharmaceuticalForm: json['pharmaceuticalForm'] as String?,
     );
   }
 
@@ -340,6 +347,7 @@ class Medicine {
       if (shelfLifeAfterOpening != null)
         'shelfLifeAfterOpening': shelfLifeAfterOpening,
       if (shelfLifeStatus != null) 'shelfLifeStatus': shelfLifeStatus,
+      if (pharmaceuticalForm != null) 'pharmaceuticalForm': pharmaceuticalForm,
     };
   }
 
@@ -362,6 +370,7 @@ class Medicine {
     String? verificationNote,
     String? shelfLifeAfterOpening,
     String? shelfLifeStatus,
+    String? pharmaceuticalForm,
     bool clearNotatka = false, // Explicite ustawia notatka na null
   }) {
     return Medicine(
@@ -383,6 +392,7 @@ class Medicine {
       shelfLifeAfterOpening:
           shelfLifeAfterOpening ?? this.shelfLifeAfterOpening,
       shelfLifeStatus: shelfLifeStatus ?? this.shelfLifeStatus,
+      pharmaceuticalForm: pharmaceuticalForm ?? this.pharmaceuticalForm,
     );
   }
 

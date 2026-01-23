@@ -11,6 +11,7 @@ import '../services/app_logger.dart';
 import '../theme/app_theme.dart';
 import '../screens/pdf_viewer_screen.dart';
 import '../utils/shelf_life_parser.dart';
+import '../utils/pharmaceutical_form_helper.dart';
 import 'package:logging/logging.dart';
 import 'neumorphic/neumorphic.dart';
 
@@ -405,12 +406,21 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
-  /// Zwraca ikonę typu leku na podstawie jednostki opakowania
+  /// Zwraca ikonę typu leku na podstawie postaci farmaceutycznej lub jednostki
   IconData _getMedicineTypeIcon() {
+    // Priorytet 1: postać farmaceutyczna (z RPL)
+    if (_medicine.pharmaceuticalForm != null &&
+        _medicine.pharmaceuticalForm!.isNotEmpty) {
+      return PharmaceuticalFormHelper.getIcon(_medicine.pharmaceuticalForm);
+    }
+
+    // Priorytet 2: fallback do PackageUnit (wsteczna kompatybilność)
     if (_medicine.packages.isEmpty) return LucideIcons.pill;
 
     switch (_medicine.packages.first.unit) {
       case PackageUnit.ml:
+        return LucideIcons.flaskConical;
+      case PackageUnit.grams:
         return LucideIcons.droplet;
       case PackageUnit.pieces:
         return LucideIcons.pill;
@@ -540,6 +550,9 @@ class _MedicineCardState extends State<MedicineCard> {
       switch (firstPackage.unit) {
         case PackageUnit.ml:
           unitLabel = 'ml';
+          break;
+        case PackageUnit.grams:
+          unitLabel = 'g';
           break;
         case PackageUnit.pieces:
           unitLabel = 'szt.';
@@ -893,6 +906,9 @@ class _MedicineCardState extends State<MedicineCard> {
         case PackageUnit.ml:
           unitLabel = 'ml';
           break;
+        case PackageUnit.grams:
+          unitLabel = 'g';
+          break;
         case PackageUnit.sachets:
           unitLabel = 'sasz.';
           break;
@@ -972,6 +988,9 @@ class _MedicineCardState extends State<MedicineCard> {
     switch (firstPackage.unit) {
       case PackageUnit.ml:
         unitLabel = 'ml';
+        break;
+      case PackageUnit.grams:
+        unitLabel = 'g';
         break;
       case PackageUnit.pieces:
         unitLabel = 'szt.';
