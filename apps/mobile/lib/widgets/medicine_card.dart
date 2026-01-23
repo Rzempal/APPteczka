@@ -7,6 +7,7 @@ import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../services/pdf_cache_service.dart';
 import '../services/gemini_shelf_life_service.dart';
+import '../services/scanner_pause_service.dart';
 import '../services/app_logger.dart';
 import '../theme/app_theme.dart';
 import '../screens/pdf_viewer_screen.dart';
@@ -1897,6 +1898,9 @@ class _MedicineCardState extends State<MedicineCard> {
           : null;
     }
 
+    // Pauzuj skaner podczas edycji
+    ScannerPauseService.instance.pauseScanner();
+
     final result = await showModalBottomSheet<Map<String, dynamic>?>(
       context: context,
       isScrollControlled: true,
@@ -2448,6 +2452,9 @@ class _MedicineCardState extends State<MedicineCard> {
         },
       ),
     );
+
+    // Wznów skaner po zamknięciu bottom sheetu
+    ScannerPauseService.instance.resumeScanner();
 
     if (result != null && widget.storageService != null) {
       final packageId = result['packageId'] as String;

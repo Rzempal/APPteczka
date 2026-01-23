@@ -12,6 +12,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/medicine.dart';
 import '../services/rpl_service.dart';
+import '../services/scanner_pause_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/gs1_parser.dart';
 import 'month_year_picker_dialog.dart';
@@ -234,13 +235,25 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    ScannerPauseService.instance.addListener(_onPauseChanged);
   }
 
   @override
   void dispose() {
+    ScannerPauseService.instance.removeListener(_onPauseChanged);
     WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
     super.dispose();
+  }
+
+  /// Reaguje na zmiany stanu pauzy skanera
+  void _onPauseChanged() {
+    if (_controller == null) return;
+    if (ScannerPauseService.instance.isPaused) {
+      _controller?.stop();
+    } else {
+      _controller?.start();
+    }
   }
 
   @override
@@ -978,94 +991,99 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // Handle do przeciągania
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheetState) => DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          expand: false,
+          builder: (context, scrollController) => Container(
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
+            ),
+            child: Column(
+              children: [
+                // Handle do przeciągania
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
 
-              // Header z ikoną
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.layoutList, color: AppColors.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Edytuj zeskanowane leki',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                // Header z ikoną
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.layoutList, color: AppColors.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Edytuj zeskanowane leki',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1),
-
-              // Lista zeskanowanych leków (reversed - najnowsze u góry)
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _scannedDrugs.length,
-                  itemBuilder: (context, index) {
-                    final reversedIndex = _scannedDrugs.length - 1 - index;
-                    final drug = _scannedDrugs[reversedIndex];
-                    return _buildEditableDrugItem(
-                      drug,
-                      reversedIndex,
-                      theme,
-                      isDark,
-                    );
-                  },
-                ),
-              ),
-
-              // Button zamknij
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: theme.scaffoldBackgroundColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withAlpha(20),
-                      blurRadius: 8,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: NeuButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(LucideIcons.x, size: 20),
-                      SizedBox(width: 8),
-                      Text('Zamknij'),
                     ],
                   ),
                 ),
-              ),
-            ],
+                const Divider(height: 1),
+
+                // Lista zeskanowanych leków (reversed - najnowsze u góry)
+                Expanded(
+                  child: ListView.builder(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _scannedDrugs.length,
+                    itemBuilder: (context, index) {
+                      final reversedIndex = _scannedDrugs.length - 1 - index;
+                      final drug = _scannedDrugs[reversedIndex];
+                      return _buildEditableDrugItem(
+                        drug,
+                        reversedIndex,
+                        theme,
+                        isDark,
+                        onDeleted: () => setSheetState(() {}),
+                      );
+                    },
+                  ),
+                ),
+
+                // Button zamknij
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.scaffoldBackgroundColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(20),
+                        blurRadius: 8,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
+                  ),
+                  child: NeuButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(LucideIcons.x, size: 20),
+                        SizedBox(width: 8),
+                        Text('Zamknij'),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1077,8 +1095,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     ScannedDrug drug,
     int index,
     ThemeData theme,
-    bool isDark,
-  ) {
+    bool isDark, {
+    VoidCallback? onDeleted,
+  }) {
     final displayName = drug.displayName;
     final hasExpiryPhoto = drug.tempImagePath != null;
     final hasProductPhoto = drug.tempProductImagePath != null;
@@ -1125,7 +1144,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                 icon: LucideIcons.trash,
                 label: 'Usuń produkt',
                 color: Colors.red,
-                onPressed: () => _confirmDeleteDrug(index),
+                onPressed: () =>
+                    _confirmDeleteDrug(index, onDeleted: onDeleted),
               ),
             ],
           ),
@@ -1225,7 +1245,7 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   }
 
   /// Potwierdza i usuwa lek z listy
-  Future<void> _confirmDeleteDrug(int index) async {
+  Future<void> _confirmDeleteDrug(int index, {VoidCallback? onDeleted}) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1246,16 +1266,20 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     );
 
     if (confirmed == true) {
-      setState(() {
-        final drug = _scannedDrugs[index];
-        _scannedEans.remove(drug.ean);
-        _scannedDrugs.removeAt(index);
+      final drug = _scannedDrugs[index];
+      _scannedEans.remove(drug.ean);
+      _scannedDrugs.removeAt(index);
 
-        // Zamknij bottomSheet jeśli lista pusta
-        if (_scannedDrugs.isEmpty) {
-          Navigator.pop(context);
-        }
-      });
+      // Odśwież UI bottom sheeta
+      onDeleted?.call();
+
+      // Aktualizuj główny stan widgetu
+      setState(() {});
+
+      // Zamknij bottomSheet jeśli lista pusta
+      if (_scannedDrugs.isEmpty && mounted) {
+        Navigator.pop(context);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
