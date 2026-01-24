@@ -337,20 +337,6 @@ class _MedicineCardState extends State<MedicineCard> {
                     ),
                   ),
                 ),
-                // Ikona duplikatu
-                if (widget.isDuplicate)
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withAlpha(30),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Icon(
-                      LucideIcons.copy,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
-                  ),
                 // Etykiety - w obu trybach (compact i expanded)
                 ...medicineLabels
                     .take(3)
@@ -2762,12 +2748,48 @@ class _MedicineCardState extends State<MedicineCard> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          _formatDate(_medicine.dataDodania),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
+                        Row(
+                          children: [
+                            Text(
+                              _formatDate(_medicine.dataDodania),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            if (widget.isDuplicate) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withAlpha(30),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      LucideIcons.copy,
+                                      size: 12,
+                                      color: AppColors.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'potencjalny duplikat',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                         // Wskaźnik weryfikacji po kodzie kreskowym
                         if (_medicine.isVerifiedByBarcode) ...[

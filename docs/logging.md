@@ -1,34 +1,26 @@
-# 📝 System Logowania
+# 📝 System Logowania (APPteczka)
 
-> **Powiązane:** [Architektura](architecture.md) | [Wdrożenie](deployment.md)
+> **Powiązane:** [Debug Standard](standards/debug.md) | [Architektura](architecture.md) |
+> [Wdrożenie](deployment.md)
 
 ---
 
 ## Poziomy Logów
 
-| Poziom      | Zastosowanie                            |
-| ----------- | --------------------------------------- |
-| **FINE**    | Debug, szczegóły techniczne (tylko dev) |
-| **INFO**    | Informacje o zdarzeniach                |
-| **WARNING** | Ostrzeżenia, problemy niekrytyczne      |
-| **SEVERE**  | Błędy krytyczne                         |
-
-> **Uwaga:** Nazwy poziomów pochodzą z pakietu `logging` Dart SDK.
+Szczegóły poziomów: **[standards/debug.md#poziomy-logów](standards/debug.md#poziomy-logów)**
 
 ---
 
 ## Logowanie z Flutter (Dart)
 
+Szczegóły wzorca AppLogger:
+**[standards/debug.md#applogger-pattern](standards/debug.md#applogger-pattern)**
+
 ```dart
 import 'services/app_logger.dart';
 
-// Pobierz logger dla swojej klasy
 final _log = AppLogger.getLogger('MyService');
-
-// Użycie
 _log.info('Operacja zakończona');
-_log.warning('Brak danych');
-_log.severe('Błąd krytyczny', error, stackTrace);
 ```
 
 ---
@@ -68,11 +60,11 @@ _fileIntentChannel.setMethodCallHandler((call) async {
 
 ## Gdzie szukać logów
 
-| Źródło            | Lokalizacja                          |
-| ----------------- | ------------------------------------ |
-| Flutter (release) | **Ustawienia → Logi aplikacji**      |
-| Flutter (debug)   | Konsola `flutter run`                |
-| Android natywny   | Logcat: `adb logcat -s MainActivity` |
+| Źródło            | Lokalizacja                           |
+| ----------------- | ------------------------------------- |
+| Flutter (release) | **Ustawienia → Zaawansowane → Debug** |
+| Flutter (debug)   | Konsola `flutter run`                 |
+| Android natywny   | Logcat: `adb logcat -s MainActivity`  |
 
 ---
 
@@ -82,7 +74,7 @@ _fileIntentChannel.setMethodCallHandler((call) async {
 1. [ ] Dodaj log w Kotlin: `log("debug: $zmienna")`
 2. [ ] Przebuduj APK
 3. [ ] Wykonaj akcję na telefonie
-4. [ ] Sprawdź: Ustawienia → Logi aplikacji
+4. [ ] Sprawdź: Ustawienia → Zaawansowane → Debug
 ```
 
 ---

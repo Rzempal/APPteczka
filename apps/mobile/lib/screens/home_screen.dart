@@ -40,6 +40,7 @@ class HomeScreen extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
   final UpdateService updateService;
+  final bool isToolbarVisible;
   final VoidCallback? onNavigateToSettings;
   final VoidCallback? onNavigateToAdd;
   final VoidCallback? onFiltersChanged;
@@ -49,6 +50,7 @@ class HomeScreen extends StatefulWidget {
     required this.storageService,
     required this.themeProvider,
     required this.updateService,
+    this.isToolbarVisible = false,
     this.onNavigateToSettings,
     this.onNavigateToAdd,
     this.onFiltersChanged,
@@ -316,9 +318,10 @@ class HomeScreenState extends State<HomeScreen> {
                               // Główna lista - tryb akordeonowy
                               ListView.builder(
                                 controller: _scrollController,
-                                padding: const EdgeInsets.only(
+                                padding: EdgeInsets.only(
                                   top: 68,
-                                  bottom: 16,
+                                  // Toolbar height (56) + margin (16) = 72
+                                  bottom: widget.isToolbarVisible ? 88 : 16,
                                 ),
                                 itemCount: _filteredMedicines.length,
                                 itemBuilder: (context, index) {

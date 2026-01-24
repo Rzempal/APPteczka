@@ -1,6 +1,17 @@
 # 🐛 Debug Standard (Cross-Project)
 
-> **Cel:** Ujednolicony sposób debugowania i zbierania logów w aplikacjach Flutter.
+> **Powiązane:** [Logging (APPteczka)](../logging.md) | [Contributing](contributing.md)
+
+---
+
+## 📋 Spis Treści
+
+- [Poziomy Logów](#poziomy-logów)
+- [AppLogger Pattern](#applogger-pattern)
+- [Użycie w kodzie](#użycie-w-kodzie)
+- [Debug UI](#debug-ui-ustawienia--zaawansowane)
+- [Format eksportu](#format-eksportu)
+- [Kanał budowania](#kanał-budowania)
 
 ---
 

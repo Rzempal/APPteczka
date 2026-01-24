@@ -395,6 +395,7 @@ class _MainNavigationState extends State<MainNavigation> {
                   storageService: widget.storageService,
                   themeProvider: widget.themeProvider,
                   updateService: widget.updateService,
+                  isToolbarVisible: _currentIndex == 1 && _showApteczkaToolbar,
                   onNavigateToSettings: () {
                     setState(() {
                       _currentIndex = 2; // Navigate to Ustawienia tab
@@ -508,6 +509,7 @@ class _HomeScreenWrapper extends StatefulWidget {
   final StorageService storageService;
   final ThemeProvider themeProvider;
   final UpdateService updateService;
+  final bool isToolbarVisible;
   final VoidCallback onNavigateToSettings;
   final VoidCallback onNavigateToAdd;
   final VoidCallback? onFiltersChanged;
@@ -517,6 +519,7 @@ class _HomeScreenWrapper extends StatefulWidget {
     required this.storageService,
     required this.themeProvider,
     required this.updateService,
+    this.isToolbarVisible = false,
     required this.onNavigateToSettings,
     required this.onNavigateToAdd,
     this.onFiltersChanged,
@@ -562,6 +565,7 @@ class _HomeScreenWrapperState extends State<_HomeScreenWrapper> {
       storageService: widget.storageService,
       themeProvider: widget.themeProvider,
       updateService: widget.updateService,
+      isToolbarVisible: widget.isToolbarVisible,
       onNavigateToSettings: widget.onNavigateToSettings,
       onNavigateToAdd: widget.onNavigateToAdd,
       onFiltersChanged: widget.onFiltersChanged,

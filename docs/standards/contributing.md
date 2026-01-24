@@ -126,6 +126,7 @@ docs/
 ├── standards/              # Uniwersalne standardy (Read-Only/Globalne)
 │   ├── conventions.md      # Konwencje kodu
 │   ├── code-review.md      # Zasady code review
+│   ├── debug.md            # Standard debugowania (cross-project)
 │   ├── design-review.md    # Kryteria oceny designu
 │   ├── contributing.md     # Ten plik (Contributing)
 │   └── testing.md          # Strategia testów
@@ -137,7 +138,7 @@ docs/
 ├── design.md               # Design system
 ├── deployment.md           # Wdrożenie i CI/CD
 ├── lessons-learned.md      # Dziennik doświadczeń
-├── logging.md              # System logowania
+├── logging.md              # System logowania (project-specific)
 └── roadmap.md              # Plan rozwoju
 ```
 
@@ -157,4 +158,4 @@ docs/
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-14
+> 📅 **Ostatnia aktualizacja:** 2026-01-24
