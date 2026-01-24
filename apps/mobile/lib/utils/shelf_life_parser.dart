@@ -40,17 +40,19 @@ class ShelfLifeParser {
     // Regex patterns dla różnych formatów
     // Pattern 1: "[liczba] [jednostka]" np. "6 miesięcy", "30 dni"
     final patterns = [
-      // Miesiące (różne formy)
-      RegExp(r'(\d+)\s*(?:miesię(?:cy|c|ca|ce))', caseSensitive: false),
-      // Dni (różne formy)
-      RegExp(r'(\d+)\s*(?:dni|dzień|dnia)', caseSensitive: false),
+      // Miesiące - wszystkie polskie odmiany (miesiąc, miesiące, miesięcy, miesiąca)
+      RegExp(r'(\d+)\s*miesi[ąę]c(?:e|y|a|ów)?', caseSensitive: false),
+      // Dni - wszystkie odmiany (dni, dzień, dnia, dniach)
+      RegExp(r'(\d+)\s*(?:dni|dzień|dnia|dniach)', caseSensitive: false),
       // Tygodnie (różne formy)
-      RegExp(r'(\d+)\s*(?:tygodni(?:e|ów)?|tydzień|tygodnia)',
-          caseSensitive: false),
+      RegExp(
+        r'(\d+)\s*(?:tygodni(?:e|ów)?|tydzień|tygodnia)',
+        caseSensitive: false,
+      ),
       // Lata (różne formy)
-      RegExp(r'(\d+)\s*(?:lat(?:a)?|rok)', caseSensitive: false),
-      // Godziny (różne formy)
-      RegExp(r'(\d+)\s*(?:godzin(?:y)?|h)', caseSensitive: false),
+      RegExp(r'(\d+)\s*(?:lat(?:a)?|rok(?:u)?)', caseSensitive: false),
+      // Godziny - wszystkie odmiany (godzin, godziny, godzinę, godzina, h)
+      RegExp(r'(\d+)\s*(?:godzin(?:y|ę|a)?|h)', caseSensitive: false),
     ];
 
     // Próbuj dopasować miesiące
@@ -110,7 +112,8 @@ class ShelfLifeParser {
     // Nie udało się sparsować
     _log.warning('Failed to parse shelf life: "$text"');
     return ParsedShelfLife.error(
-        'Nie rozpoznano formatu okresu. Spróbuj np. "6 miesięcy", "30 dni".');
+      'Nie rozpoznano formatu okresu. Spróbuj np. "6 miesięcy", "30 dni".',
+    );
   }
 
   /// Sprawdza czy podana data otwarcia + okres ważności przekroczyły termin

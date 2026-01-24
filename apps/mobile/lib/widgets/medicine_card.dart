@@ -1858,9 +1858,69 @@ class _MedicineCardState extends State<MedicineCard> {
     final percentController = TextEditingController(
       text: currentPackage.percentRemaining?.toString() ?? '',
     );
+    final shelfLifeController = TextEditingController(
+      text: _medicine.shelfLifeAfterOpening ?? '',
+    );
     DateTime? openedDate = currentPackage.openedDate != null
         ? DateTime.tryParse(currentPackage.openedDate!)
         : null;
+
+    // Shelf life toggle: z Ulotki vs ręcznie
+    bool useAiShelfLife = _medicine.shelfLifeStatus != 'manual';
+    final manualShelfLifeController = TextEditingController(text: '');
+    int manualShelfLifeUnit = 1; // 0=godziny, 1=dni, 2=miesiące
+
+    // Jeśli manualne, próbuj sparsować istniejącą wartość
+    if (_medicine.shelfLifeStatus == 'manual' &&
+        _medicine.shelfLifeAfterOpening != null) {
+      final parsed = ShelfLifeParser.parse(_medicine.shelfLifeAfterOpening!);
+      if (parsed.isValid) {
+        // Próbuj odtworzyć oryginalną jednostkę z tekstu
+        final text = _medicine.shelfLifeAfterOpening!.toLowerCase();
+        if (text.contains('miesi')) {
+          manualShelfLifeUnit = 2;
+          manualShelfLifeController.text = (parsed.days! / 30)
+              .round()
+              .toString();
+        } else if (text.contains('godzin') || text.contains('h')) {
+          manualShelfLifeUnit = 0;
+          manualShelfLifeController.text = (parsed.days! * 24).toString();
+        } else {
+          manualShelfLifeUnit = 1;
+          manualShelfLifeController.text = parsed.days.toString();
+        }
+      }
+    }
+
+    // Helper: zwraca suffix jednostki
+    String _getUnitSuffix(PackageUnit unit) {
+      switch (unit) {
+        case PackageUnit.pieces:
+          return 'szt.';
+        case PackageUnit.ml:
+          return 'ml';
+        case PackageUnit.grams:
+          return 'g';
+        case PackageUnit.sachets:
+          return 'sasz.';
+        case PackageUnit.none:
+          return '';
+      }
+    }
+
+    // Helper: zwraca etykietę jednostki czasu
+    String _getTimeUnitLabel(int unit) {
+      switch (unit) {
+        case 0:
+          return 'godzin';
+        case 1:
+          return 'dni';
+        case 2:
+          return 'miesięcy';
+        default:
+          return 'dni';
+      }
+    }
 
     // Flagi do blokowania pętli sync
     bool isSyncingFromPiece = false;
@@ -2004,7 +2064,7 @@ class _MedicineCardState extends State<MedicineCard> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Sekcja 0: Informacje wspólne (moc, shelf life)
+                            // Sekcja 0: Moc leku
                             if (_medicine.power != null &&
                                 _medicine.power!.isNotEmpty) ...[
                               Text(
@@ -2028,39 +2088,6 @@ class _MedicineCardState extends State<MedicineCard> {
                                 ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // Okres przydatności po otwarciu (z AI lub ręczny)
-                            if (_medicine.shelfLifeAfterOpening != null ||
-                                isOpen) ...[
-                              Text(
-                                'Okres przydatności po otwarciu',
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF6b7280),
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: TextEditingController(
-                                  text: _medicine.shelfLifeAfterOpening ?? '',
-                                ),
-                                readOnly: true,
-                                maxLines: 2,
-                                decoration: InputDecoration(
-                                  border: const OutlineInputBorder(),
-                                  hintText: 'Brak informacji',
-                                  suffixIcon:
-                                      _medicine.shelfLifeStatus == 'completed'
-                                      ? const Icon(
-                                          LucideIcons.sparkles,
-                                          color: Colors.amber,
-                                        )
-                                      : null,
                                 ),
                               ),
                               const SizedBox(height: 16),
@@ -2130,160 +2157,7 @@ class _MedicineCardState extends State<MedicineCard> {
 
                             const SizedBox(height: 20),
 
-                            // Sekcja 2: Ilość
-                            Text(
-                              'Ilość',
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF6b7280),
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 8,
-                              children: [
-                                ChoiceChip(
-                                  label: const Text('Brak'),
-                                  selected: selectedUnit == PackageUnit.none,
-                                  onSelected: (_) => setBottomSheetState(
-                                    () => selectedUnit = PackageUnit.none,
-                                  ),
-                                ),
-                                ChoiceChip(
-                                  label: const Text('Sztuki'),
-                                  selected: selectedUnit == PackageUnit.pieces,
-                                  onSelected: (_) => setBottomSheetState(
-                                    () => selectedUnit = PackageUnit.pieces,
-                                  ),
-                                ),
-                                ChoiceChip(
-                                  label: const Text('ml'),
-                                  selected: selectedUnit == PackageUnit.ml,
-                                  onSelected: (_) => setBottomSheetState(
-                                    () => selectedUnit = PackageUnit.ml,
-                                  ),
-                                ),
-                                ChoiceChip(
-                                  label: const Text('Saszetki'),
-                                  selected: selectedUnit == PackageUnit.sachets,
-                                  onSelected: (_) => setBottomSheetState(
-                                    () => selectedUnit = PackageUnit.sachets,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            // Inputs dla wybranej jednostki
-                            if (selectedUnit != PackageUnit.none) ...[
-                              const SizedBox(height: 16),
-                              // Pojemność opakowania (całkowita)
-                              TextField(
-                                controller: capacityController,
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  labelText: 'Pojemność opakowania',
-                                  hintText: 'np. 30',
-                                  suffixText: selectedUnit == PackageUnit.pieces
-                                      ? 'szt.'
-                                      : selectedUnit == PackageUnit.ml
-                                      ? 'ml'
-                                      : 'saszetki',
-                                  border: const OutlineInputBorder(),
-                                ),
-                                onChanged: (value) {
-                                  // Przelicz procent jeśli mamy pieceCount
-                                  final capacity = int.tryParse(value);
-                                  final piece = int.tryParse(
-                                    pieceController.text,
-                                  );
-                                  if (capacity != null &&
-                                      capacity > 0 &&
-                                      piece != null &&
-                                      !isSyncingFromPercent) {
-                                    isSyncingFromPiece = true;
-                                    final percent = ((piece / capacity) * 100)
-                                        .round()
-                                        .clamp(0, 100);
-                                    percentController.text = percent.toString();
-                                    isSyncingFromPiece = false;
-                                  }
-                                },
-                              ),
-
-                              // Pozostała ilość (tylko dla otwartych)
-                              if (isOpen) ...[
-                                const SizedBox(height: 16),
-                                TextField(
-                                  controller: pieceController,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    labelText: 'Pozostała ilość',
-                                    hintText: 'np. 15',
-                                    suffixText:
-                                        selectedUnit == PackageUnit.pieces
-                                        ? 'szt.'
-                                        : selectedUnit == PackageUnit.ml
-                                        ? 'ml'
-                                        : 'saszetki',
-                                    border: const OutlineInputBorder(),
-                                  ),
-                                  onChanged: (value) {
-                                    // Sync: pieceCount → percentRemaining
-                                    if (isSyncingFromPercent) return;
-                                    final capacity = int.tryParse(
-                                      capacityController.text,
-                                    );
-                                    final piece = int.tryParse(value);
-                                    if (capacity != null &&
-                                        capacity > 0 &&
-                                        piece != null) {
-                                      isSyncingFromPiece = true;
-                                      final percent = ((piece / capacity) * 100)
-                                          .round()
-                                          .clamp(0, 100);
-                                      percentController.text = percent
-                                          .toString();
-                                      setBottomSheetState(() {});
-                                      isSyncingFromPiece = false;
-                                    }
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                TextField(
-                                  controller: percentController,
-                                  keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Pozostało procent',
-                                    hintText: 'np. 50',
-                                    suffixText: '%',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                  onChanged: (value) {
-                                    // Sync: percentRemaining → pieceCount
-                                    if (isSyncingFromPiece) return;
-                                    final capacity = int.tryParse(
-                                      capacityController.text,
-                                    );
-                                    final percent = int.tryParse(value);
-                                    if (capacity != null &&
-                                        capacity > 0 &&
-                                        percent != null) {
-                                      isSyncingFromPercent = true;
-                                      final piece = ((capacity * percent) / 100)
-                                          .round();
-                                      pieceController.text = piece.toString();
-                                      setBottomSheetState(() {});
-                                      isSyncingFromPercent = false;
-                                    }
-                                  },
-                                ),
-                              ],
-                            ],
-
-                            const SizedBox(height: 20),
-
-                            // Sekcja 3: Status opakowania
+                            // Sekcja 2: Status opakowania
                             Text(
                               'Status opakowania',
                               style: Theme.of(context).textTheme.titleSmall
@@ -2312,6 +2186,183 @@ class _MedicineCardState extends State<MedicineCard> {
                                 ),
                               ],
                             ),
+
+                            const SizedBox(height: 20),
+
+                            // Sekcja 3: Wybór jednostki (bez nagłówka)
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('Brak'),
+                                  selected: selectedUnit == PackageUnit.none,
+                                  onSelected: (_) => setBottomSheetState(
+                                    () => selectedUnit = PackageUnit.none,
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Sztuki'),
+                                  selected: selectedUnit == PackageUnit.pieces,
+                                  onSelected: (_) => setBottomSheetState(
+                                    () => selectedUnit = PackageUnit.pieces,
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('ml'),
+                                  selected: selectedUnit == PackageUnit.ml,
+                                  onSelected: (_) => setBottomSheetState(
+                                    () => selectedUnit = PackageUnit.ml,
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Gramy'),
+                                  selected: selectedUnit == PackageUnit.grams,
+                                  onSelected: (_) => setBottomSheetState(
+                                    () => selectedUnit = PackageUnit.grams,
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  label: const Text('Saszetki'),
+                                  selected: selectedUnit == PackageUnit.sachets,
+                                  onSelected: (_) => setBottomSheetState(
+                                    () => selectedUnit = PackageUnit.sachets,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            // Inputs dla wybranej jednostki
+                            if (selectedUnit != PackageUnit.none) ...[
+                              const SizedBox(height: 16),
+                              // Pojemność opakowania (całkowita)
+                              TextField(
+                                controller: capacityController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: 'Pojemność opakowania',
+                                  hintText: 'np. 30',
+                                  suffixText: _getUnitSuffix(selectedUnit),
+                                  border: const OutlineInputBorder(),
+                                ),
+                                onChanged: (value) {
+                                  // Przelicz procent jeśli mamy pieceCount
+                                  final capacity = int.tryParse(value);
+                                  final piece = int.tryParse(
+                                    pieceController.text,
+                                  );
+                                  if (capacity != null &&
+                                      capacity > 0 &&
+                                      piece != null &&
+                                      !isSyncingFromPercent) {
+                                    isSyncingFromPiece = true;
+                                    final percent = ((piece / capacity) * 100)
+                                        .round()
+                                        .clamp(0, 100);
+                                    percentController.text = percent.toString();
+                                    isSyncingFromPiece = false;
+                                  }
+                                },
+                              ),
+
+                              // Pozostała ilość = Pozostało % (tylko dla otwartych, w jednej linii)
+                              if (isOpen) ...[
+                                const SizedBox(height: 16),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Pozostała ilość
+                                    Expanded(
+                                      flex: 3,
+                                      child: TextField(
+                                        controller: pieceController,
+                                        keyboardType: TextInputType.number,
+                                        decoration: InputDecoration(
+                                          labelText: 'Pozostało',
+                                          hintText: 'np. 15',
+                                          suffixText: _getUnitSuffix(
+                                            selectedUnit,
+                                          ),
+                                          border: const OutlineInputBorder(),
+                                        ),
+                                        onChanged: (value) {
+                                          // Sync: pieceCount → percentRemaining
+                                          if (isSyncingFromPercent) return;
+                                          final capacity = int.tryParse(
+                                            capacityController.text,
+                                          );
+                                          final piece = int.tryParse(value);
+                                          if (capacity != null &&
+                                              capacity > 0 &&
+                                              piece != null) {
+                                            isSyncingFromPiece = true;
+                                            final percent =
+                                                ((piece / capacity) * 100)
+                                                    .round()
+                                                    .clamp(0, 100);
+                                            percentController.text = percent
+                                                .toString();
+                                            setBottomSheetState(() {});
+                                            isSyncingFromPiece = false;
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                    // Znak równości
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                      ),
+                                      child: Text(
+                                        '=',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleLarge
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w500,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ),
+                                    // Procent
+                                    Expanded(
+                                      flex: 2,
+                                      child: TextField(
+                                        controller: percentController,
+                                        keyboardType: TextInputType.number,
+                                        decoration: const InputDecoration(
+                                          labelText: '%',
+                                          hintText: '50',
+                                          suffixText: '%',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        onChanged: (value) {
+                                          // Sync: percentRemaining → pieceCount
+                                          if (isSyncingFromPiece) return;
+                                          final capacity = int.tryParse(
+                                            capacityController.text,
+                                          );
+                                          final percent = int.tryParse(value);
+                                          if (capacity != null &&
+                                              capacity > 0 &&
+                                              percent != null) {
+                                            isSyncingFromPercent = true;
+                                            final piece =
+                                                ((capacity * percent) / 100)
+                                                    .round();
+                                            pieceController.text = piece
+                                                .toString();
+                                            setBottomSheetState(() {});
+                                            isSyncingFromPercent = false;
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
 
                             // Sekcja 4: Data otwarcia (tylko gdy otwarte)
                             if (isOpen) ...[
@@ -2374,6 +2425,151 @@ class _MedicineCardState extends State<MedicineCard> {
                               ),
                             ],
 
+                            // Sekcja 5: Okres przydatności po otwarciu
+                            if (_medicine.shelfLifeAfterOpening != null ||
+                                isOpen) ...[
+                              const SizedBox(height: 20),
+                              Text(
+                                'Okres przydatności po otwarciu',
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF6b7280),
+                                    ),
+                              ),
+                              const SizedBox(height: 8),
+
+                              // Toggle: z Ulotki vs ręcznie
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  ChoiceChip(
+                                    avatar: useAiShelfLife
+                                        ? const Icon(
+                                            LucideIcons.sparkles,
+                                            size: 16,
+                                            color: Colors.amber,
+                                          )
+                                        : null,
+                                    label: const Text('z Ulotki'),
+                                    selected: useAiShelfLife,
+                                    onSelected: (_) => setBottomSheetState(
+                                      () => useAiShelfLife = true,
+                                    ),
+                                  ),
+                                  ChoiceChip(
+                                    label: const Text('ręcznie'),
+                                    selected: !useAiShelfLife,
+                                    onSelected: (_) => setBottomSheetState(
+                                      () => useAiShelfLife = false,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+
+                              // Podgląd wartości AI (readonly)
+                              if (useAiShelfLife &&
+                                  _medicine.shelfLifeAfterOpening != null) ...[
+                                TextField(
+                                  controller: shelfLifeController,
+                                  readOnly: true,
+                                  maxLines: 2,
+                                  decoration: InputDecoration(
+                                    border: const OutlineInputBorder(),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF3F4F6),
+                                    suffixIcon:
+                                        _medicine.shelfLifeStatus == 'completed'
+                                        ? const Icon(
+                                            LucideIcons.sparkles,
+                                            color: Colors.amber,
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ] else if (useAiShelfLife) ...[
+                                // Brak wartości AI
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFEF3C7),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Icon(
+                                        LucideIcons.info,
+                                        size: 16,
+                                        color: Color(0xFFD97706),
+                                      ),
+                                      SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          'Brak informacji z ulotki. Wybierz "ręcznie" aby ustawić.',
+                                          style: TextStyle(fontSize: 13),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+
+                              // Input ręczny: liczba + jednostka
+                              if (!useAiShelfLife) ...[
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // Pole liczbowe
+                                    Expanded(
+                                      flex: 2,
+                                      child: TextField(
+                                        controller: manualShelfLifeController,
+                                        keyboardType: TextInputType.number,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Wartość',
+                                          hintText: 'np. 28',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    // Wybór jednostki
+                                    Expanded(
+                                      flex: 3,
+                                      child: DropdownButtonFormField<int>(
+                                        value: manualShelfLifeUnit,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Jednostka',
+                                          border: OutlineInputBorder(),
+                                        ),
+                                        items: const [
+                                          DropdownMenuItem(
+                                            value: 0,
+                                            child: Text('godzin'),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: 1,
+                                            child: Text('dni'),
+                                          ),
+                                          DropdownMenuItem(
+                                            value: 2,
+                                            child: Text('miesięcy'),
+                                          ),
+                                        ],
+                                        onChanged: (v) => setBottomSheetState(
+                                          () => manualShelfLifeUnit = v!,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ],
+
                             const SizedBox(height: 32),
                           ],
                         ),
@@ -2422,6 +2618,17 @@ class _MedicineCardState extends State<MedicineCard> {
                                           'T',
                                         )[0]
                                       : null,
+                                  // Shelf life: AI zachowuje oryginalny tekst, ręczny konwertuje na znormalizowany
+                                  'shelfLifeAfterOpening': useAiShelfLife
+                                      ? _medicine.shelfLifeAfterOpening
+                                      : (manualShelfLifeController
+                                                .text
+                                                .isNotEmpty
+                                            ? '${manualShelfLifeController.text} ${_getTimeUnitLabel(manualShelfLifeUnit)}'
+                                            : null),
+                                  'shelfLifeSource': useAiShelfLife
+                                      ? 'ai'
+                                      : 'manual',
                                 });
                               },
                               child: const Text('Zapisz'),
@@ -2454,10 +2661,27 @@ class _MedicineCardState extends State<MedicineCard> {
         percentRemaining: result['percentRemaining'] as int?,
         openedDate: result['openedDate'] as String?,
       );
-      final updatedPackages = _medicine.packages
-          .map((p) => p.id == packageId ? updatedPackage : p)
-          .toList();
-      final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
+
+      // Synchronizuj jednostkę we wszystkich opakowaniach
+      final newUnit = result['unit'] as PackageUnit;
+      final updatedPackages = _medicine.packages.map((p) {
+        if (p.id == packageId) {
+          return updatedPackage;
+        }
+        // Aktualizuj jednostkę w pozostałych opakowaniach (zachowaj inne dane)
+        return p.copyWith(unit: newUnit);
+      }).toList();
+
+      // Aktualizuj też shelfLifeAfterOpening w Medicine
+      final newShelfLife = result['shelfLifeAfterOpening'] as String?;
+      final shelfLifeSource = result['shelfLifeSource'] as String?;
+      final updatedMedicine = _medicine.copyWith(
+        packages: updatedPackages,
+        shelfLifeAfterOpening: newShelfLife,
+        shelfLifeStatus: shelfLifeSource == 'manual'
+            ? 'manual'
+            : _medicine.shelfLifeStatus, // Zachowaj oryginalny status AI
+      );
       await widget.storageService!.saveMedicine(updatedMedicine);
       setState(() {
         _medicine = updatedMedicine;

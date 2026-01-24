@@ -153,7 +153,7 @@ class MedicinePackage {
         case PackageUnit.grams:
           return 'g';
         case PackageUnit.sachets:
-          return 'saszetki';
+          return 'sasz.';
         case PackageUnit.none:
           return '';
       }
@@ -264,11 +264,11 @@ class Medicine {
     return List<MedicinePackage>.from(packages);
   }
 
-  /// Oblicza łączną liczbę sztuk ze wszystkich opakowań (tylko unit=pieces)
+  /// Oblicza łączną ilość ze wszystkich opakowań (niezależnie od jednostki)
   int get totalPieceCount {
     int total = 0;
     for (final package in packages) {
-      if (package.unit == PackageUnit.pieces && package.pieceCount != null) {
+      if (package.pieceCount != null && package.unit != PackageUnit.none) {
         total += package.pieceCount!;
       }
     }
@@ -277,10 +277,10 @@ class Medicine {
 
   /// Kalkulator zapasu - oblicza do kiedy wystarczy leku (pierwszy dzien bez leku)
   /// Zwraca null jeśli brak danych (pieceCount lub dailyIntake)
-  /// UWAGA: Działa tylko dla opakowań z unit=pieces
+  /// Działa dla wszystkich jednostek (pieces, ml, g, saszetki)
   DateTime? calculateSupplyEndDate() {
     if (dailyIntake == null || dailyIntake! <= 0) return null;
-    final total = totalPieceCount; // Tylko unit=pieces
+    final total = totalPieceCount;
     if (total <= 0) return null;
 
     // ceil - ostatnia dawka + 1 dzień = pierwszy dzień bez leku
