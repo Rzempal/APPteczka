@@ -2702,74 +2702,58 @@ class _MedicineCardState extends State<MedicineCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // H1: Kalkulator zapasu leku
-        Text(
-          'Kalkulator zapasu leku',
-          style: theme.textTheme.labelMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // CTA: Ustaw dzienne zużycie - zawsze widoczne gdy canCalculate
+        // CTA: Kalkulator zapasu leku → + wynik
         if (canCalculate)
-          GestureDetector(
-            onTap: () => _showSetDailyIntakeDialog(context),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.calculator,
-                    size: 18,
-                    color: theme.colorScheme.onSurface,
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () => _showSetDailyIntakeDialog(context),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Kalkulator zapasu leku',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: 13,
-                    ),
+                  decoration: NeuDecoration.flatSmall(
+                    isDark: isDark,
+                    radius: 12,
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.calculator,
+                        size: 18,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Kalkulator zapasu leku',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        LucideIcons.arrowRight,
+                        size: 14,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              // Wynik kalkulatora (tylko gdy ustawiono dailyIntake)
+              if (supplyEndDate != null)
+                _buildSupplyResultCompact(
+                  context,
+                  theme,
+                  isDark,
+                  supplyEndDate,
+                ),
+            ],
           ),
-        const SizedBox(height: 8),
-
-        // H2: Zapas leku do [→] + wynik (tylko gdy supplyEndDate != null)
-        Row(
-          children: [
-            Text(
-              '└',
-              style: TextStyle(
-                fontSize: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Zapas leku do',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Icon(
-              LucideIcons.arrowRight,
-              size: 14,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 12),
-            // Wynik kalkulatora (tylko gdy ustawiono dailyIntake)
-            if (canCalculate && supplyEndDate != null)
-              _buildSupplyResultCompact(context, theme, isDark, supplyEndDate),
-          ],
-        ),
       ],
     );
   }
@@ -2829,12 +2813,25 @@ class _MedicineCardState extends State<MedicineCard> {
         GestureDetector(
           onTap: () => _addToCalendar(endDate),
           child: Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-            child: Icon(
-              LucideIcons.calendarPlus,
-              size: 20,
-              color: AppColors.primary,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  LucideIcons.calendarPlus,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Dodaj do kalendarza',
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurface,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
