@@ -125,4 +125,52 @@ class AppLogger {
 
   /// Liczba wpisów w buforze
   static int get bufferSize => _logBuffer.length;
+
+  /// Pobiera wszystkie logi jako strukturyzowane wpisy (dla filtrowania)
+  static List<LogEntry> getLogEntries() {
+    return _logBuffer.map((line) => LogEntry.parse(line)).toList();
+  }
+
+  /// Pobiera unikalne źródła/kanały z logów
+  static Set<String> getUniqueSources() {
+    return getLogEntries()
+        .map((e) => e.source)
+        .where((s) => s.isNotEmpty)
+        .toSet();
+  }
+}
+
+/// Pojedynczy wpis logu - do filtrowania
+class LogEntry {
+  final String level; // INFO, WARNING, SEVERE, FINE
+  final String source; // ShelfLifeParser, MainActivity, etc.
+  final String message;
+  final String rawLine;
+
+  const LogEntry({
+    required this.level,
+    required this.source,
+    required this.message,
+    required this.rawLine,
+  });
+
+  /// Parsuje linię logu do struktury LogEntry
+  /// Format: [2026-01-24T10:45:47.281199] WARNING [ShelfLifeParser] message
+  factory LogEntry.parse(String line) {
+    // Regex: [timestamp] LEVEL   [Source] message
+    final regex = RegExp(r'\[([^\]]+)\]\s+(\w+)\s+\[([^\]]+)\]\s*(.*)');
+    final match = regex.firstMatch(line);
+
+    if (match != null) {
+      return LogEntry(
+        level: match.group(2)?.trim() ?? 'INFO',
+        source: match.group(3) ?? '',
+        message: match.group(4) ?? '',
+        rawLine: line,
+      );
+    }
+
+    // Fallback dla linii bez standardowego formatu
+    return LogEntry(level: 'INFO', source: '', message: line, rawLine: line);
+  }
 }

@@ -6,12 +6,14 @@
 
 ## Poziomy Logów
 
-| Poziom    | Zastosowanie                         |
-| --------- | ------------------------------------ |
-| **DEBUG** | Informacje techniczne dla dewelopera |
-| **INFO**  | Istotne zdarzenia biznesowe          |
-| **WARN**  | Problemy niekrytyczne                |
-| **ERROR** | Błędy krytyczne                      |
+| Poziom      | Zastosowanie                            |
+| ----------- | --------------------------------------- |
+| **FINE**    | Debug, szczegóły techniczne (tylko dev) |
+| **INFO**    | Informacje o zdarzeniach                |
+| **WARNING** | Ostrzeżenia, problemy niekrytyczne      |
+| **SEVERE**  | Błędy krytyczne                         |
+
+> **Uwaga:** Nazwy poziomów pochodzą z pakietu `logging` Dart SDK.
 
 ---
 

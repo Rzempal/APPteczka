@@ -770,6 +770,10 @@ class _SettingsScreenState extends State<SettingsScreen>
   ThemeMode? _optimisticMode; // Optimistic UI - lokalna kopia wybranego motywu
   ThemeMode? _switchingMode; // Który przycisk pokazuje spinner
 
+  // Debug log filters
+  Set<String> _selectedLevels = {'INFO', 'WARNING', 'SEVERE'};
+  Set<String> _selectedSources = {}; // puste = wszystkie
+
   /// Lista rozmiarów kawy dla swipe gesture
   static const _coffeeSizes = ['small', 'medium', 'large'];
 
@@ -1906,109 +1910,344 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  /// Pokazuje BottomSheet z podglądem logów
+  /// Pokazuje BottomSheet z podglądem logów i filtrami
   void _showLogsPreviewSheet(BuildContext context) {
-    final logs = AppLogger.getLogBuffer();
-    final theme = Theme.of(context);
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        minChildSize: 0.3,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) => Column(
-          children: [
-            // Handle
-            Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.3,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) {
+          final theme = Theme.of(context);
+          final allEntries = AppLogger.getLogEntries();
+          final sources = AppLogger.getUniqueSources().toList()..sort();
+
+          // Filtrowanie
+          final filteredEntries = allEntries.where((e) {
+            final levelMatch = _selectedLevels.contains(e.level);
+            final sourceMatch =
+                _selectedSources.isEmpty || _selectedSources.contains(e.source);
+            return levelMatch && sourceMatch;
+          }).toList();
+
+          return DraggableScrollableSheet(
+            initialChildSize: 0.85,
+            minChildSize: 0.4,
+            maxChildSize: 0.95,
+            expand: false,
+            builder: (context, scrollController) => Column(
+              children: [
+                // Handle
+                Container(
+                  margin: const EdgeInsets.only(top: 12, bottom: 8),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.3,
+                    ),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Icon(LucideIcons.terminal, color: theme.colorScheme.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Logi aplikacji',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
                   ),
-                  const Spacer(),
-                  Text(
-                    '${AppLogger.bufferSize} wpisów',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.terminal,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Logi aplikacji',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      // Wyczyść logi
+                      TextButton.icon(
+                        onPressed: allEntries.isEmpty
+                            ? null
+                            : () {
+                                AppLogger.clearBuffer();
+                                setSheetState(() {});
+                                setState(
+                                  () {},
+                                ); // Odśwież badge w Debug section
+                              },
+                        icon: const Icon(LucideIcons.trash2, size: 16),
+                        label: const Text('Wyczyść'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: AppColors.expired,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            // Logs content
-            Expanded(
-              child: logs.isEmpty
-                  ? Center(
-                      child: Text(
-                        'Brak logów',
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                ),
+                const Divider(height: 1),
+
+                // Sekcja filtrów
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Poziomy
+                      Row(
+                        children: [
+                          Text(
+                            'Poziomy:',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ..._buildLevelChips(theme, setSheetState),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      // Kanały + Wyczyść filtry
+                      Row(
+                        children: [
+                          Text(
+                            'Kanały:',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: sources.isEmpty
+                                ? Text(
+                                    'Brak',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  )
+                                : SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: sources.map((source) {
+                                        final isSelected = _selectedSources
+                                            .contains(source);
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 6,
+                                          ),
+                                          child: FilterChip(
+                                            label: Text(
+                                              source,
+                                              style: const TextStyle(
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                            selected: isSelected,
+                                            onSelected: (selected) {
+                                              setSheetState(() {
+                                                if (selected) {
+                                                  _selectedSources.add(source);
+                                                } else {
+                                                  _selectedSources.remove(
+                                                    source,
+                                                  );
+                                                }
+                                              });
+                                            },
+                                            visualDensity:
+                                                VisualDensity.compact,
+                                            padding: EdgeInsets.zero,
+                                            materialTapTargetSize:
+                                                MaterialTapTargetSize
+                                                    .shrinkWrap,
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ),
+                                  ),
+                          ),
+                          // Wyczyść filtry
+                          if (_selectedSources.isNotEmpty ||
+                              _selectedLevels.length < 3)
+                            TextButton(
+                              onPressed: () {
+                                setSheetState(() {
+                                  _selectedLevels = {
+                                    'INFO',
+                                    'WARNING',
+                                    'SEVERE',
+                                  };
+                                  _selectedSources = {};
+                                });
+                              },
+                              child: const Text('Wyczyść'),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+
+                // Info o filtrowanych wynikach
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        '${filteredEntries.length} z ${allEntries.length} wpisów',
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-                    )
-                  : SingleChildScrollView(
-                      controller: scrollController,
-                      padding: const EdgeInsets.all(16),
-                      child: SelectableText(
-                        logs,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          fontSize: 11,
-                          height: 1.4,
+                    ],
+                  ),
+                ),
+
+                // Logs content
+                Expanded(
+                  child: filteredEntries.isEmpty
+                      ? Center(
+                          child: Text(
+                            allEntries.isEmpty
+                                ? 'Brak logów'
+                                : 'Brak logów pasujących do filtrów',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(12),
+                          itemCount: filteredEntries.length,
+                          itemBuilder: (context, index) {
+                            final entry = filteredEntries[index];
+                            return _buildLogEntryTile(theme, entry);
+                          },
                         ),
-                      ),
-                    ),
+                ),
+              ],
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Buduje FilterChips dla poziomów logowania
+  List<Widget> _buildLevelChips(ThemeData theme, StateSetter setSheetState) {
+    const levels = ['INFO', 'WARNING', 'SEVERE'];
+    final colors = {
+      'INFO': theme.colorScheme.primary,
+      'WARNING': AppColors.expiringSoon,
+      'SEVERE': AppColors.expired,
+    };
+
+    return levels.map((level) {
+      final isSelected = _selectedLevels.contains(level);
+      return Padding(
+        padding: const EdgeInsets.only(right: 6),
+        child: FilterChip(
+          label: Text(level, style: const TextStyle(fontSize: 11)),
+          selected: isSelected,
+          selectedColor: colors[level]?.withValues(alpha: 0.2),
+          checkmarkColor: colors[level],
+          onSelected: (selected) {
+            setSheetState(() {
+              if (selected) {
+                _selectedLevels.add(level);
+              } else {
+                // Nie pozwalaj odznaczyć wszystkich
+                if (_selectedLevels.length > 1) {
+                  _selectedLevels.remove(level);
+                }
+              }
+            });
+          },
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      );
+    }).toList();
+  }
+
+  /// Buduje kafelek pojedynczego wpisu logu
+  Widget _buildLogEntryTile(ThemeData theme, LogEntry entry) {
+    final levelColor = switch (entry.level) {
+      'SEVERE' => AppColors.expired,
+      'WARNING' => AppColors.expiringSoon,
+      _ => theme.colorScheme.onSurfaceVariant,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: SelectableText.rich(
+        TextSpan(
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontFamily: 'monospace',
+            fontSize: 10,
+            height: 1.3,
+          ),
+          children: [
+            TextSpan(
+              text: '[${entry.level}] ',
+              style: TextStyle(color: levelColor, fontWeight: FontWeight.w600),
+            ),
+            TextSpan(
+              text: '[${entry.source}] ',
+              style: TextStyle(color: theme.colorScheme.primary),
+            ),
+            TextSpan(text: entry.message),
           ],
         ),
       ),
     );
   }
 
-  /// Kopiuje sformatowany raport debug do schowka
+  /// Kopiuje sformatowany raport debug do schowka (z uwzględnieniem filtrów)
   Future<void> _copyDebugReport(BuildContext context) async {
     final service = BugReportService.instance;
     final deviceInfo = await service.getDeviceInfo();
     final appVersion = await service.getAppVersion();
-    final logs = AppLogger.getLogBuffer();
+
+    // Pobierz przefiltrowane logi
+    final allEntries = AppLogger.getLogEntries();
+    final filteredEntries = allEntries.where((e) {
+      final levelMatch = _selectedLevels.contains(e.level);
+      final sourceMatch =
+          _selectedSources.isEmpty || _selectedSources.contains(e.source);
+      return levelMatch && sourceMatch;
+    }).toList();
+
+    final logsText = filteredEntries.map((e) => e.rawLine).join('\n');
+    final filterInfo = _selectedSources.isNotEmpty || _selectedLevels.length < 3
+        ? ' (przefiltrowane: ${filteredEntries.length}/${allEntries.length})'
+        : '';
 
     final report =
         '''KONTEKST:
 - Urządzenie: $deviceInfo
 - Wersja: $appVersion
 
-DANE TECHNICZNE (LOGI):
-$logs''';
+DANE TECHNICZNE (LOGI)$filterInfo:
+$logsText''';
 
     await Clipboard.setData(ClipboardData(text: report));
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Skopiowano do schowka'),
+        SnackBar(
+          content: Text('Skopiowano ${filteredEntries.length} wpisów'),
           behavior: SnackBarBehavior.floating,
         ),
       );
