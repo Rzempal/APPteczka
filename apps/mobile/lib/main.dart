@@ -170,29 +170,20 @@ class _MainNavigationState extends State<MainNavigation> {
 
   /// Obsługuje import pliku .karton z deep link
   Future<void> _handleBackupFileImport(Uri uri) async {
-    debugPrint('🔗 [handler] Processing URI: $uri');
-    debugPrint('🔗 [handler] Scheme: ${uri.scheme}, Path: ${uri.path}');
+    AppLogger.addNativeLog('[handler] Processing URI: $uri');
 
     // Małe opóźnienie - pozwala UI się w pełni załadować
     await Future.delayed(const Duration(milliseconds: 500));
 
-    // Sprawdź czy to plik .karton (sprawdzamy różne źródła nazwy)
-    final uriString = uri.toString().toLowerCase();
-    final path = uri.path.toLowerCase();
-
-    // Dla content:// URI nazwa pliku może być w query params lub w ostatnim segmencie
-    final lastSegment = uri.pathSegments.isNotEmpty
-        ? uri.pathSegments.last.toLowerCase()
-        : '';
-
-    final isKartonFile =
-        path.endsWith('.karton') ||
-        lastSegment.endsWith('.karton') ||
-        uriString.contains('.karton');
-
-    if (!isKartonFile) {
-      // Nie jest to plik .karton - ignoruj
-      return;
+    // Dla content:// URI (z menedżera plików) - system Android już zweryfikował
+    // rozszerzenie przez intent-filter, więc akceptujemy
+    // Dla file:// URI - sprawdzamy rozszerzenie ręcznie
+    if (uri.scheme == 'file') {
+      final path = uri.path.toLowerCase();
+      if (!path.endsWith('.karton') && !path.endsWith('.json')) {
+        AppLogger.addNativeLog('[handler] Ignored - not .karton/.json file');
+        return;
+      }
     }
 
     // Odczytaj zawartość pliku
