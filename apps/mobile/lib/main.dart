@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -137,13 +138,21 @@ class _MainNavigationState extends State<MainNavigation> {
 
   /// Inicjalizuje obsługę file intents przez MethodChannel
   void _initFileIntentHandler() {
-    // Obsługa callback z Androida (warm start)
+    final log = Logger('MainActivity'); // Logger dla logów z Androida
+
+    // Obsługa callback z Androida
     _fileIntentChannel.setMethodCallHandler((call) async {
       if (call.method == 'onFileReceived') {
         final uriString = call.arguments as String?;
-        debugPrint('🔗 [MethodChannel] onFileReceived: $uriString');
+        log.info('onFileReceived: $uriString');
         if (uriString != null) {
           _handleBackupFileImport(Uri.parse(uriString));
+        }
+      } else if (call.method == 'log') {
+        // Logi z natywnego kodu Android
+        final message = call.arguments as String?;
+        if (message != null) {
+          log.info(message);
         }
       }
     });
