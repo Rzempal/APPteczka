@@ -112,6 +112,17 @@ class AppLogger {
     _logBuffer.clear();
   }
 
+  /// Dodaje log z natywnego kodu (Android/iOS) bezpośrednio do buffera
+  static void addNativeLog(String message) {
+    final timestamp = DateTime.now().toIso8601String();
+    final formatted = '[$timestamp] INFO    $message';
+    _addToBuffer(formatted);
+    if (!kReleaseMode) {
+      // ignore: avoid_print
+      print(formatted);
+    }
+  }
+
   /// Liczba wpisów w buforze
   static int get bufferSize => _logBuffer.length;
 }
