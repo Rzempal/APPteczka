@@ -1598,7 +1598,7 @@ class _MedicineCardState extends State<MedicineCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  LucideIcons.pencil,
+                  LucideIcons.clipboardList,
                   size: 16,
                   color: theme.colorScheme.onSurface,
                 ),
@@ -2723,13 +2723,13 @@ class _MedicineCardState extends State<MedicineCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    LucideIcons.pillBottle,
+                    LucideIcons.calculator,
                     size: 18,
                     color: theme.colorScheme.onSurface,
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Ustaw dzienne zużycie',
+                    'Kalkulator zapasu leku',
                     style: TextStyle(
                       color: theme.colorScheme.onSurface,
                       fontSize: 13,
@@ -2744,6 +2744,14 @@ class _MedicineCardState extends State<MedicineCard> {
         // H2: Zapas leku do [→] + wynik (tylko gdy supplyEndDate != null)
         Row(
           children: [
+            Text(
+              '└',
+              style: TextStyle(
+                fontSize: 14,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: 6),
             Text(
               'Zapas leku do',
               style: theme.textTheme.bodySmall?.copyWith(
@@ -2762,29 +2770,6 @@ class _MedicineCardState extends State<MedicineCard> {
               _buildSupplyResultCompact(context, theme, isDark, supplyEndDate),
           ],
         ),
-
-        // H3: Wypełnij Szczegóły (tylko gdy !canCalculate)
-        if (!canCalculate) ...[
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Icon(
-                LucideIcons.cornerLeftDown,
-                size: 14,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Wypełnij Szczegóły leku by odblokować kalkulator',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  fontStyle: FontStyle.italic,
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-        ],
       ],
     );
   }
