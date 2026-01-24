@@ -6,6 +6,8 @@ import android.os.Bundle
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "app.karton/file_intent"
@@ -17,11 +19,9 @@ class MainActivity : FlutterActivity() {
         val fullMessage = "[MainActivity] $message"
         android.util.Log.d("MainActivity", message)
         
-        // Wyślij do Flutter jeśli channel jest gotowy
         if (methodChannel != null) {
             methodChannel?.invokeMethod("log", fullMessage)
         } else {
-            // Zapisz do kolejki jeśli channel jeszcze nie gotowy
             pendingLogs.add(fullMessage)
         }
     }
@@ -41,6 +41,24 @@ class MainActivity : FlutterActivity() {
                     log("getInitialFileUri called, pendingUri=$pendingUri")
                     result.success(pendingUri)
                     pendingUri = null
+                }
+                "readContentUri" -> {
+                    // Odczytaj plik z content:// URI używając ContentResolver
+                    val uriString = call.argument<String>("uri")
+                    if (uriString == null) {
+                        result.error("INVALID_URI", "URI is null", null)
+                        return@setMethodCallHandler
+                    }
+                    
+                    try {
+                        val uri = Uri.parse(uriString)
+                        val content = readContentUri(uri)
+                        log("readContentUri: success, ${content.length} chars")
+                        result.success(content)
+                    } catch (e: Exception) {
+                        log("readContentUri: error - ${e.message}")
+                        result.error("READ_ERROR", e.message, null)
+                    }
                 }
                 else -> result.notImplemented()
             }
@@ -69,17 +87,6 @@ class MainActivity : FlutterActivity() {
         
         log("onNewIntent: action=${intent.action}")
         log("onNewIntent: data=${intent.data}")
-        log("onNewIntent: clipData=${intent.clipData?.getItemAt(0)?.uri}")
-        
-        val extraStream = try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
-            } else {
-                @Suppress("DEPRECATION")
-                intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-            }
-        } catch (e: Exception) { null }
-        log("onNewIntent: EXTRA_STREAM=$extraStream")
         
         val uri = extractUri(intent)
         if (uri != null) {
@@ -125,7 +132,18 @@ class MainActivity : FlutterActivity() {
             log("extractUri: EXTRA_STREAM error: ${e.message}")
         }
         
-        log("extractUri: no URI found in any source")
         return null
+    }
+
+    /// Odczytuje zawartość pliku z content:// URI
+    private fun readContentUri(uri: Uri): String {
+        val inputStream = contentResolver.openInputStream(uri)
+            ?: throw Exception("Cannot open input stream for $uri")
+        
+        return inputStream.use { stream ->
+            BufferedReader(InputStreamReader(stream)).use { reader ->
+                reader.readText()
+            }
+        }
     }
 }

@@ -189,33 +189,29 @@ class _MainNavigationState extends State<MainNavigation> {
     // Odczytaj zawartość pliku
     String content;
     try {
-      // Dla content:// URI nie można użyć File() bezpośrednio
-      // Musimy skopiować do cache lub użyć platform channel
-      // Na razie próbujemy odczytać bezpośrednio (działa dla file://)
       if (uri.scheme == 'file') {
+        // file:// URI - odczytaj bezpośrednio
         final file = File(uri.toFilePath());
         content = await file.readAsString();
+        AppLogger.addNativeLog(
+          '[handler] Read file:// - ${content.length} chars',
+        );
       } else {
-        // content:// URI - spróbuj odczytać przez ścieżkę
-        // To może nie działać na wszystkich urządzeniach
-        try {
-          final file = File(uri.path);
-          content = await file.readAsString();
-        } catch (_) {
-          // Fallback - pokaż instrukcję użytkownikowi
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Użyj opcji "Dodaj leki" → "Import kopii zapasowej" aby zaimportować plik',
-                ),
-                behavior: SnackBarBehavior.floating,
-                duration: Duration(seconds: 5),
-              ),
-            );
-          }
-          return;
+        // content:// URI - użyj MethodChannel do odczytu przez ContentResolver
+        AppLogger.addNativeLog(
+          '[handler] Reading content:// via MethodChannel',
+        );
+        final result = await _fileIntentChannel.invokeMethod<String>(
+          'readContentUri',
+          {'uri': uri.toString()},
+        );
+        if (result == null || result.isEmpty) {
+          throw Exception('Empty content from URI');
         }
+        content = result;
+        AppLogger.addNativeLog(
+          '[handler] Read content:// - ${content.length} chars',
+        );
       }
     } catch (e) {
       if (mounted) {
