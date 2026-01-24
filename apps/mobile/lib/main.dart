@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:app_links/app_links.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -126,34 +126,47 @@ class _MainNavigationState extends State<MainNavigation> {
   // Klucz do przechwytywania screenshotów dla bug reportu
   final GlobalKey _screenshotKey = GlobalKey();
 
-  // Deep linking dla plików .karton
-  late AppLinks _appLinks;
+  // MethodChannel do odbioru file intents z Androida
+  static const _fileIntentChannel = MethodChannel('app.karton/file_intent');
 
   @override
   void initState() {
     super.initState();
-    _initDeepLinks();
+    _initFileIntentHandler();
   }
 
-  /// Inicjalizuje obsługę deep links (pliki .karton)
-  void _initDeepLinks() {
-    _appLinks = AppLinks();
-
-    // Sprawdź, czy aplikacja została uruchomiona przez plik (cold start)
-    _appLinks.getInitialLink().then((uri) {
-      if (uri != null) {
-        _handleBackupFileImport(uri);
+  /// Inicjalizuje obsługę file intents przez MethodChannel
+  void _initFileIntentHandler() {
+    // Obsługa callback z Androida (warm start)
+    _fileIntentChannel.setMethodCallHandler((call) async {
+      if (call.method == 'onFileReceived') {
+        final uriString = call.arguments as String?;
+        debugPrint('🔗 [MethodChannel] onFileReceived: $uriString');
+        if (uriString != null) {
+          _handleBackupFileImport(Uri.parse(uriString));
+        }
       }
     });
 
-    // Nasłuchuj, jeśli aplikacja już działała w tle (warm start)
-    _appLinks.uriLinkStream.listen((uri) {
-      _handleBackupFileImport(uri);
-    });
+    // Sprawdź initial intent (cold start)
+    _fileIntentChannel
+        .invokeMethod<String>('getInitialFileUri')
+        .then((uriString) {
+          debugPrint('🔗 [MethodChannel] Initial file URI: $uriString');
+          if (uriString != null && uriString.isNotEmpty) {
+            _handleBackupFileImport(Uri.parse(uriString));
+          }
+        })
+        .catchError((e) {
+          debugPrint('🔗 [MethodChannel] Error: $e');
+        });
   }
 
   /// Obsługuje import pliku .karton z deep link
   Future<void> _handleBackupFileImport(Uri uri) async {
+    debugPrint('🔗 [handler] Processing URI: $uri');
+    debugPrint('🔗 [handler] Scheme: ${uri.scheme}, Path: ${uri.path}');
+
     // Małe opóźnienie - pozwala UI się w pełni załadować
     await Future.delayed(const Duration(milliseconds: 500));
 
