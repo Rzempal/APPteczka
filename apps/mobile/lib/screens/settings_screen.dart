@@ -5,6 +5,8 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../config/app_config.dart';
+import '../services/app_logger.dart';
+import '../services/bug_report_service.dart';
 import '../services/storage_service.dart';
 import '../services/theme_provider.dart';
 import '../services/update_service.dart';
@@ -1739,6 +1741,11 @@ class _SettingsScreenState extends State<SettingsScreen>
                     children: [
                       // Zgłoś problem
                       _buildAdvancedBugReport(theme, isDark),
+                      // Debug - tylko dla kanału internal
+                      if (AppConfig.isInternal) ...[
+                        const SizedBox(height: 12),
+                        _buildAdvancedDebugSection(theme, isDark),
+                      ],
                     ],
                   ),
                 ),
@@ -1823,6 +1830,189 @@ class _SettingsScreenState extends State<SettingsScreen>
         );
       },
     );
+  }
+
+  /// Sekcja Debug - widoczna tylko w kanale internal
+  Widget _buildAdvancedDebugSection(ThemeData theme, bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.3),
+          width: 1,
+        ),
+        borderRadius: BorderRadius.circular(10),
+        color: isDark
+            ? Colors.white.withOpacity(0.03)
+            : Colors.black.withOpacity(0.02),
+      ),
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.terminal,
+                color: AppColors.expiringSoon,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Debug',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.expiringSoon.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '${AppLogger.bufferSize} wpisów',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.expiringSoon,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Przycisk podglądu logów
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _showLogsPreviewSheet(context),
+              icon: const Icon(LucideIcons.eye, size: 16),
+              label: const Text('Podgląd logów'),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Przycisk kopiowania
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => _copyDebugReport(context),
+              icon: const Icon(LucideIcons.copy, size: 16),
+              label: const Text('Kopiuj jako tekst'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Pokazuje BottomSheet z podglądem logów
+  void _showLogsPreviewSheet(BuildContext context) {
+    final logs = AppLogger.getLogBuffer();
+    final theme = Theme.of(context);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.3,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (context, scrollController) => Column(
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.3,
+                ),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Icon(LucideIcons.terminal, color: theme.colorScheme.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Logi aplikacji',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${AppLogger.bufferSize} wpisów',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            // Logs content
+            Expanded(
+              child: logs.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Brak logów',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16),
+                      child: SelectableText(
+                        logs,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Kopiuje sformatowany raport debug do schowka
+  Future<void> _copyDebugReport(BuildContext context) async {
+    final service = BugReportService.instance;
+    final deviceInfo = await service.getDeviceInfo();
+    final appVersion = await service.getAppVersion();
+    final logs = AppLogger.getLogBuffer();
+
+    final report =
+        '''KONTEKST:
+- Urządzenie: $deviceInfo
+- Wersja: $appVersion
+
+DANE TECHNICZNE (LOGI):
+$logs''';
+
+    await Clipboard.setData(ClipboardData(text: report));
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Skopiowano do schowka'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   String _getPolishPlural(int count) {
