@@ -2769,47 +2769,40 @@ class _MedicineCardState extends State<MedicineCard> {
     final formattedDate =
         '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GestureDetector(
-          onTap: () => _showSetDailyIntakeDialog(context),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.calendarOff,
-                  size: 18,
-                  color: daysRemaining <= 7
-                      ? AppColors.expired
-                      : AppColors.primary,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  formattedDate,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: daysRemaining <= 7
-                        ? AppColors.expired
-                        : theme.colorScheme.onSurface,
-                  ),
-                ),
-                Text(
-                  ' (za $daysRemaining dni)',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+        // Wynik jako zwykły tekst (bez efektu flat)
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.calendarOff,
+              size: 18,
+              color: daysRemaining <= 7 ? AppColors.expired : AppColors.primary,
             ),
-          ),
+            const SizedBox(width: 6),
+            Text(
+              formattedDate,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: daysRemaining <= 7
+                    ? AppColors.expired
+                    : theme.colorScheme.onSurface,
+              ),
+            ),
+            Text(
+              ' (za $daysRemaining dni)',
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 6),
+        const SizedBox(height: 8),
+        // CTA: Dodaj do kalendarza (na nowej linii)
         GestureDetector(
           onTap: () => _addToCalendar(endDate),
           child: Container(
