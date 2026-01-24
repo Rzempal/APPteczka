@@ -1167,8 +1167,6 @@ class _MedicineCardState extends State<MedicineCard> {
     ThemeData theme,
     bool isDark,
   ) {
-    final hasLeaflet =
-        _medicine.leafletUrl != null && _medicine.leafletUrl!.isNotEmpty;
     final hasWskazania = _medicine.wskazania.isNotEmpty;
 
     return Column(
@@ -1234,177 +1232,8 @@ class _MedicineCardState extends State<MedicineCard> {
             ],
           ],
         ),
-
-        // Ręczny wpis shelf life (gdy brak ulotki)
-        if (!hasLeaflet) ...[
-          const SizedBox(height: 12),
-          _buildManualShelfLifeEntry(context, theme, isDark),
-        ],
       ],
     );
-  }
-
-  /// Buduje sekcję ręcznego wpisu shelf life (gdy brak ulotki)
-  Widget _buildManualShelfLifeEntry(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    final hasManualEntry =
-        _medicine.shelfLifeAfterOpening != null &&
-        _medicine.shelfLifeStatus == 'manual';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              LucideIcons.pencil,
-              size: 14,
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Ważność po otwarciu',
-              style: theme.textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: TextEditingController(
-                  text: hasManualEntry ? _medicine.shelfLifeAfterOpening : '',
-                ),
-                decoration: InputDecoration(
-                  hintText: 'np. "6 miesięcy", "30 dni"',
-                  hintStyle: TextStyle(
-                    fontSize: 12,
-                    color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  isDense: true,
-                ),
-                style: const TextStyle(fontSize: 12),
-                onSubmitted: (value) => _saveManualShelfLife(value.trim()),
-              ),
-            ),
-            const SizedBox(width: 8),
-            NeuButton(
-              onPressed: () {
-                final controller = TextEditingController(
-                  text: hasManualEntry ? _medicine.shelfLifeAfterOpening : '',
-                );
-                _showManualShelfLifeDialog(context, controller);
-              },
-              padding: const EdgeInsets.all(10),
-              child: Icon(
-                LucideIcons.save,
-                size: 16,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  /// Zapisuje ręcznie wpisany shelf life
-  Future<void> _saveManualShelfLife(String value) async {
-    _log.info('Saving manual shelf life: $value');
-
-    if (value.isEmpty) {
-      // Usuń manual entry
-      final updatedMedicine = _medicine.copyWith(
-        shelfLifeAfterOpening: null,
-        shelfLifeStatus: null,
-      );
-      await widget.storageService?.saveMedicine(updatedMedicine);
-      setState(() => _medicine = updatedMedicine);
-      widget.onMedicineUpdated?.call();
-      return;
-    }
-
-    // Waliduj format (np. "6 miesięcy", "30 dni")
-    final parsed = ShelfLifeParser.parse(value);
-    if (!parsed.isValid) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(parsed.error ?? 'Nieprawidłowy format'),
-            duration: const Duration(seconds: 3),
-            backgroundColor: AppColors.expiringSoon,
-          ),
-        );
-      }
-      return;
-    }
-
-    final updatedMedicine = _medicine.copyWith(
-      shelfLifeAfterOpening: value,
-      shelfLifeStatus: 'manual',
-    );
-    await widget.storageService?.saveMedicine(updatedMedicine);
-    setState(() => _medicine = updatedMedicine);
-    widget.onMedicineUpdated?.call();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Zapisano'),
-          duration: const Duration(seconds: 2),
-          backgroundColor: AppColors.valid,
-        ),
-      );
-    }
-  }
-
-  /// Pokazuje dialog do ręcznego wpisu shelf life
-  Future<void> _showManualShelfLifeDialog(
-    BuildContext context,
-    TextEditingController controller,
-  ) async {
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Ważność po otwarciu'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            hintText: 'np. "6 miesięcy", "30 dni"',
-            border: OutlineInputBorder(),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('Zapisz'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null) {
-      _saveManualShelfLife(result);
-    }
   }
 
   Widget _buildNoteSection(BuildContext context, ThemeData theme, bool isDark) {
@@ -1893,7 +1722,7 @@ class _MedicineCardState extends State<MedicineCard> {
     }
 
     // Helper: zwraca suffix jednostki
-    String _getUnitSuffix(PackageUnit unit) {
+    String getUnitSuffix(PackageUnit unit) {
       switch (unit) {
         case PackageUnit.pieces:
           return 'szt.';
@@ -1909,7 +1738,7 @@ class _MedicineCardState extends State<MedicineCard> {
     }
 
     // Helper: zwraca etykietę jednostki czasu
-    String _getTimeUnitLabel(int unit) {
+    String getTimeUnitLabel(int unit) {
       switch (unit) {
         case 0:
           return 'godzin';
@@ -2241,7 +2070,7 @@ class _MedicineCardState extends State<MedicineCard> {
                                 decoration: InputDecoration(
                                   labelText: 'Pojemność opakowania',
                                   hintText: 'np. 30',
-                                  suffixText: _getUnitSuffix(selectedUnit),
+                                  suffixText: getUnitSuffix(selectedUnit),
                                   border: const OutlineInputBorder(),
                                 ),
                                 onChanged: (value) {
@@ -2279,7 +2108,7 @@ class _MedicineCardState extends State<MedicineCard> {
                                         decoration: InputDecoration(
                                           labelText: 'Pozostało',
                                           hintText: 'np. 15',
-                                          suffixText: _getUnitSuffix(
+                                          suffixText: getUnitSuffix(
                                             selectedUnit,
                                           ),
                                           border: const OutlineInputBorder(),
@@ -2624,7 +2453,7 @@ class _MedicineCardState extends State<MedicineCard> {
                                       : (manualShelfLifeController
                                                 .text
                                                 .isNotEmpty
-                                            ? '${manualShelfLifeController.text} ${_getTimeUnitLabel(manualShelfLifeUnit)}'
+                                            ? '${manualShelfLifeController.text} ${getTimeUnitLabel(manualShelfLifeUnit)}'
                                             : null),
                                   'shelfLifeSource': useAiShelfLife
                                       ? 'ai'
@@ -2698,16 +2527,19 @@ class _MedicineCardState extends State<MedicineCard> {
     final totalPieces = _medicine.totalPieceCount;
     final supplyEndDate = _medicine.calculateSupplyEndDate();
     final canCalculate = totalPieces > 0;
+    final hasDailyIntake =
+        _medicine.dailyIntake != null && _medicine.dailyIntake! > 0;
 
-    // Jeśli nie można obliczyć lub brak wyniku, nie pokazuj nic
-    if (!canCalculate || supplyEndDate == null) {
+    // Sekcja widoczna gdy są sztuki (niezależnie od dailyIntake)
+    if (!canCalculate) {
       return const SizedBox.shrink();
     }
 
-    final now = DateTime.now();
-    final daysRemaining = supplyEndDate.difference(now).inDays;
-    final formattedDate =
-        '${supplyEndDate.day.toString().padLeft(2, '0')}.${supplyEndDate.month.toString().padLeft(2, '0')}.${supplyEndDate.year}';
+    // Obliczenia tylko gdy dailyIntake jest ustawione
+    final int? daysRemaining = supplyEndDate?.difference(DateTime.now()).inDays;
+    final String? formattedDate = supplyEndDate != null
+        ? '${supplyEndDate.day.toString().padLeft(2, '0')}.${supplyEndDate.month.toString().padLeft(2, '0')}.${supplyEndDate.year}'
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2723,7 +2555,9 @@ class _MedicineCardState extends State<MedicineCard> {
                   horizontal: 14,
                   vertical: 10,
                 ),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                decoration: hasDailyIntake
+                    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
+                    : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -2750,78 +2584,81 @@ class _MedicineCardState extends State<MedicineCard> {
                 ),
               ),
             ),
-            // Wynik: za X dni
-            Text(
-              'za $daysRemaining dni',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: daysRemaining <= 7
-                    ? AppColors.expired
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        // Wiersz 2: [Dodaj do kalendarza] | [data]
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            GestureDetector(
-              onTap: () => _addToCalendar(supplyEndDate),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      LucideIcons.calendarPlus,
-                      size: 18,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Dodaj do kalendarza',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Wynik: data
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.calendarOff,
-                  size: 16,
+            // Wynik: koniec za X dni (tylko gdy dailyIntake ustawione)
+            if (hasDailyIntake && daysRemaining != null)
+              Text(
+                'koniec za $daysRemaining dni',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
                   color: daysRemaining <= 7
                       ? AppColors.expired
-                      : AppColors.primary,
+                      : theme.colorScheme.onSurfaceVariant,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  formattedDate,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: daysRemaining <= 7
-                        ? AppColors.expired
-                        : theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
+              ),
           ],
         ),
+        // Wiersz 2: [Dodaj do kalendarza | data] - pełny CTA (tylko gdy wynik dostępny)
+        if (hasDailyIntake &&
+            supplyEndDate != null &&
+            formattedDate != null) ...[
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _addToCalendar(supplyEndDate),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Lewa strona: ikona + tekst
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.calendarPlus,
+                        size: 18,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Dodaj do kalendarza',
+                        style: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Prawa strona: ikona + data
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.calendarOff,
+                        size: 16,
+                        color: daysRemaining != null && daysRemaining <= 7
+                            ? AppColors.expired
+                            : AppColors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        formattedDate,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: daysRemaining != null && daysRemaining <= 7
+                              ? AppColors.expired
+                              : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -4087,9 +3924,8 @@ class _MedicineCardState extends State<MedicineCard> {
       );
     }
 
-    // not_found - nie znaleziono, pokaż pole ręcznego wpisu
+    // not_found - nie znaleziono, pokaż komunikat (edycja w Szczegółach opakowania)
     if (status == 'not_found') {
-      final controller = TextEditingController(text: shelfLife ?? '');
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
@@ -4100,82 +3936,22 @@ class _MedicineCardState extends State<MedicineCard> {
             width: 1,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Text(
-              'Okres przydatności po otwarciu - Nie znaleziono... wprowadź ręcznie poniżej',
-              style: TextStyle(
-                fontSize: 11,
-                color: theme.colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
-                height: 1.3,
-              ),
+            Icon(
+              LucideIcons.info,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant,
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: 'np. 6 miesięcy, 30 dni',
-                hintStyle: TextStyle(
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'Okres przydatności po otwarciu - nie znaleziono. Ustaw w Szczegółach opakowania.',
+                style: TextStyle(
                   fontSize: 11,
-                  color: theme.colorScheme.onSurfaceVariant.withAlpha(100),
-                  fontStyle: FontStyle.italic,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  borderSide: BorderSide(
-                    color: theme.colorScheme.onSurfaceVariant.withAlpha(50),
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                isDense: true,
-              ),
-              style: TextStyle(
-                fontSize: 11,
-                color: theme.colorScheme.onSurface,
-              ),
-              onSubmitted: (value) {
-                if (value.isNotEmpty) {
-                  _saveManualShelfLife(value);
-                }
-              },
-            ),
-            const SizedBox(height: 6),
-            GestureDetector(
-              onTap: () {
-                final value = controller.text.trim();
-                if (value.isNotEmpty) {
-                  _saveManualShelfLife(value);
-                }
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(50),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      LucideIcons.save,
-                      size: 12,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Zapisz',
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: theme.colorScheme.onSurface,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                  height: 1.3,
                 ),
               ),
             ),
