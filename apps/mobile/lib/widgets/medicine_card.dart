@@ -2699,138 +2699,134 @@ class _MedicineCardState extends State<MedicineCard> {
     final supplyEndDate = _medicine.calculateSupplyEndDate();
     final canCalculate = totalPieces > 0;
 
+    // Jeśli nie można obliczyć lub brak wyniku, nie pokazuj nic
+    if (!canCalculate || supplyEndDate == null) {
+      return const SizedBox.shrink();
+    }
+
+    final now = DateTime.now();
+    final daysRemaining = supplyEndDate.difference(now).inDays;
+    final formattedDate =
+        '${supplyEndDate.day.toString().padLeft(2, '0')}.${supplyEndDate.month.toString().padLeft(2, '0')}.${supplyEndDate.year}';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // CTA: Kalkulator zapasu leku → + wynik
-        if (canCalculate)
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => _showSetDailyIntakeDialog(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 12,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        LucideIcons.calculator,
-                        size: 18,
+        // Wiersz 1: [Kalkulator zapasu leku →] | [za X dni]
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            GestureDetector(
+              onTap: () => _showSetDailyIntakeDialog(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.calculator,
+                      size: 18,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Kalkulator zapasu leku',
+                      style: TextStyle(
                         color: theme.colorScheme.onSurface,
+                        fontSize: 13,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Kalkulator zapasu leku',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        LucideIcons.arrowRight,
-                        size: 14,
-                        color: theme.colorScheme.onSurface,
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      LucideIcons.arrowRight,
+                      size: 14,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 8),
-              // Wynik kalkulatora (tylko gdy ustawiono dailyIntake)
-              if (supplyEndDate != null)
-                _buildSupplyResultCompact(
-                  context,
-                  theme,
-                  isDark,
-                  supplyEndDate,
-                ),
-            ],
-          ),
-      ],
-    );
-  }
-
-  Widget _buildSupplyResultCompact(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-    DateTime endDate,
-  ) {
-    final now = DateTime.now();
-    final daysRemaining = endDate.difference(now).inDays;
-    final formattedDate =
-        '${endDate.day.toString().padLeft(2, '0')}.${endDate.month.toString().padLeft(2, '0')}.${endDate.year}';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Wynik jako zwykły tekst (bez efektu flat)
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              LucideIcons.calendarOff,
-              size: 18,
-              color: daysRemaining <= 7 ? AppColors.expired : AppColors.primary,
             ),
-            const SizedBox(width: 6),
+            // Wynik: za X dni
             Text(
-              formattedDate,
+              'za $daysRemaining dni',
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
                 color: daysRemaining <= 7
                     ? AppColors.expired
-                    : theme.colorScheme.onSurface,
-              ),
-            ),
-            Text(
-              ' (za $daysRemaining dni)',
-              style: TextStyle(
-                fontSize: 13,
-                color: theme.colorScheme.onSurfaceVariant,
+                    : theme.colorScheme.onSurfaceVariant,
               ),
             ),
           ],
         ),
         const SizedBox(height: 8),
-        // CTA: Dodaj do kalendarza (na nowej linii)
-        GestureDetector(
-          onTap: () => _addToCalendar(endDate),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-            child: Row(
+        // Wiersz 2: [Dodaj do kalendarza] | [data]
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            GestureDetector(
+              onTap: () => _addToCalendar(supplyEndDate),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.calendarPlus,
+                      size: 18,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Dodaj do kalendarza',
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Wynik: data
+            Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  LucideIcons.calendarPlus,
-                  size: 18,
-                  color: AppColors.primary,
+                  LucideIcons.calendarOff,
+                  size: 16,
+                  color: daysRemaining <= 7
+                      ? AppColors.expired
+                      : AppColors.primary,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 Text(
-                  'Dodaj do kalendarza',
+                  formattedDate,
                   style: TextStyle(
-                    color: theme.colorScheme.onSurface,
                     fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: daysRemaining <= 7
+                        ? AppColors.expired
+                        : theme.colorScheme.onSurface,
                   ),
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ],
     );
   }
+
+  // _buildSupplyResultCompact usunięty - zintegrowany w _buildSupplyCalculatorSection
 
   Widget _buildMoreSection(BuildContext context, ThemeData theme, bool isDark) {
     return Column(
