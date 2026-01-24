@@ -74,7 +74,7 @@ enum FilterTab {
       case FilterTab.labels:
         return LucideIcons.tag;
       case FilterTab.expiry:
-        return LucideIcons.calendarClock;
+        return LucideIcons.bookmarkCheck;
       case FilterTab.symptoms:
         return LucideIcons.activity;
       case FilterTab.classification:
@@ -91,7 +91,7 @@ enum FilterTab {
       case FilterTab.labels:
         return 'Etykiety';
       case FilterTab.expiry:
-        return 'Termin';
+        return 'Status';
       case FilterTab.symptoms:
         return 'Objawy';
       case FilterTab.classification:
@@ -332,7 +332,12 @@ class _FiltersSheetState extends State<FiltersSheet> {
           // Horizontal category tabs
           _buildCategoryTabs(context, isDark),
 
+          const SizedBox(height: 8),
+
           const Divider(height: 1),
+
+          // Sticky: Wybrane filtry (tylko gdy są aktywne)
+          if (_state.hasActiveFilters) _buildSelectedFiltersSection(isDark),
 
           // Content area
           Expanded(child: _buildTabContent(context, scrollController, isDark)),
@@ -377,6 +382,137 @@ class _FiltersSheetState extends State<FiltersSheet> {
               icon: Icon(LucideIcons.funnelX, color: AppColors.expired),
               tooltip: 'Wyczyść filtry',
             ),
+        ],
+      ),
+    );
+  }
+
+  /// Sticky sekcja "Wybrane" - pokazuje aktywne filtry z możliwością usunięcia
+  Widget _buildSelectedFiltersSection(bool isDark) {
+    final List<Widget> chips = [];
+
+    // Expiry filter
+    if (_state.expiryFilter != ExpiryFilter.all) {
+      chips.add(
+        _buildRemovableChip(
+          label: _state.expiryFilter.label,
+          icon: _getExpiryIcon(_state.expiryFilter),
+          color: _getExpiryColor(_state.expiryFilter),
+          onRemove: () => setState(() {
+            _state = _state.copyWith(expiryFilter: ExpiryFilter.all);
+          }),
+          isDark: isDark,
+        ),
+      );
+    }
+
+    // Selected tags
+    for (final tag in _state.selectedTags) {
+      chips.add(
+        _buildRemovableChip(
+          label: tag,
+          icon: LucideIcons.hash,
+          color: AppColors.primary,
+          onRemove: () => _toggleTag(tag),
+          isDark: isDark,
+        ),
+      );
+    }
+
+    // Selected labels
+    for (final labelId in _state.selectedLabels) {
+      final label = widget.availableLabels
+          .where((l) => l.id == labelId)
+          .firstOrNull;
+      if (label != null) {
+        final colorInfo = labelColors[label.color]!;
+        chips.add(
+          _buildRemovableChip(
+            label: label.name,
+            icon: LucideIcons.tag,
+            color: Color(colorInfo.hexValue),
+            onRemove: () => _toggleLabel(labelId),
+            isDark: isDark,
+          ),
+        );
+      }
+    }
+
+    if (chips.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                LucideIcons.circleCheck,
+                size: 14,
+                color: isDark
+                    ? AppColors.darkTextMuted
+                    : AppColors.lightTextMuted,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'WYBRANE',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.2,
+                  color: isDark
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(spacing: 8, runSpacing: 8, children: chips),
+        ],
+      ),
+    );
+  }
+
+  /// Chip z ikoną X do usunięcia
+  Widget _buildRemovableChip({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onRemove,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: NeuDecoration.pressed(isDark: isDark, radius: 12).copyWith(
+        border: Border.all(color: color.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          const SizedBox(width: 6),
+          GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: AppColors.expired.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(LucideIcons.x, size: 12, color: AppColors.expired),
+            ),
+          ),
         ],
       ),
     );
@@ -761,9 +897,8 @@ class _FiltersSheetState extends State<FiltersSheet> {
     // Popular tags (that are available)
     final popular = popularTags.where((t) => filtered.contains(t)).toList();
 
-    // Remaining tags
-    final remaining = filtered.where((t) => !popular.contains(t)).toList()
-      ..sort();
+    // Wszystkie tagi A-Z - popularne się duplikują (nie są usuwane)
+    final allSorted = filtered.toList()..sort();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -778,13 +913,13 @@ class _FiltersSheetState extends State<FiltersSheet> {
           ),
           const SizedBox(height: 20),
         ],
-        if (remaining.isNotEmpty) ...[
+        if (allSorted.isNotEmpty) ...[
           _buildSectionHeader('Wszystkie (A-Z)', isDark),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: remaining
+            children: allSorted
                 .map((tag) => _buildTagChip(tag, isDark))
                 .toList(),
           ),

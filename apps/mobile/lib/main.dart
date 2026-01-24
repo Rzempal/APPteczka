@@ -1,7 +1,14 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:uuid/uuid.dart';
+
 import 'config/app_config.dart';
+import 'models/medicine.dart';
 import 'services/app_logger.dart';
 import 'services/bug_report_service.dart';
 import 'services/fab_service.dart';
@@ -16,6 +23,9 @@ import 'widgets/apteczka_toolbar.dart';
 import 'widgets/bug_report_sheet.dart';
 import 'widgets/floating_nav_bar.dart';
 import 'widgets/karton_icons.dart';
+
+/// Akcja importu kopii zapasowej
+enum _ImportAction { add, overwrite, cancel }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -116,6 +126,192 @@ class _MainNavigationState extends State<MainNavigation> {
   // Klucz do przechwytywania screenshotów dla bug reportu
   final GlobalKey _screenshotKey = GlobalKey();
 
+  // Deep linking dla plików .karton
+  late AppLinks _appLinks;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  /// Inicjalizuje obsługę deep links (pliki .karton)
+  void _initDeepLinks() {
+    _appLinks = AppLinks();
+
+    // Sprawdź, czy aplikacja została uruchomiona przez plik (cold start)
+    _appLinks.getInitialLink().then((uri) {
+      if (uri != null) {
+        _handleBackupFileImport(uri);
+      }
+    });
+
+    // Nasłuchuj, jeśli aplikacja już działała w tle (warm start)
+    _appLinks.uriLinkStream.listen((uri) {
+      _handleBackupFileImport(uri);
+    });
+  }
+
+  /// Obsługuje import pliku .karton z deep link
+  Future<void> _handleBackupFileImport(Uri uri) async {
+    // Sprawdź czy to plik .karton
+    final path = uri.path.toLowerCase();
+    if (!path.endsWith('.karton')) {
+      return;
+    }
+
+    // Odczytaj zawartość pliku
+    String content;
+    try {
+      if (uri.scheme == 'content') {
+        // Android content:// URI - użyj ContentResolver przez path_provider
+        // Dla uproszczenia spróbuj bezpośrednio odczytać
+        final file = File(uri.toFilePath());
+        content = await file.readAsString();
+      } else {
+        // file:// URI
+        final file = File(uri.toFilePath());
+        content = await file.readAsString();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Błąd odczytu pliku: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Parsuj JSON
+    List<Medicine> medicines;
+    try {
+      medicines = _parseBackupJson(content);
+      if (medicines.isEmpty) {
+        throw const FormatException('Brak leków w pliku');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Nieprawidłowy format pliku: $e'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return;
+    }
+
+    // Pokaż dialog z wyborem akcji
+    if (!mounted) return;
+    final action = await _showImportActionDialog(medicines.length);
+
+    if (action == null || action == _ImportAction.cancel) {
+      return;
+    }
+
+    if (action == _ImportAction.overwrite) {
+      // Nadpisz - usuń wszystkie istniejące leki
+      await widget.storageService.clearMedicines();
+    }
+
+    // Dodaj nowe leki (zarówno dla 'add' jak i 'overwrite')
+    await widget.storageService.importMedicines(medicines);
+
+    if (mounted) {
+      // Przełącz na zakładkę Apteczka i odśwież
+      setState(() {
+        _currentIndex = 1;
+        _showApteczkaToolbar = false;
+      });
+      _homeKey.currentState?.refresh();
+
+      final actionText = action == _ImportAction.overwrite
+          ? 'Nadpisano apteczkę'
+          : 'Dodano ${medicines.length} leków';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(actionText),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  /// Parsuje JSON backupu i zwraca listę leków
+  List<Medicine> _parseBackupJson(String text) {
+    final data = jsonDecode(text);
+
+    if (data is! Map<String, dynamic>) {
+      throw const FormatException('Nieprawidłowy format JSON');
+    }
+
+    // Import leków
+    final lekiRaw = data['leki'];
+    if (lekiRaw is! List) {
+      throw const FormatException('Brak leków w pliku');
+    }
+
+    final medicines = <Medicine>[];
+    for (final item in lekiRaw) {
+      if (item is Map<String, dynamic>) {
+        final medicineData = Map<String, dynamic>.from(item);
+        if (medicineData['id'] == null) {
+          medicineData['id'] = const Uuid().v4();
+        }
+        if (medicineData['dataDodania'] == null) {
+          medicineData['dataDodania'] = DateTime.now().toIso8601String();
+        }
+        medicines.add(Medicine.fromJson(medicineData));
+      }
+    }
+
+    return medicines;
+  }
+
+  /// Dialog wyboru akcji importu (3 opcje)
+  Future<_ImportAction?> _showImportActionDialog(int count) {
+    return showDialog<_ImportAction>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(LucideIcons.fileInput, size: 32),
+        title: const Text('Import kopii zapasowej'),
+        content: Text(
+          'Plik zawiera $count ${_getPolishPlural(count)}.\nCo chcesz zrobić?',
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, _ImportAction.cancel),
+            child: const Text('Anuluj'),
+          ),
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context, _ImportAction.overwrite),
+            child: const Text('Nadpisz'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, _ImportAction.add),
+            child: const Text('Dodaj'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getPolishPlural(int count) {
+    if (count == 1) return 'lek';
+    if (count >= 2 && count <= 4) return 'leki';
+    if (count >= 12 && count <= 14) return 'leków';
+    final lastDigit = count % 10;
+    if (lastDigit >= 2 && lastDigit <= 4) return 'leki';
+    return 'leków';
+  }
+
   /// Otwiera bug report z przechwyconym screenshotem
   Future<void> _openBugReportWithScreenshot() async {
     final screenshot = await BugReportService.instance.captureScreenshot(
@@ -190,7 +386,8 @@ class _MainNavigationState extends State<MainNavigation> {
                   widget.storageService.showBugReportFabNotifier,
                 ]),
                 builder: (context, _) {
-                  final showBugReportButton = widget.storageService.showBugReportFab ||
+                  final showBugReportButton =
+                      widget.storageService.showBugReportFab ||
                       AppConfig.isInternal ||
                       FabService.instance.scannerError != null;
 
@@ -198,7 +395,8 @@ class _MainNavigationState extends State<MainNavigation> {
                     ignoring: !(_currentIndex == 1 && _showApteczkaToolbar),
                     child: ApteczkaToolbar(
                       isVisible: _currentIndex == 1 && _showApteczkaToolbar,
-                      hasActiveFilters: _homeKey.currentState?.hasActiveFilters ?? false,
+                      hasActiveFilters:
+                          _homeKey.currentState?.hasActiveFilters ?? false,
                       showBugReportButton: showBugReportButton,
                       onSearch: () => _homeKey.currentState?.activateSearch(),
                       onSort: () => _homeKey.currentState?.showSort(),
@@ -296,7 +494,8 @@ class _HomeScreenWrapperState extends State<_HomeScreenWrapper> {
   }
 
   /// Czy są aktywne filtry
-  bool get hasActiveFilters => _homeScreenKey.currentState?.hasActiveFilters ?? false;
+  bool get hasActiveFilters =>
+      _homeScreenKey.currentState?.hasActiveFilters ?? false;
 
   /// Aktywuje pole wyszukiwania
   void activateSearch() => _homeScreenKey.currentState?.activateSearch();

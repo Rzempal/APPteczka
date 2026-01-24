@@ -2,7 +2,7 @@ name: karton_z_lekami
 description: "Nie kop w pudle. Sprawdź w telefonie."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -41,7 +41,7 @@ dependencies:
   uuid: ^4.5.1
   intl: ^0.20.2
   url_launcher: ^6.2.1
-  add_2_calendar: ^3.0.1  # Add to calendar integration
+  add_2_calendar: ^3.0.1 # Add to calendar integration
 
   # Logging
   logging: ^1.3.0
@@ -56,10 +56,10 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   cupertino_icons: ^1.0.8
-  
+
   # Lucide Icons - SVG icons like in web version (newer package with full icon set)
   lucide_icons_flutter: ^3.1.9
-  
+
   # Theme persistence
   shared_preferences: ^2.2.2
 
@@ -71,6 +71,9 @@ dependencies:
   # PDF Viewer dla ulotek lekowych
   pdfx: ^2.6.0
   path_provider: ^2.1.1
+
+  # Deep linking (obsługa plików .karton)
+  app_links: ^6.3.3
 
   # PDF Export (tabela leków)
   pdf: ^3.10.8
@@ -101,7 +104,6 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

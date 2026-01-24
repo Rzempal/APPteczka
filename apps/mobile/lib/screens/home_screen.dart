@@ -553,6 +553,43 @@ class HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+          // CTA: Wyczyść filtry - widoczny gdy aktywne filtry
+          if (_filterState.hasActiveFilters) ...[
+            GestureDetector(
+              onTap: _clearFilters,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.expired.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.expired.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      LucideIcons.funnelX,
+                      size: 14,
+                      color: AppColors.expired,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${_filterState.activeFilterCount}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.expired,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           // Licznik leków - klikalne, z animacją otwierania/zamykania pudełka
           GestureDetector(
             onTap: _expandSearchBar,

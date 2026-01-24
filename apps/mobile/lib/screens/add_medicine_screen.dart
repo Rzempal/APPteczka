@@ -25,6 +25,9 @@ import '../theme/app_theme.dart';
 import '../utils/tag_normalization.dart';
 import '../utils/pharmaceutical_form_helper.dart';
 
+/// Akcja importu kopii zapasowej
+enum _ImportAction { add, overwrite, cancel }
+
 /// Lek oczekujący na zapis (Batch Mode)
 class PendingDrug {
   final RplDrugDetails drugDetails;
@@ -1251,7 +1254,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['json'],
+        allowedExtensions: ['json', 'karton'],
       );
 
       if (result == null || result.files.isEmpty) {
@@ -1268,19 +1271,31 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
         throw const FormatException('Brak leków w pliku');
       }
 
-      final confirmed = await _confirmImport(medicines.length);
+      final action = await _showImportActionDialog(medicines.length);
 
-      if (confirmed == true) {
-        await widget.storageService.importMedicines(medicines);
+      if (action == null || action == _ImportAction.cancel) {
+        return;
+      }
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Zaimportowano ${medicines.length} leków z pliku'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+      if (action == _ImportAction.overwrite) {
+        // Nadpisz - usuń wszystkie istniejące leki
+        await widget.storageService.clearMedicines();
+      }
+
+      // Dodaj nowe leki
+      await widget.storageService.importMedicines(medicines);
+
+      if (mounted) {
+        final actionText = action == _ImportAction.overwrite
+            ? 'Nadpisano apteczkę'
+            : 'Dodano ${medicines.length} leków z pliku';
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(actionText),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } on FormatException catch (e) {
       _showError(e.message);
@@ -1337,20 +1352,38 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     return medicines;
   }
 
-  Future<bool?> _confirmImport(int count) {
-    return showDialog<bool>(
+  /// Dialog wyboru akcji importu (3 opcje)
+  Future<_ImportAction?> _showImportActionDialog(int count) {
+    String getPolishPlural(int count) {
+      if (count == 1) return 'lek';
+      if (count >= 2 && count <= 4) return 'leki';
+      if (count >= 12 && count <= 14) return 'leków';
+      final lastDigit = count % 10;
+      if (lastDigit >= 2 && lastDigit <= 4) return 'leki';
+      return 'leków';
+    }
+
+    return showDialog<_ImportAction>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Potwierdź import'),
-        content: Text('Czy chcesz zaimportować $count leków?'),
+        icon: const Icon(LucideIcons.fileInput, size: 32),
+        title: const Text('Import kopii zapasowej'),
+        content: Text(
+          'Plik zawiera $count ${getPolishPlural(count)}.\nCo chcesz zrobić?',
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(context, _ImportAction.cancel),
             child: const Text('Anuluj'),
           ),
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context, _ImportAction.overwrite),
+            child: const Text('Nadpisz'),
+          ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Importuj'),
+            onPressed: () => Navigator.pop(context, _ImportAction.add),
+            child: const Text('Dodaj'),
           ),
         ],
       ),

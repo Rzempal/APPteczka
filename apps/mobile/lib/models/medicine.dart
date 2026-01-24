@@ -259,11 +259,9 @@ class Medicine {
         .reduce((a, b) => a.compareTo(b) < 0 ? a : b);
   }
 
-  /// Zwraca posortowane opakowania (najkrótsza data pierwsza)
+  /// Zwraca opakowania w kolejności dodawania (bez sortowania)
   List<MedicinePackage> get sortedPackages {
-    final sorted = List<MedicinePackage>.from(packages);
-    sorted.sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
-    return sorted;
+    return List<MedicinePackage>.from(packages);
   }
 
   /// Oblicza łączną liczbę sztuk ze wszystkich opakowań (tylko unit=pieces)

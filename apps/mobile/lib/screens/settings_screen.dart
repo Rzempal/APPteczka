@@ -527,9 +527,9 @@ class _SettingsScreenState extends State<SettingsScreen>
 
         return Container(
           decoration: NeuDecoration.flat(
-        isDark: isDark,
-        borderRadius: AppTheme.organicRadiusSmall,
-      ),
+            isDark: isDark,
+            borderRadius: AppTheme.organicRadiusSmall,
+          ),
           child: Column(
             children: [
               // Header - klikalne
@@ -827,9 +827,9 @@ class _SettingsScreenState extends State<SettingsScreen>
       builder: (context, setLocalState) {
         return Container(
           decoration: NeuDecoration.flat(
-        isDark: isDark,
-        borderRadius: AppTheme.organicRadiusSmall,
-      ),
+            isDark: isDark,
+            borderRadius: AppTheme.organicRadiusSmall,
+          ),
           child: Column(
             children: [
               // Header - klikalne
@@ -994,9 +994,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         final isEnabled = widget.storageService.editModeAlwaysActive;
         return Container(
           decoration: NeuDecoration.flat(
-        isDark: isDark,
-        borderRadius: AppTheme.organicRadiusSmall,
-      ),
+            isDark: isDark,
+            borderRadius: AppTheme.organicRadiusSmall,
+          ),
           child: Column(
             children: [
               // Header - klikalne
@@ -1110,9 +1110,9 @@ class _SettingsScreenState extends State<SettingsScreen>
         final isEnabled = widget.storageService.performanceMode;
         return Container(
           decoration: NeuDecoration.flat(
-        isDark: isDark,
-        borderRadius: AppTheme.organicRadiusSmall,
-      ),
+            isDark: isDark,
+            borderRadius: AppTheme.organicRadiusSmall,
+          ),
           child: Column(
             children: [
               // Header - klikalne
@@ -1265,9 +1265,9 @@ class _SettingsScreenState extends State<SettingsScreen>
       builder: (context, setLocalState) {
         return Container(
           decoration: NeuDecoration.flat(
-        isDark: isDark,
-        borderRadius: AppTheme.organicRadiusSmall,
-      ),
+            isDark: isDark,
+            borderRadius: AppTheme.organicRadiusSmall,
+          ),
           child: Column(
             children: [
               // Header - klikalne
@@ -1483,9 +1483,9 @@ class _SettingsScreenState extends State<SettingsScreen>
       builder: (context, setLocalState) {
         return Container(
           decoration: NeuDecoration.flat(
-        isDark: isDark,
-        borderRadius: AppTheme.organicRadiusSmall,
-      ),
+            isDark: isDark,
+            borderRadius: AppTheme.organicRadiusSmall,
+          ),
           child: Column(
             children: [
               // Header - klikalne
@@ -1840,14 +1840,14 @@ class _SettingsScreenState extends State<SettingsScreen>
     try {
       final json = widget.storageService.exportToJson();
       final fileName =
-          'apteczka_backup_${DateTime.now().toIso8601String().split('T')[0]}.json';
+          'apteczka_${DateTime.now().toIso8601String().split('T')[0]}.karton';
       final bytes = utf8.encode(json);
 
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Zapisz kopię zapasową',
         fileName: fileName,
         type: FileType.custom,
-        allowedExtensions: ['json'],
+        allowedExtensions: ['karton'],
         bytes: Uint8List.fromList(bytes),
       );
 
