@@ -154,24 +154,58 @@ class _MainNavigationState extends State<MainNavigation> {
 
   /// Obsługuje import pliku .karton z deep link
   Future<void> _handleBackupFileImport(Uri uri) async {
-    // Sprawdź czy to plik .karton
+    // Małe opóźnienie - pozwala UI się w pełni załadować
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    // Sprawdź czy to plik .karton (sprawdzamy różne źródła nazwy)
+    final uriString = uri.toString().toLowerCase();
     final path = uri.path.toLowerCase();
-    if (!path.endsWith('.karton')) {
+
+    // Dla content:// URI nazwa pliku może być w query params lub w ostatnim segmencie
+    final lastSegment = uri.pathSegments.isNotEmpty
+        ? uri.pathSegments.last.toLowerCase()
+        : '';
+
+    final isKartonFile =
+        path.endsWith('.karton') ||
+        lastSegment.endsWith('.karton') ||
+        uriString.contains('.karton');
+
+    if (!isKartonFile) {
+      // Nie jest to plik .karton - ignoruj
       return;
     }
 
     // Odczytaj zawartość pliku
     String content;
     try {
-      if (uri.scheme == 'content') {
-        // Android content:// URI - użyj ContentResolver przez path_provider
-        // Dla uproszczenia spróbuj bezpośrednio odczytać
+      // Dla content:// URI nie można użyć File() bezpośrednio
+      // Musimy skopiować do cache lub użyć platform channel
+      // Na razie próbujemy odczytać bezpośrednio (działa dla file://)
+      if (uri.scheme == 'file') {
         final file = File(uri.toFilePath());
         content = await file.readAsString();
       } else {
-        // file:// URI
-        final file = File(uri.toFilePath());
-        content = await file.readAsString();
+        // content:// URI - spróbuj odczytać przez ścieżkę
+        // To może nie działać na wszystkich urządzeniach
+        try {
+          final file = File(uri.path);
+          content = await file.readAsString();
+        } catch (_) {
+          // Fallback - pokaż instrukcję użytkownikowi
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Użyj opcji "Dodaj leki" → "Import kopii zapasowej" aby zaimportować plik',
+                ),
+                behavior: SnackBarBehavior.floating,
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
+          return;
+        }
       }
     } catch (e) {
       if (mounted) {

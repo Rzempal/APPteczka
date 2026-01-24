@@ -1252,17 +1252,25 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     setState(() => _isImporting = true);
 
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json', 'karton'],
-      );
+      final result = await FilePicker.platform.pickFiles(type: FileType.any);
 
       if (result == null || result.files.isEmpty) {
         setState(() => _isImporting = false);
         return;
       }
 
-      final file = File(result.files.single.path!);
+      final filePath = result.files.single.path!;
+      final fileName = filePath.toLowerCase();
+
+      // Walidacja rozszerzenia
+      if (!fileName.endsWith('.json') && !fileName.endsWith('.karton')) {
+        _showError(
+          'Nieobsługiwany format pliku. Wybierz plik .json lub .karton',
+        );
+        return;
+      }
+
+      final file = File(filePath);
       final content = await file.readAsString();
 
       final medicines = await _parseJsonAndImportLabels(content);
