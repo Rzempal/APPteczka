@@ -107,14 +107,6 @@ class _SettingsScreenState extends State<SettingsScreen>
               _buildThemeSection(context, theme, isDark),
               const SizedBox(height: 24),
 
-              // Gesty przeciągania
-              _buildGesturesSection(context, theme, isDark),
-              const SizedBox(height: 24),
-
-              // Tryb edycji
-              _buildEditModeSection(context, theme, isDark),
-              const SizedBox(height: 24),
-
               // Tryb wydajności
               _buildPerformanceModeSection(context, theme, isDark),
               const SizedBox(height: 24),
@@ -536,7 +528,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             children: [
               // Header - klikalne
               InkWell(
-                onTap: () => setLocalState(() => _isThemeOpen = !_isThemeOpen),
+                onTap: () => _toggleSection('theme'),
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -567,7 +559,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         ),
                       ),
                       Icon(
-                        _isThemeOpen
+                        _openSectionId == 'theme'
                             ? LucideIcons.chevronUp
                             : LucideIcons.chevronDown,
                         size: 20,
@@ -578,7 +570,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
               ),
               // Zawartość zwijana
-              if (_isThemeOpen)
+              if (_openSectionId == 'theme')
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: _buildThemeToggle(context, theme, isDark),
@@ -763,10 +755,10 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   int _medicineCount = 0;
   bool _isExporting = false;
-  bool _isBackupOpen = false;
-  bool _isAdvancedOpen = false;
-  bool _isThemeOpen = false;
-  bool _isSupportOpen = false;
+
+  /// ID aktualnie otwartej sekcji akordeonu (tylko jedna może być otwarta)
+  /// Możliwe wartości: 'theme', 'backup', 'support', 'advanced', 'performance', null (wszystko zwinięte)
+  String? _openSectionId;
   ThemeMode? _optimisticMode; // Optimistic UI - lokalna kopia wybranego motywu
   ThemeMode? _switchingMode; // Który przycisk pokazuje spinner
 
@@ -820,290 +812,16 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  bool _isGesturesOpen = false;
-  bool _isEditModeOpen = false;
-  bool _isPerformanceModeOpen = false;
-
-  Widget _buildGesturesSection(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    return StatefulBuilder(
-      builder: (context, setLocalState) {
-        return Container(
-          decoration: NeuDecoration.flat(
-            isDark: isDark,
-            borderRadius: AppTheme.organicRadiusSmall,
-          ),
-          child: Column(
-            children: [
-              // Header - klikalne
-              InkWell(
-                onTap: () =>
-                    setLocalState(() => _isGesturesOpen = !_isGesturesOpen),
-                borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(LucideIcons.hand, color: theme.colorScheme.primary),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Gesty przeciągania',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              widget.storageService.swipeGesturesEnabled
-                                  ? 'Włączone'
-                                  : 'Wyłączone',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        _isGesturesOpen
-                            ? LucideIcons.chevronUp
-                            : LucideIcons.chevronDown,
-                        size: 20,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Zawartość zwijana
-              if (_isGesturesOpen) ...[
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Toggle switch
-                      NeuInsetContainer(
-                        borderRadius: 12,
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Włącz gesty',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Przeciągnij w lewo, aby edytować etykiety. Przeciągnij w prawo, aby edytować notatkę.',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Switch(
-                              value: widget.storageService.swipeGesturesEnabled,
-                              onChanged: (value) {
-                                widget.storageService.swipeGesturesEnabled =
-                                    value;
-                                setLocalState(() {});
-                                setState(() {});
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Opis gestów
-                      NeuInsetContainer(
-                        borderRadius: 12,
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  LucideIcons.arrowLeft,
-                                  size: 16,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  LucideIcons.tags,
-                                  size: 16,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Przeciągnij w lewo, aby edytować etykiety.',
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(
-                                  LucideIcons.arrowRight,
-                                  size: 16,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  LucideIcons.clipboardPenLine,
-                                  size: 16,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Przeciągnij w prawo, aby edytować notatkę.',
-                                  style: theme.textTheme.bodySmall,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildEditModeSection(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    return StatefulBuilder(
-      builder: (context, setLocalState) {
-        final isEnabled = widget.storageService.editModeAlwaysActive;
-        return Container(
-          decoration: NeuDecoration.flat(
-            isDark: isDark,
-            borderRadius: AppTheme.organicRadiusSmall,
-          ),
-          child: Column(
-            children: [
-              // Header - klikalne
-              InkWell(
-                onTap: () =>
-                    setLocalState(() => _isEditModeOpen = !_isEditModeOpen),
-                borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isEnabled ? LucideIcons.pencil : LucideIcons.pencilOff,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Tryb edycji zawsze aktywny',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              isEnabled ? 'Włączony' : 'Wyłączony',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        _isEditModeOpen
-                            ? LucideIcons.chevronUp
-                            : LucideIcons.chevronDown,
-                        size: 20,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Zawartość zwijana
-              if (_isEditModeOpen) ...[
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Toggle switch
-                      NeuInsetContainer(
-                        borderRadius: 12,
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Włącz tryb edycji',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Przyciski edycji i usuwania będą zawsze widoczne na karcie leku.',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Switch(
-                              value: isEnabled,
-                              onChanged: (value) {
-                                widget.storageService.editModeAlwaysActive =
-                                    value;
-                                setLocalState(() {});
-                                setState(() {});
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
+  /// Przełącza akordeon - otwiera wskazaną sekcję lub zamyka jeśli już otwarta
+  void _toggleSection(String sectionId) {
+    setState(() {
+      if (_openSectionId == sectionId) {
+        _openSectionId = null; // Zamknij jeśli już otwarta
+      } else {
+        _openSectionId =
+            sectionId; // Otwórz nową, automatycznie zamyka poprzednią
+      }
+    });
   }
 
   Widget _buildPerformanceModeSection(
@@ -1123,9 +841,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             children: [
               // Header - klikalne
               InkWell(
-                onTap: () => setLocalState(
-                  () => _isPerformanceModeOpen = !_isPerformanceModeOpen,
-                ),
+                onTap: () => _toggleSection('performance'),
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -1156,7 +872,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         ),
                       ),
                       Icon(
-                        _isPerformanceModeOpen
+                        _openSectionId == 'performance'
                             ? LucideIcons.chevronUp
                             : LucideIcons.chevronDown,
                         size: 20,
@@ -1167,7 +883,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
               ),
               // Zawartość zwijana
-              if (_isPerformanceModeOpen) ...[
+              if (_openSectionId == 'performance') ...[
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -1278,8 +994,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             children: [
               // Header - klikalne
               InkWell(
-                onTap: () =>
-                    setLocalState(() => _isBackupOpen = !_isBackupOpen),
+                onTap: () => _toggleSection('backup'),
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -1310,7 +1025,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         ),
                       ),
                       Icon(
-                        _isBackupOpen
+                        _openSectionId == 'backup'
                             ? LucideIcons.chevronUp
                             : LucideIcons.chevronDown,
                         size: 20,
@@ -1321,7 +1036,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
               ),
               // Zawartość zwijana
-              if (_isBackupOpen) ...[
+              if (_openSectionId == 'backup') ...[
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
@@ -1496,8 +1211,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             children: [
               // Header - klikalne
               InkWell(
-                onTap: () =>
-                    setLocalState(() => _isSupportOpen = !_isSupportOpen),
+                onTap: () => _toggleSection('support'),
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -1536,7 +1250,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                       ),
                       const SizedBox(width: 8),
                       Icon(
-                        _isSupportOpen
+                        _openSectionId == 'support'
                             ? LucideIcons.chevronUp
                             : LucideIcons.chevronDown,
                         size: 20,
@@ -1547,7 +1261,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
               ),
               // Zawartość rozwijana
-              if (_isSupportOpen)
+              if (_openSectionId == 'support')
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                   child: Column(
@@ -1704,8 +1418,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             children: [
               // Header - klikalne
               InkWell(
-                onTap: () =>
-                    setLocalState(() => _isAdvancedOpen = !_isAdvancedOpen),
+                onTap: () => _toggleSection('advanced'),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -1726,7 +1439,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                         ),
                       ),
                       Icon(
-                        _isAdvancedOpen
+                        _openSectionId == 'advanced'
                             ? LucideIcons.chevronUp
                             : LucideIcons.chevronDown,
                         size: 20,
@@ -1737,7 +1450,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
               ),
               // Zawartość zwijana
-              if (_isAdvancedOpen) ...[
+              if (_openSectionId == 'advanced') ...[
                 Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(

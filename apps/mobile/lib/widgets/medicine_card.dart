@@ -35,6 +35,12 @@ class MedicineCard extends StatefulWidget {
   final bool isDuplicate;
   final bool isPerformanceMode;
 
+  // Selection mode
+  final bool isSelectionMode;
+  final bool isSelected;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onSelect;
+
   const MedicineCard({
     super.key,
     required this.medicine,
@@ -49,6 +55,10 @@ class MedicineCard extends StatefulWidget {
     this.isCompact = false,
     this.isDuplicate = false,
     this.isPerformanceMode = false,
+    this.isSelectionMode = false,
+    this.isSelected = false,
+    this.onLongPress,
+    this.onSelect,
   });
 
   @override
@@ -152,7 +162,10 @@ class _MedicineCardState extends State<MedicineCard> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: GestureDetector(
-        onTap: widget.isCompact ? widget.onExpand : null,
+        onTap: widget.isSelectionMode
+            ? widget.onSelect
+            : (widget.isCompact ? widget.onExpand : null),
+        onLongPress: widget.isSelectionMode ? null : widget.onLongPress,
         child: Container(
           decoration: widget.isCompact
               ? BoxDecoration(
@@ -217,15 +230,25 @@ class _MedicineCardState extends State<MedicineCard> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Lewa kolumna: Tylko ikona (notatka przeniesiona do H3+H4)
+                      // Lewa kolumna: Ikona leku lub checkbox w selection mode
                       SizedBox(
                         width: 44,
                         height: 44,
-                        child: Icon(
-                          _getMedicineTypeIcon(),
-                          size: 24,
-                          color: theme.colorScheme.primary,
-                        ),
+                        child: widget.isSelectionMode
+                            ? Icon(
+                                widget.isSelected
+                                    ? LucideIcons.circleCheck
+                                    : LucideIcons.circle,
+                                size: 24,
+                                color: widget.isSelected
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurfaceVariant,
+                              )
+                            : Icon(
+                                _getMedicineTypeIcon(),
+                                size: 24,
+                                color: theme.colorScheme.primary,
+                              ),
                       ),
                       const SizedBox(width: 12),
                       // Prawa kolumna: H1 (nazwa) + H2 (statyczny opis)
@@ -332,6 +355,94 @@ class _MedicineCardState extends State<MedicineCard> {
             ),
           ),
           const SizedBox(width: 8),
+          // More Menu (tylko w expanded mode)
+          if (!widget.isCompact)
+            PopupMenuButton<String>(
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+              tooltip: 'Więcej opcji',
+              onSelected: (value) => _handleMenuAction(value),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Icon(
+                  LucideIcons.ellipsisVertical,
+                  size: 16,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.clipboardPenLine,
+                        size: 18,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text('Edytuj kartę leku'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'package_details',
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.clipboardList,
+                        size: 18,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text('Ustaw szczegóły opakowania'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'add_package',
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.packagePlus,
+                        size: 18,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text('Dodaj opakowanie'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'calculator',
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.calculator,
+                        size: 18,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text('Kalkulator zapasu leków'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'calendar',
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.calendarPlus,
+                        size: 18,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text('Dodaj do kalendarza'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           // Chevron
           if (widget.isCompact)
             Padding(
@@ -354,6 +465,44 @@ class _MedicineCardState extends State<MedicineCard> {
         ],
       ),
     );
+  }
+
+  /// Obsługuje akcje z menu kontekstowego
+  void _handleMenuAction(String action) {
+    switch (action) {
+      case 'edit':
+        _showMedicineEditSheet(context);
+        break;
+      case 'package_details':
+        final packages = _medicine.sortedPackages;
+        if (packages.isNotEmpty) {
+          _showPackageDetailsBottomSheet(context, packages.first);
+        } else {
+          _showAddPackageDialog(context);
+        }
+        break;
+      case 'add_package':
+        _showAddPackageDialog(context);
+        break;
+      case 'calculator':
+        _showSetDailyIntakeDialog(context);
+        break;
+      case 'calendar':
+        final supplyEndDate = _medicine.calculateSupplyEndDate();
+        if (supplyEndDate != null) {
+          _addToCalendar(supplyEndDate);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Ustaw najpierw dzienne zużycie w Kalkulatorze zapasu',
+              ),
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+        break;
+    }
   }
 
   /// Zwraca ikonę typu leku na podstawie postaci farmaceutycznej lub jednostki
@@ -844,35 +993,6 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
-  /// Buduje pojedynczy CTA "Edytuj kartę leku" - otwiera MedicineEditSheet
-  Widget _buildEditActionsRow(ThemeData theme, bool isDark) {
-    return GestureDetector(
-      onTap: () => _showMedicineEditSheet(context),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              LucideIcons.clipboardPenLine,
-              size: 18,
-              color: theme.colorScheme.onSurface,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Edytuj kartę leku',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 13,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// Otwiera BottomSheet z edycją karty leku
   void _showMedicineEditSheet(BuildContext context) {
     if (widget.storageService == null) return;
@@ -1158,58 +1278,7 @@ class _MedicineCardState extends State<MedicineCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // CTA: Ustaw Szczegóły opakowania (pojemność) - wyzwala bottomSheet
-        GestureDetector(
-          onTap: () => packages.isNotEmpty
-              ? _showPackageDetailsBottomSheet(context, packages.first)
-              : _showAddPackageDialog(context),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.clipboardList,
-                  size: 16,
-                  color: theme.colorScheme.onSurface,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Ustaw szczegóły opakowania',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        if (packages.isEmpty)
-          _buildEmptyPackageState(context, theme, isDark)
-        else
-          ...packages.asMap().entries.map((entry) {
-            final index = entry.key;
-            final package = entry.value;
-            final pkgStatus = _getPackageStatus(package);
-            final pkgColor = _getStatusColor(pkgStatus);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: _buildPackageRow(
-                context,
-                theme,
-                isDark,
-                package,
-                pkgColor,
-                packageNumber: index + 1,
-              ),
-            );
-          }),
-
-        const SizedBox(height: 8),
+        // CTA: Dodaj opakowanie (przeniesione na początek)
         GestureDetector(
           onTap: () => _showAddPackageDialog(context),
           child: Container(
@@ -1235,6 +1304,29 @@ class _MedicineCardState extends State<MedicineCard> {
             ),
           ),
         ),
+        const SizedBox(height: 8),
+
+        // Lista opakowań
+        if (packages.isEmpty)
+          _buildEmptyPackageState(context, theme, isDark)
+        else
+          ...packages.asMap().entries.map((entry) {
+            final index = entry.key;
+            final package = entry.value;
+            final pkgStatus = _getPackageStatus(package);
+            final pkgColor = _getStatusColor(pkgStatus);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: _buildPackageRow(
+                context,
+                theme,
+                isDark,
+                package,
+                pkgColor,
+                packageNumber: index + 1,
+              ),
+            );
+          }),
       ],
     );
   }
@@ -2257,123 +2349,48 @@ class _MedicineCardState extends State<MedicineCard> {
     final hasDailyIntake =
         _medicine.dailyIntake != null && _medicine.dailyIntake! > 0;
 
-    // Sekcja widoczna gdy są sztuki (niezależnie od dailyIntake)
-    if (!canCalculate) {
+    // Sekcja widoczna tylko gdy są dane do wyświetlenia
+    if (!canCalculate || !hasDailyIntake || supplyEndDate == null) {
       return const SizedBox.shrink();
     }
 
-    // Obliczenia tylko gdy dailyIntake jest ustawione
-    final int? daysRemaining = supplyEndDate?.difference(DateTime.now()).inDays;
-    final String? formattedDate = supplyEndDate != null
-        ? '${supplyEndDate.day.toString().padLeft(2, '0')}.${supplyEndDate.month.toString().padLeft(2, '0')}.${supplyEndDate.year}'
-        : null;
+    // Obliczenia
+    final int daysRemaining = supplyEndDate.difference(DateTime.now()).inDays;
+    final String formattedDate =
+        '${supplyEndDate.day.toString().padLeft(2, '0')}.${supplyEndDate.month.toString().padLeft(2, '0')}.${supplyEndDate.year}';
+    final bool isWarning = daysRemaining <= 7;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    // Wynik: "Zapas leku skończy się za X dni  📅 data"
+    return Row(
       children: [
-        // Wiersz 1: [Kalkulator zapasu leku →] | [za X dni]
-        Row(
-          children: [
-            GestureDetector(
-              onTap: () => _showSetDailyIntakeDialog(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: hasDailyIntake
-                    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
-                    : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      LucideIcons.calculator,
-                      size: 18,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Kalkulator zapasu leku',
-                      style: TextStyle(
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      LucideIcons.arrowRight,
-                      size: 14,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Wynik: koniec za X dni (tylko gdy dailyIntake ustawione)
-            if (hasDailyIntake && daysRemaining != null)
-              Text(
-                'koniec za $daysRemaining dni',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: daysRemaining <= 7
-                      ? AppColors.expired
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-          ],
-        ),
-        // Wiersz 2: [Dodaj do kalendarza | data] - pełny CTA (tylko gdy wynik dostępny)
-        if (hasDailyIntake &&
-            supplyEndDate != null &&
-            formattedDate != null) ...[
-          const SizedBox(height: 8),
-          GestureDetector(
-            onTap: () => _addToCalendar(supplyEndDate),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    LucideIcons.calendarPlus,
-                    size: 18,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Dodaj do kalendarza',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Icon(
-                    LucideIcons.calendarOff,
-                    size: 16,
-                    color: daysRemaining != null && daysRemaining <= 7
-                        ? AppColors.expired
-                        : AppColors.primary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    formattedDate,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: daysRemaining != null && daysRemaining <= 7
-                          ? AppColors.expired
-                          : theme.colorScheme.onSurface,
-                    ),
-                  ),
-                ],
-              ),
+        // Tekst wyniku
+        Expanded(
+          child: Text(
+            'Zapas leku skończy się za $daysRemaining dni',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: isWarning
+                  ? AppColors.expired
+                  : theme.colorScheme.onSurface,
             ),
           ),
-        ],
+        ),
+        // Data z ikoną
+        Icon(
+          LucideIcons.calendarClock,
+          size: 16,
+          color: isWarning ? AppColors.expired : AppColors.primary,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          formattedDate,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+            color: isWarning ? AppColors.expired : theme.colorScheme.onSurface,
+          ),
+        ),
       ],
     );
   }
@@ -2473,11 +2490,7 @@ class _MedicineCardState extends State<MedicineCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // === EDYTUJ KARTĘ LEKU (CTA) ===
-                        _buildEditActionsRow(theme, isDark),
-                        const SizedBox(height: 16),
-
-                        // === TERMIN WAŻNOŚCI (przeniesiony) ===
+                        // === TERMIN WAŻNOŚCI ===
                         _buildPackagesSection(
                           context,
                           theme,
@@ -2485,7 +2498,7 @@ class _MedicineCardState extends State<MedicineCard> {
                           _getStatusColor(_medicine.expiryStatus),
                         ),
 
-                        // === KALKULATOR ZAPASU (przeniesiony) ===
+                        // === WYNIK ZAPASU (bez CTA - przeniesione do menu) ===
                         const SizedBox(height: 16),
                         _buildSupplyCalculatorSection(context, theme, isDark),
 

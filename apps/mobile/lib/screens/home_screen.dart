@@ -10,8 +10,10 @@ import '../services/theme_provider.dart';
 import '../services/update_service.dart';
 import '../services/pdf_export_service.dart';
 import '../widgets/medicine_card.dart';
+import '../widgets/selection_bar.dart';
+import '../widgets/batch_label_sheet.dart';
+import '../controllers/selection_controller.dart';
 import '../widgets/filters_sheet.dart';
-import '../widgets/label_selector.dart';
 import '../widgets/karton_icons.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../theme/app_theme.dart';
@@ -87,6 +89,9 @@ class HomeScreenState extends State<HomeScreen> {
   // Search bar state - niezależny od scroll position
   bool _isSearchBarExpanded = true;
 
+  // Selection mode state
+  final SelectionController _selectionController = SelectionController();
+
   @override
   void initState() {
     super.initState();
@@ -97,6 +102,9 @@ class HomeScreenState extends State<HomeScreen> {
 
     // Scroll listener dla collapsing header
     _scrollController.addListener(_onScroll);
+
+    // Selection mode listener
+    _selectionController.addListener(_onSelectionChanged);
 
     // Pokaż tooltip pomocy po dodaniu pierwszego leku
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -113,8 +121,14 @@ class HomeScreenState extends State<HomeScreen> {
     _scrollController.dispose();
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _selectionController.removeListener(_onSelectionChanged);
+    _selectionController.dispose();
     widget.updateService.removeListener(_onUpdateChanged);
     super.dispose();
+  }
+
+  void _onSelectionChanged() {
+    if (mounted) setState(() {});
   }
 
   void _onScroll() {
@@ -326,26 +340,43 @@ class HomeScreenState extends State<HomeScreen> {
                                 itemCount: _filteredMedicines.length,
                                 itemBuilder: (context, index) {
                                   final medicine = _filteredMedicines[index];
-                                  final swipeEnabled = widget
-                                      .storageService
-                                      .swipeGesturesEnabled;
                                   final isExpanded =
                                       _expandedMedicineId == medicine.id;
 
                                   // RepaintBoundary prevents unnecessary redraws during scrolling
                                   // Critical for GPU-intensive neumorphic shadows (Soft UI 2026)
-                                  final card = RepaintBoundary(
+                                  return RepaintBoundary(
                                     child: MedicineCard(
                                       medicine: medicine,
                                       labels: _allLabels,
                                       storageService: widget.storageService,
-                                      isCompact: !isExpanded,
+                                      // W selection mode karty zawsze compact
+                                      isCompact:
+                                          _selectionController.isActive ||
+                                          !isExpanded,
                                       isPerformanceMode:
                                           widget.storageService.performanceMode,
                                       isDuplicate: hasDuplicates(
                                         medicine,
                                         _medicines,
                                       ),
+                                      // Selection mode props
+                                      isSelectionMode:
+                                          _selectionController.isActive,
+                                      isSelected: _selectionController
+                                          .isSelected(medicine.id),
+                                      onLongPress: () {
+                                        HapticFeedback.mediumImpact();
+                                        _selectionController.enterMode(
+                                          medicine.id,
+                                        );
+                                      },
+                                      onSelect: () {
+                                        HapticFeedback.lightImpact();
+                                        _selectionController.toggle(
+                                          medicine.id,
+                                        );
+                                      },
                                       onExpand: () {
                                         setState(() {
                                           // Toggle - kliknięcie na rozwiniętą kartę zwija ją
@@ -366,57 +397,6 @@ class HomeScreenState extends State<HomeScreen> {
                                       onMedicineUpdated: _loadMedicines,
                                     ),
                                   );
-
-                                  if (!swipeEnabled) {
-                                    return card;
-                                  }
-
-                                  return Dismissible(
-                                    key: Key(medicine.id),
-                                    direction: DismissDirection.horizontal,
-                                    // Swipe w prawo → notatki
-                                    background: Container(
-                                      alignment: Alignment.centerLeft,
-                                      padding: const EdgeInsets.only(left: 32),
-                                      color: Colors.transparent,
-                                      child: Icon(
-                                        LucideIcons.clipboardPenLine,
-                                        size: 32,
-                                        color: isDark
-                                            ? AppColors.primary
-                                            : Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                      ),
-                                    ),
-                                    // Swipe w lewo → etykiety
-                                    secondaryBackground: Container(
-                                      alignment: Alignment.centerRight,
-                                      padding: const EdgeInsets.only(right: 32),
-                                      color: Colors.transparent,
-                                      child: Icon(
-                                        LucideIcons.tags,
-                                        size: 32,
-                                        color: isDark
-                                            ? AppColors.primary
-                                            : Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                      ),
-                                    ),
-                                    confirmDismiss: (direction) async {
-                                      if (direction ==
-                                          DismissDirection.endToStart) {
-                                        // Swipe w lewo → edycja etykiet
-                                        _showLabelsSheet(medicine);
-                                      } else {
-                                        // Swipe w prawo → edycja notatki
-                                        _showEditNoteDialog(medicine);
-                                      }
-                                      return false; // Nie usuwaj karty
-                                    },
-                                    child: card,
-                                  );
                                 },
                               ),
                             ],
@@ -425,8 +405,9 @@ class HomeScreenState extends State<HomeScreen> {
                 ],
               ),
 
-              // Floating search bar - positioned below header
+              // Floating bars - SearchBar lub SelectionBar (tylko jeden widoczny)
               _buildFloatingSearchBar(theme, isDark),
+              _buildFloatingSelectionBar(theme, isDark),
             ],
           ),
         ),
@@ -678,10 +659,13 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildFloatingSearchBar(ThemeData theme, bool isDark) {
+    // SearchBar ukryty gdy selection mode aktywny
+    final isVisible = !_selectionController.isActive;
+
     // Width animation: expanded → collapsed (0px)
     final screenWidth = MediaQuery.of(context).size.width;
     final maxWidth = screenWidth - 32; // 16px padding z każdej strony
-    final currentWidth = _isSearchBarExpanded ? maxWidth : 0.0;
+    final currentWidth = (isVisible && _isSearchBarExpanded) ? maxWidth : 0.0;
 
     // Opacity dla ikony - widoczna tylko gdy expanded
     final iconOpacity = _isSearchBarExpanded ? 1.0 : 0.0;
@@ -766,6 +750,95 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  /// Buduje SelectionBar - animacja od lewej (przeciwna do SearchBar)
+  Widget _buildFloatingSelectionBar(ThemeData theme, bool isDark) {
+    final isVisible = _selectionController.isActive;
+
+    return Positioned(
+      top: 72,
+      left: 16, // Od lewej strony (przeciwnie do SearchBar)
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: isVisible ? 1.0 : 0.0,
+        child: AnimatedSlide(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          offset: isVisible ? Offset.zero : const Offset(-0.5, 0),
+          child: isVisible
+              ? SelectionBar(
+                  controller: _selectionController,
+                  onSelectAll: _handleSelectAll,
+                  onDelete: _handleBatchDelete,
+                  onLabels: _handleBatchLabels,
+                )
+              : const SizedBox.shrink(),
+        ),
+      ),
+    );
+  }
+
+  /// Zaznacza wszystkie widoczne (przefiltrowane) leki
+  void _handleSelectAll() {
+    final allIds = _filteredMedicines.map((m) => m.id).toList();
+    _selectionController.selectAll(allIds);
+  }
+
+  /// Usuwa zaznaczone leki z potwierdzeniem
+  void _handleBatchDelete() {
+    final count = _selectionController.selectedCount;
+    if (count == 0) return;
+
+    showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Usuń zaznaczone leki?'),
+        content: Text(
+          'Czy na pewno chcesz usunąć $count ${_getPolishPlural(count)}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Anuluj'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Usuń'),
+          ),
+        ],
+      ),
+    ).then((confirmed) async {
+      if (confirmed == true) {
+        for (final id in _selectionController.selectedIds) {
+          await widget.storageService.deleteMedicine(id);
+        }
+        _selectionController.exitMode();
+        _loadMedicines();
+      }
+    });
+  }
+
+  /// Otwiera bottom sheet do batch edycji etykiet
+  void _handleBatchLabels() {
+    final selectedMedicines = _medicines
+        .where((m) => _selectionController.selectedIds.contains(m.id))
+        .toList();
+
+    if (selectedMedicines.isEmpty) return;
+
+    BatchLabelSheet.show(
+      context: context,
+      storageService: widget.storageService,
+      selectedMedicines: selectedMedicines,
+      onComplete: () {
+        _selectionController.exitMode();
+        _loadMedicines();
+      },
     );
   }
 
@@ -1417,149 +1490,6 @@ class HomeScreenState extends State<HomeScreen> {
     final lastDigit = count % 10;
     if (lastDigit >= 2 && lastDigit <= 4) return 'leki';
     return 'leków';
-  }
-
-  /// Pokazuje bottom sheet z selectorem etykiet (swipe w lewo)
-  void _showLabelsSheet(Medicine medicine) {
-    // Lokalna kopia etykiet do reaktywnego UI
-    List<String> currentLabels = List<String>.from(medicine.labels);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final theme = Theme.of(context);
-            final isDark = theme.brightness == Brightness.dark;
-            return Container(
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(BottomSheetConstants.radius),
-                ),
-              ),
-              child: DraggableScrollableSheet(
-                initialChildSize: 0.5,
-                minChildSize: 0.3,
-                maxChildSize: 0.8,
-                expand: false,
-                builder: (context, scrollController) => Column(
-                  children: [
-                    const BottomSheetDragHandle(),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: BottomSheetConstants.contentPadding,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header
-                            Row(
-                              children: [
-                                Icon(
-                                  LucideIcons.tags,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Etykiety: ${medicine.nazwa ?? "Lek"}',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // LabelSelector z reaktywnym stanem
-                            LabelSelector(
-                              storageService: widget.storageService,
-                              selectedLabelIds: currentLabels,
-                              isOpen: true,
-                              onToggle: () {},
-                              onLabelTap: (_) {},
-                              onChanged: (newLabelIds) {
-                                // Aktualizuj TYLKO lokalny stan
-                                setSheetState(() {
-                                  currentLabels = newLabelIds;
-                                });
-                              },
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    ).then((_) async {
-      // Zapisz zmiany DOPIERO po zamknięciu arkusza (batch save)
-      // Porównaj z oryginałem, aby unikać zbędnych zapisów
-      final originalLabels = Set<String>.from(medicine.labels);
-      final newLabels = Set<String>.from(currentLabels);
-
-      if (originalLabels.length != newLabels.length ||
-          !originalLabels.containsAll(newLabels)) {
-        await widget.storageService.updateMedicineLabels(
-          medicine.id,
-          currentLabels,
-        );
-        _loadMedicines(); // Odśwież listę po zapisie
-      }
-    });
-  }
-
-  /// Pokazuje dialog edycji notatki (swipe w prawo)
-  void _showEditNoteDialog(Medicine medicine) async {
-    final controller = TextEditingController(text: medicine.notatka ?? '');
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Notatka: ${medicine.nazwa ?? "Lek"}'),
-        content: TextField(
-          controller: controller,
-          maxLines: 5,
-          decoration: const InputDecoration(
-            hintText: 'Wpisz notatkę...',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Zapisz'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null) {
-      await widget.storageService.updateMedicineNote(medicine.id, result);
-      _loadMedicines();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Notatka zapisana'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
   }
 
   void _addDemoMedicines() async {
