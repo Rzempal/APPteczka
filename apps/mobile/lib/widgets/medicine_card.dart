@@ -1410,7 +1410,6 @@ class _MedicineCardState extends State<MedicineCard> {
     Color statusColor,
   ) {
     final packages = _medicine.sortedPackages;
-    final packageCount = _medicine.packageCount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1439,22 +1438,6 @@ class _MedicineCardState extends State<MedicineCard> {
                     fontSize: 13,
                   ),
                 ),
-                const Spacer(),
-                if (packageCount > 0) ...[
-                  Text(
-                    '$packageCount',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    LucideIcons.pillBottle,
-                    size: 14,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ],
               ],
             ),
           ),
@@ -2546,7 +2529,6 @@ class _MedicineCardState extends State<MedicineCard> {
       children: [
         // Wiersz 1: [Kalkulator zapasu leku →] | [za X dni]
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             GestureDetector(
               onTap: () => _showSetDailyIntakeDialog(context),
@@ -2609,50 +2591,39 @@ class _MedicineCardState extends State<MedicineCard> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Lewa strona: ikona + tekst
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        LucideIcons.calendarPlus,
-                        size: 18,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Dodaj do kalendarza',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
+                  Icon(
+                    LucideIcons.calendarPlus,
+                    size: 18,
+                    color: AppColors.primary,
                   ),
-                  // Prawa strona: ikona + data
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        LucideIcons.calendarOff,
-                        size: 16,
-                        color: daysRemaining != null && daysRemaining <= 7
-                            ? AppColors.expired
-                            : AppColors.primary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        formattedDate,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          color: daysRemaining != null && daysRemaining <= 7
-                              ? AppColors.expired
-                              : theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 6),
+                  Text(
+                    'Dodaj do kalendarza',
+                    style: TextStyle(
+                      color: theme.colorScheme.onSurface,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Icon(
+                    LucideIcons.calendarOff,
+                    size: 16,
+                    color: daysRemaining != null && daysRemaining <= 7
+                        ? AppColors.expired
+                        : AppColors.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    formattedDate,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: daysRemaining != null && daysRemaining <= 7
+                          ? AppColors.expired
+                          : theme.colorScheme.onSurface,
+                    ),
                   ),
                 ],
               ),
