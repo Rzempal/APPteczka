@@ -849,23 +849,22 @@ class _MedicineCardState extends State<MedicineCard> {
     return GestureDetector(
       onTap: () => _showMedicineEditSheet(context),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               LucideIcons.clipboardPenLine,
-              size: 14,
-              color: theme.colorScheme.primary,
+              size: 18,
+              color: theme.colorScheme.onSurface,
             ),
             const SizedBox(width: 6),
             Text(
               'Edytuj kartę leku',
               style: TextStyle(
                 color: theme.colorScheme.onSurface,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+                fontSize: 13,
               ),
             ),
           ],
