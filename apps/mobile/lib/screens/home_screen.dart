@@ -356,6 +356,9 @@ class HomeScreenState extends State<HomeScreen> {
                                           !isExpanded,
                                       isPerformanceMode:
                                           widget.storageService.performanceMode,
+                                      showShortenedLabels: widget
+                                          .storageService
+                                          .showShortenedLabels,
                                       isDuplicate: hasDuplicates(
                                         medicine,
                                         _medicines,
@@ -1848,6 +1851,32 @@ class _LabelManagementSheetState extends State<_LabelManagementSheet> {
                       'Przeciągnij etykietę aby zmienić kolejność. Zaznacz aby usunąć wiele.',
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // Toggle: skrócone etykiety
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.05)
+                            : Colors.black.withValues(alpha: 0.03),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: SwitchListTile(
+                        title: const Text('Skrócone etykiety na liście'),
+                        subtitle: Text(
+                          'Tylko pierwsza litera w trybie compact',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        value: widget.storageService.showShortenedLabels,
+                        onChanged: (v) {
+                          setState(() {
+                            widget.storageService.showShortenedLabels = v;
+                          });
+                          widget.onChanged();
+                        },
                       ),
                     ),
                     const SizedBox(height: 16),

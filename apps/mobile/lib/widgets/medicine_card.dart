@@ -34,6 +34,7 @@ class MedicineCard extends StatefulWidget {
   final bool isCompact;
   final bool isDuplicate;
   final bool isPerformanceMode;
+  final bool showShortenedLabels;
 
   // Selection mode
   final bool isSelectionMode;
@@ -55,6 +56,7 @@ class MedicineCard extends StatefulWidget {
     this.isCompact = false,
     this.isDuplicate = false,
     this.isPerformanceMode = false,
+    this.showShortenedLabels = false,
     this.isSelectionMode = false,
     this.isSelected = false,
     this.onLongPress,
@@ -3636,16 +3638,26 @@ class _MedicineCardState extends State<MedicineCard> {
     final bgColor = Color(colorInfo.hexValue);
     final textColor = _getContrastColor(bgColor);
 
+    // Skrócona etykieta: tylko pierwsza litera w trybie compact
+    final displayName = widget.isCompact && widget.showShortenedLabels
+        ? label.name.isNotEmpty
+              ? label.name[0].toUpperCase()
+              : ''
+        : label.name.toUpperCase();
+
     return GestureDetector(
       onTap: () => widget.onLabelTap?.call(label.id),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        padding: EdgeInsets.symmetric(
+          horizontal: widget.isCompact && widget.showShortenedLabels ? 6 : 8,
+          vertical: 3,
+        ),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: BorderRadius.circular(4),
         ),
         child: Text(
-          label.name.toUpperCase(),
+          displayName,
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w700,

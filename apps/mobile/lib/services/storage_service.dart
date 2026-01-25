@@ -63,6 +63,14 @@ class StorageService {
     performanceModeNotifier.value = value;
   }
 
+  /// Skrócone etykiety - tylko pierwsza litera na karcie compact (domyślnie false)
+  bool get showShortenedLabels =>
+      _settingsBox.get('showShortenedLabels', defaultValue: false) as bool;
+
+  set showShortenedLabels(bool value) {
+    _settingsBox.put('showShortenedLabels', value);
+  }
+
   // ==================== MEDICINES ====================
 
   /// Pobiera wszystkie leki
