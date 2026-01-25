@@ -1747,9 +1747,17 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
   }
 
   Future<void> _processEan(String ean) async {
+    // Guard: ignoruj jeśli skaner spauzowany
+    if (ScannerPauseService.instance.isPaused) return;
+
     // Sprawdz czy juz zeskanowano
     if (_scannedEans.contains(ean)) {
+      // Pauza skanera na chwilę żeby uniknąć spamu komunikatów
+      ScannerPauseService.instance.pauseScanner();
       _showError('Juz zeskanowano ten kod');
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) ScannerPauseService.instance.resumeScanner();
+      });
       return;
     }
 
@@ -1829,6 +1837,9 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
 
   /// Pokazuje dialog wyboru gdy kod nie zostal rozpoznany
   void _showCodeNotRecognizedDialog(String ean) {
+    // Pauzuj skaner podczas dialogu
+    ScannerPauseService.instance.pauseScanner();
+
     showDialog(
       context: context,
       builder: (context) {
@@ -1893,7 +1904,10 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
           actionsAlignment: MainAxisAlignment.center,
         );
       },
-    );
+    ).whenComplete(() {
+      // Wznów skaner po zamknięciu dialogu
+      ScannerPauseService.instance.resumeScanner();
+    });
   }
 
   /// Robi snapshot z widoku kamery (bez opuszczania UI)

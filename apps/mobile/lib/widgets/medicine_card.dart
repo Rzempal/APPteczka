@@ -172,10 +172,13 @@ class _MedicineCardState extends State<MedicineCard> {
                   color: isDark ? AppColors.darkCardBg : AppColors.lightCardBg,
                   borderRadius: AppTheme.organicRadiusSmall,
                   border: Border.all(
-                    color: statusColor.withValues(
-                      alpha: AppTheme.cardBorderOpacity,
-                    ),
-                    width: AppTheme.cardBorderWidth,
+                    // Kolorowy border dla zaznaczonych kart
+                    color: widget.isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : statusColor.withValues(
+                            alpha: AppTheme.cardBorderOpacity,
+                          ),
+                    width: widget.isSelected ? 2.0 : AppTheme.cardBorderWidth,
                   ),
                   boxShadow: widget.isPerformanceMode
                       ? [
@@ -1574,22 +1577,83 @@ class _MedicineCardState extends State<MedicineCard> {
     bool isSyncingFromPiece = false;
     bool isSyncingFromPercent = false;
 
+    // Mapa przechowująca zedytowane pakiety (klucz = packageId)
+    final Map<String, Map<String, dynamic>> editedPackages = {};
+
+    // Funkcja budująca dane aktualnego pakietu z kontrolerów
+    Map<String, dynamic> buildCurrentPackageData() {
+      final lastDay = DateTime(selectedYear, selectedMonth + 1, 0);
+      return {
+        'packageId': currentPackage.id,
+        'expiryDate': lastDay.toIso8601String().split('T')[0],
+        'isOpen': isOpen,
+        'unit': selectedUnit,
+        'capacity': selectedUnit != PackageUnit.none
+            ? int.tryParse(capacityController.text)
+            : null,
+        'pieceCount': selectedUnit != PackageUnit.none
+            ? int.tryParse(pieceController.text)
+            : null,
+        'percentRemaining': isOpen && selectedUnit != PackageUnit.none
+            ? int.tryParse(percentController.text)
+            : null,
+        'openedDate': isOpen && openedDate != null
+            ? openedDate!.toIso8601String().split('T')[0]
+            : null,
+      };
+    }
+
+    // Funkcja zapisująca aktualny pakiet do mapy editedPackages
+    void saveCurrentPackage() {
+      editedPackages[currentPackage.id] = buildCurrentPackageData();
+    }
+
     // Funkcja aktualizująca stan przy zmianie opakowania
+    // WAŻNE: Najpierw zapisuje aktualny pakiet, potem przełącza na nowy
     void updateForPackage(MedicinePackage pkg, int idx) {
+      // Zapisz aktualny pakiet przed przełączeniem
+      saveCurrentPackage();
+
+      // Przełącz na nowy pakiet
       currentIndex = idx;
       currentPackage = pkg;
-      currentDate =
-          pkg.dateTime ?? DateTime.now().add(const Duration(days: 365));
-      selectedMonth = currentDate.month;
-      selectedYear = currentDate.year;
-      isOpen = pkg.isOpen;
-      selectedUnit = pkg.unit;
-      capacityController.text = pkg.capacity?.toString() ?? '';
-      pieceController.text = pkg.pieceCount?.toString() ?? '';
-      percentController.text = pkg.percentRemaining?.toString() ?? '';
-      openedDate = pkg.openedDate != null
-          ? DateTime.tryParse(pkg.openedDate!)
-          : null;
+
+      // Jeśli pakiet był wcześniej edytowany, przywróć jego dane
+      final previousEdit = editedPackages[pkg.id];
+      if (previousEdit != null) {
+        // Przywróć zedytowane dane
+        final expiryStr = previousEdit['expiryDate'] as String?;
+        if (expiryStr != null) {
+          final expiryDate = DateTime.tryParse(expiryStr);
+          if (expiryDate != null) {
+            selectedMonth = expiryDate.month;
+            selectedYear = expiryDate.year;
+            currentDate = expiryDate;
+          }
+        }
+        isOpen = previousEdit['isOpen'] as bool? ?? pkg.isOpen;
+        selectedUnit = previousEdit['unit'] as PackageUnit? ?? pkg.unit;
+        capacityController.text = previousEdit['capacity']?.toString() ?? '';
+        pieceController.text = previousEdit['pieceCount']?.toString() ?? '';
+        percentController.text =
+            previousEdit['percentRemaining']?.toString() ?? '';
+        final openedStr = previousEdit['openedDate'] as String?;
+        openedDate = openedStr != null ? DateTime.tryParse(openedStr) : null;
+      } else {
+        // Pakiet nie był edytowany - użyj oryginalnych danych
+        currentDate =
+            pkg.dateTime ?? DateTime.now().add(const Duration(days: 365));
+        selectedMonth = currentDate.month;
+        selectedYear = currentDate.year;
+        isOpen = pkg.isOpen;
+        selectedUnit = pkg.unit;
+        capacityController.text = pkg.capacity?.toString() ?? '';
+        pieceController.text = pkg.pieceCount?.toString() ?? '';
+        percentController.text = pkg.percentRemaining?.toString() ?? '';
+        openedDate = pkg.openedDate != null
+            ? DateTime.tryParse(pkg.openedDate!)
+            : null;
+      }
     }
 
     // Pauzuj skaner podczas edycji
@@ -2239,33 +2303,12 @@ class _MedicineCardState extends State<MedicineCard> {
                           Expanded(
                             child: FilledButton(
                               onPressed: () {
-                                final lastDay = DateTime(
-                                  selectedYear,
-                                  selectedMonth + 1,
-                                  0,
-                                );
+                                // Zapisz aktualny pakiet przed zamknięciem
+                                saveCurrentPackage();
+
+                                // Zwróć wszystkie zedytowane pakiety + dane shelf life
                                 Navigator.pop(context, {
-                                  'packageId': currentPackage.id,
-                                  'expiryDate': lastDay.toIso8601String().split(
-                                    'T',
-                                  )[0],
-                                  'isOpen': isOpen,
-                                  'unit': selectedUnit,
-                                  'capacity': selectedUnit != PackageUnit.none
-                                      ? int.tryParse(capacityController.text)
-                                      : null,
-                                  'pieceCount': selectedUnit != PackageUnit.none
-                                      ? int.tryParse(pieceController.text)
-                                      : null,
-                                  'percentRemaining':
-                                      isOpen && selectedUnit != PackageUnit.none
-                                      ? int.tryParse(percentController.text)
-                                      : null,
-                                  'openedDate': isOpen && openedDate != null
-                                      ? openedDate!.toIso8601String().split(
-                                          'T',
-                                        )[0]
-                                      : null,
+                                  'editedPackages': editedPackages,
                                   // Shelf life: AI zachowuje oryginalny tekst, ręczny konwertuje na znormalizowany
                                   'shelfLifeAfterOpening': useAiShelfLife
                                       ? _medicine.shelfLifeAfterOpening
@@ -2298,43 +2341,57 @@ class _MedicineCardState extends State<MedicineCard> {
     ScannerPauseService.instance.resumeScanner();
 
     if (result != null && widget.storageService != null) {
-      final packageId = result['packageId'] as String;
-      final updatedPackage = MedicinePackage(
-        id: packageId,
-        expiryDate: result['expiryDate'] as String,
-        isOpen: result['isOpen'] as bool,
-        unit: result['unit'] as PackageUnit,
-        capacity: result['capacity'] as int?,
-        pieceCount: result['pieceCount'] as int?,
-        percentRemaining: result['percentRemaining'] as int?,
-        openedDate: result['openedDate'] as String?,
-      );
+      final editedPackagesMap =
+          result['editedPackages'] as Map<String, Map<String, dynamic>>?;
 
-      // Synchronizuj jednostkę we wszystkich opakowaniach
-      final newUnit = result['unit'] as PackageUnit;
-      final updatedPackages = _medicine.packages.map((p) {
-        if (p.id == packageId) {
-          return updatedPackage;
+      if (editedPackagesMap != null && editedPackagesMap.isNotEmpty) {
+        // Pobierz jednostkę z pierwszego zedytowanego pakietu (synchronizacja)
+        PackageUnit? newUnit;
+        for (final data in editedPackagesMap.values) {
+          if (data['unit'] != null) {
+            newUnit = data['unit'] as PackageUnit;
+            break;
+          }
         }
-        // Aktualizuj jednostkę w pozostałych opakowaniach (zachowaj inne dane)
-        return p.copyWith(unit: newUnit);
-      }).toList();
 
-      // Aktualizuj też shelfLifeAfterOpening w Medicine
-      final newShelfLife = result['shelfLifeAfterOpening'] as String?;
-      final shelfLifeSource = result['shelfLifeSource'] as String?;
-      final updatedMedicine = _medicine.copyWith(
-        packages: updatedPackages,
-        shelfLifeAfterOpening: newShelfLife,
-        shelfLifeStatus: shelfLifeSource == 'manual'
-            ? 'manual'
-            : _medicine.shelfLifeStatus, // Zachowaj oryginalny status AI
-      );
-      await widget.storageService!.saveMedicine(updatedMedicine);
-      setState(() {
-        _medicine = updatedMedicine;
-      });
-      widget.onMedicineUpdated?.call();
+        // Zaktualizuj wszystkie pakiety
+        final updatedPackages = _medicine.packages.map((p) {
+          final editData = editedPackagesMap[p.id];
+          if (editData != null) {
+            // Pakiet był edytowany - użyj nowych danych
+            return MedicinePackage(
+              id: p.id,
+              expiryDate: editData['expiryDate'] as String? ?? p.expiryDate,
+              isOpen: editData['isOpen'] as bool? ?? p.isOpen,
+              unit: editData['unit'] as PackageUnit? ?? p.unit,
+              capacity: editData['capacity'] as int?,
+              pieceCount: editData['pieceCount'] as int?,
+              percentRemaining: editData['percentRemaining'] as int?,
+              openedDate: editData['openedDate'] as String?,
+            );
+          } else if (newUnit != null) {
+            // Pakiet nie był edytowany - tylko synchronizuj jednostkę
+            return p.copyWith(unit: newUnit);
+          }
+          return p;
+        }).toList();
+
+        // Aktualizuj też shelfLifeAfterOpening w Medicine
+        final newShelfLife = result['shelfLifeAfterOpening'] as String?;
+        final shelfLifeSource = result['shelfLifeSource'] as String?;
+        final updatedMedicine = _medicine.copyWith(
+          packages: updatedPackages,
+          shelfLifeAfterOpening: newShelfLife,
+          shelfLifeStatus: shelfLifeSource == 'manual'
+              ? 'manual'
+              : _medicine.shelfLifeStatus, // Zachowaj oryginalny status AI
+        );
+        await widget.storageService!.saveMedicine(updatedMedicine);
+        setState(() {
+          _medicine = updatedMedicine;
+        });
+        widget.onMedicineUpdated?.call();
+      }
     }
   }
 
@@ -2747,13 +2804,17 @@ class _MedicineCardState extends State<MedicineCard> {
     final currentYear = DateTime.now().year;
     int selectedMonth = DateTime.now().month;
     int selectedYear = currentYear + 1;
-    bool useSameDate = false;
-    bool useSameQuantity = false;
+    // Domyślnie zaznaczone (najczęstszy przypadek - identyczne opakowania)
+    bool useSameDate = true;
+    bool useSameQuantity = true;
+    // Ile opakowań dodać
+    int packageCount = 1;
 
     final firstPackage = _medicine.packages.isNotEmpty
         ? _medicine.sortedPackages.first
         : null;
     final hasQuantity = firstPackage?.remainingDescription != null;
+    final hasExistingPackages = _medicine.packages.isNotEmpty;
 
     final result = await showDialog<Map<String, dynamic>?>(
       context: context,
@@ -2762,8 +2823,32 @@ class _MedicineCardState extends State<MedicineCard> {
           title: const Text('Dodaj opakowanie'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_medicine.packages.isNotEmpty) ...[
+              // Sekcja: Ile opakowań dodać
+              Text(
+                'Ile opakowań dodać?',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: const Color(0xFF6b7280)),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [1, 2, 3, 5, 10]
+                    .map(
+                      (count) => ChoiceChip(
+                        label: Text('$count'),
+                        selected: packageCount == count,
+                        onSelected: (_) =>
+                            setDialogState(() => packageCount = count),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const SizedBox(height: 16),
+              // Checkboxy dla daty i ilości (tylko gdy są istniejące opakowania)
+              if (hasExistingPackages) ...[
                 CheckboxListTile(
                   title: Text(
                     'Taka sama data (${_medicine.sortedPackages.first.displayDate})',
@@ -2785,12 +2870,13 @@ class _MedicineCardState extends State<MedicineCard> {
                   ),
                 const SizedBox(height: 12),
               ],
-              if (!useSameDate)
+              // Wybór daty (tylko gdy nie kopiujemy daty)
+              if (!useSameDate || !hasExistingPackages)
                 Row(
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        initialValue: selectedMonth,
+                        value: selectedMonth,
                         decoration: const InputDecoration(
                           labelText: 'Miesiąc',
                           border: OutlineInputBorder(),
@@ -2810,7 +2896,7 @@ class _MedicineCardState extends State<MedicineCard> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        initialValue: selectedYear,
+                        value: selectedYear,
                         decoration: const InputDecoration(
                           labelText: 'Rok',
                           border: OutlineInputBorder(),
@@ -2839,7 +2925,7 @@ class _MedicineCardState extends State<MedicineCard> {
             FilledButton(
               onPressed: () {
                 DateTime date;
-                if (useSameDate && _medicine.packages.isNotEmpty) {
+                if (useSameDate && hasExistingPackages) {
                   date =
                       _medicine.sortedPackages.first.dateTime ??
                       DateTime(selectedYear, selectedMonth + 1, 0);
@@ -2849,9 +2935,10 @@ class _MedicineCardState extends State<MedicineCard> {
                 Navigator.pop(context, {
                   'date': date,
                   'useSameQuantity': useSameQuantity,
+                  'packageCount': packageCount,
                 });
               },
-              child: const Text('Dodaj'),
+              child: Text(packageCount > 1 ? 'Dodaj ($packageCount)' : 'Dodaj'),
             ),
           ],
         ),
@@ -2861,21 +2948,29 @@ class _MedicineCardState extends State<MedicineCard> {
     if (result != null) {
       final date = result['date'] as DateTime;
       final copyQuantity = result['useSameQuantity'] as bool;
+      final count = result['packageCount'] as int;
 
-      MedicinePackage newPackage;
-      if (copyQuantity && firstPackage != null) {
-        newPackage = MedicinePackage(
-          expiryDate: date.toIso8601String().split('T')[0],
-          pieceCount: firstPackage.pieceCount,
-          percentRemaining: firstPackage.percentRemaining,
-        );
-      } else {
-        newPackage = MedicinePackage(
-          expiryDate: date.toIso8601String().split('T')[0],
-        );
+      // Twórz listę nowych pakietów
+      final newPackages = <MedicinePackage>[];
+      for (var i = 0; i < count; i++) {
+        MedicinePackage newPackage;
+        if (copyQuantity && firstPackage != null) {
+          newPackage = MedicinePackage(
+            expiryDate: date.toIso8601String().split('T')[0],
+            pieceCount: firstPackage.pieceCount,
+            percentRemaining: firstPackage.percentRemaining,
+            capacity: firstPackage.capacity,
+            unit: firstPackage.unit,
+          );
+        } else {
+          newPackage = MedicinePackage(
+            expiryDate: date.toIso8601String().split('T')[0],
+          );
+        }
+        newPackages.add(newPackage);
       }
 
-      final updatedPackages = [..._medicine.packages, newPackage];
+      final updatedPackages = [..._medicine.packages, ...newPackages];
       final updatedMedicine = _medicine.copyWith(packages: updatedPackages);
       await widget.storageService?.saveMedicine(updatedMedicine);
       setState(() => _medicine = updatedMedicine);

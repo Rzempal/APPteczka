@@ -673,108 +673,118 @@ class HomeScreenState extends State<HomeScreen> {
     return Positioned(
       top: 72, // Poniżej headera (48px logo + 12px padding + 12px margin)
       right: 16, // Przykleja do prawej strony - zwija się w prawo
-      child: GestureDetector(
-        onTap: () {
-          if (!_isSearchBarExpanded) {
-            _expandSearchBar();
-          } else {
-            _searchFocusNode.requestFocus();
-          }
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          width: currentWidth,
-          height: 48,
-          decoration: BoxDecoration(
-            // Glassmorphism effect
-            color: isDark
-                ? AppColors.darkSurface.withValues(alpha: 0.5)
-                : AppColors.lightSurface.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
+      child: Visibility(
+        visible: isVisible, // Całkowicie ukryty gdy selection mode
+        child: GestureDetector(
+          onTap: () {
+            if (!_isSearchBarExpanded) {
+              _expandSearchBar();
+            } else {
+              _searchFocusNode.requestFocus();
+            }
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: currentWidth,
+            height: 48,
+            decoration: BoxDecoration(
+              // Glassmorphism effect
               color: isDark
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.05),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
+                  ? AppColors.darkSurface.withValues(alpha: 0.5)
+                  : AppColors.lightSurface.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
+                width: 1,
               ),
-            ],
-          ),
-          child: TextField(
-            controller: _searchController,
-            focusNode: _searchFocusNode,
-            decoration: InputDecoration(
-              prefixIcon: AnimatedOpacity(
-                duration: const Duration(milliseconds: 200),
-                opacity: iconOpacity,
-                child: Icon(
-                  LucideIcons.packageSearch,
-                  size: 20,
-                  color: theme.colorScheme.onSurfaceVariant.withValues(
-                    alpha: 0.7,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.1),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: TextField(
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              decoration: InputDecoration(
+                prefixIcon: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 200),
+                  opacity: iconOpacity,
+                  child: Icon(
+                    LucideIcons.packageSearch,
+                    size: 20,
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.7,
+                    ),
                   ),
                 ),
-              ),
-              hintText: 'Szukaj leku...',
-              hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.5,
+                hintText: 'Szukaj leku...',
+                hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: 0.5,
+                  ),
                 ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.zero,
               ),
-              border: InputBorder.none,
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurface,
+                fontWeight: FontWeight.w500,
+              ),
+              onChanged: (value) {
+                final wasActive = _filterState.hasActiveFilters;
+                setState(() {
+                  _filterState = _filterState.copyWith(searchQuery: value);
+                });
+                if (wasActive != _filterState.hasActiveFilters) {
+                  widget.onFiltersChanged?.call();
+                }
+              },
+              onSubmitted: (_) {
+                _searchFocusNode.unfocus();
+              },
             ),
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface,
-              fontWeight: FontWeight.w500,
-            ),
-            onChanged: (value) {
-              final wasActive = _filterState.hasActiveFilters;
-              setState(() {
-                _filterState = _filterState.copyWith(searchQuery: value);
-              });
-              if (wasActive != _filterState.hasActiveFilters) {
-                widget.onFiltersChanged?.call();
-              }
-            },
-            onSubmitted: (_) {
-              _searchFocusNode.unfocus();
-            },
           ),
         ),
       ),
     );
   }
 
-  /// Buduje SelectionBar - animacja od lewej (przeciwna do SearchBar)
+  /// Buduje SelectionBar - pełna szerokość (opcja B)
   Widget _buildFloatingSelectionBar(ThemeData theme, bool isDark) {
     final isVisible = _selectionController.isActive;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final maxWidth = screenWidth - 32;
 
     return Positioned(
       top: 72,
-      left: 16, // Od lewej strony (przeciwnie do SearchBar)
+      left: 16,
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 200),
         opacity: isVisible ? 1.0 : 0.0,
         child: AnimatedSlide(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
-          offset: isVisible ? Offset.zero : const Offset(-0.5, 0),
-          child: isVisible
-              ? SelectionBar(
-                  controller: _selectionController,
-                  onSelectAll: _handleSelectAll,
-                  onDelete: _handleBatchDelete,
-                  onLabels: _handleBatchLabels,
-                )
-              : const SizedBox.shrink(),
+          offset: isVisible ? Offset.zero : const Offset(-0.3, 0),
+          child: SizedBox(
+            width: maxWidth,
+            child: isVisible
+                ? SelectionBar(
+                    controller: _selectionController,
+                    totalCount: _filteredMedicines.length,
+                    onSelectAll: _handleSelectAll,
+                    onDeselectAll: _handleDeselectAll,
+                    onDelete: _handleBatchDelete,
+                    onLabels: _handleBatchLabels,
+                  )
+                : const SizedBox.shrink(),
+          ),
         ),
       ),
     );
@@ -784,6 +794,11 @@ class HomeScreenState extends State<HomeScreen> {
   void _handleSelectAll() {
     final allIds = _filteredMedicines.map((m) => m.id).toList();
     _selectionController.selectAll(allIds);
+  }
+
+  /// Odznacza wszystkie zaznaczone leki
+  void _handleDeselectAll() {
+    _selectionController.clearSelection();
   }
 
   /// Usuwa zaznaczone leki z potwierdzeniem

@@ -5,25 +5,33 @@ import '../controllers/selection_controller.dart';
 import '../theme/app_theme.dart';
 
 /// Pasek trybu zaznaczania - styl analogiczny do SearchBar
-/// Kompaktowy - nie rozciąga się na całą szerokość
+/// Rozciąga się na pełną szerokość (opcja B)
 class SelectionBar extends StatelessWidget {
   final SelectionController controller;
+  final int totalCount; // Łączna liczba elementów (do toggle)
   final VoidCallback? onDelete;
   final VoidCallback? onLabels;
   final VoidCallback? onSelectAll;
+  final VoidCallback? onDeselectAll;
 
   const SelectionBar({
     super.key,
     required this.controller,
+    required this.totalCount,
     this.onDelete,
     this.onLabels,
     this.onSelectAll,
+    this.onDeselectAll,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    // Czy wszystkie są zaznaczone?
+    final allSelected =
+        controller.selectedCount >= totalCount && totalCount > 0;
 
     return Container(
       height: 48,
@@ -49,7 +57,6 @@ class SelectionBar extends StatelessWidget {
         ],
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min, // Kompaktowy - nie rozciąga się
         children: [
           // Ikona trybu zaznaczania + licznik
           Icon(
@@ -67,17 +74,17 @@ class SelectionBar extends StatelessWidget {
           ),
           const SizedBox(width: 12),
 
-          // Zaznacz wszystko - z opisem, align left
+          // Zaznacz/Odznacz wszystkie - toggle w zależności od stanu
           _buildTextButton(
-            icon: LucideIcons.checkCheck,
-            label: 'Zaznacz wszystko',
-            onTap: onSelectAll,
+            icon: allSelected ? LucideIcons.squareX : LucideIcons.checkCheck,
+            label: allSelected ? 'Odznacz wszystkie' : 'Zaznacz wszystkie',
+            onTap: allSelected ? onDeselectAll : onSelectAll,
             theme: theme,
           ),
 
-          const SizedBox(width: 8),
+          const Spacer(),
 
-          // Usuń (zamienione z Etykiety)
+          // Usuń
           _buildIconButton(
             icon: LucideIcons.trash2,
             tooltip: 'Usuń zaznaczone',
@@ -87,7 +94,7 @@ class SelectionBar extends StatelessWidget {
           ),
           const SizedBox(width: 4),
 
-          // Etykiety (zamienione z Usuń)
+          // Etykiety
           _buildIconButton(
             icon: LucideIcons.tags,
             tooltip: 'Dodaj etykiety',
@@ -112,7 +119,7 @@ class SelectionBar extends StatelessWidget {
     );
   }
 
-  /// Przycisk z ikoną i tekstem (dla "Zaznacz wszystko")
+  /// Przycisk z ikoną i tekstem
   Widget _buildTextButton({
     required IconData icon,
     required String label,
