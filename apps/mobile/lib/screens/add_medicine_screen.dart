@@ -28,7 +28,11 @@ import '../utils/pharmaceutical_form_helper.dart';
 /// Akcja importu kopii zapasowej
 enum _ImportAction { add, overwrite, cancel }
 
+/// Status przetwarzania AI dla leku oczekującego
+enum ProcessingStatus { pending, processing, completed, error }
+
 /// Lek oczekujący na zapis (Batch Mode)
+
 class PendingDrug {
   final RplDrugDetails drugDetails;
   final RplPackage selectedPackage;
@@ -36,6 +40,13 @@ class PendingDrug {
   // Kopia nazwy z momentu tworzenia - zabezpieczenie przed utratą danych
   final String _cachedName;
   final String _cachedPower;
+
+  // === Background processing fields ===
+  ProcessingStatus processingStatus = ProcessingStatus.pending;
+  String? processedName; // Poprawiona nazwa z AI
+  String? processedDescription; // Opis z AI
+  List<String>? processedTags; // Tagi z AI
+  List<String>? processedWskazania; // Wskazania z AI
 
   PendingDrug({
     required this.drugDetails,
@@ -45,8 +56,12 @@ class PendingDrug {
        _cachedName = drugDetails.name,
        _cachedPower = drugDetails.power;
 
-  /// Nazwa leku z fallbackiem do cache
+  /// Nazwa leku z fallbackiem do cache (używa przetworzonej nazwy gdy dostępna)
   String get displayName {
+    // Jeśli AI przetworzyło nazwę, użyj jej
+    if (processedName != null && processedName!.isNotEmpty) {
+      return processedName!;
+    }
     if (drugDetails.fullName.isNotEmpty) {
       return drugDetails.fullName;
     }
@@ -778,7 +793,43 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     );
   }
 
+  /// Zwraca kolor tła dla ikony statusu przetwarzania
+  Color _getStatusColor(ProcessingStatus status, bool isDark) {
+    switch (status) {
+      case ProcessingStatus.pending:
+        return Colors.blue.withAlpha(isDark ? 50 : 30);
+      case ProcessingStatus.processing:
+        return Colors.orange.withAlpha(isDark ? 50 : 30);
+      case ProcessingStatus.completed:
+        return Colors.green.withAlpha(isDark ? 50 : 30);
+      case ProcessingStatus.error:
+        return Colors.red.withAlpha(isDark ? 50 : 30);
+    }
+  }
+
+  /// Buduje ikonę statusu przetwarzania
+  Widget _buildStatusIcon(ProcessingStatus status) {
+    switch (status) {
+      case ProcessingStatus.pending:
+        return const Icon(LucideIcons.clock, size: 20, color: Colors.blue);
+      case ProcessingStatus.processing:
+        return const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.orange,
+          ),
+        );
+      case ProcessingStatus.completed:
+        return const Icon(LucideIcons.sparkles, size: 20, color: Colors.green);
+      case ProcessingStatus.error:
+        return const Icon(LucideIcons.circleAlert, size: 20, color: Colors.red);
+    }
+  }
+
   /// Karta pojedynczego leku w liście oczekujących
+
   Widget _buildPendingDrugCard(
     PendingDrug drug,
     int index,
@@ -797,19 +848,16 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       ),
       child: Row(
         children: [
-          // Ikona weryfikacji RPL
+          // Ikona statusu przetwarzania AI
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.green.withAlpha(isDark ? 50 : 30),
+              color: _getStatusColor(drug.processingStatus, isDark),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
-              LucideIcons.shieldCheck,
-              size: 20,
-              color: Colors.green,
-            ),
+            child: _buildStatusIcon(drug.processingStatus),
           ),
+
           const SizedBox(width: 12),
 
           // Info o leku
@@ -947,6 +995,15 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           _pendingDrugs.add(pendingDrug);
         });
 
+        // === BACKGROUND PROCESSING TRIGGER ===
+        // Jeśli lista > 3, uruchom przetwarzanie dla najstarszego edytowalnego
+        if (_pendingDrugs.length > 3) {
+          final indexToProcess =
+              _pendingDrugs.length -
+              4; // lek który właśnie stracił edytowalność
+          _startBackgroundProcessing(indexToProcess);
+        }
+
         // Wyczyść pole wyszukiwania - gotowe na kolejny lek
         _nazwaController.clear();
         _log.info(
@@ -974,6 +1031,66 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       _pendingDrugs.removeAt(index);
     });
     HapticFeedback.lightImpact();
+  }
+
+  /// Uruchamia przetwarzanie AI w tle dla leku o danym indeksie
+  Future<void> _startBackgroundProcessing(int index) async {
+    if (index < 0 || index >= _pendingDrugs.length) return;
+
+    final drug = _pendingDrugs[index];
+
+    // Sprawdź czy lek nie jest już przetwarzany
+    if (drug.processingStatus != ProcessingStatus.pending) {
+      _log.fine('Drug at index $index already processed/processing');
+      return;
+    }
+
+    _log.info(
+      'Starting background processing for drug at index $index: ${drug.displayName}',
+    );
+
+    // Ustaw status na processing
+    setState(() {
+      drug.processingStatus = ProcessingStatus.processing;
+    });
+
+    try {
+      final geminiService = GeminiNameLookupService();
+      final result = await geminiService.lookupByName(drug.displayName);
+
+      // Sprawdź czy lek nadal istnieje na liście (mógł być usunięty)
+      if (index >= _pendingDrugs.length || _pendingDrugs[index] != drug) {
+        _log.fine('Drug was removed during processing, skipping update');
+        return;
+      }
+
+      if (result.found && result.medicine != null) {
+        final med = result.medicine!;
+        setState(() {
+          drug.processingStatus = ProcessingStatus.completed;
+          drug.processedName = med.nazwa;
+          drug.processedDescription = med.opis;
+          drug.processedTags = med.tagi;
+          drug.processedWskazania = med.wskazania;
+        });
+        _log.info('Background processing completed for: ${drug.displayName}');
+      } else {
+        // AI nie rozpoznało - ustaw jako completed bez danych
+        setState(() {
+          drug.processingStatus = ProcessingStatus.completed;
+        });
+        _log.fine('AI did not recognize drug: ${drug.displayName}');
+      }
+    } catch (e) {
+      _log.warning('Background processing error: $e');
+      if (mounted &&
+          index < _pendingDrugs.length &&
+          _pendingDrugs[index] == drug) {
+        setState(() {
+          drug.processingStatus = ProcessingStatus.error;
+        });
+      }
+    }
   }
 
   /// Przełącza rozwinięcie sekcji ręcznego dodawania
@@ -1461,9 +1578,28 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             continue;
           }
 
-          // AI uzupełnia opis, wskazania, tagi
-          final aiResult = await geminiService.lookupByName(drugName);
-          final aiMedicine = aiResult.found ? aiResult.medicine : null;
+          // === OPTIMIZATION: Użyj cached AI data jeśli dostępne ===
+          String? aiOpis;
+          List<String>? aiWskazania;
+          List<String>? aiTagi;
+
+          if (pendingDrug.processingStatus == ProcessingStatus.completed &&
+              pendingDrug.processedDescription != null) {
+            // Użyj cached data z background processing
+            _log.fine('Using cached AI data for: $drugName');
+            aiOpis = pendingDrug.processedDescription;
+            aiWskazania = pendingDrug.processedWskazania;
+            aiTagi = pendingDrug.processedTags;
+          } else {
+            // Odpytaj Gemini (dla pending/error)
+            _log.fine('Querying Gemini for: $drugName');
+            final aiResult = await geminiService.lookupByName(drugName);
+            if (aiResult.found && aiResult.medicine != null) {
+              aiOpis = aiResult.medicine!.opis;
+              aiWskazania = aiResult.medicine!.wskazania;
+              aiTagi = aiResult.medicine!.tagi;
+            }
+          }
 
           // Generuj tagi z RPL
           final rplTags = _generateTagsFromRpl(rpl, pkg);
@@ -1471,12 +1607,13 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           final medicine = Medicine(
             id: const Uuid().v4(),
             nazwa: drugName,
-            opis: aiMedicine?.opis ?? rpl.form,
-            wskazania: aiMedicine?.wskazania ?? [],
+            opis: aiOpis ?? rpl.form,
+            wskazania: aiWskazania ?? [],
             tagi: <String>{
               ...rplTags,
-              ...processTagsForImport(aiMedicine?.tagi ?? []),
+              ...processTagsForImport(aiTagi ?? []),
             }.toList(),
+
             // Opakowanie z pieceCount z RPL - data będzie ustawiona przez BatchDateInputSheet
             packages: [
               MedicinePackage(
