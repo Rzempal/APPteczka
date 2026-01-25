@@ -136,4 +136,72 @@ class PharmaceuticalFormHelper {
         return '';
     }
   }
+
+  /// Parsuje string capacity z Gemini na (int, PackageUnit)
+  /// Przykłady: "30 tabletek" → (30, pieces), "100 ml" → (100, ml)
+  static CapacityParseResult? parseCapacity(String? capacity) {
+    if (capacity == null || capacity.isEmpty) {
+      return null;
+    }
+
+    final normalized = capacity.toLowerCase().trim();
+
+    // Wzorzec: liczba + jednostka
+    final regex = RegExp(r'(\d+)\s*(.*)');
+    final match = regex.firstMatch(normalized);
+
+    if (match == null) {
+      return null;
+    }
+
+    final value = int.tryParse(match.group(1) ?? '');
+    if (value == null || value <= 0) {
+      return null;
+    }
+
+    final unitText = match.group(2)?.trim() ?? '';
+    final unit = _parseUnitFromText(unitText);
+
+    return CapacityParseResult(value: value, unit: unit);
+  }
+
+  /// Helper: parsuje tekst jednostki na PackageUnit
+  static PackageUnit _parseUnitFromText(String unitText) {
+    // ml, mililitrów
+    if (unitText.contains('ml') || unitText.contains('mililit')) {
+      return PackageUnit.ml;
+    }
+
+    // g, gramów
+    if (unitText.startsWith('g') || unitText.contains('gram')) {
+      return PackageUnit.grams;
+    }
+
+    // saszetki, saszetek
+    if (unitText.contains('saszetk') || unitText.contains('sasz')) {
+      return PackageUnit.sachets;
+    }
+
+    // tabletek, kapsułek, sztuk, dawek (wszystko → pieces)
+    if (unitText.contains('tabletk') ||
+        unitText.contains('kapsułek') ||
+        unitText.contains('kapsułk') ||
+        unitText.contains('szt') ||
+        unitText.contains('dawek') ||
+        unitText.contains('dawki') ||
+        unitText.contains('dawk')) {
+      return PackageUnit.pieces;
+    }
+
+    // Default: pieces
+    return PackageUnit.pieces;
+  }
+}
+
+/// Wynik parsowania capacity
+class CapacityParseResult {
+  final int value;
+  final PackageUnit unit;
+
+  CapacityParseResult({required this.value, required this.unit});
 }

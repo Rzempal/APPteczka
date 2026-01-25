@@ -32,6 +32,10 @@ class ScannedDrug {
   String? scannedName;
   String? scannedDescription;
   List<String>? scannedTags;
+  String? scannedPower; // Moc/dawka z OCR (np. "500 mg")
+  String? scannedCapacity; // Ilość w opakowaniu z OCR (np. "30 tabletek")
+  String? scannedProductType; // 'lek' | 'suplement' | 'wyrob_medyczny'
+  String? scannedPharmaceuticalForm; // Postać farmaceutyczna z OCR
 
   ScannedDrug({
     required this.ean,
@@ -43,6 +47,10 @@ class ScannedDrug {
     this.scannedName,
     this.scannedDescription,
     this.scannedTags,
+    this.scannedPower,
+    this.scannedCapacity,
+    this.scannedProductType,
+    this.scannedPharmaceuticalForm,
   });
 
   /// Nazwa produktu (z RPL lub OCR)
@@ -55,17 +63,45 @@ class ScannedDrug {
   /// Czy produkt jest z RPL
   bool get isFromRpl => drugInfo != null;
 
-  /// Ilość sztuk z opakowania (cache)
-  int? get pieceCount => drugInfo != null ? _parsePackaging() : null;
+  /// Ilość sztuk z opakowania (z RPL lub OCR)
+  int? get pieceCount {
+    // Priorytet 1: RPL packaging
+    if (drugInfo != null) return _parsePackaging();
+    // Priorytet 2: OCR capacity
+    if (scannedCapacity != null) {
+      final parsed = PharmaceuticalFormHelper.parseCapacity(scannedCapacity);
+      return parsed?.value;
+    }
+    return null;
+  }
+
+  /// Jednostka opakowania (z RPL form lub OCR)
+  PackageUnit get packageUnit {
+    // Priorytet 1: RPL form
+    if (drugInfo != null) {
+      return PharmaceuticalFormHelper.getPackageUnit(drugInfo!.form);
+    }
+    // Priorytet 2: OCR capacity (parsujemy jednostkę)
+    if (scannedCapacity != null) {
+      final parsed = PharmaceuticalFormHelper.parseCapacity(scannedCapacity);
+      if (parsed != null) return parsed.unit;
+    }
+    // Priorytet 3: OCR pharmaceuticalForm
+    if (scannedPharmaceuticalForm != null) {
+      return PharmaceuticalFormHelper.getPackageUnit(scannedPharmaceuticalForm);
+    }
+    return PackageUnit.pieces;
+  }
 
   /// Konwertuje do modelu Medicine
   Medicine toMedicine(String id) {
-    final pieceCount = _parsePackaging();
-    final form = drugInfo?.form;
+    final form = drugInfo?.form ?? scannedPharmaceuticalForm;
+    final power = drugInfo?.power ?? scannedPower;
 
     return Medicine(
       id: id,
       nazwa: displayName,
+      power: power,
       opis: scannedDescription ?? drugInfo?.description ?? '',
       wskazania: [],
       tagi: scannedTags ?? (drugInfo != null ? _generateTags() : <String>[]),
@@ -73,8 +109,9 @@ class ScannedDrug {
           ? [
               MedicinePackage(
                 expiryDate: expiryDate!,
+                capacity: pieceCount,
                 pieceCount: pieceCount,
-                unit: PharmaceuticalFormHelper.getPackageUnit(form),
+                unit: packageUnit,
               ),
             ]
           : [],

@@ -1,4 +1,4 @@
-// src/lib/prompts.ts v0.003 EAN as anchor of certainty - prioritize barcode over unclear names
+// src/lib/prompts.ts v0.004 Extended fields: productType, power, capacity, postacFarmaceutyczna
 // Generatory promptów do wklejenia w ChatGPT/Claude/Gemini
 
 import type { Medicine } from './types';
@@ -13,13 +13,14 @@ export function generateImportPrompt(): string {
 Jesteś asystentem farmacji pomagającym użytkownikowi prowadzić prywatną bazę leków.
 
 ## Wejście
-Zdjęcie opakowania lub opakowań leków.
+Zdjęcie opakowania lub opakowań leków, suplementów diety lub wyrobów medycznych.
 
 ## Zadanie (Priorytetyzacja)
 1. **Kod kreskowy (EAN) to "kotwica pewności".** Jeśli kod kreskowy (EAN-13 lub EAN-8) jest wyraźnie widoczny, ZAWSZE zwróć obiekt leku, nawet jeśli nazwa jest nieczytelna lub zasłonięta.
 2. Jeśli widzisz kod kreskowy, ale nie możesz odczytać nazwy, ustaw \`"nazwa": null\`. Kod kreskowy wystarczy do identyfikacji w bazie zewnętrznej.
 3. Jeśli widzisz nazwę, ale nie widzisz kodu, zwróć \`"ean": null\`.
 4. Jeśli na zdjęciu jest wiele leków, zwróć listę obiektów.
+5. **Wyroby medyczne:** Jeśli produkt NIE jest lekiem ani suplementem (np. plaster, opatrunek, termometr, ciśnieniomierz, inhalator bez leku), ustaw \`"productType": "wyrob_medyczny"\`.
 
 ## Zarządzanie Niepewnością
 Zwróć status \`"niepewne_rozpoznanie"\` WYŁĄCZNIE wtedy, gdy:
@@ -36,8 +37,12 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
 {
   "leki": [
     {
+      "productType": "lek | suplement | wyrob_medyczny",
       "nazwa": "string | null",
       "ean": "string | null",
+      "power": "string | null",
+      "capacity": "string | null",
+      "postacFarmaceutyczna": "string | null",
       "opis": "string (krótki opis, język prosty)",
       "wskazania": ["string"],
       "tagi": ["tag1", "tag2"],
@@ -47,10 +52,28 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
 }
 \`\`\`
 
+### Pole productType (typ produktu)
+- \`"lek"\` – produkt leczniczy (OTC lub na receptę)
+- \`"suplement"\` – suplement diety
+- \`"wyrob_medyczny"\` – wyrób medyczny (plaster, opatrunek, termometr, ciśnieniomierz, inhalator, strzykawka, itp.)
+
 ### Pole ean (kod kreskowy)
 - Jeśli na opakowaniu widoczny jest kod kreskowy (EAN-13 lub EAN-8), zwróć **same cyfry** (np. "5909990733828").
 - Kody kreskowe na lekach mają zazwyczaj 13 cyfr (EAN-13) lub 8 cyfr (EAN-8).
 - Jeśli kod jest niewidoczny, zwróć \`null\`.
+
+### Pole power (moc/dawka)
+- Moc lub dawka widoczna na opakowaniu, np. "500 mg", "10 mg/ml", "200 mg + 30 mg".
+- Jeśli niewidoczna lub nie dotyczy (wyrób medyczny), zwróć \`null\`.
+
+### Pole capacity (ilość w opakowaniu)
+- Ilość widoczna na pudełku, np. "30 tabletek", "100 ml", "20 saszetek", "140 dawek".
+- Dla aerozoli często jest to liczba dawek, np. "140 dawek".
+- Jeśli niewidoczna, zwróć \`null\`.
+
+### Pole postacFarmaceutyczna (forma produktu)
+- Postać produktu widoczna na opakowaniu, np. "tabletka powlekana", "syrop", "krople", "maść", "żel", "aerozol do nosa", "saszetki".
+- Jeśli niewidoczna, zwróć \`null\`.
 
 ### Pole terminWaznosci
 - Jeśli widzisz datę (np. "EXP 03/2026", "03.2026"), zamień na ostatni dzień miesiąca w formacie ISO: "2026-03-31".
@@ -84,6 +107,7 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
 Celem jest wyłącznie **porządkowanie informacji do prywatnej bazy leków użytkownika**.`;
 }
 
+
 /**
  * Generuje prompt do rozpoznawania leku po wpisanej nazwie
  */
@@ -102,6 +126,7 @@ Użytkownik wpisał nazwę: "${name}"
 2. Jeśli rozpoznajesz produkt, uzupełnij informacje o nim.
 3. Dozwolone są literówki i skróty - spróbuj rozpoznać zamiar użytkownika.
 4. **Nie zgaduj** – jeśli nazwa jest całkowicie nieznana, zwróć status "nie_rozpoznano".
+5. **Wyroby medyczne:** Jeśli produkt NIE jest lekiem ani suplementem (np. plaster, opatrunek, termometr), ustaw \`"productType": "wyrob_medyczny"\`.
 
 ## Format wyjścia (OBOWIĄZKOWY)
 
@@ -110,14 +135,35 @@ Użytkownik wpisał nazwę: "${name}"
 \`\`\`json
 {
   "status": "rozpoznano",
+  "productType": "lek | suplement | wyrob_medyczny",
   "lek": {
     "nazwa": "Poprawna nazwa produktu",
+    "power": "string | null (np. '500 mg')",
+    "capacity": "string | null (np. '30 tabletek')",
+    "postacFarmaceutyczna": "string | null (np. 'tabletka powlekana')",
     "opis": "Krótki opis działania. Stosować zgodnie z ulotką.",
     "wskazania": ["wskazanie1", "wskazanie2"],
     "tagi": ["tag1", "tag2"]
   }
 }
 \`\`\`
+
+### Pole productType (typ produktu)
+- \`"lek"\` – produkt leczniczy (OTC lub na receptę)
+- \`"suplement"\` – suplement diety
+- \`"wyrob_medyczny"\` – wyrób medyczny (plaster, opatrunek, termometr, ciśnieniomierz, itp.)
+
+### Pole power (moc/dawka)
+- Najbardziej popularna moc/dawka dla tego produktu, np. "500 mg", "10 mg/ml".
+- Jeśli nie dotyczy (wyrób medyczny) lub nieznana, zwróć \`null\`.
+
+### Pole capacity (ilość w opakowaniu)
+- Najbardziej popularna ilość w opakowaniu, np. "30 tabletek", "100 ml".
+- Jeśli nieznana, zwróć \`null\`.
+
+### Pole postacFarmaceutyczna (forma produktu)
+- Postać produktu, np. "tabletka powlekana", "syrop", "krople", "maść", "żel", "aerozol".
+- Jeśli nieznana, zwróć \`null\`.
 
 ### Gdy nie rozpoznano:
 

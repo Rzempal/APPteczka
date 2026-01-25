@@ -1116,6 +1116,10 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
                   drug.scannedName = scanned.nazwa;
                   drug.scannedDescription = scanned.opis;
                   drug.scannedTags = scanned.tagi;
+                  drug.scannedPower = scanned.power;
+                  drug.scannedCapacity = scanned.capacity;
+                  drug.scannedProductType = scanned.productType;
+                  drug.scannedPharmaceuticalForm = scanned.postacFarmaceutyczna;
                 }
               } catch (_) {
                 // OCR nazwy nie powiodło się - produkt zostanie jako "Nieznany"

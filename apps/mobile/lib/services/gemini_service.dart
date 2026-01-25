@@ -1,4 +1,4 @@
-// gemini_service.dart v0.003 Added EAN field to ScannedMedicine
+// gemini_service.dart v0.004 Extended fields: productType, power, capacity, postacFarmaceutyczna
 
 import 'dart:convert';
 import 'dart:io';
@@ -24,16 +24,25 @@ class GeminiScanResult {
 
 /// Pojedynczy lek rozpoznany przez Gemini
 class ScannedMedicine {
+  final String? productType; // 'lek' | 'suplement' | 'wyrob_medyczny'
   final String? nazwa;
   final String? ean;
+  final String? power; // Moc/dawka (np. "500 mg")
+  final String? capacity; // Ilość w opakowaniu (np. "30 tabletek")
+  final String?
+  postacFarmaceutyczna; // Forma produktu (np. "tabletka powlekana")
   final String opis;
   final List<String> wskazania;
   final List<String> tagi;
   final String? terminWaznosci;
 
   ScannedMedicine({
+    this.productType,
     this.nazwa,
     this.ean,
+    this.power,
+    this.capacity,
+    this.postacFarmaceutyczna,
     required this.opis,
     required this.wskazania,
     required this.tagi,
@@ -42,8 +51,12 @@ class ScannedMedicine {
 
   factory ScannedMedicine.fromJson(Map<String, dynamic> json) {
     return ScannedMedicine(
+      productType: json['productType'] as String?,
       nazwa: json['nazwa'] as String?,
       ean: json['ean'] as String?,
+      power: json['power'] as String?,
+      capacity: json['capacity'] as String?,
+      postacFarmaceutyczna: json['postacFarmaceutyczna'] as String?,
       opis: json['opis'] as String? ?? '',
       wskazania: List<String>.from(json['wskazania'] ?? []),
       tagi: List<String>.from(json['tagi'] ?? []),

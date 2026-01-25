@@ -74,14 +74,19 @@ class GeminiNameLookupService {
 
       if (status == 'rozpoznano') {
         final lekData = responseData['lek'] as Map<String, dynamic>;
+        final productType = responseData['productType'] as String?;
         final medicine = ScannedMedicine(
+          productType: productType,
           nazwa: lekData['nazwa'] as String?,
+          power: lekData['power'] as String?,
+          capacity: lekData['capacity'] as String?,
+          postacFarmaceutyczna: lekData['postacFarmaceutyczna'] as String?,
           opis: lekData['opis'] as String? ?? '',
           wskazania: List<String>.from(lekData['wskazania'] ?? []),
           tagi: List<String>.from(lekData['tagi'] ?? []),
           terminWaznosci: null, // Name lookup nie zwraca daty
         );
-        _log.info('Medicine found: ${medicine.nazwa}');
+        _log.info('Medicine found: ${medicine.nazwa} (type: $productType)');
         return NameLookupResult.found(medicine);
       }
 

@@ -3,10 +3,16 @@
 
 import { generateImportPrompt, generateNameLookupPrompt, generateShelfLifePrompt } from './prompts';
 
+export type ProductType = 'lek' | 'suplement' | 'wyrob_medyczny';
+
 export interface GeminiOCRResult {
     leki: Array<{
+        productType?: ProductType;
         nazwa: string | null;
         ean: string | null;
+        power?: string | null;
+        capacity?: string | null;
+        postacFarmaceutyczna?: string | null;
         opis: string;
         wskazania: string[];
         tagi: string[];
@@ -16,8 +22,12 @@ export interface GeminiOCRResult {
 
 export interface GeminiNameLookupResult {
     status: 'rozpoznano';
+    productType?: ProductType;
     lek: {
         nazwa: string;
+        power?: string | null;
+        capacity?: string | null;
+        postacFarmaceutyczna?: string | null;
         opis: string;
         wskazania: string[];
         tagi: string[];
