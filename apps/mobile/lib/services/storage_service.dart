@@ -133,10 +133,12 @@ class StorageService {
   }
 
   /// Eksportuje wszystkie leki i etykiety do JSON (kompatybilny z web)
+  /// Pretty-printed dla czytelności kopii zapasowych
   String exportToJson() {
     final medicines = getMedicines();
     final labels = getLabels();
-    return jsonEncode({
+    const encoder = JsonEncoder.withIndent('  ');
+    return encoder.convert({
       'leki': medicines.map((m) => m.toJson()).toList(),
       'labels': labels.map((l) => l.toJson()).toList(),
     });
