@@ -1,16 +1,19 @@
-// barcode_scanner.dart v1.8.0 - Skaner kodow kreskowych EAN z batch processing
+// barcode_scanner.dart v1.9.0 - Skaner kodow kreskowych EAN z batch processing + background AI
 // Widget do skanowania lekow z Rejestru Produktow Leczniczych
-// v1.8.0 - Sortowanie najnowsze u gory, numeracja nieznanych, edycja listy (usuwanie, zdjecia, daty)
+// v1.9.0 - Background Gemini processing dla lekow > 3 na liscie
 
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/medicine.dart';
+import '../services/app_logger.dart';
+import '../services/gemini_name_lookup_service.dart';
 import '../services/rpl_service.dart';
 import '../services/scanner_pause_service.dart';
 import '../theme/app_theme.dart';
@@ -18,6 +21,9 @@ import '../utils/gs1_parser.dart';
 import 'month_year_picker_dialog.dart';
 import 'neumorphic/neumorphic.dart';
 import '../utils/pharmaceutical_form_helper.dart';
+
+/// Status przetwarzania AI dla zeskanowanego leku
+enum ScanProcessingStatus { pending, processing, completed, error }
 
 /// Zeskanowany lek z kodem EAN i opcjonalna data waznosci
 class ScannedDrug {
@@ -37,6 +43,13 @@ class ScannedDrug {
   String? scannedProductType; // 'lek' | 'suplement' | 'wyrob_medyczny'
   String? scannedPharmaceuticalForm; // Postać farmaceutyczna z OCR
 
+  // === Background AI processing fields ===
+  ScanProcessingStatus processingStatus = ScanProcessingStatus.pending;
+  String? aiProcessedName; // Poprawiona nazwa z AI
+  String? aiDescription; // Opis z AI
+  List<String>? aiTags; // Tagi z AI
+  List<String>? aiWskazania; // Wskazania z AI
+
   ScannedDrug({
     required this.ean,
     this.drugInfo,
@@ -53,10 +66,17 @@ class ScannedDrug {
     this.scannedPharmaceuticalForm,
   });
 
-  /// Nazwa produktu (z RPL lub OCR)
+  /// Nazwa produktu (z AI, RPL lub OCR)
   String get displayName {
+    // Priorytet 1: Nazwa z AI processing (jeśli dostępna)
+    if (aiProcessedName != null && aiProcessedName!.isNotEmpty) {
+      return aiProcessedName!;
+    }
+    // Priorytet 2: Nazwa z RPL
     if (drugInfo != null) return drugInfo!.fullName;
+    // Priorytet 3: Nazwa z OCR
     if (scannedName != null) return scannedName!;
+    // Fallback: Nieznany
     return scanSequence != null ? 'Nieznany #$scanSequence' : 'Nieznany';
   }
 
@@ -237,6 +257,9 @@ class BarcodeScannerWidget extends StatefulWidget {
 
 class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     with WidgetsBindingObserver {
+  // Logger
+  static final Logger _log = AppLogger.getLogger('BarcodeScannerWidget');
+
   // Kontroler skanera
   MobileScannerController? _controller;
 
@@ -919,6 +942,36 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
                         color: isDark
                             ? AppColors.aiAccentDark
                             : AppColors.aiAccentLight,
+                      ),
+                    ],
+                    // === STATUS PRZETWARZANIA AI ===
+                    if (drug.processingStatus ==
+                        ScanProcessingStatus.processing) ...[
+                      const SizedBox(width: 6),
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ] else if (drug.processingStatus ==
+                            ScanProcessingStatus.completed &&
+                        drug.aiProcessedName != null) ...[
+                      const SizedBox(width: 6),
+                      Icon(
+                        LucideIcons.circleCheck,
+                        size: 14,
+                        color: Colors.green,
+                      ),
+                    ] else if (drug.processingStatus ==
+                        ScanProcessingStatus.error) ...[
+                      const SizedBox(width: 6),
+                      Icon(
+                        LucideIcons.circleAlert,
+                        size: 14,
+                        color: Colors.red,
                       ),
                     ],
                   ],
@@ -1669,6 +1722,8 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       // Jesli mamy date z kodu - POMINIJ krok zdjecia!
       if (gs1Data.hasExpiryDate) {
         _scannedDrugs.add(drug);
+        // === BACKGROUND PROCESSING TRIGGER ===
+        _triggerBackgroundIfNeeded();
         // Zostajemy w trybie EAN - gotowi na kolejny kod
         setState(() {});
       } else {
@@ -2078,6 +2133,78 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
       _mode = ScannerMode.ean; // Wroc do skanowania EAN
       _isAiMode = false; // Reset trybu AI
     });
+
+    // === BACKGROUND PROCESSING TRIGGER ===
+    _triggerBackgroundIfNeeded();
+  }
+
+  /// Triggeres background processing dla najstarszego edytowalnego leku (gdy lista > 3)
+  void _triggerBackgroundIfNeeded() {
+    if (_scannedDrugs.length > 3) {
+      // Lek który właśnie stracił edytowalność (4. od końca = index length - 4)
+      final indexToProcess = _scannedDrugs.length - 4;
+      _startBackgroundProcessingForScanner(indexToProcess);
+    }
+  }
+
+  /// Uruchamia przetwarzanie AI w tle dla leku o danym indeksie
+  Future<void> _startBackgroundProcessingForScanner(int index) async {
+    if (index < 0 || index >= _scannedDrugs.length) return;
+
+    final drug = _scannedDrugs[index];
+
+    // Sprawdź czy lek nie jest już przetwarzany
+    if (drug.processingStatus != ScanProcessingStatus.pending) {
+      _log.fine('Drug at index $index already processed/processing');
+      return;
+    }
+
+    _log.info(
+      'Starting background processing for drug #$index: ${drug.displayName}',
+    );
+
+    // Ustaw status na processing
+    setState(() {
+      drug.processingStatus = ScanProcessingStatus.processing;
+    });
+
+    try {
+      final geminiService = GeminiNameLookupService();
+      final result = await geminiService.lookupByName(drug.displayName);
+
+      // Sprawdź czy lek nadal istnieje na liście (mógł być usunięty)
+      if (index >= _scannedDrugs.length || _scannedDrugs[index] != drug) {
+        _log.fine('Drug was removed during processing, skipping update');
+        return;
+      }
+
+      if (result.found && result.medicine != null) {
+        final med = result.medicine!;
+        setState(() {
+          drug.processingStatus = ScanProcessingStatus.completed;
+          drug.aiProcessedName = med.nazwa;
+          drug.aiDescription = med.opis;
+          drug.aiTags = med.tagi;
+          drug.aiWskazania = med.wskazania;
+        });
+        _log.info('Background processing completed for: ${drug.displayName}');
+      } else {
+        // AI nie rozpoznało - ustaw jako completed bez danych
+        setState(() {
+          drug.processingStatus = ScanProcessingStatus.completed;
+        });
+        _log.fine('AI did not recognize drug: ${drug.displayName}');
+      }
+    } catch (e) {
+      _log.warning('Background processing error: $e');
+      if (mounted &&
+          index < _scannedDrugs.length &&
+          _scannedDrugs[index] == drug) {
+        setState(() {
+          drug.processingStatus = ScanProcessingStatus.error;
+        });
+      }
+    }
   }
 
   /// Usuwa tymczasowe pliki zdjęć przed rescanem
