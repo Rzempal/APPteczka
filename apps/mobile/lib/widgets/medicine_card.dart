@@ -17,12 +17,10 @@ import 'package:logging/logging.dart';
 import 'neumorphic/neumorphic.dart';
 
 import 'leaflet_search_sheet.dart';
-import 'filters_sheet.dart' show tagCategories;
-import 'label_selector.dart';
-import 'app_bottom_sheet.dart';
+import 'medicine_edit_sheet.dart';
 
 /// Karta leku - styl neumorficzny z akordeonem
-/// v2.5 - unified button sizing, delete section shadow fix
+/// v2.6 - consolidated edit mode into single MedicineEditSheet
 class MedicineCard extends StatefulWidget {
   final Medicine medicine;
   final List<UserLabel> labels;
@@ -61,20 +59,7 @@ class _MedicineCardState extends State<MedicineCard> {
   static final Logger _log = AppLogger.getLogger('MedicineCard');
   bool _isMoreExpanded = false; // Akordeon "Więcej"
 
-  bool _isEditModeButtonActive = false; // Stan lokalny przycisku trybu edycji
   late Medicine _medicine;
-
-  /// Czy tryb edycji jest aktywny (z ustawień LUB z lokalnego buttona)
-  bool get _isEditModeActive {
-    final alwaysActive = widget.storageService?.editModeAlwaysActive ?? false;
-    return alwaysActive || _isEditModeButtonActive;
-  }
-
-  /// Czy pokazać przycisk "Tryb edycji" (ukryty gdy ustawienie włączone)
-  bool get _showEditModeButton {
-    final alwaysActive = widget.storageService?.editModeAlwaysActive ?? false;
-    return !alwaysActive;
-  }
 
   // Inline note editing
   bool _isEditingNote = false;
@@ -394,108 +379,6 @@ class _MedicineCardState extends State<MedicineCard> {
       case PackageUnit.none:
         return LucideIcons.packageOpen;
     }
-  }
-
-  /// Buduje opis lub warning - dynamiczny content
-  Widget _buildDescriptionOrWarning(ThemeData theme, Color statusColor) {
-    // Sprawdź warningi w kolejności priorytetu
-
-    // 1. Krytycznie niski stan (czerwony warning)
-    if (_medicine.packages.isNotEmpty) {
-      final firstPackage = _medicine.packages.first;
-      if (firstPackage.isOpen && firstPackage.percentRemaining != null) {
-        if (firstPackage.percentRemaining! <= 10) {
-          return Text(
-            'KRYTYCZNIE NISKI STAN - UZUPEŁNIJ',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: AppColors.expired,
-              fontWeight: FontWeight.w700,
-              fontSize: 11,
-            ),
-          );
-        }
-      } else if (firstPackage.pieceCount != null) {
-        final total = _medicine.totalPieceCount;
-        if (_medicine.dailyIntake != null && _medicine.dailyIntake! > 0) {
-          final daysSupply = total / _medicine.dailyIntake!;
-          if (daysSupply <= 3) {
-            return Text(
-              'ZAPAS NA $daysSupply DNI - UZUPEŁNIJ',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.expired,
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-              ),
-            );
-          }
-        }
-      }
-    }
-
-    // 2. Termin ważności < 7 dni (amber warning)
-    final status = _medicine.expiryStatus;
-    if (status == ExpiryStatus.expiringSoon || status == ExpiryStatus.expired) {
-      final expiry = _medicine.terminWaznosci;
-      if (expiry != null) {
-        final date = DateTime.tryParse(expiry);
-        if (date != null) {
-          final daysUntilExpiry = date.difference(DateTime.now()).inDays;
-          if (daysUntilExpiry >= 0 && daysUntilExpiry <= 7) {
-            return Text(
-              'Ważne jeszcze $daysUntilExpiry dni',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.expiringSoon,
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
-              ),
-            );
-          } else if (daysUntilExpiry < 0) {
-            return Text(
-              'Produkt przeterminowany',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.expired,
-                fontWeight: FontWeight.w700,
-                fontSize: 11,
-              ),
-            );
-          }
-        }
-      }
-    }
-
-    // 3. Przydatność po otwarciu (info)
-    if (_medicine.shelfLifeAfterOpening != null &&
-        _medicine.packages.isNotEmpty &&
-        _medicine.packages.first.isOpen) {
-      return Text(
-        'Po otwarciu: ${_medicine.shelfLifeAfterOpening}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
-        ),
-      );
-    }
-
-    // 4. Default - normalny opis
-    return Text(
-      _medicine.opis,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: theme.textTheme.bodySmall?.copyWith(
-        color: theme.colorScheme.onSurfaceVariant,
-      ),
-    );
   }
 
   /// Buduje sekcję H3+H4 (Smart Stock) z notatką po lewej dla trybu compact
@@ -961,125 +844,49 @@ class _MedicineCardState extends State<MedicineCard> {
     );
   }
 
-  /// Buduje wiersz z CTA edycji dla State 3 (Szczegółowy)
-  /// Zawiera: Tryb edycji | Etykiety | #Tagi | Zmień nazwę
+  /// Buduje pojedynczy CTA "Edytuj kartę leku" - otwiera MedicineEditSheet
   Widget _buildEditActionsRow(ThemeData theme, bool isDark) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        // Tryb edycji (tylko gdy nie zawsze aktywny)
-        if (_showEditModeButton)
-          GestureDetector(
-            onTap: () => setState(
-              () => _isEditModeButtonActive = !_isEditModeButtonActive,
+    return GestureDetector(
+      onTap: () => _showMedicineEditSheet(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              LucideIcons.clipboardPenLine,
+              size: 14,
+              color: theme.colorScheme.primary,
             ),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: _isEditModeButtonActive
-                  ? NeuDecoration.pressedSmall(isDark: isDark, radius: 10)
-                  : NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _isEditModeButtonActive
-                        ? LucideIcons.pencilOff
-                        : LucideIcons.pencil,
-                    size: 14,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Tryb edycji',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurface,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
+            const SizedBox(width: 6),
+            Text(
+              'Edytuj kartę leku',
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
-        // Etykiety
-        GestureDetector(
-          onTap: () => _showLabelsSheet(context),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.tags,
-                  size: 14,
-                  color: theme.colorScheme.onSurface,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Etykiety',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          ],
         ),
-        // #Tagi
-        GestureDetector(
-          onTap: () => _showEditCustomTagsDialog(context),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.hash,
-                  size: 14,
-                  color: theme.colorScheme.onSurface,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Tagi',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        // Zmień nazwę (zawsze widoczny)
-        GestureDetector(
-          onTap: () => _showEditNameDialog(context),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 10),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  LucideIcons.textCursorInput,
-                  size: 14,
-                  color: theme.colorScheme.onSurface,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Zmień nazwę',
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+      ),
+    );
+  }
+
+  /// Otwiera BottomSheet z edycją karty leku
+  void _showMedicineEditSheet(BuildContext context) {
+    if (widget.storageService == null) return;
+
+    MedicineEditSheet.show(
+      context: context,
+      medicine: _medicine,
+      availableLabels: widget.labels,
+      storageService: widget.storageService!,
+      onMedicineUpdated: () {
+        // Odśwież kartę po zapisaniu zmian
+        widget.onMedicineUpdated?.call();
+      },
     );
   }
 
@@ -1097,47 +904,16 @@ class _MedicineCardState extends State<MedicineCard> {
         Divider(color: theme.dividerColor.withValues(alpha: 0.5)),
         const SizedBox(height: 12),
 
-        // === CTA: Zmień nazwę | Etykiety | #Tagi ===
-        if (_isMoreExpanded) _buildEditActionsRow(theme, isDark),
-        if (_isMoreExpanded) const SizedBox(height: 12),
-
-        // === OPAKOWANIE (usunięto - info przeniesione do szczegółów) ===
-
         // === TAGI (bez nagłówka, nad opisem) ===
         _buildTagsInline(context, theme, isDark),
 
         // === OPIS (bez nagłówka H1) ===
         const SizedBox(height: 12),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                _medicine.opis,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ),
-            if (_isEditModeActive) ...[
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => _showEditDescriptionDialog(context),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 12,
-                  ),
-                  child: Icon(
-                    LucideIcons.squarePen,
-                    size: 20,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
-          ],
+        Text(
+          _medicine.opis,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurface,
+          ),
         ),
 
         // === WSKAZANIA ===
@@ -1181,57 +957,26 @@ class _MedicineCardState extends State<MedicineCard> {
           ),
         ),
         const SizedBox(height: 6),
-
-        // Content row: bullet points + edit button (align-right)
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Bullet points (expanded)
-            Expanded(
-              child: hasWskazania
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _medicine.wskazania
-                          .map(
-                            (w) => Padding(
-                              padding: const EdgeInsets.only(bottom: 4),
-                              child: Text(
-                                '• $w',
-                                style: theme.textTheme.bodySmall,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    )
-                  : Text(
-                      'Brak wskazań',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontStyle: FontStyle.italic,
-                        color: theme.colorScheme.onSurfaceVariant,
+        // Content: bullet points
+        hasWskazania
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _medicine.wskazania
+                    .map(
+                      (w) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text('• $w', style: theme.textTheme.bodySmall),
                       ),
-                    ),
-            ),
-            // Edit button (align-right) - tylko w trybie edycji
-            if (_isEditModeActive) ...[
-              const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => _showEditWskazaniaDialog(context),
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: NeuDecoration.flatSmall(
-                    isDark: isDark,
-                    radius: 12,
-                  ),
-                  child: Icon(
-                    LucideIcons.squarePen,
-                    size: 20,
-                    color: theme.colorScheme.onSurface,
-                  ),
+                    )
+                    .toList(),
+              )
+            : Text(
+                'Brak wskazań',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
-            ],
-          ],
-        ),
       ],
     );
   }
@@ -1378,8 +1123,8 @@ class _MedicineCardState extends State<MedicineCard> {
                 ],
               ),
             ),
-            // Pin-off button - tylko w trybie edycji i gdy jest ulotka
-            if (hasLeaflet && _isEditModeActive) ...[
+            // Pin-off button - gdy jest ulotka
+            if (hasLeaflet) ...[
               const SizedBox(width: 8),
               GestureDetector(
                 onTap: _detachLeaflet,
@@ -2353,7 +2098,7 @@ class _MedicineCardState extends State<MedicineCard> {
                                     Expanded(
                                       flex: 3,
                                       child: DropdownButtonFormField<int>(
-                                        value: manualShelfLifeUnit,
+                                        initialValue: manualShelfLifeUnit,
                                         decoration: const InputDecoration(
                                           labelText: 'Jednostka',
                                           border: OutlineInputBorder(),
@@ -2729,6 +2474,10 @@ class _MedicineCardState extends State<MedicineCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // === EDYTUJ KARTĘ LEKU (CTA) ===
+                        _buildEditActionsRow(theme, isDark),
+                        const SizedBox(height: 16),
+
                         // === TERMIN WAŻNOŚCI (przeniesiony) ===
                         _buildPackagesSection(
                           context,
@@ -2887,13 +2636,10 @@ class _MedicineCardState extends State<MedicineCard> {
     return Row(
       children: [
         // Usuń lek button (flat style, no shadows)
-        // W trybie edycji pokazuj tylko ikonę, żeby zmieścić inne przyciski
         GestureDetector(
           onTap: () => _showDeleteConfirmationDialog(context),
           child: Container(
-            padding: _isEditModeActive
-                ? const EdgeInsets.all(10)
-                : const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
               color: AppColors.expired.withAlpha(isDark ? 25 : 15),
               borderRadius: BorderRadius.circular(12),
@@ -2906,157 +2652,24 @@ class _MedicineCardState extends State<MedicineCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(LucideIcons.trash2, size: 18, color: AppColors.expired),
-                if (!_isEditModeActive) ...[
-                  const SizedBox(width: 8),
-                  Text(
-                    'Usuń lek',
-                    style: TextStyle(
-                      color: AppColors.expired,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
+                const SizedBox(width: 8),
+                Text(
+                  'Usuń lek',
+                  style: TextStyle(
+                    color: AppColors.expired,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
-                ],
+                ),
               ],
             ),
           ),
         ),
-        // Przycisk zmiany nazwy dla niezweryfikowanych leków (tylko w trybie edycji)
-        if (_isEditModeActive && !_medicine.isVerifiedByBarcode) ...[
-          const SizedBox(width: 12),
-          Padding(
-            padding: const EdgeInsets.only(right: 4, bottom: 4),
-            child: GestureDetector(
-              onTap: () => _showEditNameDialog(context),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Icon(
-                  LucideIcons.textCursorInput,
-                  size: 18,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-            ),
-          ),
-        ],
-        const Spacer(),
-        // Przycisk Tryb edycji (ukryty gdy ustawienie "zawsze aktywny" włączone)
-        if (_showEditModeButton)
-          Padding(
-            padding: const EdgeInsets.only(right: 4, bottom: 4),
-            child: GestureDetector(
-              onTap: () => setState(
-                () => _isEditModeButtonActive = !_isEditModeButtonActive,
-              ),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                decoration: _isEditModeButtonActive
-                    ? NeuDecoration.pressedSmall(isDark: isDark, radius: 12)
-                    : NeuDecoration.flatSmall(isDark: isDark, radius: 12),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _isEditModeButtonActive
-                          ? LucideIcons.pencilOff
-                          : LucideIcons.pencil,
-                      size: 18,
-                      color: theme.colorScheme.onSurface,
-                    ),
-                    // Tekst tylko gdy tryb edycji nieaktywny (ikona zajmuje mniej miejsca)
-                    if (!_isEditModeButtonActive) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        'Tryb edycji',
-                        style: TextStyle(
-                          color: theme.colorScheme.onSurface,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
 
-  Widget _buildActionButtons(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    return GestureDetector(
-      onTap: widget.onExpand,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Icon(
-              LucideIcons.chevronUp,
-              size: 18,
-              color: theme.colorScheme.onSurface,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Zwiń',
-              style: TextStyle(
-                color: theme.colorScheme.onSurface,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   // ==================== DIALOGI ====================
-
-  Future<void> _showEditNameDialog(BuildContext context) async {
-    final controller = TextEditingController(text: _medicine.nazwa);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edytuj nazwę leku'),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: const InputDecoration(
-            hintText: 'Nazwa leku...',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Zapisz'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result.isNotEmpty) {
-      final updatedMedicine = _medicine.copyWith(nazwa: result);
-      await widget.storageService?.saveMedicine(updatedMedicine);
-      setState(() => _medicine = updatedMedicine);
-      widget.onMedicineUpdated?.call();
-    }
-  }
 
   Future<void> _showDeleteConfirmationDialog(BuildContext context) async {
     final confirmed = await showDialog<bool>(
@@ -3115,242 +2728,6 @@ class _MedicineCardState extends State<MedicineCard> {
 
     if (confirmed == true) {
       widget.onDelete?.call();
-    }
-  }
-
-  Future<void> _showEditDescriptionDialog(BuildContext context) async {
-    final controller = TextEditingController(text: _medicine.opis);
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edytuj opis'),
-        content: TextField(
-          controller: controller,
-          maxLines: 5,
-          decoration: const InputDecoration(
-            hintText: 'Opis działania leku...',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Zapisz'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null && result.isNotEmpty) {
-      final updatedMedicine = _medicine.copyWith(opis: result);
-      await widget.storageService?.saveMedicine(updatedMedicine);
-      setState(() => _medicine = updatedMedicine);
-      widget.onMedicineUpdated?.call();
-    }
-  }
-
-  Future<void> _showEditWskazaniaDialog(BuildContext context) async {
-    final controller = TextEditingController(
-      text: _medicine.wskazania.join(', '),
-    );
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edytuj wskazania'),
-        content: TextField(
-          controller: controller,
-          maxLines: 4,
-          decoration: const InputDecoration(
-            hintText: 'Wskazania oddzielone przecinkami...',
-            border: OutlineInputBorder(),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Zapisz'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null) {
-      final wskazania = result
-          .split(',')
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty)
-          .toList();
-      final updatedMedicine = _medicine.copyWith(wskazania: wskazania);
-      await widget.storageService?.saveMedicine(updatedMedicine);
-    }
-  }
-
-  /// Pokazuje bottom sheet z selectorem etykiet
-  void _showLabelsSheet(BuildContext context) {
-    List<String> currentLabels = List<String>.from(_medicine.labels);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final theme = Theme.of(context);
-            final isDark = theme.brightness == Brightness.dark;
-            return Container(
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(BottomSheetConstants.radius),
-                ),
-              ),
-              child: DraggableScrollableSheet(
-                initialChildSize: 0.5,
-                minChildSize: 0.3,
-                maxChildSize: 0.8,
-                expand: false,
-                builder: (context, scrollController) => Column(
-                  children: [
-                    const BottomSheetDragHandle(),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: BottomSheetConstants.contentPadding,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header
-                            Row(
-                              children: [
-                                Icon(
-                                  LucideIcons.tags,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Etykiety: ${_medicine.nazwa ?? "Lek"}',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            // LabelSelector z reaktywnym stanem
-                            if (widget.storageService != null)
-                              LabelSelector(
-                                storageService: widget.storageService!,
-                                selectedLabelIds: currentLabels,
-                                isOpen: true,
-                                onToggle: () {},
-                                onLabelTap: (_) {},
-                                onChanged: (newLabelIds) {
-                                  setSheetState(() {
-                                    currentLabels = newLabelIds;
-                                  });
-                                },
-                              ),
-                            const SizedBox(height: 16),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    ).then((_) async {
-      // Zapisz zmiany po zamknięciu arkusza
-      final originalLabels = Set<String>.from(_medicine.labels);
-      final newLabels = Set<String>.from(currentLabels);
-
-      if (originalLabels.length != newLabels.length ||
-          !originalLabels.containsAll(newLabels)) {
-        final updatedMedicine = _medicine.copyWith(labels: currentLabels);
-        await widget.storageService?.saveMedicine(updatedMedicine);
-        setState(() => _medicine = updatedMedicine);
-        widget.onMedicineUpdated?.call();
-      }
-    });
-  }
-
-  Future<void> _showEditCustomTagsDialog(BuildContext context) async {
-    final categorizedTags = tagCategories.values.expand((e) => e).toSet();
-    final customTags = _medicine.tagi
-        .where((t) => !categorizedTags.contains(t))
-        .toList();
-    final controller = TextEditingController(text: customTags.join(', '));
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edytuj własne tagi'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Tagi spoza listy kontrolowanej. Oddziel przecinkami.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              maxLines: 2,
-              decoration: const InputDecoration(
-                hintText: 'np. domowe, mama, dziecko...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text),
-            child: const Text('Zapisz'),
-          ),
-        ],
-      ),
-    );
-
-    if (result != null) {
-      final systemTags = _medicine.tagi
-          .where((t) => categorizedTags.contains(t))
-          .toList();
-      final newCustomTags = result
-          .split(',')
-          .map((s) => s.trim().toLowerCase())
-          .where((s) => s.isNotEmpty)
-          .toList();
-
-      final updatedMedicine = _medicine.copyWith(
-        tagi: [...systemTags, ...newCustomTags],
-      );
-      await widget.storageService?.saveMedicine(updatedMedicine);
-      setState(() => _medicine = updatedMedicine);
-      widget.onMedicineUpdated?.call();
     }
   }
 
