@@ -14,7 +14,9 @@ import 'package:path_provider/path_provider.dart';
 import '../models/medicine.dart';
 import '../services/app_logger.dart';
 import '../services/gemini_name_lookup_service.dart';
+import '../services/gemini_service.dart';
 import '../services/rpl_service.dart';
+
 import '../services/scanner_pause_service.dart';
 import '../theme/app_theme.dart';
 import '../utils/gs1_parser.dart';
@@ -2169,26 +2171,69 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     });
 
     try {
-      final geminiService = GeminiNameLookupService();
-      final result = await geminiService.lookupByName(drug.displayName);
+      // === ROZPOZNAWANIE ZALEŻNE OD TYPU PRODUKTU ===
+      bool aiFound = false;
 
-      // Sprawdź czy lek nadal istnieje na liście (mógł być usunięty)
-      if (index >= _scannedDrugs.length || _scannedDrugs[index] != drug) {
-        _log.fine('Drug was removed during processing, skipping update');
-        return;
+      if (!drug.isFromRpl && drug.tempProductImagePath != null) {
+        // === PRODUKT NIEZNANY: Użyj OCR ze zdjęcia ===
+        _log.fine('Using OCR for unknown product: ${drug.displayName}');
+        final geminiOcrService = GeminiService();
+        final result = await geminiOcrService.scanImage(
+          File(drug.tempProductImagePath!),
+        );
+
+        // Sprawdź czy lek nadal istnieje
+        if (index >= _scannedDrugs.length || _scannedDrugs[index] != drug) {
+          _log.fine('Drug was removed during processing, skipping update');
+          return;
+        }
+
+        if (result.leki.isNotEmpty) {
+          final scanned = result.leki.first;
+          setState(() {
+            drug.processingStatus = ScanProcessingStatus.completed;
+            drug.aiProcessedName = scanned.nazwa;
+            drug.aiDescription = scanned.opis;
+            drug.aiTags = scanned.tagi;
+            // Zapisz też dane OCR w polach scanned* dla spójności
+            drug.scannedName = scanned.nazwa;
+            drug.scannedDescription = scanned.opis;
+            drug.scannedTags = scanned.tagi;
+            drug.scannedPower = scanned.power;
+            drug.scannedCapacity = scanned.capacity;
+            drug.scannedProductType = scanned.productType;
+            drug.scannedPharmaceuticalForm = scanned.postacFarmaceutyczna;
+          });
+          aiFound = true;
+          _log.info('OCR completed for unknown product: ${scanned.nazwa}');
+        }
+      } else {
+        // === PRODUKT Z RPL: Użyj lookupByName ===
+        _log.fine('Using lookupByName for RPL product: ${drug.displayName}');
+        final geminiService = GeminiNameLookupService();
+        final result = await geminiService.lookupByName(drug.displayName);
+
+        // Sprawdź czy lek nadal istnieje
+        if (index >= _scannedDrugs.length || _scannedDrugs[index] != drug) {
+          _log.fine('Drug was removed during processing, skipping update');
+          return;
+        }
+
+        if (result.found && result.medicine != null) {
+          final med = result.medicine!;
+          setState(() {
+            drug.processingStatus = ScanProcessingStatus.completed;
+            drug.aiProcessedName = med.nazwa;
+            drug.aiDescription = med.opis;
+            drug.aiTags = med.tagi;
+            drug.aiWskazania = med.wskazania;
+          });
+          aiFound = true;
+          _log.info('LookupByName completed for: ${drug.displayName}');
+        }
       }
 
-      if (result.found && result.medicine != null) {
-        final med = result.medicine!;
-        setState(() {
-          drug.processingStatus = ScanProcessingStatus.completed;
-          drug.aiProcessedName = med.nazwa;
-          drug.aiDescription = med.opis;
-          drug.aiTags = med.tagi;
-          drug.aiWskazania = med.wskazania;
-        });
-        _log.info('Background processing completed for: ${drug.displayName}');
-      } else {
+      if (!aiFound) {
         // AI nie rozpoznało - ustaw jako completed bez danych
         setState(() {
           drug.processingStatus = ScanProcessingStatus.completed;

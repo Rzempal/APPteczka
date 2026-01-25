@@ -1275,21 +1275,45 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       await Future.wait(
         drugs.map((drug) async {
           try {
-            final result = await geminiService.lookupByName(drug.displayName);
-            if (result.found && result.medicine != null) {
+            // === OPTIMIZATION: Sprawdź cached AI data z background processing ===
+            String? aiOpis;
+            List<String>? aiWskazania;
+            List<String>? aiTagi;
+            bool aiFound = false;
+
+            if (drug.processingStatus == ScanProcessingStatus.completed &&
+                drug.aiDescription != null) {
+              // Użyj cached data z background processing
+              _log.fine('Using cached AI data for: ${drug.displayName}');
+              aiOpis = drug.aiDescription;
+              aiWskazania = drug.aiWskazania;
+              aiTagi = drug.aiTags;
+              aiFound = true;
+            } else {
+              // Odpytaj Gemini (dla pending/error/niezakończonych)
+              _log.fine('Querying Gemini for: ${drug.displayName}');
+              final result = await geminiService.lookupByName(drug.displayName);
+              if (result.found && result.medicine != null) {
+                aiOpis = result.medicine!.opis;
+                aiWskazania = result.medicine!.wskazania;
+                aiTagi = result.medicine!.tagi;
+                aiFound = true;
+              }
+            }
+
+            if (aiFound) {
               // Tworzymy Medicine z polaczeniem danych z RPL i AI
-              final med = result.medicine!;
               final form = drug.drugInfo?.form;
               final medicine = Medicine(
                 id: const Uuid().v4(),
                 nazwa: drug.displayName,
-                opis: med.opis,
-                wskazania: med.wskazania,
+                opis: aiOpis ?? '',
+                wskazania: aiWskazania ?? [],
                 tagi: <String>{
                   ...drug
                       .toMedicine('')
                       .tagi, // tagi z RPL (Rp/OTC, forma, substancje)
-                  ...processTagsForImport(med.tagi), // tagi z AI
+                  ...processTagsForImport(aiTagi ?? []), // tagi z AI
                 }.toList(), // usun duplikaty
                 packages: drug.expiryDate != null
                     ? [
