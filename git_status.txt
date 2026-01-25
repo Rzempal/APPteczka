@@ -1,0 +1,6 @@
+ M apps/mobile/lib/widgets/medicine_card.dart
+?? apps/mobile/analyze_output.txt
+?? apps/mobile/build_output.txt
+?? apps/mobile/lib/widgets/medicine_edit_sheet.dart
+?? git_log.txt
+?? git_status.txt

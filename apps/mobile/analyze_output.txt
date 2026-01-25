@@ -1,0 +1,5 @@
+Analyzing 2 items...                                            
+
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\widgets\medicine_card.dart:2107:41 - deprecated_member_use
+
+1 issue found. (ran in 1.2s)

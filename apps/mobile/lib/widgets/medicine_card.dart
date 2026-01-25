@@ -2490,7 +2490,7 @@ class _MedicineCardState extends State<MedicineCard> {
                         _buildSupplyCalculatorSection(context, theme, isDark),
 
                         // === DATA DODANIA + WERYFIKACJA ===
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         Text(
                           'Dodano',
                           style: theme.textTheme.labelMedium?.copyWith(

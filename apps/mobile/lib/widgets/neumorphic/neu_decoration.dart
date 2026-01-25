@@ -123,9 +123,16 @@ class NeuDecoration {
     final dist = performanceMode ? shadowDistanceSmPerf : shadowDistanceSm;
     final blur = performanceMode ? shadowBlurSmPerf : shadowBlurSm;
 
+    // Subtle accent border (more subtle than flat())
+    final accentColor = isDark ? AppColors.accentDark : AppColors.accent;
+
     return BoxDecoration(
       color: bgColor,
       borderRadius: borderRadius ?? BorderRadius.circular(radius),
+      border: Border.all(
+        color: accentColor.withValues(alpha: 0.08),
+        width: 1.0,
+      ),
       boxShadow: [
         BoxShadow(
           color: shadowDark.withValues(alpha: isDark ? 0.6 : 0.6),

@@ -1,0 +1,2 @@
+Running Gradle task 'assembleDebug'...                             62,8s
+Gradle build failed to produce an .apk file. It's likely that this file was generated under C:\Users\rzemp\GitHub\APPteczka\apps\mobile\build, but the tool couldn't find it.
