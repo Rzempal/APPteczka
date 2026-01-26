@@ -47,7 +47,6 @@ class NeuInsetContainer extends StatelessWidget {
 
     // Calculate stop position for gradient (relative to container size)
     // Using a fixed stop that works well for most sizes
-    const double gradientStop = 0.15;
 
     return Container(
       width: width,

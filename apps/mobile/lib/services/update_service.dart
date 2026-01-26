@@ -93,13 +93,6 @@ class UpdateService extends ChangeNotifier {
     }
   }
 
-  /// Compare two version strings in YYYYMMDD_HHMM format
-  /// Returns: >0 if v1 > v2, <0 if v1 < v2, 0 if equal
-  int _compareVersions(String v1, String v2) {
-    // Simple string comparison works for YYYYMMDD_HHMM format
-    return v1.compareTo(v2);
-  }
-
   /// Start downloading and installing the update
   Future<void> startUpdate() async {
     if (_apkUrl == null) {

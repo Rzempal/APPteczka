@@ -30,7 +30,8 @@ class KartonColors {
 class KartonClosedIcon extends StatelessWidget {
   final double size;
   final bool isDark;
-  final Color? accentColor; // Optional override for tape/cross color (e.g., red for DEV)
+  final Color?
+  accentColor; // Optional override for tape/cross color (e.g., red for DEV)
 
   const KartonClosedIcon({
     super.key,
@@ -75,7 +76,7 @@ class _KartonClosedPainter extends CustomPainter {
         : KartonColors.boxFaceRightLight;
     // Use accentColor if provided, otherwise default to AppColors.primary
     final tapeLight = accentColor ?? AppColors.primary;
-    final tapeDark = accentColor != null 
+    final tapeDark = accentColor != null
         ? HSLColor.fromColor(accentColor!).withLightness(0.35).toColor()
         : AppColors.primaryDark;
 
@@ -164,7 +165,8 @@ class _KartonClosedPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _KartonClosedPainter oldDelegate) {
-    return oldDelegate.isDark != isDark || oldDelegate.accentColor != accentColor;
+    return oldDelegate.isDark != isDark ||
+        oldDelegate.accentColor != accentColor;
   }
 }
 
@@ -320,9 +322,6 @@ class _KartonOpenPainter extends CustomPainter {
     canvas.translate(10 * scale, 15 * scale);
     canvas.scale(0.9 * scale);
 
-    final topColor = isDark
-        ? KartonColors.boxFaceTop
-        : KartonColors.boxFaceTopLight;
     final leftColor = isDark
         ? KartonColors.boxFaceLeft
         : KartonColors.boxFaceLeftLight;

@@ -257,7 +257,6 @@ class NeuSearchField extends StatefulWidget {
 class _NeuSearchFieldState extends State<NeuSearchField> {
   late TextEditingController _controller;
   late FocusNode _focusNode;
-  bool _isFocused = false;
   bool _hasText = false;
 
   @override
@@ -296,15 +295,11 @@ class _NeuSearchFieldState extends State<NeuSearchField> {
   }
 
   void _onFocusChange() {
-    setState(() {
-      _isFocused = _focusNode.hasFocus;
-    });
+    // Focus change handled by NeuTextField internally
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return NeuTextField(
       controller: _controller,
       focusNode: _focusNode,

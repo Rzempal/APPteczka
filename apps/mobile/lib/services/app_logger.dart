@@ -28,8 +28,7 @@ import 'package:flutter/foundation.dart';
 /// - `warning` (900) - Ostrzeżenia
 /// - `severe` (1000) - Błędy krytyczne
 class AppLogger {
-  // Singleton
-  static final AppLogger _instance = AppLogger._();
+  // Singleton - prywatny konstruktor
   static bool _initialized = false;
 
   // Circular buffer dla bug reports

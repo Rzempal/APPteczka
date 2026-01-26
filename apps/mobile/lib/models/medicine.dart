@@ -370,6 +370,7 @@ class Medicine {
     String? shelfLifeStatus,
     String? pharmaceuticalForm,
     bool clearNotatka = false, // Explicite ustawia notatka na null
+    bool clearDailyIntake = false, // Explicite ustawia dailyIntake na null
   }) {
     return Medicine(
       id: id ?? this.id,
@@ -383,7 +384,7 @@ class Medicine {
       packages: packages ?? this.packages,
       terminWaznosci: terminWaznosci ?? _legacyTerminWaznosci,
       leafletUrl: leafletUrl ?? this.leafletUrl,
-      dailyIntake: dailyIntake ?? this.dailyIntake,
+      dailyIntake: clearDailyIntake ? null : (dailyIntake ?? this.dailyIntake),
       dataDodania: dataDodania ?? this.dataDodania,
       isVerifiedByBarcode: isVerifiedByBarcode ?? this.isVerifiedByBarcode,
       verificationNote: verificationNote ?? this.verificationNote,

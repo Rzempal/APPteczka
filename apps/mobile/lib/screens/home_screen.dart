@@ -18,7 +18,6 @@ import '../widgets/karton_icons.dart';
 import '../widgets/app_bottom_sheet.dart';
 import '../theme/app_theme.dart';
 import '../widgets/neumorphic/neumorphic.dart';
-import 'edit_medicine_screen.dart';
 import 'pdf_viewer_screen.dart';
 import '../utils/tag_normalization.dart';
 import '../utils/duplicate_detection.dart';
@@ -70,15 +69,10 @@ class HomeScreenState extends State<HomeScreen> {
   String? _expandedMedicineId; // ID karty rozwiniętej jako akordeon
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
-  bool _isFiltersSheetOpen = false;
-  bool _isManagementSheetOpen = false;
   final FocusNode _searchFocusNode = FocusNode();
 
   // Help bottom sheet state
   bool _isHelpTooltipOpen = false;
-
-  // Sort bottom sheet state
-  bool _isSortSheetOpen = false;
 
   // Scroll animation state
   final ScrollController _scrollController = ScrollController();
@@ -209,15 +203,6 @@ class HomeScreenState extends State<HomeScreen> {
         _searchFocusNode.requestFocus();
       }
     });
-  }
-
-  /// Zwija search bar
-  void _collapseSearchBar() {
-    setState(() {
-      _isSearchBarExpanded = false;
-    });
-
-    _searchFocusNode.unfocus();
   }
 
   /// Otwiera bottomSheet sortowania
@@ -391,7 +376,6 @@ class HomeScreenState extends State<HomeScreen> {
                                           }
                                         });
                                       },
-                                      onEdit: () => _editMedicine(medicine),
                                       onDelete: () =>
                                           _deleteMedicineWithConfirm(medicine),
                                       onTagTap: (tag) => _filterByTag(tag),
@@ -861,7 +845,6 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   void _showFilters() {
-    setState(() => _isFiltersSheetOpen = true);
     final labels = widget.storageService.getLabels();
 
     AppBottomSheet.show(
@@ -887,9 +870,7 @@ class HomeScreenState extends State<HomeScreen> {
           _loadMedicines();
           widget.onFiltersChanged?.call();
         })
-        .whenComplete(() {
-          if (mounted) setState(() => _isFiltersSheetOpen = false);
-        });
+        .whenComplete(() {});
   }
 
   void _clearFilters() {
@@ -935,8 +916,6 @@ class HomeScreenState extends State<HomeScreen> {
   // ==================== SORT BOTTOM SHEET ====================
 
   void _showSortBottomSheet() {
-    setState(() => _isSortSheetOpen = true);
-
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -1039,13 +1018,10 @@ class HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    ).whenComplete(() {
-      if (mounted) setState(() => _isSortSheetOpen = false);
-    });
+    ).whenComplete(() {});
   }
 
   void _showFilterManagement() {
-    setState(() => _isManagementSheetOpen = true);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -1241,9 +1217,7 @@ class HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-    ).whenComplete(() {
-      if (mounted) setState(() => _isManagementSheetOpen = false);
-    });
+    ).whenComplete(() {});
   }
 
   /// Kopiuje listę nazw leków do schowka
@@ -1460,22 +1434,6 @@ class HomeScreenState extends State<HomeScreen> {
   void _deleteMedicineWithConfirm(Medicine medicine) async {
     if (await _confirmDelete(medicine)) {
       _deleteMedicine(medicine);
-    }
-  }
-
-  /// Otwiera ekran edycji leku
-  void _editMedicine(Medicine medicine) async {
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EditMedicineScreen(
-          storageService: widget.storageService,
-          medicine: medicine,
-        ),
-      ),
-    );
-    if (result == true) {
-      _loadMedicines();
     }
   }
 

@@ -26,7 +26,6 @@ class MedicineCard extends StatefulWidget {
   final List<UserLabel> labels;
   final StorageService? storageService;
   final VoidCallback? onExpand;
-  final VoidCallback? onEdit;
   final VoidCallback? onDelete;
   final Function(String)? onTagTap;
   final Function(String)? onLabelTap;
@@ -48,7 +47,6 @@ class MedicineCard extends StatefulWidget {
     this.labels = const [],
     this.storageService,
     this.onExpand,
-    this.onEdit,
     this.onDelete,
     this.onTagTap,
     this.onLabelTap,
@@ -3074,9 +3072,9 @@ class _MedicineCardState extends State<MedicineCard> {
 
     if (result != null) {
       // -1 = wyczyść dawkę (z przycisku "Wyczyść")
-      final updated = _medicine.copyWith(
-        dailyIntake: result == -1 ? null : result,
-      );
+      final updated = result == -1
+          ? _medicine.copyWith(clearDailyIntake: true)
+          : _medicine.copyWith(dailyIntake: result);
       await widget.storageService?.saveMedicine(updated);
       setState(() => _medicine = updated);
       widget.onMedicineUpdated?.call();

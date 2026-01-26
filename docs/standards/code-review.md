@@ -144,6 +144,53 @@ Podczas przeglądu kodu -- trzy poziomy oceny:
 - „Te 10 linii można skrócić do 3"\
 - „Struktura danych jest błędna, powinna być..."
 
+## Szósta warstwa: Polowanie na sieroty (Orphan Hunt)
+
+> "Martwy kod jest jak martwe ciało w szafie. Śmierdzi i wszystkich straszy."
+
+**Cel:** Identyfikacja i eliminacja nieużywanego kodu.
+
+**Kiedy uruchamiać:** Raz na sprint lub przed major release.
+
+### Procedura Orphan Hunt
+
+```markdown
+## Protokół Orphan Hunt
+
+### Krok 1: Automatyczna detekcja
+
+- Uruchom `dart analyze` z włączonymi regułami `unused_*`
+- Przeszukaj grep: `TODO|FIXME|HACK` → zweryfikuj aktualność
+
+### Krok 2: Weryfikacja każdego znaleziska
+
+Dla każdego orphana:
+
+- [ ] Potwierdź brak użycia (IDE → Find Usages)
+- [ ] Sprawdź czy nie ma adnotacji `// KEEP: powód`
+- [ ] Sprawdź historię Git (git blame)
+
+### Krok 3: Decyzja
+
+| Warunek                                         | Akcja                 |
+| ----------------------------------------------- | --------------------- |
+| Brak użycia + brak KEEP + >3 miesiące bez zmian | DELETE                |
+| Ma KEEP z aktualnym powodem                     | ZACHOWAJ              |
+| TODO starsze niż 3 miesiące                     | Zrób TERAZ lub DELETE |
+
+### Krok 4: Commit
+
+Format: `#N Orphan Hunt: usunięto X martwych elementów`
+```
+
+### Wzorzec oceny orphan-code
+
+**Ocena:** czysto / akceptowalne / cmentarzysko  
+**Liczba orphanów:** `[X funkcji, Y importów, Z TODO bez daty]`  
+**Kierunek poprawy:** `"Usuń całą klasę XyzHelper - nikt jej nie używa od 6 miesięcy"`
+
+---
+
 ## Wykorzystanie narzędzi
 
 ### Narzędzia dokumentacyjne
@@ -193,4 +240,4 @@ Czy psujemy przestrzeń użytkownika? [Tak/Nie]
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-14
+> 📅 **Ostatnia aktualizacja:** 2026-01-26

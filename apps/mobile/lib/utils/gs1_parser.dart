@@ -174,11 +174,6 @@ class Gs1Parser {
     return data.length;
   }
 
-  /// Heurystyka nie jest juz potrzebna - cala logika w _findVariableFieldEnd
-  static bool _looksLikeAiStart(String data, int pos) {
-    return true; // Unused, kept for API compatibility
-  }
-
   /// Parsuje date YYMMDD na YYYY-MM-DD
   static String? _parseExpiryDate(String yymmdd) {
     if (yymmdd.length != 6) return null;

@@ -98,6 +98,48 @@ function calculateProjectMatch(project, plot) { ... }
 
 ---
 
+## Higiena Kodu (Orphan-Code Prevention)
+
+### Reguły prewencyjne
+
+| Reguła                  | Opis                                            | Weryfikacja           |
+| ----------------------- | ----------------------------------------------- | --------------------- |
+| Zero martwych importów  | Usuwaj importy nieużywane w pliku               | Lint: `unused_import` |
+| Zero martwych elementów | Funkcja/klasa bez wywołań = do usunięcia        | IDE "Find Usages"     |
+| TODO z formatem         | `// TODO(autor YYYY-MM): opis`                  | Code review           |
+| Dead code = delete      | Kod po `return`/`throw`/`break` niedopuszczalny | Lint: `dead_code`     |
+| Wyjątek: `// KEEP:`     | Dozwolony dla świadomie planowanego kodu        | `// KEEP: powód`      |
+
+### Lint rules (Flutter/Dart)
+
+Włącz w `analysis_options.yaml`:
+
+```yaml
+linter:
+  rules:
+    - unused_element # nieużywane klasy/funkcje prywatne
+    - unused_field # nieużywane pola klas
+    - unused_import # martwe importy
+    - unused_local_variable # zmienne lokalne bez użycia
+    - dead_code # kod po return/throw/break
+```
+
+### Przykłady
+
+```dart
+// ❌ Źle - TODO bez formatu
+// TODO: naprawić później
+
+// ✅ Dobrze - TODO z autorem i datą
+// TODO(rzempal 2026-01): dodać walidację email
+
+// ✅ Wyjątek KEEP - świadomy placeholder
+// KEEP: hook dla przyszłej integracji z kalendarzem
+void _onCalendarSync() {}
+```
+
+---
+
 ## Struktura Plików
 
 ### Frontend (Next.js)
@@ -155,4 +197,4 @@ const ProjectCard = (props: any) => { ... }
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-14
+> 📅 **Ostatnia aktualizacja:** 2026-01-26

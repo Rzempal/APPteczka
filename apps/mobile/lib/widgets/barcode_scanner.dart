@@ -1392,64 +1392,6 @@ class _BarcodeScannerWidgetState extends State<BarcodeScannerWidget>
     }
   }
 
-  /// Usuwa zdjęcie daty ważności
-  Future<void> _deleteExpiryPhoto(int index) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Usuń zdjęcie daty'),
-        content: const Text(
-          'Czy na pewno chcesz usunąć zdjęcie daty ważności?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Anuluj'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Usuń'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      setState(() {
-        final drug = _scannedDrugs[index];
-
-        // Usuń plik fizyczny jeśli istnieje
-        if (drug.tempImagePath != null) {
-          try {
-            final file = File(drug.tempImagePath!);
-            if (file.existsSync()) {
-              file.deleteSync();
-            }
-          } catch (e) {
-            // Ignoruj błędy usuwania pliku
-          }
-        }
-
-        // Wyczyść dane w modelu
-        drug.tempImagePath = null;
-        drug.expiryDate = null;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Zdjęcie usunięte. Możesz ponownie zrobić zdjęcie lub wpisać datę',
-            ),
-            behavior: SnackBarBehavior.floating,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
   /// Pokazuje podgląd zdjęć produktu (nazwa + data) z opcją ponownego zrobienia
   Future<void> _showPhotosPreview(int index) async {
     final drug = _scannedDrugs[index];

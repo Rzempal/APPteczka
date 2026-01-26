@@ -115,7 +115,9 @@ class _TagSelectorWidgetState extends State<TagSelectorWidget> {
                     color: isSubstance
                         ? Colors.blue.shade700
                         : theme.colorScheme.onSurface,
-                    fontStyle: isSubstance ? FontStyle.italic : FontStyle.normal,
+                    fontStyle: isSubstance
+                        ? FontStyle.italic
+                        : FontStyle.normal,
                   ),
                 ),
                 // Substancje czynne sa readonly - bez przycisku X
@@ -168,81 +170,6 @@ class _TagSelectorWidgetState extends State<TagSelectorWidget> {
                   isDark,
                 ),
               ],
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildCategorySection(String name, List<String> tags, bool isDark) {
-    final isExpanded = _expandedCategories[name] ?? false;
-    final selectedInCategory = tags
-        .where((t) => _selectedSet.contains(t))
-        .length;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        InkWell(
-          onTap: () {
-            setState(() {
-              _expandedCategories[name] = !isExpanded;
-            });
-          },
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                Transform.rotate(
-                  angle: isExpanded ? math.pi / 2 : 0,
-                  child: Icon(
-                    LucideIcons.chevronRight,
-                    color: AppColors.primary,
-                    size: 16,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                    color: AppColors.primary,
-                  ),
-                ),
-                const Spacer(),
-                if (selectedInCategory > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$selectedInCategory',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        if (isExpanded) ...[
-          Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 8),
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: tags.map((tag) => _buildTagChip(tag, isDark)).toList(),
             ),
           ),
         ],

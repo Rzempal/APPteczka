@@ -54,6 +54,9 @@ enum ExpiryFilter {
   expired('Przeterminowane'),
   expiringSoon('Kończą się'),
   valid('Ważne'),
+  inUse('W użyciu'),
+  opened('Otwarte'),
+  noExpiry('Brak daty'),
   duplicates('Potencjalne duplikaty');
 
   final String label;
@@ -1095,6 +1098,12 @@ class _FiltersSheetState extends State<FiltersSheet> {
         return Icons.warning_amber_outlined;
       case ExpiryFilter.valid:
         return Icons.check_circle_outline;
+      case ExpiryFilter.inUse:
+        return LucideIcons.pill;
+      case ExpiryFilter.opened:
+        return LucideIcons.packageOpen;
+      case ExpiryFilter.noExpiry:
+        return LucideIcons.calendarX2;
       case ExpiryFilter.duplicates:
         return LucideIcons.copy;
     }
@@ -1110,6 +1119,12 @@ class _FiltersSheetState extends State<FiltersSheet> {
         return AppColors.expiringSoon;
       case ExpiryFilter.valid:
         return AppColors.valid;
+      case ExpiryFilter.inUse:
+        return AppColors.primary;
+      case ExpiryFilter.opened:
+        return AppColors.expiringSoon;
+      case ExpiryFilter.noExpiry:
+        return AppColors.lightTextMuted;
       case ExpiryFilter.duplicates:
         return AppColors.primary;
     }
@@ -1148,23 +1163,25 @@ List<Medicine> applyFilters(List<Medicine> medicines, FilterState state) {
       }
     }
 
-    // Filtr terminu ważności LUB duplikatów
+    // Filtr terminu ważności / statusu
     if (state.expiryFilter != ExpiryFilter.all) {
-      if (state.expiryFilter == ExpiryFilter.duplicates) {
-        if (!hasDuplicates(m, medicines)) return false;
-      } else {
-        final status = m.expiryStatus;
-        switch (state.expiryFilter) {
-          case ExpiryFilter.expired:
-            if (status != ExpiryStatus.expired) return false;
-          case ExpiryFilter.expiringSoon:
-            if (status != ExpiryStatus.expiringSoon) return false;
-          case ExpiryFilter.valid:
-            if (status != ExpiryStatus.valid) return false;
-          case ExpiryFilter.all:
-          case ExpiryFilter.duplicates:
-            break;
-        }
+      switch (state.expiryFilter) {
+        case ExpiryFilter.duplicates:
+          if (!hasDuplicates(m, medicines)) return false;
+        case ExpiryFilter.expired:
+          if (m.expiryStatus != ExpiryStatus.expired) return false;
+        case ExpiryFilter.expiringSoon:
+          if (m.expiryStatus != ExpiryStatus.expiringSoon) return false;
+        case ExpiryFilter.valid:
+          if (m.expiryStatus != ExpiryStatus.valid) return false;
+        case ExpiryFilter.inUse:
+          if (m.dailyIntake == null || m.dailyIntake! <= 0) return false;
+        case ExpiryFilter.opened:
+          if (!m.packages.any((p) => p.isOpen)) return false;
+        case ExpiryFilter.noExpiry:
+          if (m.expiryStatus != ExpiryStatus.unknown) return false;
+        case ExpiryFilter.all:
+          break;
       }
     }
 
