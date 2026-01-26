@@ -4,6 +4,7 @@ import '../models/medicine.dart';
 import '../models/label.dart';
 import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
+import '../utils/pharmaceutical_form_helper.dart';
 import 'app_bottom_sheet.dart';
 import 'neumorphic/neumorphic.dart';
 import 'filters_sheet.dart' show tagCategories;
@@ -92,6 +93,7 @@ class _MedicineEditSheetContentState extends State<_MedicineEditSheetContent> {
   late TextEditingController _customTagsController;
 
   late List<String> _selectedLabels;
+  String? _selectedForm;
   bool _hasChanges = false;
   bool _isSaving = false;
 
@@ -116,6 +118,7 @@ class _MedicineEditSheetContentState extends State<_MedicineEditSheetContent> {
     _customTagsController = TextEditingController(text: customTags.join(', '));
 
     _selectedLabels = List<String>.from(widget.medicine.labels);
+    _selectedForm = widget.medicine.pharmaceuticalForm;
 
     // Listeners dla walidacji w czasie rzeczywistym
     _nazwaController.addListener(_validateNazwa);
@@ -201,6 +204,7 @@ class _MedicineEditSheetContentState extends State<_MedicineEditSheetContent> {
         wskazania: wskazania,
         labels: _selectedLabels,
         tagi: [...systemTags, ...newCustomTags],
+        pharmaceuticalForm: _selectedForm,
       );
 
       await widget.storageService.saveMedicine(updatedMedicine);
@@ -313,6 +317,18 @@ class _MedicineEditSheetContentState extends State<_MedicineEditSheetContent> {
                     hintText: 'Wprowadź nazwę leku...',
                     errorText: _nazwaError,
                   ),
+
+                  const SizedBox(height: 24),
+
+                  // POSTAĆ FARMACEUTYCZNA
+                  _buildSectionHeader(
+                    theme,
+                    isDark,
+                    icon: PharmaceuticalFormHelper.getIcon(_selectedForm),
+                    title: 'Postać farmaceutyczna',
+                  ),
+                  const SizedBox(height: 8),
+                  _buildFormSelector(isDark),
 
                   const SizedBox(height: 24),
 
@@ -592,6 +608,66 @@ class _MedicineEditSheetContentState extends State<_MedicineEditSheetContent> {
                 if (isSelected) ...[
                   const SizedBox(width: 6),
                   Icon(LucideIcons.check, size: 14, color: labelColor),
+                ],
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildFormSelector(bool isDark) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: PharmaceuticalFormHelper.predefinedForms.map((form) {
+        final isSelected = _selectedForm?.toLowerCase() == form.toLowerCase();
+        final formIcon = PharmaceuticalFormHelper.getIcon(form);
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedForm = form;
+              _hasChanges = true;
+            });
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: isSelected
+                ? NeuDecoration.pressed(isDark: isDark, radius: 14).copyWith(
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 1.5,
+                    ),
+                  )
+                : NeuDecoration.flat(isDark: isDark, radius: 14),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  formIcon,
+                  size: 16,
+                  color: isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : (isDark ? Colors.white70 : Colors.black54),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  form,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  ),
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 6),
+                  Icon(
+                    LucideIcons.check,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ],
               ],
             ),
