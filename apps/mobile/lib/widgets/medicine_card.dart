@@ -3040,7 +3040,7 @@ class _MedicineCardState extends State<MedicineCard> {
               autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Ile tabletek dziennie?',
-                hintText: 'np. 2 (0 = anuluj)',
+                hintText: 'np. 2',
                 suffixText: 'szt./dzień',
                 border: OutlineInputBorder(),
               ),
@@ -3048,6 +3048,15 @@ class _MedicineCardState extends State<MedicineCard> {
           ],
         ),
         actions: [
+          // Wyczyść - tylko gdy jest ustawiona dawka
+          if (_medicine.dailyIntake != null)
+            TextButton(
+              onPressed: () => Navigator.pop(context, -1), // -1 = wyczyść
+              child: Text(
+                'Wyczyść',
+                style: TextStyle(color: AppColors.expired),
+              ),
+            ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Anuluj'),
@@ -3064,9 +3073,9 @@ class _MedicineCardState extends State<MedicineCard> {
     );
 
     if (result != null) {
-      // 0 = anuluj kalkulację (user przestał brać tabletki)
+      // -1 = wyczyść dawkę (z przycisku "Wyczyść")
       final updated = _medicine.copyWith(
-        dailyIntake: result == 0 ? null : result,
+        dailyIntake: result == -1 ? null : result,
       );
       await widget.storageService?.saveMedicine(updated);
       setState(() => _medicine = updated);
