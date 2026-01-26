@@ -1,13 +1,13 @@
 // src/lib/prompts.ts v0.004 Extended fields: productType, power, capacity, postacFarmaceutyczna
 // Generatory promptów do wklejenia w ChatGPT/Claude/Gemini
 
-import type { Medicine } from './types';
+import type { Medicine } from "./types";
 
 /**
  * Generuje prompt do rozpoznawania leków ze zdjęcia
  */
 export function generateImportPrompt(): string {
-  return `# Prompt – Rozpoznawanie leków ze zdjęcia (Import JSON)
+	return `# Prompt – Rozpoznawanie leków ze zdjęcia (Import JSON)
 
 ## Rola
 Jesteś asystentem farmacji pomagającym użytkownikowi prowadzić prywatną bazę leków.
@@ -72,7 +72,7 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
 - Jeśli niewidoczna, zwróć \`null\`.
 
 ### Pole postacFarmaceutyczna (forma produktu)
-- Postać produktu widoczna na opakowaniu, np. "tabletka powlekana", "syrop", "krople", "maść", "żel", "aerozol do nosa", "saszetki".
+- Postać produktu widoczna na opakowaniu, np. "tabletka powlekana", "syrop", "krople", "maść", "żel", "aerozol do nosa", "saszetki", "ampułki", "dawki".
 - Jeśli niewidoczna, zwróć \`null\`.
 
 ### Pole terminWaznosci
@@ -107,12 +107,11 @@ Zwróć **wyłącznie poprawny JSON**, bez dodatkowego tekstu.
 Celem jest wyłącznie **porządkowanie informacji do prywatnej bazy leków użytkownika**.`;
 }
 
-
 /**
  * Generuje prompt do rozpoznawania leku po wpisanej nazwie
  */
 export function generateNameLookupPrompt(name: string): string {
-  return `# Prompt – Rozpoznawanie leku po nazwie
+	return `# Prompt – Rozpoznawanie leku po nazwie
 
 ## Rola
 Jesteś asystentem farmacji pomagającym użytkownikowi prowadzić prywatną bazę leków (domową apteczkę). Użytkownik nie ma wiedzy farmaceutycznej.
@@ -162,7 +161,7 @@ Użytkownik wpisał nazwę: "${name}"
 - Jeśli nieznana, zwróć \`null\`.
 
 ### Pole postacFarmaceutyczna (forma produktu)
-- Postać produktu, np. "tabletka powlekana", "syrop", "krople", "maść", "żel", "aerozol".
+- Postać produktu, np. "tabletka powlekana", "syrop", "krople", "maść", "żel", "aerozol", "ampułki", "dawki".
 - Jeśli nieznana, zwróć \`null\`.
 
 ### Gdy nie rozpoznano:
@@ -223,7 +222,7 @@ Celem jest wyłącznie **porządkowanie informacji do prywatnej bazy leków uży
  * Generuje prompt do analizy terminu ważności po otwarciu
  */
 export function generateShelfLifePrompt(): string {
-  return `# Prompt – Analiza terminu ważności produktu po pierwszym otwarciu
+	return `# Prompt – Analiza terminu ważności produktu po pierwszym otwarciu
 
 ## Rola
 Jesteś asystentem farmacji analizującym ulotki leków.
@@ -290,20 +289,17 @@ Celem jest **wyłącznie ekstrakcja faktów z dokumentu**.`;
  * Do kopiowania i użycia zewnętrznego
  */
 export function generateMedicineList(medicines: Medicine[]): string {
-  return medicines
-    .map(m => m.nazwa || 'Nieznany lek')
-    .join(', ');
+	return medicines.map((m) => m.nazwa || "Nieznany lek").join(", ");
 }
 
 /**
  * Kopiuje tekst do schowka
  */
 export async function copyToClipboard(text: string): Promise<boolean> {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
+	try {
+		await navigator.clipboard.writeText(text);
+		return true;
+	} catch {
+		return false;
+	}
 }
-

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/medicine.dart';
 import '../services/storage_service.dart';
+import '../utils/pharmaceutical_form_helper.dart';
 
 /// Ekran edycji leku
 class EditMedicineScreen extends StatefulWidget {
@@ -24,6 +25,7 @@ class _EditMedicineScreenState extends State<EditMedicineScreen> {
   late TextEditingController _wskazaniaController;
   late TextEditingController _tagiController;
   DateTime? _terminWaznosci;
+  String? _selectedForm;
   bool _isSaving = false;
 
   @override
@@ -40,6 +42,7 @@ class _EditMedicineScreenState extends State<EditMedicineScreen> {
     if (widget.medicine.terminWaznosci != null) {
       _terminWaznosci = DateTime.tryParse(widget.medicine.terminWaznosci!);
     }
+    _selectedForm = widget.medicine.pharmaceuticalForm;
   }
 
   @override
@@ -131,6 +134,62 @@ class _EditMedicineScreenState extends State<EditMedicineScreen> {
                   labelText: 'Tagi (oddzielone przecinkami)',
                   prefixIcon: Icon(Icons.tag),
                   border: OutlineInputBorder(),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Postać farmaceutyczna
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Icon(
+                        PharmaceuticalFormHelper.getIcon(_selectedForm),
+                        size: 32,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: DropdownButtonFormField<String>(
+                          value:
+                              PharmaceuticalFormHelper.predefinedForms.contains(
+                                _selectedForm?.toLowerCase(),
+                              )
+                              ? _selectedForm?.toLowerCase()
+                              : null,
+                          decoration: const InputDecoration(
+                            labelText: 'Postać farmaceutyczna',
+                            border: OutlineInputBorder(),
+                          ),
+                          hint: Text(_selectedForm ?? 'Wybierz postać'),
+                          items: PharmaceuticalFormHelper.predefinedForms
+                              .map(
+                                (form) => DropdownMenuItem(
+                                  value: form,
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        PharmaceuticalFormHelper.getIcon(form),
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(form),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedForm = value;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
@@ -240,6 +299,7 @@ class _EditMedicineScreenState extends State<EditMedicineScreen> {
             .where((s) => s.isNotEmpty)
             .toList(),
         terminWaznosci: _terminWaznosci?.toIso8601String().split('T')[0],
+        pharmaceuticalForm: _selectedForm,
       );
 
       await widget.storageService.saveMedicine(updatedMedicine);

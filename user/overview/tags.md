@@ -1,6 +1,7 @@
 # 🏷️ System Tagów
 
-> **Powiązane:** [Baza Danych](../database.md) | [Proces Dodawania](drug_addition_process.md) | [Architektura](../architecture.md)
+> **Powiązane:** [Baza Danych](../database.md) | [Proces Dodawania](drug_addition_process.md) |
+> [Architektura](../architecture.md)
 
 ---
 
@@ -9,7 +10,8 @@
 Tagi służą do kategoryzacji leków, umożliwiając:
 
 - **Filtrowanie** - szybkie wyszukiwanie leków po cechach
-- **Auto-tagowanie** - Gemini AI automatycznie przypisuje tagi podczas skanowania (zobacz: [Proces dodawania](drug_addition_process.md))
+- **Auto-tagowanie** - Gemini AI automatycznie przypisuje tagi podczas skanowania (zobacz:
+  [Proces dodawania](drug_addition_process.md))
 - **Organizację** - grupowanie leków w sensowne kategorie
 
 ---
@@ -40,22 +42,24 @@ Tagi służą do kategoryzacji leków, umożliwiając:
 
 #### Rodzaj i postać leku
 
-| Tag | Opis |
-|-----|------|
-| `bez recepty` | Leki OTC dostępne bez recepty |
-| `na receptę` | Leki Rx wymagające recepty |
-| `suplement` | Suplementy diety |
-| `wyrób medyczny` | Wyroby medyczne (testy, opatrunki) |
-| `tabletki` | Tabletki, tabletki powlekane |
-| `kapsułki` | Kapsułki twarde i miękkie |
-| `syrop` | Syropy i roztwory doustne |
-| `maść` | Maści, kremy, żele |
-| `zastrzyki` | Roztwory do wstrzykiwań |
-| `krople` | Krople do oczu, uszu, nosa |
-| `aerozol` | Aerozole, spray |
-| `czopki` | Czopki doodbytnicze |
-| `plastry` | Plastry lecznicze |
-| `proszek/zawiesina` | Proszki, zawiesiny, granulaty |
+| Tag                 | Opis                               |
+| ------------------- | ---------------------------------- |
+| `bez recepty`       | Leki OTC dostępne bez recepty      |
+| `na receptę`        | Leki Rx wymagające recepty         |
+| `suplement`         | Suplementy diety                   |
+| `wyrób medyczny`    | Wyroby medyczne (testy, opatrunki) |
+| `tabletki`          | Tabletki, tabletki powlekane       |
+| `kapsułki`          | Kapsułki twarde i miękkie          |
+| `syrop`             | Syropy i roztwory doustne          |
+| `maść`              | Maści, kremy, żele                 |
+| `zastrzyki`         | Roztwory do wstrzykiwań            |
+| `ampułki`           | Ampułki do iniekcji                |
+| `krople`            | Krople do oczu, uszu, nosa         |
+| `aerozol`           | Aerozole, spray                    |
+| `dawki`             | Aerozole dozowane (np. 140 dawek)  |
+| `czopki`            | Czopki doodbytnicze                |
+| `plastry`           | Plastry lecznicze                  |
+| `proszek/zawiesina` | Proszki, zawiesiny, granulaty      |
 
 #### Substancja czynna (dynamiczna)
 
@@ -68,22 +72,22 @@ Tagi substancji czynnych są automatycznie generowane ze skanera kodów EAN (API
 
 #### Grupa docelowa
 
-| Tag | Opis |
-|-----|------|
-| `dla dorosłych` | Przeznaczone dla osób dorosłych |
-| `dla dzieci` | Przeznaczone dla dzieci |
-| `dla kobiet w ciąży` | Bezpieczne w ciąży |
-| `dla niemowląt` | Przeznaczone dla niemowląt |
+| Tag                  | Opis                            |
+| -------------------- | ------------------------------- |
+| `dla dorosłych`      | Przeznaczone dla osób dorosłych |
+| `dla dzieci`         | Przeznaczone dla dzieci         |
+| `dla kobiet w ciąży` | Bezpieczne w ciąży              |
+| `dla niemowląt`      | Przeznaczone dla niemowląt      |
 
 #### Typ infekcji
 
-| Tag | Opis |
-|-----|------|
-| `grypa` | Leki na grypę |
+| Tag                   | Opis                 |
+| --------------------- | -------------------- |
+| `grypa`               | Leki na grypę        |
 | `infekcja bakteryjna` | Zakażenia bakteryjne |
-| `infekcja grzybicza` | Zakażenia grzybicze |
-| `infekcja wirusowa` | Zakażenia wirusowe |
-| `przeziębienie` | Przeziębienie |
+| `infekcja grzybicza`  | Zakażenia grzybicze  |
+| `infekcja wirusowa`   | Zakażenia wirusowe   |
+| `przeziębienie`       | Przeziębienie        |
 
 ---
 
@@ -91,23 +95,28 @@ Tagi substancji czynnych są automatycznie generowane ze skanera kodów EAN (API
 
 #### Ból
 
-`ból`, `ból gardła`, `ból głowy`, `ból menstruacyjny`, `ból mięśni`, `ból ucha`, `mięśnie i stawy`, `przeciwbólowy`
+`ból`, `ból gardła`, `ból głowy`, `ból menstruacyjny`, `ból mięśni`, `ból ucha`, `mięśnie i stawy`,
+`przeciwbólowy`
 
 #### Układ pokarmowy
 
-`biegunka`, `kolka`, `nudności`, `przeczyszczający`, `przeciwbiegunkowy`, `przeciwwymiotny`, `układ pokarmowy`, `wzdęcia`, `wymioty`, `zaparcia`, `zgaga`
+`biegunka`, `kolka`, `nudności`, `przeczyszczający`, `przeciwbiegunkowy`, `przeciwwymiotny`,
+`układ pokarmowy`, `wzdęcia`, `wymioty`, `zaparcia`, `zgaga`
 
 #### Układ oddechowy
 
-`duszność`, `gorączka`, `kaszel`, `katar`, `nos`, `przeciwgorączkowy`, `przeciwkaszlowy`, `układ oddechowy`, `wykrztuśny`
+`duszność`, `gorączka`, `kaszel`, `katar`, `nos`, `przeciwgorączkowy`, `przeciwkaszlowy`,
+`układ oddechowy`, `wykrztuśny`
 
 #### Skóra i alergia
 
-`alergia`, `nawilżający`, `oparzenie`, `przeciwhistaminowy`, `przeciwświądowy`, `rana`, `skóra`, `sucha skóra`, `suche oczy`, `świąd`, `ukąszenie`, `wysypka`
+`alergia`, `nawilżający`, `oparzenie`, `przeciwhistaminowy`, `przeciwświądowy`, `rana`, `skóra`,
+`sucha skóra`, `suche oczy`, `świąd`, `ukąszenie`, `wysypka`
 
 #### Inne
 
-`afty`, `antybiotyk`, `bezsenność`, `choroba lokomocyjna`, `jama ustna`, `odkażający`, `probiotyk`, `przeciwzapalny`, `rozkurczowy`, `steryd`, `stres`, `układ nerwowy`, `uspokajający`, `ząbkowanie`
+`afty`, `antybiotyk`, `bezsenność`, `choroba lokomocyjna`, `jama ustna`, `odkażający`, `probiotyk`,
+`przeciwzapalny`, `rozkurczowy`, `steryd`, `stres`, `układ nerwowy`, `uspokajający`, `ząbkowanie`
 
 ---
 
@@ -115,14 +124,14 @@ Tagi substancji czynnych są automatycznie generowane ze skanera kodów EAN (API
 
 Master Lista jest zsynchronizowana w następujących miejscach:
 
-| Plik | Platforma | Zastosowanie |
-|------|-----------|--------------|
-| [filters_sheet.dart](../apps/mobile/lib/widgets/filters_sheet.dart) | Mobile | Filtrowanie leków + dynamiczne substancje |
-| [tag_selector_widget.dart](../apps/mobile/lib/widgets/tag_selector_widget.dart) | Mobile | Ręczne dodawanie leku |
-| [barcode_scanner.dart](../apps/mobile/lib/widgets/barcode_scanner.dart) | Mobile | Auto-tagowanie ze skanera EAN |
-| [types.ts](../apps/web/src/lib/types.ts) | Web | Definicja typów tagów |
-| [prompts.ts](../apps/web/src/lib/prompts.ts) | Web | Prompt do auto-tagowania |
-| [dual-ocr.ts](../apps/web/src/lib/dual-ocr.ts) | Web | Prompt dual OCR |
+| Plik                                                                            | Platforma | Zastosowanie                              |
+| ------------------------------------------------------------------------------- | --------- | ----------------------------------------- |
+| [filters_sheet.dart](../apps/mobile/lib/widgets/filters_sheet.dart)             | Mobile    | Filtrowanie leków + dynamiczne substancje |
+| [tag_selector_widget.dart](../apps/mobile/lib/widgets/tag_selector_widget.dart) | Mobile    | Ręczne dodawanie leku                     |
+| [barcode_scanner.dart](../apps/mobile/lib/widgets/barcode_scanner.dart)         | Mobile    | Auto-tagowanie ze skanera EAN             |
+| [types.ts](../apps/web/src/lib/types.ts)                                        | Web       | Definicja typów tagów                     |
+| [prompts.ts](../apps/web/src/lib/prompts.ts)                                    | Web       | Prompt do auto-tagowania                  |
+| [dual-ocr.ts](../apps/web/src/lib/dual-ocr.ts)                                  | Web       | Prompt dual OCR                           |
 
 ---
 
@@ -130,16 +139,17 @@ Master Lista jest zsynchronizowana w następujących miejscach:
 
 Stare tagi z backupów są automatycznie normalizowane:
 
-| Stary tag | → Nowy tag |
-|-----------|------------|
-| `lek OTC` / `OTC` | `bez recepty` |
-| `lek Rx` / `Rx` | `na receptę` |
+| Stary tag            | → Nowy tag       |
+| -------------------- | ---------------- |
+| `lek OTC` / `OTC`    | `bez recepty`    |
+| `lek Rx` / `Rx`      | `na receptę`     |
 | `test diagnostyczny` | `wyrób medyczny` |
-| `kosmetyk leczniczy` | `nawilżający` |
+| `kosmetyk leczniczy` | `nawilżający`    |
 
 Deprecated tagi (usuwane): `oczy`, `uszy`, `dla seniorów`, `układ krążenia`, `układ moczowy`
 
-Plik: [tag_normalization.dart](file:///c:/Users/rzemp/GitHub/APPteczka/apps/mobile/lib/utils/tag_normalization.dart)
+Plik:
+[tag_normalization.dart](file:///c:/Users/rzemp/GitHub/APPteczka/apps/mobile/lib/utils/tag_normalization.dart)
 
 ---
 
@@ -156,7 +166,8 @@ antybiotyk → infekcja bakteryjna, na receptę
 steryd → przeciwzapalny, na receptę
 ```
 
-Pełna lista: [tag_normalization.dart](file:///c:/Users/rzemp/GitHub/APPteczka/apps/mobile/lib/utils/tag_normalization.dart#L35-L55)
+Pełna lista:
+[tag_normalization.dart](file:///c:/Users/rzemp/GitHub/APPteczka/apps/mobile/lib/utils/tag_normalization.dart#L35-L55)
 
 ---
 
@@ -170,4 +181,4 @@ Tagi spoza Master Listy są wyświetlane w sekcji "Moje":
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-14
+> 📅 **Ostatnia aktualizacja:** 2026-01-26

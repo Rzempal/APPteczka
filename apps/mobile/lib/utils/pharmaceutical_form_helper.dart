@@ -8,6 +8,23 @@ import '../models/medicine.dart';
 
 /// Helper do mapowania postaci farmaceutycznej na ikonę i jednostkę opakowania
 class PharmaceuticalFormHelper {
+  /// Lista predefiniowanych postaci farmaceutycznych dla dropdown UI
+  static const List<String> predefinedForms = [
+    'tabletki',
+    'kapsułki',
+    'syrop',
+    'krople',
+    'maść',
+    'żel',
+    'aerozol',
+    'ampułki',
+    'dawki',
+    'saszetki',
+    'plastry',
+    'czopki',
+    'proszek',
+  ];
+
   /// Zwraca ikonę Lucide dla postaci farmaceutycznej
   /// Priorytet: pattern matching na tekst postaci
   static IconData getIcon(String? form) {
@@ -30,11 +47,12 @@ class PharmaceuticalFormHelper {
       return LucideIcons.syringe;
     }
 
-    // Aerozole i inhalatory
+    // Aerozole, inhalatory i dawki
     if (normalized.contains('aerozol') ||
         normalized.contains('inhalat') ||
         normalized.contains('spray') ||
-        normalized.contains('nebuliz')) {
+        normalized.contains('nebuliz') ||
+        normalized.contains('dawk')) {
       return LucideIcons.sprayCan;
     }
 
