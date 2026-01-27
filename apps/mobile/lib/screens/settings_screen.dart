@@ -1480,13 +1480,13 @@ class _SettingsScreenState extends State<SettingsScreen>
         return Container(
           decoration: BoxDecoration(
             border: Border.all(
-              color: theme.colorScheme.outline.withOpacity(0.3),
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
               width: 1,
             ),
             borderRadius: BorderRadius.circular(10),
             color: isDark
-                ? Colors.white.withOpacity(0.03)
-                : Colors.black.withOpacity(0.02),
+                ? Colors.white.withValues(alpha: 0.03)
+                : Colors.black.withValues(alpha: 0.02),
           ),
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -1554,13 +1554,13 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: theme.colorScheme.outline.withOpacity(0.3),
+          color: theme.colorScheme.outline.withValues(alpha: 0.3),
           width: 1,
         ),
         borderRadius: BorderRadius.circular(10),
         color: isDark
-            ? Colors.white.withOpacity(0.03)
-            : Colors.black.withOpacity(0.02),
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.black.withValues(alpha: 0.02),
       ),
       padding: const EdgeInsets.all(10),
       child: Column(

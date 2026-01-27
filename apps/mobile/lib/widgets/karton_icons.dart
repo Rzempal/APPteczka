@@ -340,7 +340,10 @@ class _KartonOpenPainter extends CustomPainter {
       ..lineTo(85, 5)
       ..lineTo(5, 30)
       ..close();
-    canvas.drawPath(flapLeftPath, Paint()..color = flapColor.withOpacity(0.9));
+    canvas.drawPath(
+      flapLeftPath,
+      Paint()..color = flapColor.withValues(alpha: 0.9),
+    );
 
     final flapRightPath = Path()
       ..moveTo(186, 64)
@@ -348,7 +351,10 @@ class _KartonOpenPainter extends CustomPainter {
       ..lineTo(115, 5)
       ..lineTo(195, 30)
       ..close();
-    canvas.drawPath(flapRightPath, Paint()..color = flapColor.withOpacity(0.9));
+    canvas.drawPath(
+      flapRightPath,
+      Paint()..color = flapColor.withValues(alpha: 0.9),
+    );
 
     // Wnętrze kartonu
     final innerPath = Path()
@@ -394,7 +400,7 @@ class _KartonOpenPainter extends CustomPainter {
         const Rect.fromLTWH(-8, 10, 16, 20),
         const Radius.circular(2),
       ),
-      Paint()..color = Colors.white.withOpacity(0.9),
+      Paint()..color = Colors.white.withValues(alpha: 0.9),
     );
     canvas.restore();
 
@@ -476,7 +482,7 @@ class _KartonOpenPainter extends CustomPainter {
         const Rect.fromLTWH(-6, -6, 12, 12),
         const Radius.circular(1),
       ),
-      Paint()..color = AppColors.primary.withOpacity(0.9),
+      Paint()..color = AppColors.primary.withValues(alpha: 0.9),
     );
     canvas.restore();
 
@@ -499,7 +505,7 @@ class _KartonOpenPainter extends CustomPainter {
         const Radius.circular(3),
       ),
       Paint()
-        ..color = Colors.white.withOpacity(0.4)
+        ..color = Colors.white.withValues(alpha: 0.4)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );

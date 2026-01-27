@@ -1642,7 +1642,9 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
             packages: [
               MedicinePackage(
                 expiryDate: '',
-                pieceCount: _parsePackaging(pkg.packaging),
+                pieceCount: PharmaceuticalFormHelper.parsePackaging(
+                  pkg.packaging,
+                ),
                 unit: PharmaceuticalFormHelper.getPackageUnit(rpl.form),
               ),
             ],
@@ -1730,33 +1732,8 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       tags.add('na receptę');
     }
 
-    // Postac farmaceutyczna
-    if (rpl.form.isNotEmpty) {
-      final formLower = rpl.form.toLowerCase();
-      if (formLower.contains('tabletk')) {
-        tags.add('tabletki');
-      } else if (formLower.contains('kaps')) {
-        tags.add('kapsułki');
-      } else if (formLower.contains('syrop')) {
-        tags.add('syrop');
-      } else if (formLower.contains('masc') || formLower.contains('krem')) {
-        tags.add('maść');
-      } else if (formLower.contains('zastrzyk') ||
-          formLower.contains('iniekcj')) {
-        tags.add('zastrzyki');
-      } else if (formLower.contains('krople')) {
-        tags.add('krople');
-      } else if (formLower.contains('aerozol') || formLower.contains('spray')) {
-        tags.add('aerozol');
-      } else if (formLower.contains('czopk')) {
-        tags.add('czopki');
-      } else if (formLower.contains('plast')) {
-        tags.add('plastry');
-      } else if (formLower.contains('zawies') ||
-          formLower.contains('proszek')) {
-        tags.add('proszek/zawiesina');
-      }
-    }
+    // Postac farmaceutyczna - z helpera
+    tags.addAll(PharmaceuticalFormHelper.getTagsForForm(rpl.form));
 
     // Substancje czynne
     if (rpl.activeSubstance.isNotEmpty) {
@@ -1768,37 +1745,6 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
     }
 
     return tags.toList();
-  }
-
-  /// Parsuje packaging na ilość sztuk
-  /// Np. "28 tabl. (2 x 14)" -> 28, "1 butelka 120 ml" -> 120
-  /// Skopiowane z barcode_scanner.dart dla spójności
-  int? _parsePackaging(String? packaging) {
-    if (packaging == null || packaging.isEmpty) return null;
-
-    final lower = packaging.toLowerCase();
-
-    // Wzorzec 1: "28 tabl.", "30 kaps.", "10 amp."
-    final countMatch = RegExp(
-      r'^(\d+)\s*(tabl|kaps|amp|sasz|czop|plast)',
-    ).firstMatch(lower);
-    if (countMatch != null) {
-      return int.tryParse(countMatch.group(1)!);
-    }
-
-    // Wzorzec 2: "1 butelka 120 ml", "1 tuba 30 g"
-    final volumeMatch = RegExp(r'(\d+)\s*(ml|g)\b').firstMatch(lower);
-    if (volumeMatch != null) {
-      return int.tryParse(volumeMatch.group(1)!);
-    }
-
-    // Wzorzec 3: pierwsza liczba
-    final firstNumber = RegExp(r'(\d+)').firstMatch(lower);
-    if (firstNumber != null) {
-      return int.tryParse(firstNumber.group(1)!);
-    }
-
-    return null;
   }
 
   void _showError(String message) {

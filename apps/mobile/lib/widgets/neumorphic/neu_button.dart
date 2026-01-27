@@ -179,7 +179,7 @@ class _NeuButtonState extends State<NeuButton>
                 widget.icon,
                 size: widget.iconSize,
                 color: isDisabled
-                    ? contentColor.withOpacity(0.5)
+                    ? contentColor.withValues(alpha: 0.5)
                     : contentColor,
               ),
               if (widget.label != null) const SizedBox(width: 8),
@@ -191,7 +191,7 @@ class _NeuButtonState extends State<NeuButton>
                   fontSize: widget.fontSize,
                   fontWeight: FontWeight.w600,
                   color: isDisabled
-                      ? contentColor.withOpacity(0.5)
+                      ? contentColor.withValues(alpha: 0.5)
                       : contentColor,
                 ),
               ),

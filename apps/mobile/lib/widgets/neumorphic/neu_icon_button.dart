@@ -121,7 +121,7 @@ class _NeuIconButtonState extends State<NeuIconButton>
         widget.iconColor ??
         (widget.isActive
             ? activeColor
-            : theme.colorScheme.onSurface.withOpacity(0.8));
+            : theme.colorScheme.onSurface.withValues(alpha: 0.8));
 
     Widget button = GestureDetector(
       onTapDown: _handleTapDown,

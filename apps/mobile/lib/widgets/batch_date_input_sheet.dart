@@ -131,7 +131,8 @@ class _BatchDateInputSheetState extends State<BatchDateInputSheet> {
                 controller: scrollController,
                 padding: const EdgeInsets.all(16),
                 itemCount: widget.medicines.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final medicine = widget.medicines[index];
                   return _buildMedicineRow(medicine, isDark);

@@ -197,7 +197,7 @@ class _NeuSortMenuState<T> extends State<NeuSortMenu<T>>
         padding: EdgeInsets.symmetric(horizontal: padding + 8, vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
+              ? AppColors.primary.withValues(alpha: 0.1)
               : Colors.transparent,
         ),
         child: Row(
@@ -251,7 +251,7 @@ class _NeuSortMenuState<T> extends State<NeuSortMenu<T>>
 
     final iconColor = _isMenuOpen
         ? AppColors.primary
-        : theme.colorScheme.onSurface.withOpacity(0.8);
+        : theme.colorScheme.onSurface.withValues(alpha: 0.8);
 
     Widget button = CompositedTransformTarget(
       link: _layerLink,

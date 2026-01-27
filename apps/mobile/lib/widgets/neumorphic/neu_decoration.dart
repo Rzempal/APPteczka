@@ -245,12 +245,12 @@ class NeuDecoration {
       borderRadius: borderRadius ?? BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: shadowDark.withOpacity(isDark ? 0.5 : 0.25),
+          color: shadowDark.withValues(alpha: isDark ? 0.5 : 0.25),
           offset: Offset(dist, dist),
           blurRadius: blur,
         ),
         BoxShadow(
-          color: shadowLight.withOpacity(isDark ? 0.05 : 0.8),
+          color: shadowLight.withValues(alpha: isDark ? 0.05 : 0.8),
           offset: Offset(-dist, -dist),
           blurRadius: blur,
         ),
@@ -280,12 +280,12 @@ class NeuDecoration {
       Color borderColor = AppColors.primary.withValues(alpha: 0.12);
 
       // Status-aware border colors
-      if (baseColor.value == 0xFF064e3b || baseColor == AppColors.valid) {
+      if (baseColor.toARGB32() == 0xFF064e3b || baseColor == AppColors.valid) {
         borderColor = AppColors.valid.withValues(alpha: 0.2);
-      } else if (baseColor.value == 0xFF78350f ||
+      } else if (baseColor.toARGB32() == 0xFF78350f ||
           baseColor == AppColors.expiringSoon) {
         borderColor = AppColors.expiringSoon.withValues(alpha: 0.2);
-      } else if (baseColor.value == 0xFF7f1d1d ||
+      } else if (baseColor.toARGB32() == 0xFF7f1d1d ||
           baseColor == AppColors.expired) {
         borderColor = AppColors.expired.withValues(alpha: 0.2);
       }
@@ -310,14 +310,14 @@ class NeuDecoration {
     Color borderColor = const Color(0xFF94a3b8).withValues(alpha: 0.1);
     Color glowColor = Colors.transparent;
 
-    if (baseColor.value == 0xFF064e3b || baseColor == AppColors.valid) {
+    if (baseColor.toARGB32() == 0xFF064e3b || baseColor == AppColors.valid) {
       borderColor = const Color(0xFF10b981).withValues(alpha: 0.3);
       glowColor = const Color(0xFF10b981).withValues(alpha: 0.1);
-    } else if (baseColor.value == 0xFF78350f ||
+    } else if (baseColor.toARGB32() == 0xFF78350f ||
         baseColor == AppColors.expiringSoon) {
       borderColor = const Color(0xFFf59e0b).withValues(alpha: 0.3);
       glowColor = const Color(0xFFf59e0b).withValues(alpha: 0.1);
-    } else if (baseColor.value == 0xFF7f1d1d ||
+    } else if (baseColor.toARGB32() == 0xFF7f1d1d ||
         baseColor == AppColors.expired) {
       borderColor = const Color(0xFFef4444).withValues(alpha: 0.3);
       glowColor = const Color(0xFFef4444).withValues(alpha: 0.1);
@@ -373,7 +373,7 @@ class NeuDecoration {
       borderRadius: borderRadius ?? BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: accentColor.withOpacity(performanceMode ? 0.2 : 0.4),
+          color: accentColor.withValues(alpha: performanceMode ? 0.2 : 0.4),
           offset: const Offset(0, 4),
           blurRadius: performanceMode ? 6 : 12,
           spreadRadius: -2,
@@ -408,7 +408,9 @@ class NeuDecoration {
       borderRadius: borderRadius ?? BorderRadius.circular(radius),
       boxShadow: [
         BoxShadow(
-          color: AppColors.expired.withOpacity(performanceMode ? 0.2 : 0.4),
+          color: AppColors.expired.withValues(
+            alpha: performanceMode ? 0.2 : 0.4,
+          ),
           offset: const Offset(0, 4),
           blurRadius: performanceMode ? 6 : 12,
           spreadRadius: -2,

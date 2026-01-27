@@ -11,23 +11,19 @@ import 'gemini_service.dart'; // Używamy GeminiException
 /// Wynik analizy terminu ważności
 class ShelfLifeResult {
   final bool found;
-  final String? shelfLife;  // Dosłowny cytat z ulotki
-  final String? period;     // Okres w formacie naturalnym (np. "6 miesięcy")
+  final String? shelfLife; // Dosłowny cytat z ulotki
+  final String? period; // Okres w formacie naturalnym (np. "6 miesięcy")
   final String? reason;
 
-  ShelfLifeResult.found({
-    required String shelfLife,
-    required String period,
-  })  : found = true,
-        shelfLife = shelfLife,
-        period = period,
-        reason = null;
+  ShelfLifeResult.found({required this.shelfLife, required this.period})
+    : found = true,
+      reason = null;
 
   ShelfLifeResult.notFound(String message)
-      : found = false,
-        shelfLife = null,
-        period = null,
-        reason = message;
+    : found = false,
+      shelfLife = null,
+      period = null,
+      reason = message;
 }
 
 /// Serwis do analizy terminu ważności po otwarciu przez Gemini API
@@ -89,14 +85,12 @@ class GeminiShelfLifeService {
         }
 
         _log.info('Shelf life found: $period');
-        return ShelfLifeResult.found(
-          shelfLife: shelfLife,
-          period: period,
-        );
+        return ShelfLifeResult.found(shelfLife: shelfLife, period: period);
       }
 
       if (status == 'nie_znaleziono') {
-        final reason = responseData['reason'] as String? ??
+        final reason =
+            responseData['reason'] as String? ??
             'W ulotce nie znaleziono informacji o terminie ważności po pierwszym otwarciu.';
         _log.info('Shelf life not found: $reason');
         return ShelfLifeResult.notFound(reason);

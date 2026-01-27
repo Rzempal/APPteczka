@@ -113,6 +113,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
         }
       }
     } catch (e) {
+      // ignore: deprecated_member_use_from_same_package
       BugReportService.instance.log('Gallery pick error: $e');
     }
   }
@@ -206,7 +207,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.expired.withOpacity(0.15),
+                      color: AppColors.expired.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
@@ -236,7 +237,7 @@ class _BugReportSheetState extends State<BugReportSheet> {
                             'Wersja: $_appVersion',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant
-                                  .withOpacity(0.6),
+                                  .withValues(alpha: 0.6),
                               fontFamily: 'monospace',
                               fontSize: 11,
                             ),
@@ -301,10 +302,12 @@ class _BugReportSheetState extends State<BugReportSheet> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer.withOpacity(0.3),
+                    color: theme.colorScheme.errorContainer.withValues(
+                      alpha: 0.3,
+                    ),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: theme.colorScheme.error.withOpacity(0.3),
+                      color: theme.colorScheme.error.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Row(
@@ -478,7 +481,9 @@ class _BugReportSheetState extends State<BugReportSheet> {
                   Icon(
                     LucideIcons.fileCode,
                     size: 48,
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.5,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Checkbox(
@@ -569,15 +574,15 @@ class _CategoryChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.15)
+              ? AppColors.primary.withValues(alpha: 0.15)
               : isDark
-              ? Colors.white.withOpacity(0.05)
-              : Colors.black.withOpacity(0.03),
+              ? Colors.white.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
-                : theme.colorScheme.outline.withOpacity(0.3),
+                : theme.colorScheme.outline.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
         ),

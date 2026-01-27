@@ -190,7 +190,7 @@ class _RplAutocompleteState extends State<RplAutocomplete> {
                   padding: EdgeInsets.zero,
                   shrinkWrap: true,
                   itemCount: _results.length,
-                  separatorBuilder: (_, __) => Divider(
+                  separatorBuilder: (context, index) => Divider(
                     height: 1,
                     color: Theme.of(context).colorScheme.outlineVariant,
                   ),

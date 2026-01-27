@@ -33,12 +33,17 @@
 
 ---
 
-## 🟡 Deprecated do osobnego PR
+## ✅ Deprecated API - NAPRAWIONE
 
-53 ostrzeżenia `deprecated_member_use`:
+53 ostrzeżenia naprawione:
 
-- `withOpacity` → `.withValues()`
-- `value` → `initialValue` / `.r/.g/.toARGB32`
+| Kategoria                            | Ilość | Zmiana        |
+| ------------------------------------ | ----- | ------------- |
+| `withOpacity` → `withValues(alpha:)` | 43    | Zmodyfikowano |
+| `Color.value` → `toARGB32()`         | 6     | Zmodyfikowano |
+| `__` → `(context, index)`            | 5     | Zmodyfikowano |
+| Initializing formal                  | 1     | Zmodyfikowano |
+| Ignore comments (celowe wzorce)      | 2     | Dodano        |
 
 ---
 
@@ -50,4 +55,4 @@
 
 ---
 
-> 📅 **Data raportu:** 2026-01-26 10:55 **Commit:** `#N Orphan Hunt: usunięto 9 martwych elementów`
+> 📅 **Data raportu:** 2026-01-26 15:33 **Commit:** `#718 Orphan Hunt + Deprecated API cleanup`

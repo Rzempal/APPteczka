@@ -316,6 +316,15 @@ class _MedicineCardState extends State<MedicineCard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Ikona leku w nagłówku (tylko w Expanded mode - w Compact jest w rodzicu)
+          if (!widget.isCompact) ...[
+            Icon(
+              _getMedicineTypeIcon(),
+              size: 24,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+          ],
           // Lewa strona: Nazwa + Ikona duplikatu + Etykiety (tylko w compact)
           Expanded(
             child: Wrap(
@@ -528,6 +537,8 @@ class _MedicineCardState extends State<MedicineCard> {
         return LucideIcons.pill;
       case PackageUnit.sachets:
         return LucideIcons.package;
+      case PackageUnit.doses:
+        return LucideIcons.sprayCan; // Ikona dla dawek (np. inhalator)
       case PackageUnit.none:
         return LucideIcons.packageOpen;
     }
@@ -602,6 +613,9 @@ class _MedicineCardState extends State<MedicineCard> {
           break;
         case PackageUnit.sachets:
           unitLabel = 'sasz.';
+          break;
+        case PackageUnit.doses:
+          unitLabel = 'dawk.';
           break;
         case PackageUnit.none:
           unitLabel = '';
@@ -1554,6 +1568,8 @@ class _MedicineCardState extends State<MedicineCard> {
           return 'g';
         case PackageUnit.sachets:
           return 'sasz.';
+        case PackageUnit.doses:
+          return 'dawk.';
         case PackageUnit.none:
           return '';
       }
@@ -2876,7 +2892,7 @@ class _MedicineCardState extends State<MedicineCard> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        value: selectedMonth,
+                        initialValue: selectedMonth,
                         decoration: const InputDecoration(
                           labelText: 'Miesiąc',
                           border: OutlineInputBorder(),
@@ -2896,7 +2912,7 @@ class _MedicineCardState extends State<MedicineCard> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<int>(
-                        value: selectedYear,
+                        initialValue: selectedYear,
                         decoration: const InputDecoration(
                           labelText: 'Rok',
                           border: OutlineInputBorder(),

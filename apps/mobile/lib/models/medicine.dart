@@ -8,6 +8,7 @@ enum PackageUnit {
   ml, // Mililitry (syropy, krople)
   grams, // Gramy (maści, kremy, żele)
   sachets, // Saszetki
+  doses, // Dawki
 }
 
 /// Opakowanie leku z własną datą ważności
@@ -154,6 +155,8 @@ class MedicinePackage {
           return 'g';
         case PackageUnit.sachets:
           return 'sasz.';
+        case PackageUnit.doses:
+          return 'dawki';
         case PackageUnit.none:
           return '';
       }

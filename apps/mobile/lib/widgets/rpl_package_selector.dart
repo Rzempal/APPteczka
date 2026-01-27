@@ -41,11 +41,15 @@ class RplPackageSelectorSheet extends StatelessWidget {
     required BuildContext context,
     required RplDrugDetails drugDetails,
   }) async {
-    _log.fine('show() called for: ${drugDetails.fullName}, packages: ${drugDetails.packages.length}');
+    _log.fine(
+      'show() called for: ${drugDetails.fullName}, packages: ${drugDetails.packages.length}',
+    );
 
     // Jeśli tylko jedno opakowanie - zwróć od razu bez pokazywania dialogu
     if (drugDetails.packages.length == 1) {
-      _log.fine('Auto-selecting single package: ${drugDetails.packages.first.packaging}');
+      _log.fine(
+        'Auto-selecting single package: ${drugDetails.packages.first.packaging}',
+      );
       return PackageSelectionResult(
         drugDetails: drugDetails,
         selectedPackage: drugDetails.packages.first,
@@ -58,7 +62,9 @@ class RplPackageSelectorSheet extends StatelessWidget {
       return null;
     }
 
-    _log.fine('Showing package selector sheet with ${drugDetails.packages.length} options');
+    _log.fine(
+      'Showing package selector sheet with ${drugDetails.packages.length} options',
+    );
 
     // Pokaż bottom sheet z listą opakowań
     return showModalBottomSheet<PackageSelectionResult>(
@@ -154,7 +160,7 @@ class RplPackageSelectorSheet extends StatelessWidget {
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 itemCount: drugDetails.packages.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 4),
+                separatorBuilder: (context, index) => const SizedBox(height: 4),
                 itemBuilder: (_, index) {
                   final package = drugDetails.packages[index];
                   return _buildPackageTile(sheetContext, package, isDark);
@@ -175,7 +181,8 @@ class RplPackageSelectorSheet extends StatelessWidget {
     bool isDark,
   ) {
     final theme = Theme.of(sheetContext);
-    final isRx = package.accessibilityCategory?.toUpperCase() == 'RP' ||
+    final isRx =
+        package.accessibilityCategory?.toUpperCase() == 'RP' ||
         package.accessibilityCategory?.toUpperCase() == 'RPZ';
 
     return Padding(
@@ -184,10 +191,13 @@ class RplPackageSelectorSheet extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            _log.info('Package selected: ${package.packaging} (GTIN: ${package.gtin})');
+            _log.info(
+              'Package selected: ${package.packaging} (GTIN: ${package.gtin})',
+            );
             // Użyj Future.microtask aby dać czas na zakończenie animacji tap
             // Zapobiega przeciekaniu zdarzeń do warstwy pod modalem
             Future.microtask(() {
+              // ignore: use_build_context_synchronously
               Navigator.of(sheetContext).pop(
                 PackageSelectionResult(
                   drugDetails: drugDetails,

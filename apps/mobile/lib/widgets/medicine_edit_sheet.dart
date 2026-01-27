@@ -689,7 +689,6 @@ class _FormPickerSheet extends StatefulWidget {
   final ValueChanged<String> onSelect;
 
   const _FormPickerSheet({
-    super.key,
     required this.isDark,
     required this.selectedForm,
     required this.onSelect,
@@ -792,37 +791,34 @@ class _FormPickerSheetState extends State<_FormPickerSheet> {
                 radius: 14,
               ),
               padding: const EdgeInsets.only(left: 12, right: 12, bottom: 4),
-              child: Row(
-                children: [
-                  Icon(
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                decoration: InputDecoration(
+                  prefixIcon: Icon(
                     LucideIcons.search,
                     size: 20,
                     color: widget.isDark ? Colors.white54 : Colors.black38,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      decoration: InputDecoration(
-                        labelText: 'Wyszukaj postać...',
-                        labelStyle: TextStyle(
-                          color: widget.isDark
-                              ? AppColors.darkTextMuted
-                              : AppColors.lightTextMuted,
-                        ),
-                        floatingLabelBehavior: FloatingLabelBehavior.auto,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                        isDense: false,
-                      ),
-                      style: TextStyle(
-                        color: widget.isDark ? Colors.white : Colors.black,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
                   ),
-                ],
+                  labelText: 'Wyszukaj postać...',
+                  labelStyle: TextStyle(
+                    color: widget.isDark
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
+                  ),
+                  floatingLabelBehavior: FloatingLabelBehavior.auto,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                  isDense: false,
+                ),
+                style: TextStyle(
+                  color: widget.isDark ? Colors.white : Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

@@ -143,7 +143,7 @@ class _NeuTextFieldState extends State<NeuTextField> {
                   ? (isDark
                         ? AppColors.accentDark
                         : AppColors.accent) // Use accent color
-                  : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
+                  : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
               width: _isFocused ? 1.5 : 1,
             ),
             boxShadow: [
@@ -151,15 +151,15 @@ class _NeuTextFieldState extends State<NeuTextField> {
               if (_isFocused)
                 BoxShadow(
                   color: (isDark ? AppColors.accentDark : AppColors.accent)
-                      .withOpacity(0.3),
+                      .withValues(alpha: 0.3),
                   blurRadius: 4,
                   spreadRadius: 0,
                 ),
               // Inner shadow (basin/inset effect) - dark
               BoxShadow(
                 color: isDark
-                    ? AppColors.darkShadowDark.withOpacity(0.6)
-                    : AppColors.lightShadowDark.withOpacity(0.4),
+                    ? AppColors.darkShadowDark.withValues(alpha: 0.6)
+                    : AppColors.lightShadowDark.withValues(alpha: 0.4),
                 offset: const Offset(2, 2),
                 blurRadius: 4,
                 spreadRadius: 0,
@@ -167,8 +167,8 @@ class _NeuTextFieldState extends State<NeuTextField> {
               // Inner shadow (basin/inset effect) - light highlight
               BoxShadow(
                 color: isDark
-                    ? AppColors.darkShadowLight.withOpacity(0.05)
-                    : AppColors.lightShadowLight.withOpacity(0.7),
+                    ? AppColors.darkShadowLight.withValues(alpha: 0.05)
+                    : AppColors.lightShadowLight.withValues(alpha: 0.7),
                 offset: const Offset(-2, -2),
                 blurRadius: 4,
                 spreadRadius: 0,
@@ -193,7 +193,9 @@ class _NeuTextFieldState extends State<NeuTextField> {
             decoration: InputDecoration(
               hintText: widget.hintText,
               hintStyle: TextStyle(
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.6),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.6,
+                ),
               ),
               filled: false,
               prefixIcon: widget.prefixIcon != null

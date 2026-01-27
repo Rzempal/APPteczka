@@ -588,7 +588,7 @@ class _FiltersSheetState extends State<FiltersSheet> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 24),
         itemCount: FilterTab.values.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final tab = FilterTab.values[index];
           final isActive = tab == _activeTab;

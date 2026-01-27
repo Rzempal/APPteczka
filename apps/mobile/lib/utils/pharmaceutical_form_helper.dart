@@ -83,8 +83,7 @@ class PharmaceuticalFormHelper {
       mainName: 'Aerozole',
       description: 'spraye',
       icon: LucideIcons.sprayCan,
-      unit: PackageUnit
-          .pieces, // Zmieniłem na pieces/dawki, ale PackageUnit ma ograniczony set
+      unit: PackageUnit.doses,
     ),
     PharmaceuticalFormDefinition(
       mainName: 'Iniekcje',
@@ -102,7 +101,7 @@ class PharmaceuticalFormHelper {
       mainName: 'Inhalacje',
       description: 'insuflacje',
       icon: LucideIcons.wind,
-      unit: PackageUnit.pieces, // Dawki -> pieces
+      unit: PackageUnit.doses,
     ),
     PharmaceuticalFormDefinition(
       mainName: 'Czopki',
@@ -190,6 +189,8 @@ class PharmaceuticalFormHelper {
         return 'g';
       case PackageUnit.sachets:
         return 'sasz.';
+      case PackageUnit.doses:
+        return 'dawki';
       case PackageUnit.none:
         return '';
     }
@@ -230,7 +231,75 @@ class PharmaceuticalFormHelper {
     if (unitText.contains('saszetk') || unitText.contains('sasz')) {
       return PackageUnit.sachets;
     }
+    if (unitText.contains('dawk') || unitText.contains('doz')) {
+      return PackageUnit.doses;
+    }
     return PackageUnit.pieces;
+  }
+
+  /// Parsuje string packaging na ilość sztuk (logika z AddMedicineScreen)
+  /// Np. "28 tabl. (2 x 14)" -> 28, "1 butelka 120 ml" -> 120
+  static int? parsePackaging(String? packaging) {
+    if (packaging == null || packaging.isEmpty) return null;
+
+    final lower = packaging.toLowerCase();
+
+    // Wzorzec 1: "28 tabl.", "30 kaps.", "10 amp." - rozszerzony o dawk/doz
+    final countMatch = RegExp(
+      r'^(\d+)\s*(tabl|kaps|amp|sasz|czop|plast|dawk|doz)',
+    ).firstMatch(lower);
+    if (countMatch != null) {
+      return int.tryParse(countMatch.group(1)!);
+    }
+
+    // Wzorzec 2: "1 butelka 120 ml", "1 tuba 30 g"
+    final volumeMatch = RegExp(r'(\d+)\s*(ml|g)\b').firstMatch(lower);
+    if (volumeMatch != null) {
+      return int.tryParse(volumeMatch.group(1)!);
+    }
+
+    // Wzorzec 3: pierwsza liczba
+    final firstNumber = RegExp(r'(\d+)').firstMatch(lower);
+    if (firstNumber != null) {
+      return int.tryParse(firstNumber.group(1)!);
+    }
+
+    return null;
+  }
+
+  /// Generuje tagi dla danej postaci farmaceutycznej
+  static Set<String> getTagsForForm(String? form) {
+    if (form == null || form.isEmpty) return {};
+    final formLower = form.toLowerCase();
+    final tags = <String>{};
+
+    if (formLower.contains('tabletk')) {
+      tags.add('tabletki');
+    } else if (formLower.contains('kaps')) {
+      tags.add('kapsułki');
+    } else if (formLower.contains('syrop')) {
+      tags.add('syrop');
+    } else if (formLower.contains('masc') || formLower.contains('krem')) {
+      tags.add('maść');
+    } else if (formLower.contains('zastrzyk') ||
+        formLower.contains('iniekcj') ||
+        formLower.contains('ampuł')) {
+      tags.add('zastrzyki');
+    } else if (formLower.contains('krople')) {
+      tags.add('krople');
+    } else if (formLower.contains('aerozol') || formLower.contains('spray')) {
+      tags.add('aerozol');
+    } else if (formLower.contains('czopk')) {
+      tags.add('czopki');
+    } else if (formLower.contains('plast')) {
+      tags.add('plastry');
+    } else if (formLower.contains('zawies') || formLower.contains('proszek')) {
+      tags.add('proszek/zawiesina');
+    } else if (formLower.contains('inhal')) {
+      tags.add('inhalacja');
+    }
+
+    return tags;
   }
 }
 
