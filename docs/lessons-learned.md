@@ -1394,4 +1394,29 @@ Przy tworzeniu reużywalnych metod UI:
 
 ---
 
-> 📅 **Ostatnia aktualizacja:** 2026-01-23
+## 19. Exhaustiveness check przy rozszerzaniu Enumów (Dart)
+
+**Data:** 2026-01-27  
+**Kontekst:** Dodanie `PackageUnit.doses` do modelu leku.
+
+### ❌ Błąd
+
+Dodanie nowej wartości do Enuma bez sprawdzenia wszystkich jego użyć. W Dart `switch` statement nad
+enumem jest sprawdzany pod kątem kompletności (exhaustiveness) tylko jeśli nie ma klauzuli
+`default`.
+
+### ✅ Poprawne rozwiązanie
+
+1.  Unikaj `default` w switchach opartych na enumach, jeśli to możliwe - wymusi to błąd kompilacji
+    przy dodaniu nowej wartości.
+2.  Przy dodawaniu wartości do enuma, użyj "Find Usages" w IDE.
+3.  Uruchom linter (`dart analyze`) po zmianie enuma.
+
+### Zasada ogólna
+
+Zmieniając definicję typu bazowego (Enum, Sealed Class), zawsze weryfikuj miejsca jego użycia.
+Linter jest Twoim przyjacielem.
+
+---
+
+> 📅 **Ostatnia aktualizacja:** 2026-01-27
