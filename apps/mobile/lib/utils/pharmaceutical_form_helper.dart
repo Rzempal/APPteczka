@@ -6,139 +6,179 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/medicine.dart';
 
+class PharmaceuticalFormDefinition {
+  final String mainName;
+  final String description; // Warianty (aliasy)
+  final IconData icon;
+  final PackageUnit unit;
+
+  const PharmaceuticalFormDefinition({
+    required this.mainName,
+    required this.description,
+    required this.icon,
+    required this.unit,
+  });
+
+  String get displayName => mainName;
+}
+
 /// Helper do mapowania postaci farmaceutycznej na ikonę i jednostkę opakowania
 class PharmaceuticalFormHelper {
-  /// Lista predefiniowanych postaci farmaceutycznych dla dropdown UI
-  static const List<String> predefinedForms = [
-    'tabletki',
-    'kapsułki',
-    'syrop',
-    'krople',
-    'maść',
-    'żel',
-    'aerozol',
-    'ampułki',
-    'dawki',
-    'saszetki',
-    'plastry',
-    'czopki',
-    'proszek',
+  static const List<PharmaceuticalFormDefinition> _definitions = [
+    PharmaceuticalFormDefinition(
+      mainName: 'Tabletki',
+      description: 'pastylki, tabletki do ssania',
+      icon: LucideIcons.tablets,
+      unit: PackageUnit.pieces,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Kapsułki',
+      description: 'pigułki, opłatki',
+      icon: LucideIcons.pill,
+      unit: PackageUnit.pieces,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Saszetki',
+      description: '',
+      icon: LucideIcons.stickyNote,
+      unit: PackageUnit.sachets,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Proszki',
+      description: 'zawiesiny, mikstury',
+      icon: LucideIcons.waves,
+      unit: PackageUnit.ml,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Plastry lecznicze',
+      description: 'okłady',
+      icon: LucideIcons.bandage,
+      unit: PackageUnit.pieces,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Syropy',
+      description: 'eliksiry, roztwory',
+      icon: LucideIcons.flaskConical,
+      unit: PackageUnit.ml,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Maści',
+      description: 'żele, kremy',
+      icon: LucideIcons.droplet,
+      unit: PackageUnit.grams,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Krople',
+      description: 'oczne, do uszu, do nosa',
+      icon: LucideIcons.droplets,
+      unit: PackageUnit.ml,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Krople doustne',
+      description: 'koloidy',
+      icon: LucideIcons.glassWater,
+      unit: PackageUnit.ml,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Aerozole',
+      description: 'spraye',
+      icon: LucideIcons.sprayCan,
+      unit: PackageUnit
+          .pieces, // Zmieniłem na pieces/dawki, ale PackageUnit ma ograniczony set
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Iniekcje',
+      description: 'zastrzyki, ampułki',
+      icon: LucideIcons.syringe,
+      unit: PackageUnit.ml,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Infuzje',
+      description: 'kroplówki, irygacje',
+      icon: LucideIcons.pipette,
+      unit: PackageUnit.ml,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Inhalacje',
+      description: 'insuflacje',
+      icon: LucideIcons.wind,
+      unit: PackageUnit.pieces, // Dawki -> pieces
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Czopki',
+      description: 'globulki',
+      icon: LucideIcons.thermometer,
+      unit: PackageUnit.pieces,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Płukanki',
+      description: '',
+      icon: LucideIcons.cupSoda,
+      unit: PackageUnit.ml,
+    ),
+    PharmaceuticalFormDefinition(
+      mainName: 'Produkty sterylne',
+      description: '',
+      icon: LucideIcons.stethoscope,
+      unit: PackageUnit.pieces,
+    ),
   ];
 
+  /// Zwraca listę wszystkich definicji (do użycia w UI Dropdowna)
+  static List<PharmaceuticalFormDefinition> get definitions => _definitions;
+
+  /// Lista nazw głównych (zachowanie kompatybilności tam gdzie oczekiwana jest lista stringów)
+  static List<String> get predefinedForms =>
+      _definitions.map((e) => e.mainName).toList();
+
+  /// Znajduje definicję pasującą do danej nazwy (szuka w mainName i description)
+  static PharmaceuticalFormDefinition? _findDefinition(String? form) {
+    if (form == null || form.isEmpty) return null;
+    final normalized = form.toLowerCase().trim();
+
+    // 1. Exact match on main name
+    try {
+      return _definitions.firstWhere(
+        (d) => d.mainName.toLowerCase() == normalized,
+      );
+    } catch (_) {}
+
+    // 2. Contains match on main name or description
+    try {
+      return _definitions.firstWhere(
+        (d) =>
+            d.mainName.toLowerCase().contains(normalized) ||
+            d.description.toLowerCase().contains(normalized),
+      );
+    } catch (_) {}
+
+    return null;
+  }
+
   /// Zwraca ikonę Lucide dla postaci farmaceutycznej
-  /// Priorytet: pattern matching na tekst postaci
   static IconData getIcon(String? form) {
-    if (form == null || form.isEmpty) {
-      return LucideIcons.pill; // default
-    }
-
-    final normalized = form.toLowerCase();
-
-    // Tabletki (najczęstsze)
-    if (normalized.contains('tabletk')) {
-      return LucideIcons.tablets;
-    }
-
-    // Iniekcje (roztwory do wstrzykiwań, ampułki)
-    if (normalized.contains('wstrzykiw') ||
-        normalized.contains('ampułk') ||
-        normalized.contains('iniekcj') ||
-        normalized.contains('ampułkostrzykawk')) {
-      return LucideIcons.syringe;
-    }
-
-    // Aerozole, inhalatory i dawki
-    if (normalized.contains('aerozol') ||
-        normalized.contains('inhalat') ||
-        normalized.contains('spray') ||
-        normalized.contains('nebuliz') ||
-        normalized.contains('dawk')) {
-      return LucideIcons.sprayCan;
-    }
-
-    // Plastry transdermalne
-    if (normalized.contains('plaster') ||
-        normalized.contains('transder') ||
-        normalized.contains('system leczniczy')) {
-      return LucideIcons.sticker;
-    }
-
-    // Półstałe (maści, kremy, żele)
-    if (normalized.contains('maść') ||
-        normalized.contains('krem') ||
-        normalized.contains('żel') ||
-        normalized.contains('pasta')) {
-      return LucideIcons.droplet;
-    }
-
-    // Płynne (syropy, roztwory, krople, zawiesiny)
-    if (normalized.contains('syrop') ||
-        normalized.contains('krople') ||
-        normalized.contains('zawiesina') ||
-        normalized.contains('emulsja') ||
-        (normalized.contains('roztwór') && !normalized.contains('wstrzykiw'))) {
-      return LucideIcons.flaskConical;
-    }
-
-    // Saszetki
-    if (normalized.contains('saszetk')) {
-      return LucideIcons.package;
-    }
-
-    // Stałe - kapsułki, granulaty, proszki, czopki (default dla stałych)
-    if (normalized.contains('kapsułk') ||
-        normalized.contains('granul') ||
-        normalized.contains('proszek') ||
-        normalized.contains('czopek')) {
-      return LucideIcons.pill;
-    }
-
-    // Default
-    return LucideIcons.pill;
+    if (form == null || form.isEmpty) return LucideIcons.pill;
+    final def = _findDefinition(form);
+    return def?.icon ?? LucideIcons.pill;
   }
 
   /// Zwraca jednostkę opakowania dla postaci farmaceutycznej
   static PackageUnit getPackageUnit(String? form) {
-    if (form == null || form.isEmpty) {
-      return PackageUnit.pieces; // default
-    }
-
-    final normalized = form.toLowerCase();
-
-    // Półstałe → gramy
-    if (normalized.contains('maść') ||
-        normalized.contains('krem') ||
-        normalized.contains('żel') ||
-        normalized.contains('pasta')) {
-      return PackageUnit.grams;
-    }
-
-    // Płynne → ml
-    if (normalized.contains('syrop') ||
-        normalized.contains('krople') ||
-        normalized.contains('zawiesina') ||
-        normalized.contains('emulsja') ||
-        normalized.contains('roztwór') ||
-        normalized.contains('wstrzykiw') ||
-        normalized.contains('ampułk') ||
-        normalized.contains('iniekcj') ||
-        normalized.contains('aerozol') ||
-        normalized.contains('inhalat') ||
-        normalized.contains('spray') ||
-        normalized.contains('nebuliz')) {
-      return PackageUnit.ml;
-    }
-
-    // Saszetki
-    if (normalized.contains('saszetk')) {
-      return PackageUnit.sachets;
-    }
-
-    // Stałe (tabletki, kapsułki, itd.) → sztuki
-    return PackageUnit.pieces;
+    if (form == null || form.isEmpty) return PackageUnit.pieces;
+    final def = _findDefinition(form);
+    return def?.unit ?? PackageUnit.pieces;
   }
 
-  /// Zwraca etykietę jednostki dla postaci farmaceutycznej
+  /// Zwraca opis pomocniczy (description)
+  static String getDescription(String? form) {
+    if (form == null || form.isEmpty) return '';
+    final def = _findDefinition(form);
+    // Jeśli znaleziono definicję, upewnijmy się, że nie zwracamy opisu dla formy która nie jest 'Main Name'
+    // Tzn. jeśli user wpisał 'pastylki', a my zmapowaliśmy to na 'Tabletki', to description 'pastylki...' jest ok.
+    return def?.description ?? '';
+  }
+
+  /// Zwraca etykietę jednostki
   static String getUnitLabel(String? form) {
     final unit = getPackageUnit(form);
     switch (unit) {
@@ -156,15 +196,12 @@ class PharmaceuticalFormHelper {
   }
 
   /// Parsuje string capacity z Gemini na (int, PackageUnit)
-  /// Przykłady: "30 tabletek" → (30, pieces), "100 ml" → (100, ml)
   static CapacityParseResult? parseCapacity(String? capacity) {
     if (capacity == null || capacity.isEmpty) {
       return null;
     }
 
     final normalized = capacity.toLowerCase().trim();
-
-    // Wzorzec: liczba + jednostka
     final regex = RegExp(r'(\d+)\s*(.*)');
     final match = regex.firstMatch(normalized);
 
@@ -183,40 +220,20 @@ class PharmaceuticalFormHelper {
     return CapacityParseResult(value: value, unit: unit);
   }
 
-  /// Helper: parsuje tekst jednostki na PackageUnit
   static PackageUnit _parseUnitFromText(String unitText) {
-    // ml, mililitrów
     if (unitText.contains('ml') || unitText.contains('mililit')) {
       return PackageUnit.ml;
     }
-
-    // g, gramów
     if (unitText.startsWith('g') || unitText.contains('gram')) {
       return PackageUnit.grams;
     }
-
-    // saszetki, saszetek
     if (unitText.contains('saszetk') || unitText.contains('sasz')) {
       return PackageUnit.sachets;
     }
-
-    // tabletek, kapsułek, sztuk, dawek (wszystko → pieces)
-    if (unitText.contains('tabletk') ||
-        unitText.contains('kapsułek') ||
-        unitText.contains('kapsułk') ||
-        unitText.contains('szt') ||
-        unitText.contains('dawek') ||
-        unitText.contains('dawki') ||
-        unitText.contains('dawk')) {
-      return PackageUnit.pieces;
-    }
-
-    // Default: pieces
     return PackageUnit.pieces;
   }
 }
 
-/// Wynik parsowania capacity
 class CapacityParseResult {
   final int value;
   final PackageUnit unit;

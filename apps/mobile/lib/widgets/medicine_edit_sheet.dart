@@ -618,62 +618,326 @@ class _MedicineEditSheetContentState extends State<_MedicineEditSheetContent> {
   }
 
   Widget _buildFormSelector(bool isDark) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: PharmaceuticalFormHelper.predefinedForms.map((form) {
-        final isSelected = _selectedForm?.toLowerCase() == form.toLowerCase();
-        final formIcon = PharmaceuticalFormHelper.getIcon(form);
+    final theme = Theme.of(context);
+    final formIcon = PharmaceuticalFormHelper.getIcon(_selectedForm);
+    final displayText = _selectedForm ?? 'Wybierz postać...';
 
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedForm = form;
-              _hasChanges = true;
-            });
-          },
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: isSelected
-                ? NeuDecoration.pressed(isDark: isDark, radius: 14).copyWith(
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 1.5,
-                    ),
-                  )
-                : NeuDecoration.flat(isDark: isDark, radius: 14),
+    return GestureDetector(
+      onTap: () => _showFormPicker(isDark),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: NeuDecoration.basin(isDark: isDark, radius: 14),
+        child: Row(
+          children: [
+            Icon(
+              formIcon,
+              size: 20,
+              color: _selectedForm != null
+                  ? theme.colorScheme.primary
+                  : (isDark ? Colors.white54 : Colors.black38),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                displayText,
+                style: TextStyle(
+                  color: _selectedForm != null
+                      ? (isDark ? Colors.white : Colors.black)
+                      : (isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Icon(
+              LucideIcons.chevronDown,
+              size: 18,
+              color: isDark ? Colors.white54 : Colors.black38,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Pokazuje BottomSheet z listą postaci farmaceutycznych i wyszukiwarką
+  void _showFormPicker(bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _FormPickerSheet(
+        isDark: isDark,
+        selectedForm: _selectedForm,
+        onSelect: (form) {
+          setState(() {
+            _selectedForm = form;
+            _hasChanges = true;
+          });
+          Navigator.pop(context);
+        },
+      ),
+    );
+  }
+}
+
+/// BottomSheet z listą postaci farmaceutycznych i wyszukiwarką
+class _FormPickerSheet extends StatefulWidget {
+  final bool isDark;
+  final String? selectedForm;
+  final ValueChanged<String> onSelect;
+
+  const _FormPickerSheet({
+    super.key,
+    required this.isDark,
+    required this.selectedForm,
+    required this.onSelect,
+  });
+
+  @override
+  State<_FormPickerSheet> createState() => _FormPickerSheetState();
+}
+
+class _FormPickerSheetState extends State<_FormPickerSheet> {
+  late TextEditingController _searchController;
+  late FocusNode _searchFocusNode;
+  List<PharmaceuticalFormDefinition> _filteredDefinitions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+    _searchFocusNode = FocusNode();
+    _filteredDefinitions = List.from(PharmaceuticalFormHelper.definitions);
+    _searchController.addListener(_filterForms);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _filterForms() {
+    final query = _searchController.text.toLowerCase().trim();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredDefinitions = List.from(PharmaceuticalFormHelper.definitions);
+      } else {
+        _filteredDefinitions = PharmaceuticalFormHelper.definitions.where((
+          def,
+        ) {
+          return def.mainName.toLowerCase().contains(query) ||
+              def.description.toLowerCase().contains(query);
+        }).toList();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    // Stała minimalna wysokość 50%
+    final minHeight = screenHeight * 0.5;
+    final maxHeight = screenHeight * 0.85;
+
+    return Container(
+      constraints: BoxConstraints(minHeight: minHeight, maxHeight: maxHeight),
+      decoration: BoxDecoration(
+        color: widget.isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: widget.isDark ? Colors.white24 : Colors.black12,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  formIcon,
-                  size: 16,
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.primary
-                      : (isDark ? Colors.white70 : Colors.black54),
-                ),
-                const SizedBox(width: 8),
+                Icon(LucideIcons.pill, color: theme.colorScheme.primary),
+                const SizedBox(width: 12),
                 Text(
-                  form,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : Colors.black,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                  'Postać farmaceutyczna',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (isSelected) ...[
-                  const SizedBox(width: 6),
-                  Icon(
-                    LucideIcons.check,
-                    size: 14,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ],
               ],
             ),
           ),
-        );
-      }).toList(),
+
+          // Search bar with Floating Label
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              decoration: NeuDecoration.basin(
+                isDark: widget.isDark,
+                radius: 14,
+              ),
+              padding: const EdgeInsets.only(left: 12, right: 12, bottom: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    LucideIcons.search,
+                    size: 20,
+                    color: widget.isDark ? Colors.white54 : Colors.black38,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      focusNode: _searchFocusNode,
+                      decoration: InputDecoration(
+                        labelText: 'Wyszukaj postać...',
+                        labelStyle: TextStyle(
+                          color: widget.isDark
+                              ? AppColors.darkTextMuted
+                              : AppColors.lightTextMuted,
+                        ),
+                        floatingLabelBehavior: FloatingLabelBehavior.auto,
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                        isDense: false,
+                      ),
+                      style: TextStyle(
+                        color: widget.isDark ? Colors.white : Colors.black,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // List
+          Flexible(
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              itemCount: _filteredDefinitions.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final def = _filteredDefinitions[index];
+                final isSelected = widget.selectedForm == def.mainName;
+
+                return _buildListItem(theme, def, isSelected);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListItem(
+    ThemeData theme,
+    PharmaceuticalFormDefinition def,
+    bool isSelected,
+  ) {
+    return GestureDetector(
+      onTap: () => widget.onSelect(def.mainName),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: isSelected
+            ? NeuDecoration.pressed(isDark: widget.isDark, radius: 12).copyWith(
+                border: Border.all(
+                  color: theme.colorScheme.primary.withAlpha(100),
+                  width: 1.5,
+                ),
+              )
+            : NeuDecoration.flat(isDark: widget.isDark, radius: 12),
+        child: Row(
+          children: [
+            // Icon Container
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: widget.isDark
+                    ? Colors.white.withAlpha(10)
+                    : Colors.black.withAlpha(5),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                def.icon,
+                size: 20,
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : (widget.isDark ? Colors.white70 : Colors.black87),
+              ),
+            ),
+            const SizedBox(width: 12),
+
+            // Text Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    def.mainName,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: widget.isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  if (def.description.isNotEmpty)
+                    Text(
+                      def.description,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: widget.isDark
+                            ? AppColors.darkTextMuted
+                            : AppColors.lightTextMuted,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+
+            // Unit Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: widget.isDark ? Colors.black26 : Colors.white60,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: widget.isDark ? Colors.white10 : Colors.black12,
+                ),
+              ),
+              child: Text(
+                PharmaceuticalFormHelper.getUnitLabel(def.mainName),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: widget.isDark ? Colors.white70 : Colors.black54,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
