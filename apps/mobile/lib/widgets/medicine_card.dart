@@ -144,15 +144,66 @@ class _MedicineCardState extends State<MedicineCard> {
     widget.onMedicineUpdated?.call();
   }
 
+  /// Oblicza procent zapasu na podstawie aktualnego stanu opakowań
+  /// Zwraca wartość 0.0-1.0, lub 0.0 jeśli brak danych
+  double _calculateStockPercentage() {
+    if (_medicine.packages.isEmpty) return 0.0;
+
+    int currentStock = 0;
+    int totalCapacity = 0;
+
+    for (final package in _medicine.packages) {
+      final packageCapacity = package.capacity ?? package.pieceCount;
+      if (packageCapacity != null) {
+        totalCapacity += packageCapacity;
+
+        if (package.isOpen) {
+          if (package.pieceCount != null) {
+            currentStock += package.pieceCount!;
+          } else if (package.percentRemaining != null) {
+            currentStock += (packageCapacity * package.percentRemaining! / 100)
+                .round();
+          }
+        } else {
+          // Zamknięte = pełne
+          currentStock += packageCapacity;
+        }
+      }
+    }
+
+    if (totalCapacity <= 0) return 0.0;
+    return (currentStock / totalCapacity).clamp(0.0, 1.0);
+  }
+
+  /// Kolor progress bara - zależny TYLKO od ilości zapasu (nie od terminów)
+  Color _getProgressBarColor(double stockPercentage, bool isDark) {
+    final dangerColor = isDark ? AppColors.expiredDark : AppColors.expiredLight;
+    final warnColor = isDark
+        ? AppColors.expiringSoonDark
+        : AppColors.expiringSoonLight;
+    final accentColor = isDark ? AppColors.accentDark : AppColors.accent;
+
+    if (stockPercentage <= 0) return dangerColor;
+    if (stockPercentage < 0.20) return warnColor;
+    return accentColor;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    final status = _medicine.expiryStatus;
+    // Oblicz procent zapasu raz
+    final stockPercentage = _calculateStockPercentage();
 
-    final statusColor = _getStatusColor(status);
-    final statusIcon = _getStatusIcon(status);
+    // Outline color: z pełnej logiki priorytetów (shelf-life vs expiry)
+    // BEZ uwzględniania ilości - ilość wpływa tylko na progress bar
+    final validityInfo = _calculateValidityInfo(stockPercentage);
+    final statusColor = validityInfo.color;
+    final statusIcon = validityInfo.icon;
+
+    // Progress bar color: TYLKO na podstawie ilości zapasu
+    final progressBarColor = _getProgressBarColor(stockPercentage, isDark);
 
     // Pobierz etykiety dla tego leku
     final medicineLabels = widget.labels
@@ -291,9 +342,18 @@ class _MedicineCardState extends State<MedicineCard> {
                   ),
                 // H3 + H4 pod spodem (tylko compact) - z notatką po lewej
                 if (widget.isCompact)
-                  _buildCompactStockWithNote(theme, statusColor),
+                  _buildCompactStockWithNote(
+                    theme,
+                    statusColor,
+                    progressBarColor,
+                  ),
                 if (!widget.isCompact)
-                  _buildExpandedContent(theme, isDark, statusColor),
+                  _buildExpandedContent(
+                    theme,
+                    isDark,
+                    statusColor,
+                    progressBarColor,
+                  ),
               ],
             ),
           ),
@@ -546,7 +606,11 @@ class _MedicineCardState extends State<MedicineCard> {
 
   /// Buduje sekcję H3+H4 (Smart Stock) z notatką po lewej dla trybu compact
   /// Layout: [Notatka 44px] + [gap 12px] + [Smart Stock flex]
-  Widget _buildCompactStockWithNote(ThemeData theme, Color statusColor) {
+  Widget _buildCompactStockWithNote(
+    ThemeData theme,
+    Color statusColor,
+    Color progressBarColor,
+  ) {
     final hasNote = _medicine.notatka?.isNotEmpty == true;
 
     return Row(
@@ -575,6 +639,7 @@ class _MedicineCardState extends State<MedicineCard> {
           child: _buildCompactStockSection(
             theme,
             statusColor,
+            progressBarColor: progressBarColor,
             skipLeftPadding: true,
           ),
         ),
@@ -588,6 +653,7 @@ class _MedicineCardState extends State<MedicineCard> {
   Widget _buildCompactStockSection(
     ThemeData theme,
     Color statusColor, {
+    required Color progressBarColor,
     bool skipLeftPadding = false,
   }) {
     String unitLabel = 'szt.';
@@ -674,14 +740,15 @@ class _MedicineCardState extends State<MedicineCard> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Lewa strona: Ilość (np. "24 szt.")
+              // Lewa strona: Ilość (np. "24 szt.") - kolor zależny od ilości zapasu
               Text(
                 '$currentStock$unitLabel',
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: validityInfo.isWarning || validityInfo.isDanger
-                      ? validityColor
+                  // Kolor tekstu ilości = logika stock-based (jak progress bar)
+                  color: stockPercentage <= 0 || stockPercentage < 0.20
+                      ? progressBarColor
                       : theme.colorScheme.onSurface,
                 ),
               ),
@@ -699,11 +766,11 @@ class _MedicineCardState extends State<MedicineCard> {
               ),
             ],
           ),
-          // Dół: Segmented Progress Bar
+          // Dół: Segmented Progress Bar - kolor zależny TYLKO od ilości
           const SizedBox(height: 6),
           _buildSegmentedProgressBar(
             stockPercentage,
-            validityColor,
+            progressBarColor,
             isDark,
             theme,
           ),
@@ -718,6 +785,7 @@ class _MedicineCardState extends State<MedicineCard> {
   Widget _buildExpandedStockWithPackageCount(
     ThemeData theme,
     Color statusColor,
+    Color progressBarColor,
   ) {
     final packageCount = _medicine.packageCount;
     // Stała wysokość dla licznika opakowań (2 linie = ~40px)
@@ -761,6 +829,7 @@ class _MedicineCardState extends State<MedicineCard> {
           child: _buildCompactStockSection(
             theme,
             statusColor,
+            progressBarColor: progressBarColor,
             skipLeftPadding: true,
           ),
         ),
@@ -790,7 +859,7 @@ class _MedicineCardState extends State<MedicineCard> {
       expiryDateTime = DateTime.tryParse(expiryDate);
       if (expiryDateTime != null) {
         daysUntilExpiry = expiryDateTime.difference(now).inDays;
-        if (daysUntilExpiry < 0) {
+        if (daysUntilExpiry <= 0) {
           return _ValidityInfo(
             icon: LucideIcons.ban,
             text: 'Przeterminowane',
@@ -820,62 +889,75 @@ class _MedicineCardState extends State<MedicineCard> {
           parsed.days!,
         );
         if (shelfExpiryDate != null) {
-          final daysUntilShelfExpiry = shelfExpiryDate.difference(now).inDays;
+          // === PRIORYTET: użyj krótszego terminu (shelf-life vs expiry) ===
+          // Jeśli termin ważności (expiryDateTime) jest WCZEŚNIEJSZY niż shelf-life,
+          // to pomiń logikę shelf-life i użyj standardowej logiki expiry poniżej
+          final useShelfLifeLogic =
+              expiryDateTime == null ||
+              shelfExpiryDate.isBefore(expiryDateTime) ||
+              shelfExpiryDate.isAtSameMomentAs(expiryDateTime);
 
-          // Przeterminowane po otwarciu
-          if (daysUntilShelfExpiry < 0) {
-            return _ValidityInfo(
-              icon: LucideIcons.ban,
-              text: 'Przeterminowane',
-              color: dangerColor,
-              isDanger: true,
-              isWarning: false,
-            );
-          }
+          if (useShelfLifeLogic) {
+            final daysUntilShelfExpiry = shelfExpiryDate.difference(now).inDays;
 
-          // === PRIO 3: Brak zapasu ===
-          if (stockPercentage <= 0) {
-            return _ValidityInfo(
-              icon: LucideIcons.ban,
-              text: 'Brak zapasu',
-              color: dangerColor,
-              isDanger: true,
-              isWarning: false,
-            );
-          }
+            // Przeterminowane po otwarciu
+            if (daysUntilShelfExpiry < 0) {
+              return _ValidityInfo(
+                icon: LucideIcons.ban,
+                text: 'Przeterminowane',
+                color: dangerColor,
+                isDanger: true,
+                isWarning: false,
+              );
+            }
 
-          // === PRIO 4: Warning (ilość <20% LUB shelf-life <7 dni) ===
-          if (stockPercentage < 0.20 && daysUntilShelfExpiry < 7) {
-            return _ValidityInfo(
-              icon: LucideIcons.triangleAlert,
-              text: '$daysUntilShelfExpiry dni',
-              color: warnColor,
-              isDanger: false,
-              isWarning: true,
-            );
-          }
+            // === PRIO 4: Shelf-life 0 dni (ostatni dzień) ===
+            if (daysUntilShelfExpiry == 0) {
+              return _ValidityInfo(
+                icon: LucideIcons.triangleAlert,
+                text: 'Ostatni dzień!',
+                color: dangerColor,
+                isDanger: true,
+                isWarning: false,
+              );
+            }
 
-          // === PRIO 5: Shelf-life <35 dni (countdown) ===
-          if (daysUntilShelfExpiry < 35) {
+            // === PRIO 4.5: Shelf-life <30% całkowitego czasu (warn) ===
+            final totalShelfDays = parsed.days!;
+            final percentRemaining = daysUntilShelfExpiry / totalShelfDays;
+            if (percentRemaining < 0.30) {
+              return _ValidityInfo(
+                icon: LucideIcons.triangleAlert,
+                text: 'Zużyć w ciągu $daysUntilShelfExpiry dni',
+                color: warnColor,
+                isDanger: false,
+                isWarning: true,
+              );
+            }
+
+            // === PRIO 5: Shelf-life <90 dni (countdown - informacyjnie) ===
+            if (daysUntilShelfExpiry < 90) {
+              return _ValidityInfo(
+                icon: LucideIcons.trendingDown,
+                text: 'Otwarto, zużyć w ciągu $daysUntilShelfExpiry dni',
+                color: accentColor,
+                isDanger: false,
+                isWarning: false,
+              );
+            }
+
+            // === PRIO 6: Shelf-life ≥90 dni (data) ===
+            final formattedShelfExpiry =
+                '${shelfExpiryDate.day.toString().padLeft(2, '0')}.${shelfExpiryDate.month.toString().padLeft(2, '0')}';
             return _ValidityInfo(
-              icon: LucideIcons.trendingDown,
-              text: 'Otwarto, zużyć w ciągu $daysUntilShelfExpiry dni',
+              icon: LucideIcons.circleCheckBig,
+              text: 'Otwarto, zużyć do $formattedShelfExpiry',
               color: accentColor,
               isDanger: false,
               isWarning: false,
             );
           }
-
-          // === PRIO 6: Shelf-life ≥35 dni (data) ===
-          final formattedShelfExpiry =
-              '${shelfExpiryDate.day.toString().padLeft(2, '0')}.${shelfExpiryDate.month.toString().padLeft(2, '0')}';
-          return _ValidityInfo(
-            icon: LucideIcons.circleCheckBig,
-            text: 'Otwarto, zużyć do $formattedShelfExpiry',
-            color: accentColor,
-            isDanger: false,
-            isWarning: false,
-          );
+          // Jeśli !useShelfLifeLogic, przechodzimy do standardowej logiki expiry poniżej
         }
       }
     }
@@ -904,8 +986,19 @@ class _MedicineCardState extends State<MedicineCard> {
       );
     }
 
-    // === PRIO 5: Expiry <35 dni (countdown) ===
-    if (daysUntilExpiry != null && daysUntilExpiry < 35) {
+    // === PRIO 4.5: Expiry <31 dni (warn - zbliża się termin) ===
+    if (daysUntilExpiry != null && daysUntilExpiry < 31) {
+      return _ValidityInfo(
+        icon: LucideIcons.triangleAlert,
+        text: 'Ważne jeszcze $daysUntilExpiry dni',
+        color: warnColor,
+        isDanger: false,
+        isWarning: true,
+      );
+    }
+
+    // === PRIO 5: Expiry <90 dni (countdown - informacyjnie) ===
+    if (daysUntilExpiry != null && daysUntilExpiry < 90) {
       return _ValidityInfo(
         icon: LucideIcons.trendingDown,
         text: 'Ważne jeszcze $daysUntilExpiry dni',
@@ -1030,6 +1123,7 @@ class _MedicineCardState extends State<MedicineCard> {
     ThemeData theme,
     bool isDark,
     Color statusColor,
+    Color progressBarColor,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1062,7 +1156,11 @@ class _MedicineCardState extends State<MedicineCard> {
 
         // === ZAPAS LEKU (Smart Stock z compact) + licznik opakowań ===
         const SizedBox(height: 16),
-        _buildExpandedStockWithPackageCount(theme, statusColor),
+        _buildExpandedStockWithPackageCount(
+          theme,
+          statusColor,
+          progressBarColor,
+        ),
 
         // === WIĘCEJ (akordeon - zawiera packages, calculator, delete) ===
         const SizedBox(height: 16),
