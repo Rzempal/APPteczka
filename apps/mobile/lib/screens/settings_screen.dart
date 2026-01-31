@@ -107,10 +107,6 @@ class _SettingsScreenState extends State<SettingsScreen>
               _buildThemeSection(context, theme, isDark),
               const SizedBox(height: 24),
 
-              // Tryb wydajności
-              _buildPerformanceModeSection(context, theme, isDark),
-              const SizedBox(height: 24),
-
               // Kopia zapasowa (akordeon)
               _buildBackupSection(theme, isDark),
               const SizedBox(height: 24),
@@ -121,6 +117,12 @@ class _SettingsScreenState extends State<SettingsScreen>
 
               // Zaawansowane (osobny akordeon)
               _buildAdvancedSection(theme, isDark),
+
+              // Developer tools - tylko dla kanału internal
+              if (AppConfig.isInternal) ...[
+                const SizedBox(height: 24),
+                _buildDeveloperToolsSection(theme, isDark),
+              ],
               const SizedBox(height: 32),
             ],
           ),
@@ -757,7 +759,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   bool _isExporting = false;
 
   /// ID aktualnie otwartej sekcji akordeonu (tylko jedna może być otwarta)
-  /// Możliwe wartości: 'theme', 'backup', 'support', 'advanced', 'performance', null (wszystko zwinięte)
+  /// Możliwe wartości: 'theme', 'backup', 'support', 'advanced', 'devtools', null (wszystko zwinięte)
   String? _openSectionId;
   ThemeMode? _optimisticMode; // Optimistic UI - lokalna kopia wybranego motywu
   ThemeMode? _switchingMode; // Który przycisk pokazuje spinner
@@ -822,162 +824,6 @@ class _SettingsScreenState extends State<SettingsScreen>
             sectionId; // Otwórz nową, automatycznie zamyka poprzednią
       }
     });
-  }
-
-  Widget _buildPerformanceModeSection(
-    BuildContext context,
-    ThemeData theme,
-    bool isDark,
-  ) {
-    return StatefulBuilder(
-      builder: (context, setLocalState) {
-        final isEnabled = widget.storageService.performanceMode;
-        return Container(
-          decoration: NeuDecoration.flat(
-            isDark: isDark,
-            borderRadius: AppTheme.organicRadiusSmall,
-          ),
-          child: Column(
-            children: [
-              // Header - klikalne
-              InkWell(
-                onTap: () => _toggleSection('performance'),
-                borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        isEnabled ? LucideIcons.zap : LucideIcons.zapOff,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Tryb wydajności',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              isEnabled ? 'Włączony' : 'Wyłączony',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        _openSectionId == 'performance'
-                            ? LucideIcons.chevronUp
-                            : LucideIcons.chevronDown,
-                        size: 20,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              // Zawartość zwijana
-              if (_openSectionId == 'performance') ...[
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Toggle switch
-                      NeuInsetContainer(
-                        borderRadius: 12,
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Uproszczone efekty 3D',
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Zmniejsz obciążenie GPU dla starszych urządzeń. Efekty neumorficzne będą prostsze, ale aplikacja będzie działać płynniej.',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Switch(
-                              value: isEnabled,
-                              onChanged: (value) {
-                                widget.storageService.performanceMode = value;
-                                setLocalState(() {});
-                                setState(() {});
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      // Opis techniczny
-                      NeuInsetContainer(
-                        borderRadius: 12,
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  LucideIcons.info,
-                                  size: 16,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Jak to działa?',
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Tryb wydajności redukuje złożoność cieni (offset ±4, blur 8 zamiast ±10, blur 20), co zmniejsza obciążenie GPU o ~60%.',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '💡 Zalecane dla urządzeń z Androidem < 10',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
   }
 
   Widget _buildBackupSection(ThemeData theme, bool isDark) {
@@ -1456,13 +1302,152 @@ class _SettingsScreenState extends State<SettingsScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Tryb wydajności
+                      _buildAdvancedPerformanceMode(theme, isDark),
+                      const SizedBox(height: 12),
                       // Zgłoś problem
                       _buildAdvancedBugReport(theme, isDark),
-                      // Debug - tylko dla kanału internal
-                      if (AppConfig.isInternal) ...[
-                        const SizedBox(height: 12),
-                        _buildAdvancedDebugSection(theme, isDark),
-                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Stan rozwinięcia subsekcji Tryb wydajności w Zaawansowane
+  bool _performanceSubExpanded = false;
+
+  /// Tryb wydajności jako subsekcja wewnątrz Zaawansowane
+  Widget _buildAdvancedPerformanceMode(ThemeData theme, bool isDark) {
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        final isEnabled = widget.storageService.performanceMode;
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(10),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.03)
+                : Colors.black.withValues(alpha: 0.02),
+          ),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () {
+                  setLocalState(() {
+                    _performanceSubExpanded = !_performanceSubExpanded;
+                  });
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isEnabled ? LucideIcons.zap : LucideIcons.zapOff,
+                        color: theme.colorScheme.primary,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Tryb wydajności',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              isEnabled ? 'Włączony' : 'Wyłączony',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _performanceSubExpanded
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Zawartość zwijana
+              if (_performanceSubExpanded) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Toggle switch
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.05)
+                              : Colors.black.withValues(alpha: 0.03),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Uproszczone efekty 3D',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Zmniejsz obciążenie GPU dla starszych urządzeń.',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Switch(
+                              value: isEnabled,
+                              onChanged: (value) {
+                                widget.storageService.performanceMode = value;
+                                setLocalState(() {});
+                                setState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Opis techniczny
+                      Text(
+                        'Tryb wydajności redukuje złożoność cieni (offset ±4, blur 8 zamiast ±10, blur 20), co zmniejsza obciążenie GPU o ~60%. Zalecane dla urządzeń z Androidem < 10.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 10,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1549,8 +1534,81 @@ class _SettingsScreenState extends State<SettingsScreen>
     );
   }
 
-  /// Sekcja Debug - widoczna tylko w kanale internal
-  Widget _buildAdvancedDebugSection(ThemeData theme, bool isDark) {
+  /// Sekcja Developer Tools - widoczna tylko w kanale internal
+  Widget _buildDeveloperToolsSection(ThemeData theme, bool isDark) {
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        return Container(
+          decoration: NeuDecoration.flat(isDark: isDark, radius: 12),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () => _toggleSection('devtools'),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        LucideIcons.folderCode,
+                        color: AppColors.expiringSoon,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Developer tools',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.expiringSoon.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'DEV',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: AppColors.expiringSoon,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        _openSectionId == 'devtools'
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        size: 20,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Zawartość zwijana
+              if (_openSectionId == 'devtools') ...[
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: _buildDevToolsDebugSection(theme, isDark),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Sekcja Debug wewnątrz Developer Tools
+  Widget _buildDevToolsDebugSection(ThemeData theme, bool isDark) {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
