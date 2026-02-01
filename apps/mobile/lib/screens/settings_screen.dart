@@ -1321,6 +1321,9 @@ class _SettingsScreenState extends State<SettingsScreen>
   // Stan rozwinięcia subsekcji Tryb wydajności w Zaawansowane
   bool _performanceSubExpanded = false;
 
+  // Stan rozwinięcia subsekcji AI w Developer Tools
+  bool _aiSubExpanded = false;
+
   /// Tryb wydajności jako subsekcja wewnątrz Zaawansowane
   Widget _buildAdvancedPerformanceMode(ThemeData theme, bool isDark) {
     return StatefulBuilder(
@@ -1597,13 +1600,267 @@ class _SettingsScreenState extends State<SettingsScreen>
               if (_openSectionId == 'devtools') ...[
                 Padding(
                   padding: const EdgeInsets.all(12),
-                  child: _buildDevToolsDebugSection(theme, isDark),
+                  child: Column(
+                    children: [
+                      // Sekcja AI Toggle
+                      _buildAiToggleSection(theme, isDark),
+                      const SizedBox(height: 12),
+                      // Sekcja Debug
+                      _buildDevToolsDebugSection(theme, isDark),
+                    ],
+                  ),
                 ),
               ],
             ],
           ),
         );
       },
+    );
+  }
+
+  /// Sekcja AI Toggle wewnątrz Developer Tools
+  Widget _buildAiToggleSection(ThemeData theme, bool isDark) {
+    // Kolor AI (Violet-500)
+    const aiColor = Color(0xFF8B5CF6);
+
+    return StatefulBuilder(
+      builder: (context, setLocalState) {
+        final isAiEnabled = widget.storageService.aiEnabled;
+        return Container(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.3),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(10),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.03)
+                : Colors.black.withValues(alpha: 0.02),
+          ),
+          child: Column(
+            children: [
+              // Header - klikalne
+              InkWell(
+                onTap: () {
+                  setLocalState(() {
+                    _aiSubExpanded = !_aiSubExpanded;
+                  });
+                },
+                borderRadius: BorderRadius.circular(10),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isAiEnabled
+                            ? LucideIcons.sparkles
+                            : LucideIcons.sparkle,
+                        color: aiColor,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Funkcje AI',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              isAiEnabled ? 'Włączone' : 'Wyłączone',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _aiSubExpanded
+                            ? LucideIcons.chevronUp
+                            : LucideIcons.chevronDown,
+                        size: 18,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Zawartość zwijana
+              if (_aiSubExpanded) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Główny toggle
+                      _buildAiToggleRow(
+                        theme: theme,
+                        isDark: isDark,
+                        label: 'Wszystkie funkcje AI',
+                        description:
+                            'Globalny przełącznik dla wszystkich funkcji AI',
+                        value: isAiEnabled,
+                        onChanged: (value) {
+                          widget.storageService.aiEnabled = value;
+                          setLocalState(() {});
+                          setState(() {});
+                        },
+                        aiColor: aiColor,
+                        isPrimary: true,
+                      ),
+                      // Granularne toggles (tylko jeśli AI włączone)
+                      if (isAiEnabled) ...[
+                        const SizedBox(height: 8),
+                        _buildAiToggleRow(
+                          theme: theme,
+                          isDark: isDark,
+                          label: 'Wyszukiwanie po nazwie',
+                          description: 'Name Lookup + wzbogacanie danych',
+                          value: widget.storageService.aiNameLookupEnabled,
+                          onChanged: (value) {
+                            widget.storageService.aiNameLookupEnabled = value;
+                            setLocalState(() {});
+                          },
+                          aiColor: aiColor,
+                        ),
+                        const SizedBox(height: 6),
+                        _buildAiToggleRow(
+                          theme: theme,
+                          isDark: isDark,
+                          label: 'Rozpoznawanie kodu',
+                          description: 'Fallback gdy kod EAN nieznany',
+                          value: widget.storageService.aiBarcodeFallbackEnabled,
+                          onChanged: (value) {
+                            widget.storageService.aiBarcodeFallbackEnabled =
+                                value;
+                            setLocalState(() {});
+                          },
+                          aiColor: aiColor,
+                        ),
+                        const SizedBox(height: 6),
+                        _buildAiToggleRow(
+                          theme: theme,
+                          isDark: isDark,
+                          label: 'Zdjęcie produktu',
+                          description: 'Rozpoznawanie leku ze zdjęcia',
+                          value: widget.storageService.aiProductPhotoEnabled,
+                          onChanged: (value) {
+                            widget.storageService.aiProductPhotoEnabled = value;
+                            setLocalState(() {});
+                          },
+                          aiColor: aiColor,
+                        ),
+                        const SizedBox(height: 6),
+                        _buildAiToggleRow(
+                          theme: theme,
+                          isDark: isDark,
+                          label: 'OCR daty ważności',
+                          description: 'Odczyt daty ze zdjęcia',
+                          value: widget.storageService.aiExpiryDateOcrEnabled,
+                          onChanged: (value) {
+                            widget.storageService.aiExpiryDateOcrEnabled =
+                                value;
+                            setLocalState(() {});
+                          },
+                          aiColor: aiColor,
+                        ),
+                        const SizedBox(height: 6),
+                        _buildAiToggleRow(
+                          theme: theme,
+                          isDark: isDark,
+                          label: 'Analiza ulotki',
+                          description: 'Termin ważności po otwarciu',
+                          value: widget.storageService.aiShelfLifeEnabled,
+                          onChanged: (value) {
+                            widget.storageService.aiShelfLifeEnabled = value;
+                            setLocalState(() {});
+                          },
+                          aiColor: aiColor,
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      // Info
+                      Text(
+                        'Wyłączenie funkcji AI pozwala testować aplikację bez kosztów API. Funkcje Pro będą dostępne w przyszłej subskrypcji.',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Helper do budowania wiersza toggle AI
+  Widget _buildAiToggleRow({
+    required ThemeData theme,
+    required bool isDark,
+    required String label,
+    required String description,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required Color aiColor,
+    bool isPrimary = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: isPrimary
+            ? aiColor.withValues(alpha: 0.08)
+            : (isDark
+                  ? Colors.white.withValues(alpha: 0.03)
+                  : Colors.black.withValues(alpha: 0.02)),
+        borderRadius: BorderRadius.circular(8),
+        border: isPrimary
+            ? Border.all(color: aiColor.withValues(alpha: 0.3), width: 1)
+            : null,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: isPrimary ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  description,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Switch(
+            value: value,
+            onChanged: onChanged,
+            activeTrackColor: aiColor.withValues(alpha: 0.5),
+            thumbColor: WidgetStateProperty.resolveWith(
+              (states) =>
+                  states.contains(WidgetState.selected) ? aiColor : null,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

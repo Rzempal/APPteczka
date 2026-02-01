@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
+import 'ai_settings_service.dart';
 import 'app_logger.dart';
 import 'gemini_service.dart'; // Używamy GeminiException
 
@@ -36,6 +37,11 @@ class GeminiShelfLifeService {
 
   /// Analizuje ulotkę PDF w celu znalezienia terminu ważności po otwarciu
   Future<ShelfLifeResult> analyzeLeaflet(String pdfUrl) async {
+    // Sprawdź czy funkcja AI jest włączona
+    AiSettingsService.instance.assertFeatureEnabled(
+      AiFeature.shelfLifeAnalysis,
+    );
+
     _log.info('Analyzing shelf life from leaflet: $pdfUrl');
 
     try {

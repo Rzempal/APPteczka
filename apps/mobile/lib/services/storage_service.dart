@@ -71,6 +71,56 @@ class StorageService {
     _settingsBox.put('showShortenedLabels', value);
   }
 
+  // ==================== AI SETTINGS (Developer Tools) ====================
+
+  /// Globalny toggle AI - wyłącza wszystkie funkcje AI
+  bool get aiEnabled =>
+      _settingsBox.get('aiEnabled', defaultValue: true) as bool;
+
+  set aiEnabled(bool value) {
+    _settingsBox.put('aiEnabled', value);
+  }
+
+  /// Name Lookup + Background Queue Processing
+  bool get aiNameLookupEnabled =>
+      _settingsBox.get('aiNameLookupEnabled', defaultValue: true) as bool;
+
+  set aiNameLookupEnabled(bool value) {
+    _settingsBox.put('aiNameLookupEnabled', value);
+  }
+
+  /// Barcode Scanner Fallback (gdy EAN nieznany)
+  bool get aiBarcodeFallbackEnabled =>
+      _settingsBox.get('aiBarcodeFallbackEnabled', defaultValue: true) as bool;
+
+  set aiBarcodeFallbackEnabled(bool value) {
+    _settingsBox.put('aiBarcodeFallbackEnabled', value);
+  }
+
+  /// Product Photo OCR (rozpoznawanie produktu ze zdjęcia)
+  bool get aiProductPhotoEnabled =>
+      _settingsBox.get('aiProductPhotoEnabled', defaultValue: true) as bool;
+
+  set aiProductPhotoEnabled(bool value) {
+    _settingsBox.put('aiProductPhotoEnabled', value);
+  }
+
+  /// Expiry Date OCR (rozpoznawanie daty ważności)
+  bool get aiExpiryDateOcrEnabled =>
+      _settingsBox.get('aiExpiryDateOcrEnabled', defaultValue: true) as bool;
+
+  set aiExpiryDateOcrEnabled(bool value) {
+    _settingsBox.put('aiExpiryDateOcrEnabled', value);
+  }
+
+  /// Shelf Life Analysis (analiza ulotki PDF)
+  bool get aiShelfLifeEnabled =>
+      _settingsBox.get('aiShelfLifeEnabled', defaultValue: true) as bool;
+
+  set aiShelfLifeEnabled(bool value) {
+    _settingsBox.put('aiShelfLifeEnabled', value);
+  }
+
   // ==================== MEDICINES ====================
 
   /// Pobiera wszystkie leki

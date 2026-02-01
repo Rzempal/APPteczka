@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
+import 'ai_settings_service.dart';
 import 'app_logger.dart';
 
 /// Wynik skanowania Gemini
@@ -85,7 +86,16 @@ class GeminiService {
       'https://pudelkonaleki.michalrapala.app/api/gemini-ocr';
 
   /// Skanuje zdjęcie i rozpoznaje leki
-  Future<GeminiScanResult> scanImage(File imageFile) async {
+  ///
+  /// [feature] określa którą funkcję AI sprawdzić (domyślnie productPhoto).
+  /// Dla barcodeFallback należy przekazać AiFeature.barcodeFallback.
+  Future<GeminiScanResult> scanImage(
+    File imageFile, {
+    AiFeature feature = AiFeature.productPhoto,
+  }) async {
+    // Sprawdź czy funkcja AI jest włączona
+    AiSettingsService.instance.assertFeatureEnabled(feature);
+
     _log.info('Starting single image scan');
 
     try {

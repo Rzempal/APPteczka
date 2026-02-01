@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
+import 'ai_settings_service.dart';
 import 'app_logger.dart';
 import 'gemini_service.dart'; // Używamy ScannedMedicine i GeminiException
 
@@ -35,6 +36,9 @@ class GeminiNameLookupService {
 
   /// Wyszukuje lek na podstawie nazwy
   Future<NameLookupResult> lookupByName(String name) async {
+    // Sprawdź czy funkcja AI jest włączona
+    AiSettingsService.instance.assertFeatureEnabled(AiFeature.nameLookup);
+
     _log.info('Looking up medicine by name: $name');
 
     try {

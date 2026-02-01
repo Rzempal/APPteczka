@@ -9,6 +9,7 @@ import 'package:uuid/uuid.dart';
 
 import 'config/app_config.dart';
 import 'models/medicine.dart';
+import 'services/ai_settings_service.dart';
 import 'services/app_logger.dart';
 import 'services/bug_report_service.dart';
 import 'services/fab_service.dart';
@@ -36,6 +37,9 @@ void main() async {
   // Inicjalizacja storage
   final storageService = StorageService();
   await storageService.init();
+
+  // Inicjalizacja AiSettingsService (gateway dla przełączników AI)
+  AiSettingsService.initialize(storageService);
 
   // Inicjalizacja theme provider
   final themeProvider = ThemeProvider();

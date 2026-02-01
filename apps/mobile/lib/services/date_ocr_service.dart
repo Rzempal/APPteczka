@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
+import 'ai_settings_service.dart';
 import 'app_logger.dart';
 
 /// Wynik rozpoznawania daty ważności
@@ -38,6 +39,9 @@ class DateOcrService {
 
   /// Rozpoznaje datę ważności ze zdjęcia
   Future<DateOcrResult> recognizeDate(File imageFile) async {
+    // Sprawdź czy funkcja AI jest włączona
+    AiSettingsService.instance.assertFeatureEnabled(AiFeature.expiryDateOcr);
+
     _log.info('Starting date recognition');
 
     try {
