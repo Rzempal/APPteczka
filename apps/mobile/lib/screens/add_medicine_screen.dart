@@ -14,6 +14,7 @@ import '../services/gemini_name_lookup_service.dart';
 import '../services/gemini_shelf_life_service.dart';
 import '../services/date_ocr_service.dart';
 import '../services/rpl_service.dart';
+import '../services/ai_settings_service.dart';
 import '../services/app_logger.dart';
 import '../widgets/barcode_scanner.dart';
 import '../widgets/karton_icons.dart';
@@ -1575,6 +1576,7 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
 
     final geminiService = GeminiNameLookupService();
     final savedMedicines = <Medicine>[];
+    bool aiWasDisabled = false; // Flaga dla komunikatu PRO
 
     try {
       // Przetwarzaj każdy lek z listy
@@ -1661,6 +1663,48 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
           ); // Auto-trigger shelf life analysis
           savedMedicines.add(medicine);
           _log.fine('Saved medicine: ${medicine.nazwa}');
+        } on AiDisabledException catch (e) {
+          // AI wyłączone - zapisz z danymi RPL bez AI enrichment
+          _log.info(
+            'AI disabled for ${pendingDrug.displayName}: ${e.userMessage}',
+          );
+          aiWasDisabled = true;
+
+          // Zapisz lek tylko z danymi RPL
+          final rpl = pendingDrug.drugDetails;
+          final pkg = pendingDrug.selectedPackage;
+          final drugName = rpl.fullName.isNotEmpty
+              ? rpl.fullName
+              : rpl.name.isNotEmpty
+              ? rpl.name
+              : pendingDrug.displayName;
+
+          if (drugName.isNotEmpty) {
+            final rplTags = _generateTagsFromRpl(rpl, pkg);
+            final medicine = Medicine(
+              id: const Uuid().v4(),
+              nazwa: drugName,
+              opis: rpl.form, // Tylko dane RPL, bez AI
+              wskazania: [],
+              tagi: rplTags,
+              packages: [
+                MedicinePackage(
+                  expiryDate: '',
+                  pieceCount: PharmaceuticalFormHelper.parsePackaging(
+                    pkg.packaging,
+                  ),
+                  unit: PharmaceuticalFormHelper.getPackageUnit(rpl.form),
+                ),
+              ],
+              dataDodania: DateTime.now().toIso8601String(),
+              leafletUrl: rpl.leafletUrl,
+              isVerifiedByBarcode: true,
+              pharmaceuticalForm: rpl.form.isNotEmpty ? rpl.form : null,
+            );
+            await widget.storageService.saveMedicine(medicine);
+            savedMedicines.add(medicine);
+            _log.fine('Saved medicine without AI: ${medicine.nazwa}');
+          }
         } catch (e) {
           _log.warning('Error saving medicine ${pendingDrug.displayName}: $e');
           // Kontynuuj z pozostałymi lekami
@@ -1686,11 +1730,21 @@ class _AddMedicineScreenState extends State<AddMedicineScreen> {
       });
 
       if (mounted) {
+        // Komunikat zależny od trybu AI
+        final message = aiWasDisabled
+            ? 'Zapisano ${savedMedicines.length} lek(ów). Automatyczne wypełnianie dostępne w trybie AI PRO.'
+            : 'Zapisano ${savedMedicines.length} lek(ów)';
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Zapisano ${savedMedicines.length} lek(ów)'),
+            content: Text(message),
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: aiWasDisabled
+                ? Theme.of(context).colorScheme.secondary
+                : Theme.of(context).colorScheme.primary,
+            duration: aiWasDisabled
+                ? const Duration(seconds: 4)
+                : const Duration(seconds: 2),
           ),
         );
 
