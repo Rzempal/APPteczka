@@ -65,7 +65,7 @@ function Update-DeployLog {
         [string]$Duration
     )
     
-    $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\-LOG\log-karton.md"
+    $LOG_PATH = "C:\Users\rzemp\Documents\obsidian\ADMIN\-LOG\log-karton.mdd"
     $MAX_ENTRIES = 10
     $SEPARATOR = "`n---`n"
     
